@@ -17,7 +17,7 @@
 | Schema | **EF Core migrations** |
 | Auth | ASP.NET Core Identity + cookie (through the Cloudflare `/api` proxy) + Google ID-token endpoint |
 | DI scanning | Scrutor |
-| Tests | xUnit + Testcontainers (real Postgres) |
+| Tests | xUnit v3 on Microsoft Testing Platform + Testcontainers (real Postgres, from Phase 4) |
 | API docs | Built-in OpenAPI + Scalar page (check docs) |
 
 ## Architecture: Clean Architecture + CQRS
@@ -36,7 +36,7 @@ Controller → dispatcher.Send(Query | Command)
 src/api/
   Kvit.Api/              Web API entry: Controllers/, Registers/ (DI), Program.cs
   Kvit.Application/      Queries/<Feature>/<QueryName>/  and  Commands/<Feature>/<CommandName>/
-  Kvit.Domain/           Entities/, Interfaces/ (repository interfaces), Services/<Entity>/, Money/, Result/
+  Kvit.Domain/           Entities/, Interfaces/ (repository interfaces), Services/<Entity>/, Money/, Results/ (not `Result/`: a namespace named like its class confuses C#; see DECISIONS, Phase 1)
   Kvit.Infrastructure/   Persistence/ (AppDbContext, Configurations/, Migrations/), Repositories/, Auth/, ExchangeRates/
   Kvit.Contracts/        Request/response DTOs shared by controllers and handlers, IUnitOfWork
 tests/
@@ -115,6 +115,9 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
   - `Result.Unauthorized(...)` (401)
   - `Result.Forbid(...)` (403)
   - `Result.NotFound(...)` (404, new in Kvit)
+  - Each failure factory also has a generic twin (`Result.NotFound<T>(...)` etc.), so a query handler returning `Result<T>` can fail (Phase 1).
+- **Dispatcher calls:** `Send<TCommand>(...)` → `Result`, `Send<TCommand, TResult>(...)` and `Query<TQuery, TResult>(...)` → `Result<TResult>`. No handler, or more than one, throws with the request's name.
+- **HTTP answers:** success → 204 (`Result`) or 200 with the value (`Result<T>`); failure → ProblemDetails with an extra `errorCode` field.
 - **Error codes** are string constants in `ResultCodes` (e.g. `EXPENSE_SPLIT_DOES_NOT_ADD_UP`). The frontend translates these codes, so they're a contract. Never rename one silently.
 - **Exceptions are only for real bugs and outages** (the database is down, the NBRM service is unreachable). They're logged with the cause and never swallowed.
 

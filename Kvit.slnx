@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/api/">
+    <Project Path="src/api/Kvit.Api/Kvit.Api.csproj" />
+    <Project Path="src/api/Kvit.Application/Kvit.Application.csproj" />
+    <Project Path="src/api/Kvit.Domain/Kvit.Domain.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Kvit.Api.Tests/Kvit.Api.Tests.csproj" />
+    <Project Path="tests/Kvit.Domain.Tests/Kvit.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
