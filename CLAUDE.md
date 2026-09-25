@@ -24,12 +24,13 @@ Filip is a beginner at .NET and React: explain each new concept in one or two pl
 - `/health` never touches the database, and nothing polls Neon.
 - Filip runs every git commit himself. No `Co-Authored-By` trailer, no "Generated with Claude Code" line.
 
-## Commands (planned; confirm and fix once Phases 1–2 exist)
-Backend, from the repository root:
-- `dotnet build Kvit.slnx`
-- `dotnet test Kvit.slnx` (Docker Desktop must be running for `Kvit.Api.Tests`)
-- `dotnet run --project src/api/Kvit.Api`
+## Commands
+Backend, from the repository root (VERIFIED 2026-09-25, Phase 1):
+- `dotnet build Kvit.slnx` (must show 0 warnings; warnings and style rules fail the build)
+- `dotnet test Kvit.slnx` (xUnit v3 on Microsoft Testing Platform; Docker Desktop is needed from Phase 4, when Testcontainers arrive)
+- `dotnet run --project src/api/Kvit.Api` → `http://localhost:5018` (API page at `/scalar`, health at `/health` and `/api/health`)
+- `docker build -f src/api/Dockerfile -t kvit-api .` from the root (the build context is the whole repository)
 - Windows: a running API locks its DLLs. Stop it → build → start → test.
 
-Frontend, from `src/web`:
+Frontend, from `src/web` (planned; confirm in Phase 2):
 - `npm run dev` · `npm run lint` · `npm run build` · `npm test`

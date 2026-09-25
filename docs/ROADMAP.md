@@ -17,26 +17,27 @@ Branch names follow Filip's rule `<type>/<NN>-<short-name>`, with NN = the phase
 - [x] Write the project `CLAUDE.md`
 - [x] Write `START-HERE-PROMPT.md` for the building session
 - [x] **Filip:** answer the open questions for Release 1 (end of `DATA-MODEL.md`; all answered 2026-09-25)
-- [ ] **Filip:** OK the data model and this roadmap ("go")
-- [ ] **Filip:** create the local repository and the first branch (`docs/guides/start-the-repository.md`, Part 1)
+- [x] **Filip:** OK the data model and this roadmap ("go", 2026-09-25)
+- [x] **Filip:** create the repository: `main` pushed to `https://github.com/fdavchev/Kvit`, branch `feat/01-backend-skeleton` created (checked 2026-09-25)
 
 ---
 
 # Release 1: "splitting works"
 
 ## Phase 1: Backend skeleton · `feat/01-backend-skeleton`
-Only the projects needed now; `Kvit.Infrastructure` arrives in Phase 4 (final plan review: "build it one project at a time").
-- [ ] Repository basics: `.gitignore`, `.gitattributes`, `.editorconfig`, `global.json` (pins the .NET 10 SDK)
-- [ ] `Directory.Build.props` (net10.0, `Nullable`, `ImplicitUsings`, `TreatWarningsAsErrors`) and `Directory.Packages.props` (every NuGet version in one file)
-- [ ] `Kvit.slnx` with `Kvit.Api`, `Kvit.Application`, `Kvit.Domain`, `Kvit.Contracts`, `tests/Kvit.Domain.Tests`, `tests/Kvit.Api.Tests`
-- [ ] `Result` / `Result<T>` / `ResultCodes` (Domain), the small dispatcher and handler interfaces (Application), `BaseController` that turns a `Result` into an HTTP answer (Api), Scrutor registration in `Registers/`
-- [ ] `GET /health` that never touches the database
-- [ ] OpenAPI + Scalar API reference page (development only, proposal) and `Kvit.Api.http`
-- [ ] `src/api/Dockerfile` (multi-stage, runs as a non-root user)
-- [ ] `.github/workflows/ci.yml`: backend job (restore, build, test)
-- [ ] Tests: `Result` factories, dispatcher finds the right handler, `/health` answers 200
+Only the projects needed now; `Kvit.Contracts` and `Kvit.Infrastructure` arrive in Phase 4, when the first request/response shapes and the database need them (final plan review: "build it one project at a time").
+- [x] Repository basics: `.gitignore`, `.gitattributes`, `.editorconfig`, `global.json` (pins the .NET 10 SDK)
+- [x] `Directory.Build.props` (net10.0, `Nullable`, `ImplicitUsings`, `TreatWarningsAsErrors`) and `Directory.Packages.props` (every NuGet version in one file)
+- [x] `Kvit.slnx` with `Kvit.Api`, `Kvit.Application`, `Kvit.Domain`, `tests/Kvit.Domain.Tests`, `tests/Kvit.Api.Tests`
+- [x] `Result` / `Result<T>` / `ResultCodes` (Domain), the small dispatcher and handler interfaces (Application), `BaseController` that turns a `Result` into an HTTP answer (Api), Scrutor registration in `Registers/`
+- [x] `GET /health` and `GET /api/health` that never touch the database
+- [x] OpenAPI + Scalar API reference page (development only) and `Kvit.Api.http`
+- [x] `src/api/Dockerfile` (multi-stage, runs as a non-root user)
+- [x] `.github/workflows/ci.yml`: backend job (restore, build, test)
+- [x] Tests: `Result` factories, dispatcher finds the right handler, `/health` answers 200
 - **Done when:** `dotnet build` has 0 warnings, `dotnet test` passes, `docker build -f src/api/Dockerfile .` succeeds and the container answers `/health`.
-- **Filip:** start Docker Desktop before this phase is checked (the image build needs it).
+- **Checked 2026-09-25:** 0 warnings, 26/26 tests pass, the image builds and answers `/health` on port 10000 as a non-root user (VERIFIED by live run, see `reports/2026-09-25-phase-01-backend-skeleton.md`).
+- [ ] **Filip:** commit, push, open the pull request, see CI go green on GitHub, merge into `main`
 
 ## Phase 2: Frontend skeleton · `feat/02-frontend-skeleton`
 - [ ] `src/web` from the official Vite `react-ts` template (it installs TypeScript 6.0 and oxlint; VERIFIED from the template's `package.json`, create-vite 9.2.1)
@@ -63,7 +64,7 @@ Pure C# in `Kvit.Domain/Money/`, no database. The heart of the app, tested harde
 - **Done when:** `dotnet test` passes and every rule in "Money rules" has a test.
 
 ## Phase 4: Database + email accounts · `feat/04-accounts`
-- [ ] `Kvit.Infrastructure`: `AppDbContext`, snake_case naming, Identity with `Guid` ids, the Kvit user columns
+- [ ] `Kvit.Contracts` (request/response shapes) and `Kvit.Infrastructure`: `AppDbContext`, snake_case naming, Identity with `Guid` ids, the Kvit user columns
 - [ ] Data Protection keys in Postgres, encrypted with a certificate (and a small script that makes the certificate)
 - [ ] Login cookie: HttpOnly, Secure, SameSite=Lax, long-lived
 - [ ] Own auth endpoints: register (name + email + password), log in, log out, "me". Not `MapIdentityApi`: it has no name field, no Google, and exposes password-reset/2FA endpoints we can't support without email (decided 2026-09-25)
@@ -80,6 +81,7 @@ Put the skeleton online early, so the hosting traps show up before there are fea
 - [ ] Forwarded headers for Render (`KnownIPNetworks`), production settings
 - [ ] How migrations reach Neon (proposal: a CI step runs an EF migration bundle with the **direct** connection string from a GitHub secret, before Render deploys; alternative: the app migrates at startup over the direct connection)
 - [ ] Fill in every «from the session» value in `guides/free-hosting-setup.md`
+- [ ] Once the site is live: a **"Try it: kvit-mk.pages.dev"** link at the very top of `README.md`, so visitors see it's a real, working app (Filip, 2026-09-25). Also put the address in GitHub's **About → Website** field
 - **Filip:** hosting guide Part B1–B3 and B5; test on his iPhone/Android: sign up, close the browser, come back, still logged in.
 - **Done when:** `https://kvit-mk.pages.dev` loads; sign-up works through the proxy; after a manual Render redeploy the user is **still logged in** (proves the database key storage); `/health` never wakes Neon.
 
