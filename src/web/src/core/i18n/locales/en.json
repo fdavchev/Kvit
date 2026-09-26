@@ -1,0 +1,32 @@
+{
+  "app": {
+    "name": "Kvit"
+  },
+  "common": {
+    "comingSoon": "Coming soon",
+    "loading": "Loading…",
+    "retry": "Try again"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Can't reach the server. Check your connection and try again."
+  },
+  "language": {
+    "label": "Language",
+    "en": "EN",
+    "mk": "МК"
+  },
+  "welcome": {
+    "tagline": "Квит сме.",
+    "taglineTranslation": "We're even.",
+    "pitch": "Only you need an account. Friends can be just names.",
+    "continueWithGoogle": "Continue with Google",
+    "signUpWithEmail": "Sign up with email",
+    "haveAccount": "I already have an account"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "message": "This page doesn't exist or has moved.",
+    "goHome": "Go to the dashboard"
+  }
+}
