@@ -24,7 +24,6 @@ pnpm-debug.log*
 .vs/
 .idea/
 .claude/
-CLAUDE.md
 *.swp
 .DS_Store
 Thumbs.db

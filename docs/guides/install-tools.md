@@ -29,8 +29,10 @@ In VS Code, click the **Extensions** icon on the left (four little squares), sea
 | **Prettier – Code formatter** | Keeps the React code neatly formatted |
 | **REST Client** (by Huachao Mao) | Lets you click "Send Request" in `.http` files to test the backend (this replaces Postman) |
 | **Docker** (by Microsoft) | Shows your running containers (optional, but handy) |
+| **TypeScript (Native Preview)** (by Microsoft, ID `TypeScriptTeam.native-preview`) | Phase 2 kept TypeScript 7, and VS Code's own built-in TypeScript is older, so this extension is needed for correct type-checking in `.ts`/`.tsx` files (checked 2026-09-26) |
 
 - **Check:** each one shows "Installed" or a gear icon instead of the Install button.
+- **For the TypeScript (Native Preview) extension only, one extra step:** open the Command Palette (Ctrl+Shift+P) → run **"TypeScript Native Preview: Enable (Experimental)"**. Installing it alone isn't enough — without this step VS Code keeps using its own older built-in TypeScript.
 
 ## 4. .NET 10 SDK (to build and run the backend)
 - Go to **dotnet.microsoft.com/download** → pick **.NET 10** (marked LTS) → under **SDK**, download the **Windows x64 installer** → run it → **Install**.

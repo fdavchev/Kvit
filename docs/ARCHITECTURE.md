@@ -143,7 +143,7 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
 ## Stack
 | Concern | Choice |
 |---|---|
-| Language / build | TypeScript + Vite (check which TS version the template installs; see Traps) |
+| Language / build | TypeScript 7 + Vite (Phase 2 tried TS 7 last, on the real code; kept because lint, build and tests all passed on it) |
 | Server state + caching | **TanStack Query**, with its cache persisted to IndexedDB so saved data shows instantly (check docs) |
 | Local UI state | `useState` / `useReducer`. A global store only if a real need appears |
 | Offline outbox | Own small module over IndexedDB (e.g. `idb-keyval` or Dexie, check docs) |
@@ -157,17 +157,18 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
 
 ## Folder structure (`src/web/src/`): vertical slices
 - **`core/`**: infrastructure shared by all features.
-  - `api/`: `apiClient.ts`, `endpoints.ts` (all paths in one place; functions for paths with parameters), `generated/` (OpenAPI types, never edited by hand), `errors.ts` (maps `ResultCodes` to translation keys).
-  - `services/<domain>/`: one module per domain (`groupsService.ts`, `expensesService.ts`…). These are the only places that call `apiClient`.
-  - `outbox/`: the offline queue (IndexedDB), the sender and its status. It follows the rules in `DECISIONS.md` exactly.
-  - `router/`: the route table and guards.
-  - `i18n/`: setup, and `locales/en.json` + `locales/mk.json`.
+  - `api/`: `apiClient.ts`, `endpoints.ts` (all paths in one place; functions for paths with parameters), `errors.ts` (maps `ResultCodes` to translation keys; only the generic "something went wrong"/"can't reach the server" keys exist while `ResultCodes` is still empty). `generated/` (OpenAPI types, never edited by hand) arrives once the backend has real contracts to generate from.
+  - `services/<domain>/`: one module per domain. Phase 2 only has `services/health/healthService.ts` (the sole caller of `apiClient` so far); more arrive with the features that need them.
+  - `router/`: the route table (`routes.ts`, `router.tsx`) and the `RequireAuth` guard (a placeholder until Phase 4: it always redirects to `/welcome`).
+  - `i18n/`: setup (`i18n.ts`), `locales/en.json` + `locales/mk.json`, and the hand-written `detectLanguage.ts` (saved choice in `localStorage`, else the phone's language list) instead of `i18next-browser-languagedetector`.
+  - `outbox/`: the offline queue (IndexedDB) — Release 3, not built yet.
 - **`features/<feature>/<sub_feature>/`**, each slice containing:
   - `components/`: the screen (`*Screen.tsx`) and its pieces,
   - `hooks/`: `use*.ts` (TanStack Query hooks wrapping the services),
   - `types.ts`: slice-only types, if any.
-- **`shared/components/`**: reusable `Kvit*` components (`KvitButton`, `KvitAmountInput`, `KvitChip`, `KvitAvatar`, `KvitLoading`, `KvitError`, `KvitEmpty`).
-- **`shared/utils/`**: money and date formatting (`Intl` with `mk-MK` / `en`).
+  - Phase 2 has `features/auth/welcome/` (the Welcome screen) and `features/notFound/`.
+- **`shared/components/`**: reusable `Kvit*` components. Phase 2 has `KvitButton`, `KvitLoading`, `KvitError`, `KvitEmpty`, `KvitToaster` (Sonner, `theme="system"`, no `next-themes`). Others (`KvitAmountInput`, `KvitChip`, `KvitAvatar`…) arrive with the features that need them. shadcn/ui's own copied files live in `shared/components/ui/` and are only ever imported by the `Kvit*` wrappers, never by a feature directly.
+- **`shared/utils/`**: money and date formatting (`Intl` with `mk-MK` / `en`). `formatMoney` works only in integer minor units; a non-whole-denar MKD amount or a non-safe-integer value throws, naming the value, because it can only be a bug.
 
 ## Rules
 - **Shared components know no feature.** Everything comes in through props and goes out through callbacks, and they never call feature hooks or services.
@@ -237,5 +238,8 @@ When debugging, prefer the command that produces a number (a grep count, a SQL `
   - *2026-09-25:* checked. The Vite `react-ts` template (create-vite 9.2.1) installs TS ~6.0.2 and uses **oxlint**, not ESLint, so typescript-eslint isn't involved. TS 7 gets tried in Phase 2 (see `DECISIONS.md`). `openapi-typescript` 7.13.0 asks for TS 5, which clashes with both 6 and 7.
 - **Macedonian plurals:** 21, 31, 101 use the "one" form, so always pass `count` to `t()`. Set `<html lang="mk">` when Macedonian is active.
 - **NBRM exchange rate:** if the service fails, keep the last saved rate and show its date, and log the error. Never fall back silently to a made-up number.
+- **TS 7 removed `baseUrl`; TS 6 had already deprecated it.** shadcn's own Vite setup guide still shows `baseUrl` for the `@/` import alias. Kvit's `tsconfig.json` uses `paths` alone; Vite's `resolve.alias` (in `vite.config.ts`, built with `import.meta.dirname`, not `__dirname`) makes the same alias work at build/dev time. *2026-09-26, verified: build and dev server both resolve `@/` correctly with this setup.*
+- **Dark mode is CSS-only.** No `.dark` class, no toggle, no `next-themes` — everything follows `prefers-color-scheme` because Kvit never has a manual theme switch (`DECISIONS.md`: always follows the phone). Sonner is used directly with `theme="system"` for the same reason; shadcn's own generated Sonner wrapper pulls in `next-themes`, which was dropped.
+- **Behind the Cloudflare Pages Function proxy, the API only sees Cloudflare's own address, not the visitor's.** Phase 4's per-IP rate limiting (login/sign-up) needs to read the real visitor address from the forwarded-for header Cloudflare adds, not `HttpContext.Connection.RemoteIpAddress` directly — check Cloudflare's docs for the exact header name and ASP.NET's forwarded-headers middleware setup when Phase 4 builds this (the backend's own `KnownIPNetworks` note for Render forwarding, Phase 5, is a separate but related trap).
 
 New traps found while building get added here, with the date.
