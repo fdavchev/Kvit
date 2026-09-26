@@ -123,6 +123,7 @@ The building session will give you some exact values: folder names and the names
    | Root directory (advanced) | `src/web` |
 3. Under **Environment variables (advanced)**, add:
    - `API_ORIGIN` = your Render address from B2 (e.g. `https://kvit-mk-api.onrender.com`, **no slash at the end**).
+   - `NODE_VERSION` = `24` (Cloudflare's build machine defaults to Node 22.16, which is too old for React Router 8.4; the frontend pins Node 24 itself via `src/web/.nvmrc`, but Cloudflare's own build step needs this variable too).
    - Anything else «from the session».
 4. Click **Save and Deploy**.
    - **You should see:** a build log, then **Success**, and your address `https://kvit-mk.pages.dev`.

@@ -48,7 +48,21 @@ docs/        Decisions, architecture, data model, screens, roadmap and reports
 ```
 
 ## Running it locally
-Instructions arrive with the first code (roadmap phases 1 and 2).
+**Backend**, from the repository root:
+```
+dotnet run --project src/api/Kvit.Api
+```
+→ `http://localhost:5018` (API reference at `/scalar`, health at `/health` and `/api/health`)
+
+**Frontend**, from `src/web` (needs the backend running first, for the `/api` dev proxy):
+```
+npm install
+npm run dev
+```
+→ `http://localhost:5173`
+
+Backend checks: `dotnet build Kvit.slnx`, `dotnet test Kvit.slnx`.
+Frontend checks, from `src/web`: `npm run lint`, `npm run build`, `npm test`.
 
 ## Documentation
 - [Decisions](docs/DECISIONS.md): every product rule and the reasons behind it

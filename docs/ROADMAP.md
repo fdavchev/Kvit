@@ -37,21 +37,21 @@ Only the projects needed now; `Kvit.Contracts` and `Kvit.Infrastructure` arrive 
 - [x] Tests: `Result` factories, dispatcher finds the right handler, `/health` answers 200
 - **Done when:** `dotnet build` has 0 warnings, `dotnet test` passes, `docker build -f src/api/Dockerfile .` succeeds and the container answers `/health`.
 - **Checked 2026-09-25:** 0 warnings, 26/26 tests pass, the image builds and answers `/health` on port 10000 as a non-root user (VERIFIED by live run, see `reports/2026-09-25-phase-01-backend-skeleton.md`).
-- [ ] **Filip:** commit, push, open the pull request, see CI go green on GitHub, merge into `main`
+- [x] **Filip:** commit, push, open the pull request, see CI go green on GitHub, merge into `main` (PR #1 merged 2026-09-25; CI green on the branch and on `main`)
 
 ## Phase 2: Frontend skeleton · `feat/02-frontend-skeleton`
-- [ ] `src/web` from the official Vite `react-ts` template (it installs TypeScript 6.0 and oxlint; VERIFIED from the template's `package.json`, create-vite 9.2.1)
-- [ ] **Try TypeScript 7:** switch, run lint + build + test; keep it if all pass, otherwise stay on 6.0 and log why in `DECISIONS.md`
-- [ ] Styling: Tailwind CSS v4 + CSS variables as design tokens (light and dark), shadcn/ui (Base UI) set up with its files in `shared/components/ui/`, Sonner for toasts
-- [ ] React Router with the route table and a `<RequireAuth>` placeholder
-- [ ] react-i18next with `en.json` / `mk.json`, `<html lang>` switching, a plural test (21 → "one" in Macedonian)
-- [ ] TanStack Query provider; `core/api/apiClient.ts` + `endpoints.ts`; Vite dev proxy `/api` → the local API
-- [ ] Shared `KvitButton`, `KvitLoading`, `KvitError`, `KvitEmpty`; money formatting in `shared/utils` (MKD without decimals, EUR with two; `mk-MK` / `en`)
-- [ ] Welcome screen (screen 1, buttons not wired yet) that pings `/api/health`
-- [ ] Font check: Ѓ Ќ Ѕ Ј Љ Њ Џ render correctly
-- [ ] Cloudflare Pages Function `src/web/functions/api/[[path]].ts` that forwards `/api/*` to `API_ORIGIN` (check docs)
-- [ ] CI: frontend job (`npm ci`, lint, build, test)
-- **Done when:** lint, build and Vitest pass; the Welcome screen looks right at 360 px in light and dark, in EN and MK; the health ping works through the dev proxy.
+- [x] `src/web` from the official Vite `react-ts` template (it installs TypeScript 6.0 and oxlint; VERIFIED from the template's `package.json`, create-vite 9.2.1)
+- [x] **Try TypeScript 7:** switch, run lint + build + test; keep it if all pass, otherwise stay on 6.0 and log why in `DECISIONS.md` — **kept** (VERIFIED: `npm run lint`/`build`/`test` all pass on TS 7.0.2)
+- [x] Styling: Tailwind CSS v4 + CSS variables as design tokens (light and dark), shadcn/ui (Base UI) set up with its files in `shared/components/ui/`, Sonner for toasts
+- [x] React Router with the route table and a `<RequireAuth>` placeholder
+- [x] react-i18next with `en.json` / `mk.json`, `<html lang>` switching, a plural test (21 → "one" in Macedonian)
+- [x] TanStack Query provider; `core/api/apiClient.ts` + `endpoints.ts`; Vite dev proxy `/api` → the local API
+- [x] Shared `KvitButton`, `KvitLoading`, `KvitError`, `KvitEmpty`; money formatting in `shared/utils` (MKD without decimals, EUR with two; `mk-MK` / `en`)
+- [x] Welcome screen (screen 1, buttons not wired yet) that pings `/api/health`
+- [ ] Font check: Ѓ Ќ Ѕ Ј Љ Њ Џ render correctly — the app's own Macedonian text (Welcome, not-found) renders correctly (VERIFIED by screenshot); a raw check of the full special-letter set showed a few glyphs that looked like possible Latin-lookalike substitutions on this PC. NOT fully verified — real confirmation is Phase 5, on an actual phone.
+- [x] Cloudflare Pages Function `src/web/functions/api/[[path]].ts` that forwards `/api/*` to `API_ORIGIN` (check docs) — VERIFIED live with `wrangler pages dev`: 200 with `API_ORIGIN` set, a clear 500 when it's missing
+- [x] CI: frontend job (`npm ci`, lint, build, test)
+- **Done when:** lint, build and Vitest pass; the Welcome screen looks right at 360 px in light and dark, in EN and MK; the health ping works through the dev proxy. **Checked 2026-09-26:** all VERIFIED (automated: lint 0 warnings, build 0 type errors, 52/52 Vitest; live: health ping 200 through the dev proxy and through `wrangler pages dev`, language switch + `<html lang>` persist across reload, button contrast 5.32:1 light / 8.91:1 dark). CI-on-GitHub is NOT VERIFIED until pushed.
 
 ## Phase 3: Money core · `feat/03-money-core`
 Pure C# in `Kvit.Domain/Money/`, no database. The heart of the app, tested hardest.

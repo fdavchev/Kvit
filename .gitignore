@@ -23,6 +23,7 @@ pnpm-debug.log*
 
 .vs/
 .idea/
+.claude/
 *.swp
 .DS_Store
 Thumbs.db

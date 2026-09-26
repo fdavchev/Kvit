@@ -32,5 +32,8 @@ Backend, from the repository root (VERIFIED 2026-09-25, Phase 1):
 - `docker build -f src/api/Dockerfile -t kvit-api .` from the root (the build context is the whole repository)
 - Windows: a running API locks its DLLs. Stop it → build → start → test.
 
-Frontend, from `src/web` (planned; confirm in Phase 2):
-- `npm run dev` · `npm run lint` · `npm run build` · `npm test`
+Frontend, from `src/web` (VERIFIED 2026-09-26, Phase 2):
+- `npm install` then `npm run dev` → `http://localhost:5173` (needs the API running for the `/api` dev proxy)
+- `npm run lint` (oxlint, `--deny-warnings`: must show 0 warnings)
+- `npm run build` (`tsc -b && vite build`: must show 0 type errors)
+- `npm test` (Vitest)
