@@ -51,7 +51,8 @@ Only the projects needed now; `Kvit.Contracts` and `Kvit.Infrastructure` arrive 
 - [ ] Font check: Ѓ Ќ Ѕ Ј Љ Њ Џ render correctly — the app's own Macedonian text (Welcome, not-found) renders correctly (VERIFIED by screenshot); a raw check of the full special-letter set showed a few glyphs that looked like possible Latin-lookalike substitutions on this PC. NOT fully verified — real confirmation is Phase 5, on an actual phone.
 - [x] Cloudflare Pages Function `src/web/functions/api/[[path]].ts` that forwards `/api/*` to `API_ORIGIN` (check docs) — VERIFIED live with `wrangler pages dev`: 200 with `API_ORIGIN` set, a clear 500 when it's missing
 - [x] CI: frontend job (`npm ci`, lint, build, test)
-- **Done when:** lint, build and Vitest pass; the Welcome screen looks right at 360 px in light and dark, in EN and MK; the health ping works through the dev proxy. **Checked 2026-09-26:** all VERIFIED (automated: lint 0 warnings, build 0 type errors, 52/52 Vitest; live: health ping 200 through the dev proxy and through `wrangler pages dev`, language switch + `<html lang>` persist across reload, button contrast 5.32:1 light / 8.91:1 dark). CI-on-GitHub is NOT VERIFIED until pushed.
+- **Done when:** lint, build and Vitest pass; the Welcome screen looks right at 360 px in light and dark, in EN and MK; the health ping works through the dev proxy. **Checked 2026-09-26:** all VERIFIED (automated: lint 0 warnings, build 0 type errors, 52/52 Vitest; live: health ping 200 through the dev proxy and through `wrangler pages dev`, language switch + `<html lang>` persist across reload, button contrast 5.32:1 light / 8.91:1 dark).
+- [x] **Filip:** commit, push, open the pull request, see CI go green on GitHub, merge into `main` (PR #2 merged 2026-09-26; CI green on the branch and on `main`)
 
 ## Phase 3: Money core · `feat/03-money-core`
 Pure C# in `Kvit.Domain/Money/`, no database. The heart of the app, tested hardest.
