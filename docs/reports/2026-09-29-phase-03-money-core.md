@@ -13,7 +13,7 @@ Written by the `coder` subagent (Opus) on the branch `feat/03-money-core`. Nothi
 | Splitting | `SplitType.cs`, `SplitInput.cs`, `SplitShare.cs`, `Splitter.cs` | Equal (+ extras), Exact, Percentage, Shares. Every result adds up exactly to the total; the rounding leftover goes to the payer |
 | Balances | `SettlementStatus.cs`, `BalanceExpense.cs`, `BalanceSettlement.cs`, `MemberBalance.cs`, `BalanceSummary.cs`, `Balances.cs` | Each member's balance per currency, and "is everyone kvit?", from one call |
 | Who pays whom | `Payment.cs`, `DebtSimplifier.cs` | Turns balances into a short list of payments |
-| Error codes | `src/api/Kvit.Domain/Results/ResultCodes.cs` | 9 new codes (listed in `DECISIONS.md`, 2026-09-29) |
+| Error codes | `src/api/Kvit.Domain/Results/ResultCodes.cs` | 9 new codes (listed in the "Decisions" section at the end of this report, 2026-09-29) |
 | Tests | `tests/Kvit.Domain.Tests/MoneyRules/` (12 files: 11 test classes + `MoneyTestData.cs` with shared test helpers) | 139 new tests (127, plus 12 from the code-review follow-up) |
 
 ## The rules, with the examples that are tested
@@ -55,12 +55,12 @@ All of these are **VERIFIED by automated test**, in both MKD and EUR unless the 
 
 ## Where the code differs from the plan
 - **"Total off the step" test:** the splitter can't receive such a total, because `Money.Create` already refuses it. The test in `SplitValidationTests` checks exactly that (120.50 MKD can't be made) instead of calling the splitter.
-- **Two extra safety checks in `Balances`:** an expense whose shares are in a different currency, or don't add up to its amount, throws with a clear message. Without them, a damaged row would silently show wrong balances. Logged in `DECISIONS.md`.
-- **A currency only appears in the balances when a counted row uses it** (the plan said "each currency that appears" without saying whether deleted rows count). Logged in `DECISIONS.md`.
+- **Two extra safety checks in `Balances`:** an expense whose shares are in a different currency, or don't add up to its amount, throws with a clear message. Without them, a damaged row would silently show wrong balances. Logged in the "Decisions" section at the end of this report.
+- **A currency only appears in the balances when a counted row uses it** (the plan said "each currency that appears" without saying whether deleted rows count). Logged in the "Decisions" section at the end of this report.
 - **`CurrencyRules.FormatAmount`** was added so error messages can name amounts ("2,700 of 3,000 MKD"), which the plan asked for. It's for messages only; the website formats amounts itself.
 
 ## Follow-up after code review
-Done by the `coder` subagent on the same branch, same day. Details and reasons in `DECISIONS.md` (2026-09-29, follow-up).
+Done by the `coder` subagent on the same branch, same day. Details and reasons in the "Decisions" section at the end of this report (2026-09-29, follow-up).
 
 | Change | Label |
 |---|---|
@@ -81,3 +81,33 @@ Done by the `coder` subagent on the same branch, same day. Details and reasons i
 
 ## Next
 Filip commits, pushes `feat/03-money-core`, opens the pull request, checks CI turns green and merges. Then Phase 4 (database + email accounts).
+
+## Decisions and rejected alternatives (moved word for word from DECISIONS.md on 2026-09-29)
+
+### 2026-09-29: Phase 3 money core
+Planned in plan mode, built by the `coder` subagent on `feat/03-money-core`. Report: `reports/2026-09-29-phase-03-money-core.md`.
+
+**Filip's answers (2026-09-29):**
+- **The payer always takes the whole leftover**, even when it's more than one step. *1,000 MKD among 7:* 142 each, the payer pays 148.
+- **Everyone listed in the split counts as "in the split", even at 0 % or 0 shares.** A listed payer still takes the leftover. *Shares Filip 0, Ana 1, Marko 1, Bojan 1 on 1,000 MKD, Filip paid:* Filip 1, Ana 333, Marko 333, Bojan 333. The leftover goes to the first listed person only when the payer isn't listed at all.
+
+**Technical decisions (Claude's):**
+- **The folder is `Kvit.Domain/MoneyRules/` (namespace `Kvit.Domain.MoneyRules`), not `Money/`.** A class called `Money` inside a namespace called `Money` confuses C# name lookup, the same problem Phase 1 had with `Result` (hence `Results/`). The folder is named after the DATA-MODEL section it implements. ARCHITECTURE updated.
+- **`Money` is a sealed record (a class), not a struct.** A struct always has an empty `default` value that skips validation; a class can only be made through `Money.Create`, which rejects amounts off the currency's step (e.g. 120.50 MKD) with `MONEY_NOT_ON_CURRENCY_STEP`. Its properties have no setters, so `with { ... }` can't sneak an invalid amount past `Create` either (VERIFIED: a throwaway file trying it failed the build with CS0200, then was deleted). Negative amounts are allowed, because balances use `Money`. `Add` / `Subtract` fail with `MONEY_CURRENCY_MISMATCH` for different currencies and use `checked` arithmetic, so an overflow throws instead of wrapping round.
+- **Step checks for typed values reuse `Money.Create`:** an MKD extra (Equal) or amount (Exact) that isn't a whole denar fails with `MONEY_NOT_ON_CURRENCY_STEP`, the same code as the amount itself, so the rule lives in one place.
+- **`EXPENSE_SPLIT_DOES_NOT_ADD_UP` is reused for percentages that don't total 100 %,** not a second code: it's the same message to the user ("doesn't add up"), and DATA-MODEL already named it.
+- **New result codes** (a contract with the frontend, never renamed silently): `MONEY_CURRENCY_MISMATCH`, `MONEY_NOT_ON_CURRENCY_STEP`, `EXPENSE_AMOUNT_NOT_POSITIVE`, `EXPENSE_SPLIT_NO_PARTICIPANTS`, `EXPENSE_SPLIT_DUPLICATE_MEMBER`, `EXPENSE_SPLIT_NEGATIVE_INPUT`, `EXPENSE_SPLIT_EXTRAS_EXCEED_TOTAL`, `EXPENSE_SPLIT_DOES_NOT_ADD_UP`, `EXPENSE_SPLIT_NO_SHARES`. Each English message names the numbers, e.g. "Split adds up to 2,700 of 3,000 MKD; 300 left to assign."
+- **Split sums and products use `Int128`** (a 128-bit whole number built into .NET), so adding up typed values or multiplying amount × percentage can't overflow, and the "doesn't add up" answer is always a clean failure instead of a crash.
+- **A member missing from the group's member list throws** (`InvalidOperationException` naming the id) in `Balances`, and so does an expense whose shares are in another currency or don't add up to its amount. These can only be bugs or damaged data; skipping them would silently show wrong balances. Balances that don't add up to 0, or mixed currencies, make `DebtSimplifier` throw for the same reason.
+- **A currency appears in the balances only when a counted row uses it** (a non-deleted expense or a confirmed, non-deleted settlement). A group whose only EUR expense was deleted shows no EUR balances.
+- **Property-style tests use a fixed-seed `Random`** (seed 20260929, e.g. 2,000 cases per split type and currency) instead of a property-test package such as FsCheck. No new NuGet package, and a failure repeats exactly on every run.
+- **`SettlementStatus` lives in `MoneyRules/` for now,** because `Balances` needs it. Phase 9's settlement entity reuses it; move it then if it fits better elsewhere.
+- **Out of scope:** currency conversion (Release 2, budget only), entities, persistence and endpoints.
+
+**Follow-up after code review (2026-09-29, same branch):**
+- **`Balances.Calculate` is now one call that returns a `BalanceSummary`:** the balances per currency (same shape as before) plus `IsEveryoneKvit`, both worked out from the same expenses and payments. *Why:* the old separate `Balances.IsEveryoneKvit(balances, settlements)` took the balances and the payments as two inputs, so a caller could pass balances from one moment and payments from another and get a wrong "everyone's kvit". *Rejected:* keeping two functions.
+- **`Balances` rejects impossible amounts by throwing `InvalidOperationException`:** an expense of 0 or less, a negative share, a payment of 0 or less, and a payment from a person to themselves. The message names the member id(s) and the amount. Payments are checked when they are confirmed or pending; deleted rows are skipped without being checked, as before. *Why:* `Money` allows negative amounts on purpose (balances are negative), so it can't guard these; `Balances` is where they would silently turn into wrong balances. *Rejected:* silently skipping the bad row.
+- **"Everyone's kvit" is true when nothing counts and nothing is pending,** e.g. a new group, or one whose only expense was deleted. The balances are then empty (no currency at all), and there is nothing to settle. A pending payment still makes it false, even with no balances.
+- **The random split test checks rounding with its own rule,** not a copy of `Splitter`'s formulas. For Percentage and Shares, every person except the leftover person must get the largest whole step that doesn't go over their exact part (total × their weight ÷ all weights), compared as whole numbers by cross-multiplying in `Int128`. For Equal, everyone except the leftover person gets the same equal part (their share minus their extra), and it's the largest whole step where equal part × people ≤ total − extras. The leftover person is at most (people − 1) steps above their own rounded-down part. Rounding to nearest (Percentage/Shares) or one step too low (Equal) inside `Splitter` makes this test fail (VERIFIED by live run, then undone).
+- **Contract for Phase 9 and later: the member list passed to `Balances.Calculate` must include every member the group has ever had, including removed and left members,** in joining order. Their rows are kept because old expenses and payments still point at them (see `DATA-MODEL.md`, `group_members.removed_at`). If one is missing, `Calculate` throws on purpose, naming the id.
+

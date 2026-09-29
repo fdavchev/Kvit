@@ -36,7 +36,7 @@ Controller → dispatcher.Send(Query | Command)
 src/api/
   Kvit.Api/              Web API entry: Controllers/, Registers/ (DI), Program.cs
   Kvit.Application/      Queries/<Feature>/<QueryName>/  and  Commands/<Feature>/<CommandName>/
-  Kvit.Domain/           Entities/, Interfaces/ (repository interfaces), Services/<Entity>/, MoneyRules/ (not `Money/`, for the same reason; see DECISIONS, Phase 3), Results/ (not `Result/`: a namespace named like its class confuses C#; see DECISIONS, Phase 1)
+  Kvit.Domain/           Entities/, Interfaces/ (repository interfaces), Services/<Entity>/, MoneyRules/ (not `Money/`, for the same reason; see `reports/2026-09-29-phase-03-money-core.md`), Results/ (not `Result/`: a namespace named like its class confuses C#; see `reports/2026-09-25-phase-01-backend-skeleton.md`)
   Kvit.Infrastructure/   Persistence/ (AppDbContext, Configurations/, Migrations/), Repositories/, Auth/, ExchangeRates/
   Kvit.Contracts/        Request/response DTOs shared by controllers and handlers, IUnitOfWork
 tests/
@@ -86,7 +86,7 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
 - **Construction:** a private constructor for EF. A static `Create(...) : Result<Entity>` and an instance `Update(...) : Result<Entity>` do all the validation.
 - **Behaviour methods:** e.g. `settlement.Confirm(byUserId)`, `settlement.Reject(byUserId)`, `member.Claim(userId)`.
 - No logic in property getters.
-- **Money is a value type, `Money(long MinorUnits, Currency Currency)`.** It's never a `decimal` or `double` in entities. Adding two different currencies is a failure, not a conversion.
+- **Money is a sealed record class, `Money(long MinorUnits, Currency Currency)`, made only through `Money.Create`** (a struct's empty default would skip validation). It's never a `decimal` or `double` in entities. An amount off the currency's step fails with `MONEY_NOT_ON_CURRENCY_STEP`; adding two different currencies fails with `MONEY_CURRENCY_MISMATCH`, never a conversion; negatives are allowed because balances use `Money`. Sums and products of typed values use `Int128`. Anything that can only be a bug or damaged data (a member missing from the list, shares in another currency, an impossible amount) throws `InvalidOperationException` naming the id; it is never skipped silently (Phase 3).
 - **The split logic is pure functions** in `Domain/MoneyRules/` (equal, exact, percentage, shares), so it's easy to unit-test. Rounding leftovers go to the payer.
 
 ## Domain services
@@ -118,6 +118,7 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
   - Each failure factory also has a generic twin (`Result.NotFound<T>(...)` etc.), so a query handler returning `Result<T>` can fail (Phase 1).
 - **Dispatcher calls:** `Send<TCommand>(...)` → `Result`, `Send<TCommand, TResult>(...)` and `Query<TQuery, TResult>(...)` → `Result<TResult>`. No handler, or more than one, throws with the request's name.
 - **HTTP answers:** success → 204 (`Result`) or 200 with the value (`Result<T>`); failure → ProblemDetails with an extra `errorCode` field.
+- **Two traps in `Result<T>` answers (VERIFIED by test, review-fix Step 2):** a `Result<T>` holding null answers **204 with no body**, so never return `Result.Ok<T>(null)` where the frontend expects an object; a handler that finds nothing returns `Result.NotFound<T>`. A `Result<string>` answers `text/plain` without quotes, so wrap a string in a small record when the frontend expects JSON.
 - **Error codes** are string constants in `ResultCodes` (e.g. `EXPENSE_SPLIT_DOES_NOT_ADD_UP`). The frontend translates these codes, so they're a contract. Never rename one silently.
 - **Exceptions are only for real bugs and outages** (the database is down, the NBRM service is unreachable). They're logged with the cause and never swallowed.
 
@@ -125,6 +126,11 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
 - **Domain services:** scan `Kvit.Domain.Services`, registered with `AsSelf()` and a scoped lifetime.
 - **Repositories:** scan `Kvit.Infrastructure.Repositories`, registered with `AsMatchingInterface()` and a scoped lifetime.
 - **Handlers:** registered as `AssignableTo(ICommandHandler<>)`, `ICommandHandler<,>` and `IQueryHandler<,>`, with `AsImplementedInterfaces()` and a transient lifetime.
+
+## Build, Docker and CI
+- `global.json` pins SDK 10.0.400 with `rollForward: latestFeature` (any .NET 10 SDK from 10.0.400, never .NET 11). Tests use xUnit v3 on Microsoft Testing Platform (`global.json` sets the runner).
+- The Dockerfile builds on `sdk:10.0` and runs on `aspnet:10.0` as the non-root `app` user. It has **no build arguments** (no secret can end up in the image) and **no port** (Render sets `ASPNETCORE_HTTP_PORTS=10000`). **Every new project's `.csproj` needs a `COPY` line before `dotnet restore`**; CI's backend job ends with `docker build`, so a missing line fails CI.
+- The build enforces style: `var` (IDE0008), file-scoped namespaces (IDE0160) and a namespace that doesn't match its folder (IDE0130) are errors; primary constructors, collection expressions and switch expressions are warnings, which `TreatWarningsAsErrors` turns into errors. "No comments" and "file name = class name" can't be checked by the compiler and stay review rules. Generated migrations are marked `generated_code` in `.editorconfig`.
 
 ## Code style
 - **Every `.csproj`:** `Nullable=enable`, `ImplicitUsings=enable`, **`TreatWarningsAsErrors=true`**.
@@ -157,7 +163,7 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
 
 ## Folder structure (`src/web/src/`): vertical slices
 - **`core/`**: infrastructure shared by all features.
-  - `api/`: `apiClient.ts`, `endpoints.ts` (all paths in one place; functions for paths with parameters), `errors.ts` (maps `ResultCodes` to translation keys; only the generic "something went wrong"/"can't reach the server" keys exist while `ResultCodes` is still empty). `generated/` (OpenAPI types, never edited by hand) arrives once the backend has real contracts to generate from.
+  - `api/`: `apiClient.ts`, `endpoints.ts` (all paths in one place; functions for paths with parameters), `errors.ts` (maps `ResultCodes` to translation keys; `errorMessageKey` answers `errors.network` for a fetch that never got an answer and for HTTP 502, the proxy's answer when the API is asleep or down; an unmapped error code is logged with `console.error` and answers `errors.generic`). `generated/` (OpenAPI types, never edited by hand) arrives once the backend has real contracts to generate from.
   - `services/<domain>/`: one module per domain. Phase 2 only has `services/health/healthService.ts` (the sole caller of `apiClient` so far); more arrive with the features that need them.
   - `router/`: the route table (`routes.ts`, `router.tsx`) and the `RequireAuth` guard (a placeholder until Phase 4: it always redirects to `/welcome`).
   - `i18n/`: setup (`i18n.ts`), `locales/en.json` + `locales/mk.json`, and the hand-written `detectLanguage.ts` (saved choice in `localStorage`, else the phone's language list) instead of `i18next-browser-languagedetector`.
@@ -179,6 +185,7 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
 - **Loading, error and empty states** use the shared `KvitLoading` / `KvitError` / `KvitEmpty` components.
 - **Mobile first.** Kvit is used on phones: design for 360 px width first and grow from there.
 - **Money in the frontend** is also integer minor units. It's only formatted for display at the last moment.
+- **Tests sit next to the code they test** (`formatMoney.test.ts`); the Cloudflare proxy's tests are in `src/web/test/functions/`. Every route sits under one `errorElement` (`RouteError`), and `main.tsx` shows a two-language fallback if `startI18n()` fails. Node 24 is pinned (`.nvmrc`, `engines`).
 
 ## Naming
 - **Components:** PascalCase file and name (`AddExpenseScreen.tsx`, `ExpenseListItem.tsx`).
@@ -218,6 +225,12 @@ Before adding a shape (a DTO, service method, shared component, translation key,
 - **English only** in commits and PR text. Macedonian stays in `mk.json` and in the docs.
 - Branch names and the rest of the git workflow follow Filip's global rules (`feat/NN-short-name`). **No Claude co-author trailer.**
 
+## Where to write what (so the docs stay small; agreed with Filip 2026-09-29)
+- **`DECISIONS.md`** holds the product rules (what the app does) and the **log of the phase in progress**. Only real decisions go in it, with the rejected alternatives, and never verification results.
+- **A finished phase's log moves, word for word, to the end of that phase's report** in `docs/reports/` (section "Decisions and rejected alternatives"). Any rule from it that still binds future code gets one line in this file first.
+- **Verification results** (what was run, the numbers, VERIFIED / NOT VERIFIED) live only in the step's report. `STATUS.md` gets a few lines and a link to the report; `ROADMAP.md` gets its box ticked.
+- **Reading:** read the headings first (`Grep '^#'`) and then the parts that apply: backend work reads Part 1, 3 and 4 here; frontend work reads Part 2, 3 and 4; `DATA-MODEL.md` only for the tables the step touches. Read a part completely once it applies; nothing is summarized.
+
 ## When a hypothesis can be counted, count it
 When debugging, prefer the command that produces a number (a grep count, a SQL `SELECT`, a test run) over reasoning that produces a story.
 
@@ -235,12 +248,12 @@ When debugging, prefer the command that produces a number (a grep count, a SQL `
 - **Neon's free compute hours** run out if something keeps the database awake. The health check (`/health`) must not touch the database, and nothing may poll it.
 - **Render's free service sleeps after 15 minutes idle** and takes about 1 minute to wake. The frontend wakes it on page load and shows saved data plus the outbox while it wakes.
 - **TypeScript 7** has no stable tooling API yet, so typescript-eslint may need TS 6. Check the generated `package.json`.
-  - *2026-09-25:* checked. The Vite `react-ts` template (create-vite 9.2.1) installs TS ~6.0.2 and uses **oxlint**, not ESLint, so typescript-eslint isn't involved. TS 7 gets tried in Phase 2 (see `DECISIONS.md`). `openapi-typescript` 7.13.0 asks for TS 5, which clashes with both 6 and 7.
+  - *2026-09-25:* checked. The Vite `react-ts` template (create-vite 9.2.1) installs TS ~6.0.2 and uses **oxlint**, not ESLint, so typescript-eslint isn't involved. TS 7 gets tried in Phase 2 (see `reports/2026-09-26-phase-02-frontend-skeleton.md`). `openapi-typescript` 7.13.0 asks for TS 5, which clashes with both 6 and 7.
 - **Macedonian plurals:** 21, 31, 101 use the "one" form, so always pass `count` to `t()`. Set `<html lang="mk">` when Macedonian is active.
 - **NBRM exchange rate:** if the service fails, keep the last saved rate and show its date, and log the error. Never fall back silently to a made-up number.
 - **TS 7 removed `baseUrl`; TS 6 had already deprecated it.** shadcn's own Vite setup guide still shows `baseUrl` for the `@/` import alias. Kvit's `tsconfig.json` uses `paths` alone; Vite's `resolve.alias` (in `vite.config.ts`, built with `import.meta.dirname`, not `__dirname`) makes the same alias work at build/dev time. *2026-09-26, verified: build and dev server both resolve `@/` correctly with this setup.*
 - **Dark mode is CSS-only.** No `.dark` class, no toggle, no `next-themes` — everything follows `prefers-color-scheme` because Kvit never has a manual theme switch (`DECISIONS.md`: always follows the phone). Sonner is used directly with `theme="system"` for the same reason; shadcn's own generated Sonner wrapper pulls in `next-themes`, which was dropped.
-- **Behind the Cloudflare Pages Function proxy, the API only sees Cloudflare's own address, not the visitor's.** The proxy (`src/web/functions/api/[[path]].ts`) throws away every forwarding header the visitor's browser sent (`x-forwarded-*`, `forwarded`, `x-real-ip`, `true-client-ip`, `cf-connecting-ip`, `cf-connecting-ipv6`) and sets `X-Forwarded-For` to the one address in `cf-connecting-ip`, which Cloudflare adds (its docs: "provides the client IP address connecting to Cloudflare to the origin"). If `cf-connecting-ip` is missing the proxy answers 500 instead of guessing. Phase 4's per-IP rate limiting reads `X-Forwarded-For` through ASP.NET's forwarded-headers middleware, never `HttpContext.Connection.RemoteIpAddress`. Decision and reasons: `DECISIONS.md` 2026-09-29. Three open points, none checked yet:
+- **Behind the Cloudflare Pages Function proxy, the API only sees Cloudflare's own address, not the visitor's.** The proxy (`src/web/functions/api/[[path]].ts`) throws away every forwarding header the visitor's browser sent (`x-forwarded-*`, `forwarded`, `x-real-ip`, `true-client-ip`, `cf-connecting-ip`, `cf-connecting-ipv6`) and sets `X-Forwarded-For` to the one address in `cf-connecting-ip`, which Cloudflare adds (its docs: "provides the client IP address connecting to Cloudflare to the origin"). If `cf-connecting-ip` is missing the proxy answers 500 instead of guessing. Phase 4's per-IP rate limiting reads `X-Forwarded-For` through ASP.NET's forwarded-headers middleware, never `HttpContext.Connection.RemoteIpAddress`. Decision and reasons: `reports/2026-09-29-code-review-phase-01-02.md` (Step 3) and the Phase 4 entry in `DECISIONS.md` (the proxy gate replaces the `X-Forwarded-For` choice). Three open points, none checked yet:
   - Render's own load balancer sits between the proxy and the API. What it does to `X-Forwarded-For` (append its peer's address? how many entries reach the API?) is NOT VERIFIED; it decides `ForwardLimit` / `KnownIPNetworks` in Phase 4/5 (a separate but related trap: the backend's own `KnownIPNetworks` note for Render forwarding, Phase 5).
   - The API is also reachable directly on `onrender.com`, where anyone can send their own `X-Forwarded-For`. Unless the API only trusts requests that came through the proxy (for example a secret header the proxy adds), a per-IP limit can be dodged by skipping Cloudflare. Decide this in Phase 4.
   - Local `wrangler pages dev` honours a client-sent `cf-connecting-ip`; the real Cloudflare edge is documented to set it itself. Prove it on the deployed site in Phase 5.

@@ -29,3 +29,32 @@ Filip asked for the project to be read, a thorough plan for starting to code, an
 
 ## What's next
 Filip answers the open questions, runs Part 1 of `guides/start-the-repository.md`, and says go; then Phase 1 (backend skeleton) starts.
+
+## Architecture decisions of the planning phase (moved word for word from DECISIONS.md on 2026-09-29; the source of truth is now ARCHITECTURE.md)
+
+### 2026-09-25: Architecture
+- **Written in:** `docs/ARCHITECTURE.md`.
+- **Backend:**
+  - Clean Architecture + CQRS.
+  - Rich entities with `Create`/`Update` factories that return `Result`.
+  - Domain services, repositories and `IUnitOfWork`.
+  - Query handlers with `AsNoTracking` + projection.
+  - Thin controllers, `ResultCodes` and Scrutor registration.
+  - `TreatWarningsAsErrors`, explicit types and block namespaces.
+  - **No MediatR.** A small hand-written dispatcher instead, because of the MediatR licence change.
+  - **One Application project** holding both Queries and Commands.
+  - **Postgres with EF migrations and snake_case.**
+  - **Group rules are checked in domain services,** on top of platform permissions.
+- **Frontend:**
+  - Vertical feature slices.
+  - Shared components that know no feature.
+  - All text goes through translations.
+  - Mobile first.
+  - TanStack Query + IndexedDB persistence, and types generated from OpenAPI.
+- **Working rules:** propose then wait, never guess, search before writing, no comments, format only changed lines, and the commit shortcuts.
+- **Tests are required.**
+- **Open for the building session:** Tailwind vs another styling approach, and the exact library APIs marked "check docs".
+
+### 2026-09-24: Architecture document
+- Done on 2026-09-25: `docs/ARCHITECTURE.md` (see "Architecture" at the top).
+

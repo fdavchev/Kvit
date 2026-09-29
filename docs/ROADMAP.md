@@ -41,7 +41,7 @@ Only the projects needed now; `Kvit.Contracts` and `Kvit.Infrastructure` arrive 
 
 ## Phase 2: Frontend skeleton · `feat/02-frontend-skeleton`
 - [x] `src/web` from the official Vite `react-ts` template (it installs TypeScript 6.0 and oxlint; VERIFIED from the template's `package.json`, create-vite 9.2.1)
-- [x] **Try TypeScript 7:** switch, run lint + build + test; keep it if all pass, otherwise stay on 6.0 and log why in `DECISIONS.md` — **kept** (VERIFIED: `npm run lint`/`build`/`test` all pass on TS 7.0.2)
+- [x] **Try TypeScript 7:** switch, run lint + build + test; keep it if all pass, otherwise stay on 6.0 and log why in `reports/2026-09-26-phase-02-frontend-skeleton.md` — **kept** (VERIFIED: `npm run lint`/`build`/`test` all pass on TS 7.0.2)
 - [x] Styling: Tailwind CSS v4 + CSS variables as design tokens (light and dark), shadcn/ui (Base UI) set up with its files in `shared/components/ui/`, Sonner for toasts
 - [x] React Router with the route table and a `<RequireAuth>` placeholder
 - [x] react-i18next with `en.json` / `mk.json`, `<html lang>` switching, a plural test (21 → "one" in Macedonian)
@@ -55,7 +55,7 @@ Only the projects needed now; `Kvit.Contracts` and `Kvit.Infrastructure` arrive 
 - [x] **Filip:** commit, push, open the pull request, see CI go green on GitHub, merge into `main` (PR #2 merged 2026-09-26; CI green on the branch and on `main`)
 
 ## Phase 3: Money core · `feat/03-money-core`
-Pure C# in `Kvit.Domain/MoneyRules/` (not `Money/`, see `DECISIONS.md` 2026-09-29), no database. The heart of the app, tested hardest.
+Pure C# in `Kvit.Domain/MoneyRules/` (not `Money/`, see `reports/2026-09-29-phase-03-money-core.md`), no database. The heart of the app, tested hardest.
 - [x] `Currency`, `Money(long MinorUnits, Currency Currency)`; adding two currencies is a failure
 - [x] Rounding step per currency (MKD to whole denars, EUR to the cent)
 - [x] The four split functions (Equal + extras, Exact, Percentage, Shares), leftover to the payer
@@ -71,7 +71,7 @@ Pure C# in `Kvit.Domain/MoneyRules/` (not `Money/`, see `DECISIONS.md` 2026-09-2
 - [ ] Add each new project's `.csproj` to the `COPY` lines of `src/api/Dockerfile` (`Kvit.Infrastructure`, `Kvit.Contracts`). Without them `dotnet restore` inside the image fails, and only Render's deploy would show it (review 01-1; CI builds the image from Step 2 of the review-fix branch, so the CI run on this phase's PR catches a missing line). **`Kvit.Infrastructure` line done in Step 1 (image builds, VERIFIED by live run); `Kvit.Contracts` line comes in Step 2**
 - [ ] A test that the Scrutor scan in `Register.Application.cs` registers the first real handler: resolve it through the real `AddApplication()` and send a request through the dispatcher. Today the scan finds zero handlers and no test proves it works (review 01-2)
 - [ ] A fallback authorization policy that requires a signed-in user, with `/health` and `/api/health` explicitly marked anonymous, so a controller written without `[Authorize]` is closed, not open. It can't be built before an auth scheme exists, so it belongs here. Test: an endpoint without `[Authorize]` answers 401, and both health routes still answer 200 without a login (review 01-3)
-- [ ] Per-IP rate limiting reads the visitor address the Cloudflare proxy forwards: the proxy sets `X-Forwarded-For` from `cf-connecting-ip` (see `DECISIONS.md` 2026-09-29), read through ASP.NET's forwarded-headers middleware, not `HttpContext.Connection.RemoteIpAddress` (that is Cloudflare's or Render's own address). Also decide how the API refuses a client-supplied `X-Forwarded-For` on direct `onrender.com` requests, and check what Render's load balancer does to the header (see the trap in `ARCHITECTURE.md`). Test that a client-supplied `X-Forwarded-For` doesn't change the address the limiter counts
+- [ ] Per-IP rate limiting reads the visitor address the Cloudflare proxy forwards: the proxy sets `X-Forwarded-For` from `cf-connecting-ip` (see `reports/2026-09-29-code-review-phase-01-02.md`, Step 3, and the Phase 4 entry in `DECISIONS.md`), read through ASP.NET's forwarded-headers middleware, not `HttpContext.Connection.RemoteIpAddress` (that is Cloudflare's or Render's own address). Also decide how the API refuses a client-supplied `X-Forwarded-For` on direct `onrender.com` requests, and check what Render's load balancer does to the header (see the trap in `ARCHITECTURE.md`). Test that a client-supplied `X-Forwarded-For` doesn't change the address the limiter counts
 - [ ] Data Protection keys in Postgres, encrypted with a certificate (and a small script that makes the certificate)
 - [ ] Login cookie: HttpOnly, Secure, SameSite=Lax (or Strict), long-lived. This is the only CSRF protection: there is no anti-forgery token, and the API is also reachable directly on `onrender.com`. Checked by the cookie-flags test below (review 02-9)
 - [ ] Own auth endpoints: register (name + email + password), log in, log out, "me". Not `MapIdentityApi`: it has no name field, no Google, and exposes password-reset/2FA endpoints we can't support without email (decided 2026-09-25)
@@ -121,7 +121,7 @@ Put the skeleton online early, so the hosting traps show up before there are fea
 
 ## Phase 9: Balances + settle up · `feat/09-settle-up`
 - [ ] Balances per currency; "who pays whom"
-- [ ] Pass `Balances.Calculate` every member the group has ever had, **including removed and left members** (`removed_at` set), in joining order; otherwise it throws by design (see `DECISIONS.md` 2026-09-29, follow-up)
+- [ ] Pass `Balances.Calculate` every member the group has ever had, **including removed and left members** (`removed_at` set), in joining order; otherwise it throws by design (see `reports/2026-09-29-phase-03-money-core.md`, follow-up)
 - [ ] Settlements: record, confirm, reject, cancel, delete; owner acts for plain names
 - [ ] Zero-balance rules for leave / remove / delete group
 - [ ] Screens 11, 12; "Needs you" items for pending payments
