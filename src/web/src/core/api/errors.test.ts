@@ -11,6 +11,14 @@ describe('errorMessageKey', () => {
     expect(errorMessageKey(error)).toBe('errors.network')
   })
 
+  it('uses the network message when the proxy answers 502 because the API is unreachable', () => {
+    const error = new ApiError('GET /api/health failed with status 502', {
+      httpStatus: 502,
+    })
+
+    expect(errorMessageKey(error)).toBe('errors.network')
+  })
+
   it('uses the generic message for an error code with no translation', () => {
     const error = new ApiError('GET /api/groups/1 failed with status 404', {
       httpStatus: 404,
