@@ -7,6 +7,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddApplication();
+builder.Services.AddInfrastructure();
 
 WebApplication app = builder.Build();
 

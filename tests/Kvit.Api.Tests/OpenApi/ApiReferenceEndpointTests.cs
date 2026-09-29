@@ -1,12 +1,12 @@
 using System.Net;
+using Kvit.Api.Tests.Hosting;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace Kvit.Api.Tests.OpenApi
 {
-    public class ApiReferenceEndpointTests(WebApplicationFactory<Program> _factory) : IClassFixture<WebApplicationFactory<Program>>
+    public class ApiReferenceEndpointTests(KvitApiFactory _factory) : IClassFixture<KvitApiFactory>
     {
         [Theory]
         [InlineData("/openapi/v1.json")]

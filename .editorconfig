@@ -39,3 +39,6 @@ dotnet_diagnostic.IDE0305.severity = warning
 
 csharp_style_prefer_switch_expression = true
 dotnet_diagnostic.IDE0066.severity = warning
+
+[**/Migrations/*.cs]
+generated_code = true

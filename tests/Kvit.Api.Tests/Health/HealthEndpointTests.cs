@@ -1,10 +1,10 @@
 using System.Net;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Kvit.Api.Tests.Hosting;
 using Xunit;
 
 namespace Kvit.Api.Tests.Health
 {
-    public class HealthEndpointTests(WebApplicationFactory<Program> _factory) : IClassFixture<WebApplicationFactory<Program>>
+    public class HealthEndpointTests(KvitApiFactory _factory) : IClassFixture<KvitApiFactory>
     {
         [Theory]
         [InlineData("/health")]

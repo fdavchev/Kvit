@@ -1,11 +1,11 @@
 using System.Net;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Kvit.Api.Tests.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Kvit.Api.Tests.Controllers
 {
-    public class ResultOverHttpTests(WebApplicationFactory<Program> _factory) : IClassFixture<WebApplicationFactory<Program>>
+    public class ResultOverHttpTests(KvitApiFactory _factory) : IClassFixture<KvitApiFactory>
     {
         [Fact]
         public async Task SuccessfulResultWithValue_Answers200WithAJsonBody()

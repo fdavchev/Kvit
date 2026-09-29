@@ -4,6 +4,7 @@
     <Project Path="src/api/Kvit.Api/Kvit.Api.csproj" />
     <Project Path="src/api/Kvit.Application/Kvit.Application.csproj" />
     <Project Path="src/api/Kvit.Domain/Kvit.Domain.csproj" />
+    <Project Path="src/api/Kvit.Infrastructure/Kvit.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Kvit.Api.Tests/Kvit.Api.Tests.csproj" />
