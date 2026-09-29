@@ -46,7 +46,7 @@ Only the projects needed now; `Kvit.Contracts` and `Kvit.Infrastructure` arrive 
 - [x] React Router with the route table and a `<RequireAuth>` placeholder
 - [x] react-i18next with `en.json` / `mk.json`, `<html lang>` switching, a plural test (21 → "one" in Macedonian)
 - [x] TanStack Query provider; `core/api/apiClient.ts` + `endpoints.ts`; Vite dev proxy `/api` → the local API
-- [x] Shared `KvitButton`, `KvitLoading`, `KvitError`, `KvitEmpty`; money formatting in `shared/utils` (MKD without decimals, EUR with two; `mk-MK` / `en`)
+- [x] Shared `KvitButton`, `KvitLoading`, `KvitError`, `KvitEmpty`; money formatting in `shared/utils` (MKD without decimals, EUR with two; the app language `mk` / `en` is passed to `Intl`)
 - [x] Welcome screen (screen 1, buttons not wired yet) that pings `/api/health`
 - [ ] Font check: Ѓ Ќ Ѕ Ј Љ Њ Џ render correctly — the app's own Macedonian text (Welcome, not-found) renders correctly (VERIFIED by screenshot); a raw check of the full special-letter set showed a few glyphs that looked like possible Latin-lookalike substitutions on this PC. NOT fully verified — real confirmation is Phase 5, on an actual phone.
 - [x] Cloudflare Pages Function `src/web/functions/api/[[path]].ts` that forwards `/api/*` to `API_ORIGIN` (check docs) — VERIFIED live with `wrangler pages dev`: 200 with `API_ORIGIN` set, a clear 500 when it's missing
@@ -68,8 +68,12 @@ Pure C# in `Kvit.Domain/MoneyRules/` (not `Money/`, see `DECISIONS.md` 2026-09-2
 
 ## Phase 4: Database + email accounts · `feat/04-accounts`
 - [ ] `Kvit.Contracts` (request/response shapes) and `Kvit.Infrastructure`: `AppDbContext`, snake_case naming, Identity with `Guid` ids, the Kvit user columns
+- [ ] Add each new project's `.csproj` to the `COPY` lines of `src/api/Dockerfile` (`Kvit.Infrastructure`, `Kvit.Contracts`). Without them `dotnet restore` inside the image fails, and only Render's deploy would show it (review 01-1; CI builds the image from Step 2 of the review-fix branch, so the CI run on this phase's PR catches a missing line)
+- [ ] A test that the Scrutor scan in `Register.Application.cs` registers the first real handler: resolve it through the real `AddApplication()` and send a request through the dispatcher. Today the scan finds zero handlers and no test proves it works (review 01-2)
+- [ ] A fallback authorization policy that requires a signed-in user, with `/health` and `/api/health` explicitly marked anonymous, so a controller written without `[Authorize]` is closed, not open. It can't be built before an auth scheme exists, so it belongs here. Test: an endpoint without `[Authorize]` answers 401, and both health routes still answer 200 without a login (review 01-3)
+- [ ] Per-IP rate limiting reads the visitor address that the Cloudflare proxy forwards (the header decided in Step 3 of the review-fix branch, see `DECISIONS.md`), through ASP.NET's forwarded-headers middleware, not `HttpContext.Connection.RemoteIpAddress` (that is Cloudflare's own address). Test that a client-supplied `X-Forwarded-For` doesn't change the address the limiter counts
 - [ ] Data Protection keys in Postgres, encrypted with a certificate (and a small script that makes the certificate)
-- [ ] Login cookie: HttpOnly, Secure, SameSite=Lax, long-lived
+- [ ] Login cookie: HttpOnly, Secure, SameSite=Lax (or Strict), long-lived. This is the only CSRF protection: there is no anti-forgery token, and the API is also reachable directly on `onrender.com`. Checked by the cookie-flags test below (review 02-9)
 - [ ] Own auth endpoints: register (name + email + password), log in, log out, "me". Not `MapIdentityApi`: it has no name field, no Google, and exposes password-reset/2FA endpoints we can't support without email (decided 2026-09-25)
 - [ ] Rate limiting on log-in and sign-up; time zone and language saved from the phone
 - [ ] `usage_events` table + `SignedUp` event
@@ -105,6 +109,7 @@ Put the skeleton online early, so the hosting traps show up before there are fea
 - [ ] Screens 6, 7 (Group part), 8 (shell), 14, 15, 16
 
 ## Phase 8: Expenses · `feat/08-expenses`
+- [ ] A way to check that every API error code the frontend can receive has a translation key (review 02-5). `ResultCodes` is C# and the frontend is TypeScript, so decide how the two meet (for example a generated list of codes read by a Vitest test, or a backend test that reads `en.json` and `mk.json`) and record the choice in `DECISIONS.md`
 - [ ] Built-in categories (seed); exchange rate table + seed + lazy NBRM refresh
 - [ ] Add, edit, delete, Undo; all four split types through the Phase 3 functions; `client_request_id` duplicate protection
 - [ ] Change history in the activity feed (old → new)

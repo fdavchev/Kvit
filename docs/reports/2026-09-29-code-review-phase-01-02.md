@@ -135,6 +135,27 @@ Its output was discarded: it reviewed the Phase 3 MoneyRules work instead of the
 
 ---
 
-## Fixes
+## Fix status
 
-The fixes for these findings are done on a separate branch. This report stays in the repository as the record of what was found and why.
+The fixes are done on branch `fix/review-phase-01-02`, in four steps. Filip commits between steps. This report keeps the findings above as the record of what was found; this table is updated after every step.
+
+**Steps:** 1 = docs only (done). 2 = backend. 3 = Cloudflare proxy. 4 = frontend.
+
+| Finding | Status | What changed | Label |
+|---|---|---|---|
+| 01-1 Docker build not in CI | Step 2 (not done yet). The Phase 4 `COPY` line is recorded now | Step 1: Phase 4 line in `docs/ROADMAP.md` for the new `.csproj` files | NOT VERIFIED (docs only) |
+| 01-2 handler scan has no test | DEFERRED to Phase 4 | Line in the Phase 4 checklist: test that the first real handler resolves | NOT VERIFIED (docs only) |
+| 01-3 no fallback authorization policy | DEFERRED to Phase 4 | Line in the Phase 4 checklist: fallback policy, `/health` and `/api/health` anonymous | NOT VERIFIED (docs only) |
+| 01-4 Result-to-HTTP tests missing | Step 2 (not done yet) | Nothing yet | NOT VERIFIED |
+| 01-5 CI runs twice | SKIPPED on purpose | Reason logged in `docs/BACKLOG.md`: the second run tests the merge with `main`, costs only free minutes | NOT VERIFIED (a decision, nothing to run) |
+| 02-1 proxy forwards spoofable headers | Step 3 (not done yet). The Phase 4 rate-limit line is recorded now | Step 1: Phase 4 line for reading the forwarded visitor address | NOT VERIFIED (docs only) |
+| 02-2 proxy doesn't enforce `/api` | Step 3 (not done yet) | Nothing yet | NOT VERIFIED |
+| 02-3 no handling when the API is down | Step 3 (not done yet) | Nothing yet | NOT VERIFIED |
+| 02-4 no error page or startup fallback | Step 4 (not done yet) | Nothing yet | NOT VERIFIED |
+| 02-5 unknown error codes vanish | Step 4 (log it) and DEFERRED to Phase 8 (every-code-has-a-key check) | Step 1: Phase 8 line in `docs/ROADMAP.md` | NOT VERIFIED (docs only) |
+| 02-6 failed health ping invisible | Step 4 (not done yet) | Nothing yet | NOT VERIFIED |
+| 02-7 language switching loose ends | Step 4 (not done yet) | Nothing yet | NOT VERIFIED |
+| 02-8 shadcn alias and `mk-MK` wording | Docs part FIXED in Step 1; the shadcn alias is Step 4 (not done yet) | `docs/ARCHITECTURE.md` and the Phase 2 line in `docs/ROADMAP.md` now say the app language `mk` / `en` is passed to `Intl`. Checked against `formatMoney.ts` first | NOT VERIFIED by a run; checked by reading the code (`new Intl.NumberFormat(language, ...)`) |
+| 02-9 CSRF, cookie flags | DEFERRED to Phase 4 | The Phase 4 login-cookie line now says `SameSite=Lax` (or `Strict`), `Secure`, and why | NOT VERIFIED (docs only) |
+| Proxy test gaps | Step 3 (not done yet) | Nothing yet | NOT VERIFIED |
+| `START-HERE-PROMPT.md` in a public repo | NOT IN THIS WORK: Filip's decision | Left alone | NOT VERIFIED |

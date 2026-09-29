@@ -1,18 +1,14 @@
 # Status: Kvit
 
-_Last updated: 2026-09-29 (Phase 3 merged to `main`)_
+_Last updated: 2026-09-29 (review-fix branch, Step 1 done)_
 
 ## Where we stopped
-- Phase 3 (money core) is merged to `main` via PR #4. `feat/03-money-core` is done.
-- New code: `src/api/Kvit.Domain/MoneyRules/` (money, rounding steps, the four split types, balances, "who pays whom") and 9 new error codes in `Results/ResultCodes.cs`. Tests: `tests/Kvit.Domain.Tests/MoneyRules/`.
-- A small `docs/guides/install-tools.md` edit that predates Phase 3 went into the same commit; it isn't part of the money core.
-- Phase 2 (frontend skeleton) is merged to `main` via PR #2.
+- Working on branch `fix/review-phase-01-02`: fixing the Phase 1 + 2 code review (`docs/reports/2026-09-29-code-review-phase-01-02.md`), in four steps. Filip commits between steps.
+- **Step 1 (docs only) is done:** Phase 4 and Phase 8 checklist lines in `ROADMAP.md`, the `formatMoney` wording in `ARCHITECTURE.md`, the skipped finding 01-5 in `BACKLOG.md`, a dated entry in `DECISIONS.md`, and the "Fix status" table at the end of the review report. Waiting for Filip's commit.
+- Phase 3 (money core) is merged to `main` via PR #4; Phase 2 via PR #2.
 
 ## Next step
-Start Phase 4 (database + email accounts): branch `feat/04-accounts`, per `docs/ROADMAP.md`. Docker Desktop must be running first.
-
-## Then
-- Phase 4 (database + email accounts), per `docs/ROADMAP.md`. Docker Desktop is needed from here on (Testcontainers).
+Step 2 of the review fixes (backend: findings 01-1 Docker build in CI, 01-4 `BaseController` tests). Then Step 3 (Cloudflare proxy), Step 4 (frontend). After all four steps and a green CI, Phase 4 (`feat/04-accounts`) is next; its checklist now carries the deferred review items.
 
 ## Blockers and open questions
 - None outstanding for Filip.
@@ -21,3 +17,4 @@ Start Phase 4 (database + email accounts): branch `feat/04-accounts`, per `docs/
 - Backend (Phase 3, 2026-09-29): `dotnet build Kvit.slnx` 0 warnings, 0 errors; `dotnet test Kvit.slnx` 165/165 passing (Domain 150, Api 15), after the code-review follow-up — VERIFIED by automated test (Filip re-ran it, 2026-09-29).
 - A deliberate break of the leftover rule (always to the first person) made 9 tests fail, then was undone — VERIFIED by live run.
 - Frontend (Phase 2): VERIFIED 2026-09-26, unchanged by Phase 3 (no frontend files touched; frontend checks not re-run).
+- Review-fix Step 1 changed only `.md` files (checked with `git status`); no build or test was needed and none was run.

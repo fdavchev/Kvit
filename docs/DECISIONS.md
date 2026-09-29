@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-09-29: Fixes for the Phase 1 + 2 code review
+Branch `fix/review-phase-01-02`, done in four steps, each committed by Filip. Findings: `reports/2026-09-29-code-review-phase-01-02.md`; the per-finding result is in its "Fix status" table.
+
+**Step 1 (docs only):**
+- **Findings 01-2, 01-3 and 02-9 are Phase 4 items, not fixed now.** They can't be done or tested before Phase 4 has something to test: the Scrutor scan finds no handler until the first one exists (01-2); a fallback authorization policy needs an auth scheme (01-3); the auth cookie doesn't exist yet (02-9). Each is now a line in the Phase 4 checklist in `ROADMAP.md`, worded so that it names its test. *Rejected:* building a fake auth scheme or a fake handler now just to have something to test, which would be thrown away in Phase 4.
+- **Two more Phase 4 lines come from the review's fixes:** every new project's `.csproj` goes into the Dockerfile's `COPY` lines (01-1), and per-IP rate limiting reads the visitor address the proxy forwards (02-1; the header is chosen in Step 3).
+- **Finding 02-5's "every error code has a translation key" check goes to Phase 8,** as a roadmap line. `ResultCodes` is C# and the frontend is TypeScript, so a test needs a bridge between them, and the list of codes the frontend can see is still tiny until Phase 8's expenses. The "how" is left to that phase and gets recorded then. Step 4 only logs an unmapped code.
+- **Finding 01-5 (CI runs twice on a PR branch) is skipped on purpose,** see `BACKLOG.md`. *Why:* the second run tests the merge with `main` and only costs free minutes; limiting `push` to `main` would leave a branch without a pull request unchecked.
+- **`formatMoney` passes the app language (`mk` / `en`) to `Intl`, not `mk-MK`** (checked in `src/web/src/shared/utils/formatMoney.ts`: `new Intl.NumberFormat(language, ...)`). `ARCHITECTURE.md` and the Phase 2 line in `ROADMAP.md` said `mk-MK`; both now match the code. The code stays as it is: the two languages are the only ones the app supports, and the number shapes were checked by test.
+
 ## 2026-09-29: Phase 3 money core
 Planned in plan mode, built by the `coder` subagent on `feat/03-money-core`. Report: `reports/2026-09-29-phase-03-money-core.md`.
 

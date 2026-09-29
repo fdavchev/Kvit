@@ -168,7 +168,7 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
   - `types.ts`: slice-only types, if any.
   - Phase 2 has `features/auth/welcome/` (the Welcome screen) and `features/notFound/`.
 - **`shared/components/`**: reusable `Kvit*` components. Phase 2 has `KvitButton`, `KvitLoading`, `KvitError`, `KvitEmpty`, `KvitToaster` (Sonner, `theme="system"`, no `next-themes`). Others (`KvitAmountInput`, `KvitChip`, `KvitAvatar`…) arrive with the features that need them. shadcn/ui's own copied files live in `shared/components/ui/` and are only ever imported by the `Kvit*` wrappers, never by a feature directly.
-- **`shared/utils/`**: money and date formatting (`Intl` with `mk-MK` / `en`). `formatMoney` works only in integer minor units; a non-whole-denar MKD amount or a non-safe-integer value throws, naming the value, because it can only be a bug.
+- **`shared/utils/`**: money and date formatting (`Intl` gets the app language, `mk` or `en`, not a region tag like `mk-MK`). `formatMoney` works only in integer minor units; a non-whole-denar MKD amount or a non-safe-integer value throws, naming the value, because it can only be a bug.
 
 ## Rules
 - **Shared components know no feature.** Everything comes in through props and goes out through callbacks, and they never call feature hooks or services.
