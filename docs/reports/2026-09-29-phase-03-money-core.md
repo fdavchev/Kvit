@@ -51,7 +51,7 @@ All of these are **VERIFIED by automated test**, in both MKD and EUR unless the 
 | The tests really catch mistakes | Breaking the leftover rule on purpose (always the first person) made 9 tests fail; the break was then undone | **VERIFIED by live run** (coder) |
 | `with { ... }` can't bypass `Money.Create` | A throwaway file trying it failed to build (CS0200), then was deleted | **VERIFIED by live run** (coder) |
 | No comments, no `var`, no `decimal`/`double` | 0 matches for `//`, `var`, `decimal`, `double`, `float` in the new `.cs` files | **VERIFIED by search** (coder) |
-| CI on GitHub | Not pushed yet | **NOT VERIFIED** |
+| CI on GitHub (PR #4) | `backend` and `frontend` jobs passed on both runs (push and pull request), read with `gh pr checks 4` on 2026-09-29 | **VERIFIED by live run** |
 
 ## Where the code differs from the plan
 - **"Total off the step" test:** the splitter can't receive such a total, because `Money.Create` already refuses it. The test in `SplitValidationTests` checks exactly that (120.50 MKD can't be made) instead of calling the splitter.

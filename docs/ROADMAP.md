@@ -64,7 +64,7 @@ Pure C# in `Kvit.Domain/MoneyRules/` (not `Money/`, see `DECISIONS.md` 2026-09-2
 - [x] Tests: every example from `DATA-MODEL.md`, both currencies, rounding edge cases, "shares always add up to the total", "balances always add up to 0"
 - **Done when:** `dotnet test` passes and every rule in "Money rules" has a test.
 - **Checked 2026-09-29 on the branch:** `dotnet build` 0 warnings; `dotnet test` 165/165 pass (Domain 150, of which 139 are new; Api 15), after the code-review follow-up. Seeded random checks: 2,000 cases per split type and currency, 500 random groups for balances, 2,000 cases per currency for "who pays whom" (VERIFIED by automated test, see `reports/2026-09-29-phase-03-money-core.md`).
-- [ ] **Filip:** commit, push, open the pull request, see CI go green on GitHub, merge into `main`
+- [x] **Filip:** commit, push, open the pull request, see CI go green on GitHub, merge into `main` (PR #4 merged 2026-09-29)
 
 ## Phase 4: Database + email accounts · `feat/04-accounts`
 - [ ] `Kvit.Contracts` (request/response shapes) and `Kvit.Infrastructure`: `AppDbContext`, snake_case naming, Identity with `Guid` ids, the Kvit user columns
