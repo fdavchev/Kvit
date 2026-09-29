@@ -1,11 +1,21 @@
 import { useTranslation } from 'react-i18next'
-import { languages } from '@/core/i18n/language'
+import { toast } from 'sonner'
+import { languages, type Language } from '@/core/i18n/language'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import { KvitButton } from '@/shared/components/KvitButton'
 
 export function LanguageSwitch() {
   const { t } = useTranslation()
   const { language, changeLanguage } = useLanguage()
+
+  async function handleChange(newLanguage: Language): Promise<void> {
+    try {
+      await changeLanguage(newLanguage)
+    } catch (error) {
+      console.error('Could not change the language', error)
+      toast.error(t('errors.generic'))
+    }
+  }
 
   return (
     <div role="group" aria-label={t('language.label')} className="flex items-center">
@@ -25,7 +35,7 @@ export function LanguageSwitch() {
                 ? 'font-bold no-underline'
                 : 'text-muted-foreground'
             }
-            onClick={() => changeLanguage(option)}
+            onClick={() => void handleChange(option)}
           >
             {t(`language.${option}`)}
           </KvitButton>

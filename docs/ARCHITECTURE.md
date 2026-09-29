@@ -153,7 +153,7 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
 | Localisation | react-i18next, `en.json` + `mk.json` |
 | Styling | Tailwind CSS v4 with CSS variables as design tokens (colours, spacing) + shadcn/ui components (Base UI variant) in `shared/components/ui/`, wrapped by `Kvit*` components + Sonner for toasts (decided 2026-09-25, see `DECISIONS.md`) |
 | Lint | oxlint (the Vite template's default since create-vite 9) |
-| Tests | Vitest for logic (money formatting, outbox), and Playwright later for key flows |
+| Tests | Vitest for logic (money formatting, outbox) and for screens and hooks (jsdom + Testing Library, `environment: 'jsdom'` for every test file, cleanup in `src/test/setup.ts`), and Playwright later for key flows |
 
 ## Folder structure (`src/web/src/`): vertical slices
 - **`core/`**: infrastructure shared by all features.
@@ -168,7 +168,7 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
   - `types.ts`: slice-only types, if any.
   - Phase 2 has `features/auth/welcome/` (the Welcome screen) and `features/notFound/`.
 - **`shared/components/`**: reusable `Kvit*` components. Phase 2 has `KvitButton`, `KvitLoading`, `KvitError`, `KvitEmpty`, `KvitToaster` (Sonner, `theme="system"`, no `next-themes`). Others (`KvitAmountInput`, `KvitChip`, `KvitAvatar`…) arrive with the features that need them. shadcn/ui's own copied files live in `shared/components/ui/` and are only ever imported by the `Kvit*` wrappers, never by a feature directly.
-- **`shared/utils/`**: money and date formatting (`Intl` with `mk-MK` / `en`). `formatMoney` works only in integer minor units; a non-whole-denar MKD amount or a non-safe-integer value throws, naming the value, because it can only be a bug.
+- **`shared/utils/`**: money and date formatting (`Intl` gets the app language, `mk` or `en`, not a region tag like `mk-MK`). `formatMoney` works only in integer minor units; a non-whole-denar MKD amount or a non-safe-integer value throws, naming the value, because it can only be a bug.
 
 ## Rules
 - **Shared components know no feature.** Everything comes in through props and goes out through callbacks, and they never call feature hooks or services.
@@ -240,6 +240,9 @@ When debugging, prefer the command that produces a number (a grep count, a SQL `
 - **NBRM exchange rate:** if the service fails, keep the last saved rate and show its date, and log the error. Never fall back silently to a made-up number.
 - **TS 7 removed `baseUrl`; TS 6 had already deprecated it.** shadcn's own Vite setup guide still shows `baseUrl` for the `@/` import alias. Kvit's `tsconfig.json` uses `paths` alone; Vite's `resolve.alias` (in `vite.config.ts`, built with `import.meta.dirname`, not `__dirname`) makes the same alias work at build/dev time. *2026-09-26, verified: build and dev server both resolve `@/` correctly with this setup.*
 - **Dark mode is CSS-only.** No `.dark` class, no toggle, no `next-themes` — everything follows `prefers-color-scheme` because Kvit never has a manual theme switch (`DECISIONS.md`: always follows the phone). Sonner is used directly with `theme="system"` for the same reason; shadcn's own generated Sonner wrapper pulls in `next-themes`, which was dropped.
-- **Behind the Cloudflare Pages Function proxy, the API only sees Cloudflare's own address, not the visitor's.** Phase 4's per-IP rate limiting (login/sign-up) needs to read the real visitor address from the forwarded-for header Cloudflare adds, not `HttpContext.Connection.RemoteIpAddress` directly — check Cloudflare's docs for the exact header name and ASP.NET's forwarded-headers middleware setup when Phase 4 builds this (the backend's own `KnownIPNetworks` note for Render forwarding, Phase 5, is a separate but related trap).
+- **Behind the Cloudflare Pages Function proxy, the API only sees Cloudflare's own address, not the visitor's.** The proxy (`src/web/functions/api/[[path]].ts`) throws away every forwarding header the visitor's browser sent (`x-forwarded-*`, `forwarded`, `x-real-ip`, `true-client-ip`, `cf-connecting-ip`, `cf-connecting-ipv6`) and sets `X-Forwarded-For` to the one address in `cf-connecting-ip`, which Cloudflare adds (its docs: "provides the client IP address connecting to Cloudflare to the origin"). If `cf-connecting-ip` is missing the proxy answers 500 instead of guessing. Phase 4's per-IP rate limiting reads `X-Forwarded-For` through ASP.NET's forwarded-headers middleware, never `HttpContext.Connection.RemoteIpAddress`. Decision and reasons: `DECISIONS.md` 2026-09-29. Three open points, none checked yet:
+  - Render's own load balancer sits between the proxy and the API. What it does to `X-Forwarded-For` (append its peer's address? how many entries reach the API?) is NOT VERIFIED; it decides `ForwardLimit` / `KnownIPNetworks` in Phase 4/5 (a separate but related trap: the backend's own `KnownIPNetworks` note for Render forwarding, Phase 5).
+  - The API is also reachable directly on `onrender.com`, where anyone can send their own `X-Forwarded-For`. Unless the API only trusts requests that came through the proxy (for example a secret header the proxy adds), a per-IP limit can be dodged by skipping Cloudflare. Decide this in Phase 4.
+  - Local `wrangler pages dev` honours a client-sent `cf-connecting-ip`; the real Cloudflare edge is documented to set it itself. Prove it on the deployed site in Phase 5.
 
 New traps found while building get added here, with the date.

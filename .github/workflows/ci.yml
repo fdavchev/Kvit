@@ -26,6 +26,9 @@ jobs:
       - name: Test
         run: dotnet test Kvit.slnx --no-build --configuration Release
 
+      - name: Docker build
+        run: docker build -f src/api/Dockerfile .
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
