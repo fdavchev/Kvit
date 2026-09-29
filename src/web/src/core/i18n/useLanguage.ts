@@ -10,8 +10,8 @@ export function useLanguage() {
   }
 
   async function changeLanguage(newLanguage: Language): Promise<void> {
-    saveLanguage(newLanguage)
     await i18n.changeLanguage(newLanguage)
+    saveLanguage(newLanguage)
   }
 
   return { language, changeLanguage }

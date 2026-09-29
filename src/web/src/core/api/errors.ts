@@ -13,9 +13,16 @@ export function errorMessageKey(error: unknown): string {
   ) {
     return 'errors.network'
   }
-  const knownKey =
-    error.errorCode === null
-      ? undefined
-      : errorCodeMessageKeys.get(error.errorCode)
-  return knownKey ?? 'errors.generic'
+  if (error.errorCode === null) {
+    return 'errors.generic'
+  }
+  const knownKey = errorCodeMessageKeys.get(error.errorCode)
+  if (knownKey === undefined) {
+    console.error(
+      `No translation key is mapped for API error code "${error.errorCode}"`,
+      error,
+    )
+    return 'errors.generic'
+  }
+  return knownKey
 }

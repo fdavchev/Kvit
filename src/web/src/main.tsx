@@ -5,6 +5,7 @@ import { I18nextProvider } from 'react-i18next'
 import { RouterProvider } from 'react-router/dom'
 import { startI18n } from '@/core/i18n/i18n'
 import { router } from '@/core/router/router'
+import { renderStartupFailure } from '@/core/startup/renderStartupFailure'
 import { KvitToaster } from '@/shared/components/KvitToaster'
 import './index.css'
 
@@ -13,7 +14,10 @@ if (rootElement === null) {
   throw new Error('index.html has no element with id "root"')
 }
 
-const i18n = await startI18n()
+const i18n = await startI18n().catch((error: unknown) => {
+  renderStartupFailure(rootElement, error)
+  throw error
+})
 const queryClient = new QueryClient()
 
 createRoot(rootElement).render(

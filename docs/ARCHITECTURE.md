@@ -153,7 +153,7 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
 | Localisation | react-i18next, `en.json` + `mk.json` |
 | Styling | Tailwind CSS v4 with CSS variables as design tokens (colours, spacing) + shadcn/ui components (Base UI variant) in `shared/components/ui/`, wrapped by `Kvit*` components + Sonner for toasts (decided 2026-09-25, see `DECISIONS.md`) |
 | Lint | oxlint (the Vite template's default since create-vite 9) |
-| Tests | Vitest for logic (money formatting, outbox), and Playwright later for key flows |
+| Tests | Vitest for logic (money formatting, outbox) and for screens and hooks (jsdom + Testing Library, `environment: 'jsdom'` for every test file, cleanup in `src/test/setup.ts`), and Playwright later for key flows |
 
 ## Folder structure (`src/web/src/`): vertical slices
 - **`core/`**: infrastructure shared by all features.
