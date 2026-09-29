@@ -1,25 +1,24 @@
 # Status: Kvit
 
-_Last updated: 2026-09-26 (Phase 2 merged to `main`)_
+_Last updated: 2026-09-29 (Phase 3 built on `feat/03-money-core`, not merged yet)_
 
 ## Where we stopped
-- Phase 2 (frontend skeleton) is merged to `main` via PR #2. `feat/02-frontend-skeleton` is done.
-- A GitHub ruleset now protects `main`: PR required before merging, `backend`/`frontend` CI checks required, force-push and deletion blocked (0 required approvals, since this is solo — see project memory for what to revisit if a collaborator ever joins).
+- Phase 3 (money core) is built on the branch `feat/03-money-core` and passes build and tests. The changes are not committed yet: Filip commits, pushes and opens the pull request.
+- New code: `src/api/Kvit.Domain/MoneyRules/` (money, rounding steps, the four split types, balances, "who pays whom") and 9 new error codes in `Results/ResultCodes.cs`. Tests: `tests/Kvit.Domain.Tests/MoneyRules/`.
+- `docs/guides/install-tools.md` has an uncommitted change from before Phase 3. It isn't part of this phase; Filip decides what happens to it.
+- Phase 2 (frontend skeleton) is merged to `main` via PR #2.
 
 ## Next step
-Start Phase 3 (Money core): branch `feat/03-money-core`, pure C# in `Kvit.Domain/Money/`, no database, per `docs/ROADMAP.md`.
+Filip: commit Phase 3, push `feat/03-money-core`, open the pull request, see CI go green, merge into `main`.
 
 ## Then
-- Follow Phase 3's checklist in `docs/ROADMAP.md`.
+- Phase 4 (database + email accounts), per `docs/ROADMAP.md`. Docker Desktop is needed from here on (Testcontainers).
 
 ## Blockers and open questions
 - None outstanding for Filip.
 
 ## Verification state
-- Backend (Phase 1): still 0 warnings, 26/26 tests — re-confirmed 2026-09-26 against the merged worktree.
-- Frontend (Phase 2): VERIFIED 2026-09-26.
-  - Automated: `npm run lint` 0 warnings, `npm run build` 0 type errors, `npm test` 52/52 passing, `package-lock.json` has the Linux native-package entries CI needs.
-  - Live: `/api/health` → 200 through both the Vite dev proxy and `wrangler pages dev`; a missing `API_ORIGIN` fails closed with a clear 500; language switch changes `<html lang>` and persists across reload; `/` → `/welcome`, `/nope` → not-found screen; a "Coming soon" toast shows on the placeholder buttons.
-  - Calculated: button contrast 5.32:1 (light) / 8.91:1 (dark) — both clear WCAG AA (4.5:1).
-  - NOT fully verified: the full Macedonian special-letter set (Ѓ Ќ Ѕ Ј Љ Њ Џ and lowercase) rendered ambiguously in a raw on-PC check — the app's own actual UI text renders correctly, but this is PC-fonts-only regardless; the real check is on a phone in Phase 5.
-  - NOT VERIFIED yet: CI green on GitHub (branch not pushed as of this doc update).
+- Backend (Phase 3, 2026-09-29, on the branch): `dotnet build Kvit.slnx` 0 warnings, 0 errors; `dotnet test Kvit.slnx` 165/165 passing (Domain 150, Api 15), after the code-review follow-up — VERIFIED by automated test (Filip re-ran it, 2026-09-29).
+- A deliberate break of the leftover rule (always to the first person) made 9 tests fail, then was undone — VERIFIED by live run.
+- NOT VERIFIED yet: CI on GitHub for this branch (not pushed).
+- Frontend (Phase 2): VERIFIED 2026-09-26, unchanged by Phase 3 (no frontend files touched; frontend checks not re-run).

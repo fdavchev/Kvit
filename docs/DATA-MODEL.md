@@ -253,6 +253,9 @@ The budget counts **only your share** of group expenses, never who paid and neve
 - **EUR** is split to the cent (step = 1 minor unit).
 - **MKD** is split to the **whole denar** (step = 100 deni). The denar is shown without decimals, so splitting to the deni would show amounts that don't add up on screen (1,000 / 3 would show "333 + 333 + 333"). MKD amounts are typed without decimals.
 - **The leftover** from rounding goes to the **payer** (ARCHITECTURE). If the payer isn't in the split, it goes to the first person in the split in joining order (Filip agreed, 2026-09-25).
+- **The payer always takes the whole leftover**, even when it's more than one step (Filip, 2026-09-29). *1,000 MKD among 7:* 142 each, and the payer pays 148.
+- **Everyone listed in the split counts as "in the split", even at 0 % or 0 shares** (Filip, 2026-09-29). So a listed payer still takes the leftover. *Shares Filip 0, Ana 1, Marko 1, Bojan 1 on 1,000 MKD, Filip paid:* Filip 1, Ana 333, Marko 333, Bojan 333. The leftover goes to the first listed person only when the payer isn't listed at all.
+- Built and tested in Phase 3 (`src/api/Kvit.Domain/MoneyRules/`, VERIFIED by automated test).
 
 ## The four split types
 1. **Equal (+ extras).** Extras are taken off first, the rest is split equally, and each person's extra is added back.

@@ -36,7 +36,7 @@ Controller → dispatcher.Send(Query | Command)
 src/api/
   Kvit.Api/              Web API entry: Controllers/, Registers/ (DI), Program.cs
   Kvit.Application/      Queries/<Feature>/<QueryName>/  and  Commands/<Feature>/<CommandName>/
-  Kvit.Domain/           Entities/, Interfaces/ (repository interfaces), Services/<Entity>/, Money/, Results/ (not `Result/`: a namespace named like its class confuses C#; see DECISIONS, Phase 1)
+  Kvit.Domain/           Entities/, Interfaces/ (repository interfaces), Services/<Entity>/, MoneyRules/ (not `Money/`, for the same reason; see DECISIONS, Phase 3), Results/ (not `Result/`: a namespace named like its class confuses C#; see DECISIONS, Phase 1)
   Kvit.Infrastructure/   Persistence/ (AppDbContext, Configurations/, Migrations/), Repositories/, Auth/, ExchangeRates/
   Kvit.Contracts/        Request/response DTOs shared by controllers and handlers, IUnitOfWork
 tests/
@@ -87,7 +87,7 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
 - **Behaviour methods:** e.g. `settlement.Confirm(byUserId)`, `settlement.Reject(byUserId)`, `member.Claim(userId)`.
 - No logic in property getters.
 - **Money is a value type, `Money(long MinorUnits, Currency Currency)`.** It's never a `decimal` or `double` in entities. Adding two different currencies is a failure, not a conversion.
-- **The split logic is pure functions** in `Domain/Money/` (equal, exact, percentage, shares), so it's easy to unit-test. Rounding leftovers go to the payer.
+- **The split logic is pure functions** in `Domain/MoneyRules/` (equal, exact, percentage, shares), so it's easy to unit-test. Rounding leftovers go to the payer.
 
 ## Domain services
 - They live in `Domain/Services/<Entity>/<ServiceName>.cs`, with repositories injected through the primary constructor.

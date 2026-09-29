@@ -55,14 +55,16 @@ Only the projects needed now; `Kvit.Contracts` and `Kvit.Infrastructure` arrive 
 - [x] **Filip:** commit, push, open the pull request, see CI go green on GitHub, merge into `main` (PR #2 merged 2026-09-26; CI green on the branch and on `main`)
 
 ## Phase 3: Money core · `feat/03-money-core`
-Pure C# in `Kvit.Domain/Money/`, no database. The heart of the app, tested hardest.
-- [ ] `Currency`, `Money(long MinorUnits, Currency Currency)`; adding two currencies is a failure
-- [ ] Rounding step per currency (MKD to whole denars, EUR to the cent)
-- [ ] The four split functions (Equal + extras, Exact, Percentage, Shares), leftover to the payer
-- [ ] Balances per member per currency; "everyone's kvit"
-- [ ] Debt simplification per currency, stable order
-- [ ] Tests: every example from `DATA-MODEL.md`, both currencies, rounding edge cases, "shares always add up to the total", "balances always add up to 0"
+Pure C# in `Kvit.Domain/MoneyRules/` (not `Money/`, see `DECISIONS.md` 2026-09-29), no database. The heart of the app, tested hardest.
+- [x] `Currency`, `Money(long MinorUnits, Currency Currency)`; adding two currencies is a failure
+- [x] Rounding step per currency (MKD to whole denars, EUR to the cent)
+- [x] The four split functions (Equal + extras, Exact, Percentage, Shares), leftover to the payer
+- [x] Balances per member per currency; "everyone's kvit"
+- [x] Debt simplification per currency, stable order
+- [x] Tests: every example from `DATA-MODEL.md`, both currencies, rounding edge cases, "shares always add up to the total", "balances always add up to 0"
 - **Done when:** `dotnet test` passes and every rule in "Money rules" has a test.
+- **Checked 2026-09-29 on the branch:** `dotnet build` 0 warnings; `dotnet test` 165/165 pass (Domain 150, of which 139 are new; Api 15), after the code-review follow-up. Seeded random checks: 2,000 cases per split type and currency, 500 random groups for balances, 2,000 cases per currency for "who pays whom" (VERIFIED by automated test, see `reports/2026-09-29-phase-03-money-core.md`).
+- [ ] **Filip:** commit, push, open the pull request, see CI go green on GitHub, merge into `main`
 
 ## Phase 4: Database + email accounts · `feat/04-accounts`
 - [ ] `Kvit.Contracts` (request/response shapes) and `Kvit.Infrastructure`: `AppDbContext`, snake_case naming, Identity with `Guid` ids, the Kvit user columns
@@ -111,6 +113,7 @@ Put the skeleton online early, so the hosting traps show up before there are fea
 
 ## Phase 9: Balances + settle up · `feat/09-settle-up`
 - [ ] Balances per currency; "who pays whom"
+- [ ] Pass `Balances.Calculate` every member the group has ever had, **including removed and left members** (`removed_at` set), in joining order; otherwise it throws by design (see `DECISIONS.md` 2026-09-29, follow-up)
 - [ ] Settlements: record, confirm, reject, cancel, delete; owner acts for plain names
 - [ ] Zero-balance rules for leave / remove / delete group
 - [ ] Screens 11, 12; "Needs you" items for pending payments
