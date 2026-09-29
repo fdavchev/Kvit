@@ -86,3 +86,32 @@ dotnet test Kvit.slnx
 | **Wipe all data and start empty** | `docker compose down -v`, then Steps 3 and 5 again |
 
 The database also starts by itself when Docker Desktop starts.
+
+## Part 2: the accounts step (Step 2a)
+
+### What changed for you
+The database got one more small update (a new migration): a rule that two accounts can't share an email, and checks that name, time zone and creation time are never empty. You apply it with one command. Nothing else needs your hands in this step: the sign-up screens come in the last step, and that is where you try it in the browser.
+
+### Step 1: keep Docker Desktop open
+Open Docker Desktop and wait for "Engine running". The `kvit-postgres` container from Part 1 should still show a green dot.
+
+**If the container is not there or is stopped:** in the terminal, in the Kvit folder, run `docker compose up -d`.
+
+### Step 2: apply the new database update
+In the terminal, in the Kvit folder:
+```
+dotnet ef database update --project src/api/Kvit.Infrastructure --startup-project src/api/Kvit.Api
+```
+**You should see:** `Applying migration '20260929200613_AccountRules'.` and the last line `Done.`
+(A red `fail:` line is not expected this time. It only appears the first time, on an empty database.)
+
+**If it fails:**
+- `The setting ConnectionStrings:KvitDatabase is missing or empty`: do Part 1, Step 4 again.
+- `Failed to connect` or `Connection refused`: the database is not running; do Step 1 above.
+- `violates check constraint` or `could not create unique index`: the database already holds test users that break the new rules. Send me the text.
+
+### Step 3 (optional): check the tests yourself
+```
+dotnet test Kvit.slnx
+```
+**You should see:** `total: 403`, `failed: 0`, `succeeded: 403` (the first run is slower while it starts a test database).

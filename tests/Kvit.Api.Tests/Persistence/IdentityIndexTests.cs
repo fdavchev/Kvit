@@ -10,7 +10,7 @@ namespace Kvit.Api.Tests.Persistence
     public class IdentityIndexTests(MigratedDatabase _database) : IClassFixture<MigratedDatabase>
     {
         [Theory]
-        [InlineData("ix_users_normalized_email", "false")]
+        [InlineData("ix_users_normalized_email", "true")]
         [InlineData("ix_users_normalized_user_name", "true")]
         [InlineData("ix_roles_normalized_name", "true")]
         public async Task Index_HasTheExpectedUniqueness(string indexName, string expectedIsUnique)
@@ -51,7 +51,7 @@ namespace Kvit.Api.Tests.Persistence
         }
 
         [Fact]
-        public async Task TwoUsers_WithTheSameNormalizedEmail_AreAllowed()
+        public async Task TwoUsers_WithTheSameNormalizedEmail_ViolateTheUniqueIndex()
         {
             using IServiceScope scope = _database.CreateScope();
             AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -60,9 +60,10 @@ namespace Kvit.Api.Tests.Persistence
             second.NormalizedEmail = first.NormalizedEmail;
             context.Users.AddRange(first, second);
 
-            int saved = await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+            PostgresException error = await PostgresErrors.SaveChangesFailingAsync(context);
 
-            Assert.Equal(2, saved);
+            Assert.Equal(PostgresErrorCodes.UniqueViolation, error.SqlState);
+            Assert.Equal("ix_users_normalized_email", error.ConstraintName);
         }
 
         [Fact]

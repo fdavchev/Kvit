@@ -35,7 +35,7 @@ Controller → dispatcher.Send(Query | Command)
 ```
 src/api/
   Kvit.Api/              Web API entry: Controllers/, Registers/ (DI), Program.cs
-  Kvit.Application/      Queries/<Feature>/<QueryName>/  and  Commands/<Feature>/<CommandName>/
+  Kvit.Application/      Queries/<Feature>/  and  Commands/<Feature>/  (one folder per feature; the command, its handler and their DTOs sit in it)
   Kvit.Domain/           Entities/, Interfaces/ (repository interfaces), Services/<Entity>/, MoneyRules/ (not `Money/`, for the same reason; see `reports/2026-09-29-phase-03-money-core.md`), Results/ (not `Result/`: a namespace named like its class confuses C#; see `reports/2026-09-25-phase-01-backend-skeleton.md`)
   Kvit.Infrastructure/   Persistence/ (AppDbContext, Configurations/, Migrations/), Repositories/, Auth/, ExchangeRates/
   Kvit.Contracts/        Request/response DTOs shared by controllers and handlers, IUnitOfWork
@@ -69,7 +69,7 @@ public class CreateExpenseCommandHandler(
 - Shapes a handler needs go in their own `<X>Dto.cs` in the same folder. Handlers don't declare nested or private classes.
 
 ## Controllers
-- Inherit `BaseController`, with `[Route("api")]` and `[Authorize]`.
+- Inherit `BaseController` and give each controller its own `[Route("api/...")]`. **Everything is closed by default** (a fallback authorization policy requires a signed-in user); `[AllowAnonymous]` opens an endpoint on purpose (only register, log in, log out and the health routes). An anonymous request to an unknown path answers 401, not 404 (Phase 4, Step 2a).
 - **Thin:** build the query or command, `await _dispatcher.Send(...)`, `return Result(result);`.
 - **Ids in the route:** the id that scopes the request goes in the route (`groups/{groupId}/expenses`). Only genuine filters go in `[FromQuery]`.
 

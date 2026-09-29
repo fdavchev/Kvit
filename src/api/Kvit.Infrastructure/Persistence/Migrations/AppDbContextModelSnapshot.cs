@@ -177,6 +177,7 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasName("pk_users");
 
                     b.HasIndex("NormalizedEmail")
+                        .IsUnique()
                         .HasDatabaseName("ix_users_normalized_email");
 
                     b.HasIndex("NormalizedUserName")
@@ -185,7 +186,13 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                     b.ToTable("users", null, t =>
                         {
+                            t.HasCheckConstraint("ck_users_created_at_set", "created_at > '0002-01-01 00:00:00+00'");
+
+                            t.HasCheckConstraint("ck_users_display_name_not_empty", "char_length(display_name) >= 1");
+
                             t.HasCheckConstraint("ck_users_language", "language IN ('en', 'mk')");
+
+                            t.HasCheckConstraint("ck_users_time_zone_not_empty", "char_length(time_zone) >= 1");
                         });
                 });
 

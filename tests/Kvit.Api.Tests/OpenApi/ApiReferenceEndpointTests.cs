@@ -23,13 +23,13 @@ namespace Kvit.Api.Tests.OpenApi
         [Theory]
         [InlineData("/openapi/v1.json")]
         [InlineData("/scalar")]
-        public async Task ApiReference_InProduction_AnswersWithStatus404(string path)
+        public async Task ApiReference_InProduction_IsNotServedToAnAnonymousVisitor(string path)
         {
             HttpClient client = ClientFor(Environments.Production);
 
             HttpResponseMessage response = await client.GetAsync(path, TestContext.Current.CancellationToken);
 
-            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
 
         private HttpClient ClientFor(string environmentName)

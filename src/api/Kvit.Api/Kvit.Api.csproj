@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Kvit.Application\Kvit.Application.csproj" />
+    <ProjectReference Include="..\Kvit.Contracts\Kvit.Contracts.csproj" />
     <ProjectReference Include="..\Kvit.Domain\Kvit.Domain.csproj" />
     <ProjectReference Include="..\Kvit.Infrastructure\Kvit.Infrastructure.csproj" />
   </ItemGroup>

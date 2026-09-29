@@ -11,7 +11,7 @@ namespace Kvit.Api.Tests.Persistence
     public class MigratedDatabase : IAsyncLifetime
     {
         private readonly string _connectionString;
-        private readonly KvitApiFactory _factory;
+        protected readonly KvitApiFactory _factory;
 
         public MigratedDatabase(PostgresFixture postgres)
         {

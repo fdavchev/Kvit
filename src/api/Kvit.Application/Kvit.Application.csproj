@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\Kvit.Contracts\Kvit.Contracts.csproj" />
     <ProjectReference Include="..\Kvit.Domain\Kvit.Domain.csproj" />
+    <ProjectReference Include="..\Kvit.Infrastructure\Kvit.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

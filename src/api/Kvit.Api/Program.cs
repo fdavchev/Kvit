@@ -9,19 +9,23 @@ builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
+builder.Services.AddAuth();
 
 WebApplication app = builder.Build();
 
 KvitDatabaseSetting.Read(app.Configuration);
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapOpenApi().AllowAnonymous();
+    app.MapScalarApiReference().AllowAnonymous();
 }
 
-app.MapHealthChecks("/health");
-app.MapHealthChecks("/api/health");
+app.MapHealthChecks("/health").AllowAnonymous();
+app.MapHealthChecks("/api/health").AllowAnonymous();
 app.MapControllers();
 
 app.Run();

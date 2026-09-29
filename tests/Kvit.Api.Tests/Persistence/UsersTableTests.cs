@@ -144,6 +144,48 @@ namespace Kvit.Api.Tests.Persistence
         }
 
         [Fact]
+        public async Task DisplayName_Empty_ViolatesTheCheckConstraint()
+        {
+            using IServiceScope scope = _database.CreateScope();
+            AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            AppUser user = TestUsers.Create();
+            user.DisplayName = string.Empty;
+            context.Users.Add(user);
+
+            PostgresException error = await PostgresErrors.SaveChangesFailingAsync(context);
+
+            Assert.Equal(PostgresErrorCodes.CheckViolation, error.SqlState);
+        }
+
+        [Fact]
+        public async Task TimeZone_Empty_ViolatesTheCheckConstraint()
+        {
+            using IServiceScope scope = _database.CreateScope();
+            AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            AppUser user = TestUsers.Create();
+            user.TimeZone = string.Empty;
+            context.Users.Add(user);
+
+            PostgresException error = await PostgresErrors.SaveChangesFailingAsync(context);
+
+            Assert.Equal(PostgresErrorCodes.CheckViolation, error.SqlState);
+        }
+
+        [Fact]
+        public async Task CreatedAt_DefaultValue_ViolatesTheCheckConstraint()
+        {
+            using IServiceScope scope = _database.CreateScope();
+            AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            AppUser user = TestUsers.Create();
+            user.CreatedAt = new DateTimeOffset(1, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            context.Users.Add(user);
+
+            PostgresException error = await PostgresErrors.SaveChangesFailingAsync(context);
+
+            Assert.Equal(PostgresErrorCodes.CheckViolation, error.SqlState);
+        }
+
+        [Fact]
         public async Task User_SavedWithEveryKvitColumn_ReadsBackUnchanged()
         {
             DateTimeOffset createdAt = new(2026, 9, 29, 10, 15, 30, TimeSpan.Zero);
