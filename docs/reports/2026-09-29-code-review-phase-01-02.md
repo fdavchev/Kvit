@@ -139,14 +139,14 @@ Its output was discarded: it reviewed the Phase 3 MoneyRules work instead of the
 
 The fixes are done on branch `fix/review-phase-01-02`, in four steps. Filip commits between steps. This report keeps the findings above as the record of what was found; this table is updated after every step.
 
-**Steps:** 1 = docs only (done). 2 = backend. 3 = Cloudflare proxy. 4 = frontend.
+**Steps:** 1 = docs only (done). 2 = backend (done). 3 = Cloudflare proxy. 4 = frontend.
 
 | Finding | Status | What changed | Label |
 |---|---|---|---|
-| 01-1 Docker build not in CI | Step 2 (not done yet). The Phase 4 `COPY` line is recorded now | Step 1: Phase 4 line in `docs/ROADMAP.md` for the new `.csproj` files | NOT VERIFIED (docs only) |
+| 01-1 Docker build not in CI | FIXED in Step 2 (the Phase 4 `COPY` lines stay a Phase 4 item, recorded in Step 1) | `.github/workflows/ci.yml`: the backend job ends with `docker build -f src/api/Dockerfile .` | VERIFIED by live run: the same command was run locally with Docker Desktop (image built; container answered 200 on `/health` and `/api/health`, running as user `app`, not root). NOT VERIFIED: the step inside GitHub Actions itself (`actionlint` is not installed; the YAML parses in Python `yaml`). The CI run on the PR is that check |
 | 01-2 handler scan has no test | DEFERRED to Phase 4 | Line in the Phase 4 checklist: test that the first real handler resolves | NOT VERIFIED (docs only) |
 | 01-3 no fallback authorization policy | DEFERRED to Phase 4 | Line in the Phase 4 checklist: fallback policy, `/health` and `/api/health` anonymous | NOT VERIFIED (docs only) |
-| 01-4 Result-to-HTTP tests missing | Step 2 (not done yet) | Nothing yet | NOT VERIFIED |
+| 01-4 Result-to-HTTP tests missing | FIXED in Step 2. The report's claim "200 with an empty body" was WRONG: the real answer is 204 with no body | `BaseControllerTests` now covers 400, 401, 403 and 404 for `Result` and `Result<T>`; new `ResultOverHttpTests` sends real requests: a value gives 200 + JSON, a null value gives 204 + no body. Decision in `DECISIONS.md` | VERIFIED by automated test (backend 165 -> 173 tests; breaking the status code on purpose made 6 fail) |
 | 01-5 CI runs twice | SKIPPED on purpose | Reason logged in `docs/BACKLOG.md`: the second run tests the merge with `main`, costs only free minutes | NOT VERIFIED (a decision, nothing to run) |
 | 02-1 proxy forwards spoofable headers | Step 3 (not done yet). The Phase 4 rate-limit line is recorded now | Step 1: Phase 4 line for reading the forwarded visitor address | NOT VERIFIED (docs only) |
 | 02-2 proxy doesn't enforce `/api` | Step 3 (not done yet) | Nothing yet | NOT VERIFIED |

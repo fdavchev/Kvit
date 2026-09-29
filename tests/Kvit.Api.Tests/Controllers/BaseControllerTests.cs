@@ -35,28 +35,54 @@ namespace Kvit.Api.Tests.Controllers
             Assert.Equal(42, ok.Value);
         }
 
-        [Fact]
-        public void Result_Failure_AnswersProblemDetailsWithStatusDetailAndErrorCode()
+        [Theory]
+        [InlineData(StatusCodes.Status400BadRequest)]
+        [InlineData(StatusCodes.Status401Unauthorized)]
+        [InlineData(StatusCodes.Status403Forbidden)]
+        [InlineData(StatusCodes.Status404NotFound)]
+        public void Result_Failure_AnswersProblemDetailsWithStatusDetailAndErrorCode(int statusCode)
         {
             using IServiceScope scope = _factory.Services.CreateScope();
             ResultTestController controller = CreateController(scope);
 
-            ActionResult response = controller.Convert(Result.NotFound(ErrorMessage, ErrorCode));
+            ActionResult response = controller.Convert(FailureFor(statusCode));
 
-            AssertProblem(response);
+            AssertProblem(response, statusCode);
         }
 
-        [Fact]
-        public void Result_FailureWithValueType_AnswersProblemDetailsWithStatusDetailAndErrorCode()
+        [Theory]
+        [InlineData(StatusCodes.Status400BadRequest)]
+        [InlineData(StatusCodes.Status401Unauthorized)]
+        [InlineData(StatusCodes.Status403Forbidden)]
+        [InlineData(StatusCodes.Status404NotFound)]
+        public void Result_FailureWithValueType_AnswersProblemDetailsWithStatusDetailAndErrorCode(int statusCode)
         {
             using IServiceScope scope = _factory.Services.CreateScope();
             ResultTestController controller = CreateController(scope);
 
-            ActionResult<int> response = controller.Convert(Result.NotFound<int>(ErrorMessage, ErrorCode));
+            ActionResult<int> response = controller.Convert(FailureFor<int>(statusCode));
 
             Assert.NotNull(response.Result);
-            AssertProblem(response.Result);
+            AssertProblem(response.Result, statusCode);
         }
+
+        private static Result FailureFor(int statusCode) => statusCode switch
+        {
+            StatusCodes.Status400BadRequest => Result.Failure(ErrorMessage, ErrorCode),
+            StatusCodes.Status401Unauthorized => Result.Unauthorized(ErrorMessage, ErrorCode),
+            StatusCodes.Status403Forbidden => Result.Forbid(ErrorMessage, ErrorCode),
+            StatusCodes.Status404NotFound => Result.NotFound(ErrorMessage, ErrorCode),
+            _ => throw new ArgumentOutOfRangeException(nameof(statusCode), statusCode, "No Result factory for this status code."),
+        };
+
+        private static Result<T> FailureFor<T>(int statusCode) => statusCode switch
+        {
+            StatusCodes.Status400BadRequest => Result.Failure<T>(ErrorMessage, ErrorCode),
+            StatusCodes.Status401Unauthorized => Result.Unauthorized<T>(ErrorMessage, ErrorCode),
+            StatusCodes.Status403Forbidden => Result.Forbid<T>(ErrorMessage, ErrorCode),
+            StatusCodes.Status404NotFound => Result.NotFound<T>(ErrorMessage, ErrorCode),
+            _ => throw new ArgumentOutOfRangeException(nameof(statusCode), statusCode, "No Result factory for this status code."),
+        };
 
         private static ResultTestController CreateController(IServiceScope scope)
         {
@@ -64,12 +90,12 @@ namespace Kvit.Api.Tests.Controllers
             return new ResultTestController { ControllerContext = new ControllerContext { HttpContext = httpContext } };
         }
 
-        private static void AssertProblem(ActionResult response)
+        private static void AssertProblem(ActionResult response, int expectedStatusCode)
         {
             ObjectResult objectResult = Assert.IsType<ObjectResult>(response);
             ProblemDetails problem = Assert.IsType<ProblemDetails>(objectResult.Value);
-            Assert.Equal(StatusCodes.Status404NotFound, objectResult.StatusCode);
-            Assert.Equal(StatusCodes.Status404NotFound, problem.Status);
+            Assert.Equal(expectedStatusCode, objectResult.StatusCode);
+            Assert.Equal(expectedStatusCode, problem.Status);
             Assert.Equal(ErrorMessage, problem.Detail);
             Assert.Equal(ErrorCode, problem.Extensions["errorCode"]);
         }
