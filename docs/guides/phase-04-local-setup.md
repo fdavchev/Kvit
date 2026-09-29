@@ -2,7 +2,7 @@
 
 > For Filip. Plain steps you can follow from your phone. Each step says what to do, what you should see, and what to do if it fails.
 > **This file grows.** Part 1 is written now (Step 1, the database). Parts 2 to 4 are added when their steps are done.
-> Nothing in here is a secret. The database on your PC has **no password on purpose**: it can only be reached from your own PC.
+> Nothing in here is a secret. The database on your PC has **no password on purpose**: it can only be reached from your own PC. That only holds while `compose.yaml` keeps `127.0.0.1:5432:5432` for the port. **Never change the `127.0.0.1` part**, and never copy that file to a server. The database **online** (Neon, Phase 5) will always have a password; that is written down as a Phase 5 line in `docs/ROADMAP.md`.
 
 ## Part 1: the local database (Step 1)
 

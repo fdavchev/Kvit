@@ -13,19 +13,7 @@ namespace Kvit.Api.Tests.Startup
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        public void Start_WithoutAConnectionString_FailsAndNamesTheSetting(string? connectionString)
-        {
-            using KvitApiFactory factory = KvitApiFactory.WithConnectionString(connectionString);
-
-            Exception exception = Assert.ThrowsAny<Exception>(() => factory.CreateClient());
-
-            Assert.Contains(ConnectionStringKey, MessagesOf(exception));
-        }
-
-        [Theory]
-        [InlineData("")]
-        [InlineData("   ")]
-        public void Start_WithABlankConnectionString_ThrowsAnInvalidOperationExceptionNamingTheSetting(string connectionString)
+        public void Start_WithoutAConnectionString_ThrowsAnInvalidOperationExceptionNamingTheSetting(string? connectionString)
         {
             using KvitApiFactory factory = KvitApiFactory.WithConnectionString(connectionString);
 
@@ -60,11 +48,6 @@ namespace Kvit.Api.Tests.Startup
             }
 
             return chain;
-        }
-
-        private static string MessagesOf(Exception exception)
-        {
-            return string.Join(Environment.NewLine, ExceptionChainOf(exception).Select(candidate => candidate.Message));
         }
     }
 }

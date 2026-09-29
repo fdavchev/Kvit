@@ -32,13 +32,25 @@ Date: 2026-09-29. Branch `feat/04-accounts`. Built by the `tester` (tests first)
 | Frontend | no frontend file was touched (`git status`); checks not re-run | NOT VERIFIED (not needed) |
 
 ## Decisions made in this step (also in `DECISIONS.md`)
-See the "Step 1" notes in the Phase 4 entry. The main ones: the start-up check is an `IHostedLifecycleService` (not `ValidateOnStart`, which throws a different exception type); `usage_events.user_id` is a nullable foreign key with ON DELETE SET NULL; a plain index on `usage_events.user_id` is added on purpose; the role-claims foreign key is named by hand; `AddInfrastructure()` takes no parameter.
+See the "Step 1" notes in the Phase 4 entry. The main ones: the start-up check first was an `IHostedLifecycleService` and is now one line in `Program.cs` (not `ValidateOnStart`, which throws a different exception type); `usage_events.user_id` is a nullable foreign key with ON DELETE SET NULL; a plain index on `usage_events.user_id` is added on purpose; the role-claims foreign key is named by hand; `AddInfrastructure()` takes no parameter.
 
 ## Not verified
 - **Why the container exited with code 139 (not 134) when it failed to start without the setting.** The message and the refusal to start were seen; the odd exit code was not looked into. It does not change what Render or you see (the app stops with the clear message), but it is not understood.
 - **The tests inside GitHub Actions.** Testcontainers needs Docker on the runner; GitHub's `ubuntu-latest` has it, but this only shows on the PR's CI run.
 - The empty `display_name` and `time_zone` are not rejected by the database (only by the handler's validation, Step 2). Step 2 also adds a database check that `display_name` has at least 1 character (DATA-MODEL says 1–60).
 - A leftover `testcontainers/ryuk` helper container may show in Docker Desktop for a while; Testcontainers removes it by itself.
+
+## Code review (run after the Step 1 commit, `/code-review` at high effort)
+7 findings; none is a crash or a security hole today. Decisions are in `DECISIONS.md` (top entry, "Code review of Step 1"). Labels: findings NOT VERIFIED by a run (read from the code), each checked against the code and plan by Claude.
+| Finding | Decision |
+|---|---|
+| `AppUser` defaults hide missing values (`CreatedAt`, `time_zone`, `display_name`) | Accepted, fixed in Step 2a (validation + database checks) |
+| `ix_users_normalized_email` is not unique | Accepted, made unique in Step 2a's migration; one Step 1 test changes |
+| No transient-failure retry for Neon | Accepted, decided in Phase 5 (new roadmap line); Step 2a keeps `IUnitOfWork` small |
+| Every test class creates a database in the container | Declined (Docker is required from Phase 4 anyway; costs milliseconds) |
+| Two overlapping blank-connection-string theories | Fixed after Filip asked: merged into one; tests 292 → 290, all pass, 0 warnings (VERIFIED by automated test) |
+| Five empty `IHostedLifecycleService` members | Fixed after Filip asked: the class is replaced by one line in `Program.cs` after `Build()`; 290 of 290 tests pass, 0 warnings, live `dotnet run` with an empty setting prints the clear error and never listens (VERIFIED by automated test and by live run) |
+| Unpinned `postgres:17` and passwordless `trust` | Declined; guide now warns never to change `127.0.0.1`; Phase 5 line for Neon on Postgres 17 |
 
 ## PR checklist (grows each step; copy into the PR description at the end)
 - [x] Step 1: database foundation (Infrastructure, first migration, compose.yaml, Testcontainers setup)
@@ -47,19 +59,6 @@ See the "Step 1" notes in the Phase 4 entry. The main ones: the start-up check i
 - [ ] Step 4: frontend (Sign up, Log in, RequireAuth, Settings)
 
 ## Commit message for Step 1 (first commit of the Phase 4 PR)
-Subject: `Add Kvit.Infrastructure, the first migration and real-Postgres tests`
+`Add Kvit.Infrastructure, the first migration and real-Postgres tests`
 
-Body:
-```
-Add the database layer for Phase 4: the Kvit.Infrastructure project with
-AppDbContext, AppUser (Identity with Guid ids) and the first migration
-(users, Identity tables, usage_events, data_protection_keys), plus a
-compose.yaml for a local Postgres 17.
-
-The app now stops at start-up with a clear message when
-ConnectionStrings:KvitDatabase is missing, and never connects to the
-database at start-up. Tests run against a real Postgres 17 through
-Testcontainers. The Dockerfile copies the new project file so the image
-still builds.
-```
-Later commits on this branch get one plain line each, and their line is ticked in the PR checklist.
+PR title: `Phase 4: database and email accounts`. The PR description is written when the PR is opened (overview, scope, the checklist above). Later commits get one plain line each, and their line is ticked in the PR checklist.

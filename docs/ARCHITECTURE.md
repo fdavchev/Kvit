@@ -102,7 +102,7 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
 - **Configuration:** `IEntityTypeConfiguration<T>` per entity, applied with `ApplyConfigurationsFromAssembly`.
 - **Naming:** tables and columns in **snake_case** (Postgres convention, via `EFCore.NamingConventions`, check docs). Foreign keys use the EF default `<Entity>Id`, so EF needs no extra config. Booleans are `Is...`.
 - **Repositories:** the interface is in `Domain/Interfaces` and the implementation in `Infrastructure/Repositories`. They return `Result` or `Result<T>` and hold data access only.
-- **Connection string:** the key is `KvitDatabase`. The value only ever comes from environment variables or secrets, **never** from `appsettings.json` in the repository. The context reads it lazily, and a start-up check (`Kvit.Api/Settings/KvitDatabaseSettingCheck.cs`, an `IHostedLifecycleService`) stops the app with a clear `InvalidOperationException` when it is missing, before the web server listens. The app never connects to the database or migrates at start-up (built in Phase 4, Step 1; Identity's own table and index names are renamed by hand because EFCore.NamingConventions leaves explicit names alone).
+- **Connection string:** the key is `KvitDatabase`. The value only ever comes from environment variables or secrets, **never** from `appsettings.json` in the repository. The context reads it lazily, and a start-up check (`KvitDatabaseSetting.Read(app.Configuration)` in `Program.cs`, right after `Build()`) stops the app with a clear `InvalidOperationException` when it is missing, before the web server listens. The app never connects to the database or migrates at start-up (built in Phase 4, Step 1; Identity's own table and index names are renamed by hand because EFCore.NamingConventions leaves explicit names alone).
 - **Data Protection keys** are stored in the database (`PersistKeysToDbContext`) and encrypted. Render wipes its files on restart (see Traps).
 - **Duplicate protection:** every queued write from the outbox carries a client-generated `ClientRequestId` (a GUID) with a unique index on it. A repeated request returns the original result and doesn't create a second row.
 
@@ -214,7 +214,7 @@ Before adding a shape (a DTO, service method, shared component, translation key,
 
 ## Commit messages
 - **"msg"** means one sentence and nothing else.
-- **"commit msg"** means a subject line plus a body for the branch and its PR. Flag any files that were already modified before the task started.
+- **"commit msg"** means, for the first push of a branch, a commit subject, a PR name and a PR description; for every later push, just the one-line commit subject. Commits never have a body. Flag any files that were already modified before the task started.
 - **English only** in commits and PR text. Macedonian stays in `mk.json` and in the docs.
 - Branch names and the rest of the git workflow follow Filip's global rules (`feat/NN-short-name`). **No Claude co-author trailer.**
 

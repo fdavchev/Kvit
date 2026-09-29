@@ -1,4 +1,5 @@
 using Kvit.Api.Registers;
+using Kvit.Api.Settings;
 using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,8 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
 WebApplication app = builder.Build();
+
+KvitDatabaseSetting.Read(app.Configuration);
 
 if (app.Environment.IsDevelopment())
 {
