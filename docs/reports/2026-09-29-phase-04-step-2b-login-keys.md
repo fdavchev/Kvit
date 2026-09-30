@@ -55,7 +55,7 @@ Known small concerns left as they are: a multi-line secret whose line starts wit
 - The exact `Now listening on: http://localhost:5018` line with the launch profile on Filip's PC (my run used another port without the profile); the guide says what to expect.
 - Why an unhandled start-up exception exits with code 139 in the Docker image (seen in Step 1 too).
 - Npgsql printed "libgssapi_krb5.so.2: cannot open shared object file" twice in the Linux logs (Kerberos library missing; requests still worked); not checked whether it also happened before this step.
-- The tests inside GitHub Actions.
+- ~~The tests inside GitHub Actions~~: settled on 2026-09-30, CI on PR #6 is green (`backend` and `frontend`), including the Testcontainers tests and the new "Build the certificate script" step (VERIFIED by live run).
 
 ## Cost (subagent tokens as reported by the harness)
 | Agent | Tokens | Tool calls | Time |

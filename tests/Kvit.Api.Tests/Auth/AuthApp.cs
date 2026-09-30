@@ -108,7 +108,7 @@ namespace Kvit.Api.Tests.Auth
                 .ExecuteUpdateAsync(setters => setters.SetProperty(user => user.IsTimeZoneManual, true), TestContext.Current.CancellationToken);
         }
 
-        private static WebApplicationFactoryClientOptions HttpsWithCookies()
+        protected static WebApplicationFactoryClientOptions HttpsWithCookies()
         {
             return new WebApplicationFactoryClientOptions
             {

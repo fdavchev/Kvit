@@ -3,6 +3,7 @@ import { onRequest, proxyToApi } from '../../functions/api/[[path]]'
 
 const apiOrigin = 'https://kvit-mk-api.onrender.com'
 const visitorAddress = '203.0.113.9'
+const proxySecret = 'shared-secret-known-to-the-api'
 
 function visitorRequest(url: string, init: RequestInit = {}): Request {
   const headers = new Headers(init.headers)
@@ -34,6 +35,7 @@ describe('proxyToApi', () => {
     await proxyToApi(
       visitorRequest('https://kvit-mk.pages.dev/api/groups/7/expenses?page=2&size=20'),
       apiOrigin,
+      proxySecret,
     )
 
     expect(forwardedRequest(fetchMock).url).toBe(
@@ -51,6 +53,7 @@ describe('proxyToApi', () => {
         body: JSON.stringify({ email: 'ana@example.com' }),
       }),
       apiOrigin,
+      proxySecret,
     )
 
     const forwarded = forwardedRequest(fetchMock)
@@ -71,6 +74,7 @@ describe('proxyToApi', () => {
     const response = await proxyToApi(
       visitorRequest('https://kvit-mk.pages.dev/api/groups', { method: 'POST' }),
       apiOrigin,
+      proxySecret,
     )
 
     expect(response.status).toBe(201)
@@ -89,6 +93,7 @@ describe('proxyToApi', () => {
     const response = await proxyToApi(
       visitorRequest('https://kvit-mk.pages.dev/api/health'),
       apiOrigin,
+      proxySecret,
     )
 
     expect(forwardedRequest(fetchMock).redirect).toBe('manual')
@@ -104,6 +109,7 @@ describe('proxyToApi', () => {
     const response = await proxyToApi(
       visitorRequest('https://kvit-mk.pages.dev/api/health'),
       undefined,
+      proxySecret,
     )
 
     expect(response.status).toBe(500)
@@ -111,6 +117,49 @@ describe('proxyToApi', () => {
       'Kvit proxy is misconfigured: API_ORIGIN is not set',
     )
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it.each([undefined, '', '   '])(
+    'answers 500 with a clear message when API_PROXY_SECRET is %j',
+    async (missingSecret) => {
+      const fetchMock = stubUpstream(new Response('Healthy'))
+
+      const response = await proxyToApi(
+        visitorRequest('https://kvit-mk.pages.dev/api/health'),
+        apiOrigin,
+        missingSecret,
+      )
+
+      expect(response.status).toBe(500)
+      expect(await response.text()).toBe(
+        'Kvit proxy is misconfigured: API_PROXY_SECRET is not set',
+      )
+      expect(fetchMock).not.toHaveBeenCalled()
+    },
+  )
+
+  it('reports a missing API_ORIGIN before a missing API_PROXY_SECRET', async () => {
+    const response = await proxyToApi(
+      visitorRequest('https://kvit-mk.pages.dev/api/health'),
+      undefined,
+      undefined,
+    )
+
+    expect(await response.text()).toBe(
+      'Kvit proxy is misconfigured: API_ORIGIN is not set',
+    )
+  })
+
+  it('reports a missing API_PROXY_SECRET before a missing cf-connecting-ip', async () => {
+    const response = await proxyToApi(
+      new Request('https://kvit-mk.pages.dev/api/health'),
+      apiOrigin,
+      undefined,
+    )
+
+    expect(await response.text()).toBe(
+      'Kvit proxy is misconfigured: API_PROXY_SECRET is not set',
+    )
   })
 
   it.each([
@@ -124,6 +173,7 @@ describe('proxyToApi', () => {
     const response = await proxyToApi(
       visitorRequest('https://kvit-mk.pages.dev/api/health'),
       value,
+      proxySecret,
     )
 
     expect(response.status).toBe(500)
@@ -141,6 +191,7 @@ describe('proxyToApi', () => {
       const response = await proxyToApi(
         visitorRequest('https://kvit-mk.pages.dev/api/health'),
         value,
+        proxySecret,
       )
 
       expect(response.status).toBe(200)
@@ -148,7 +199,41 @@ describe('proxyToApi', () => {
     },
   )
 
-  it('drops client-supplied forwarding headers and sets the visitor address from cf-connecting-ip', async () => {
+  it('sends the proxy secret and the cf-connecting-ip value in the two Kvit headers and sets no x-forwarded-for', async () => {
+    const fetchMock = stubUpstream(new Response('Healthy'))
+
+    await proxyToApi(
+      visitorRequest('https://kvit-mk.pages.dev/api/health'),
+      apiOrigin,
+      proxySecret,
+    )
+
+    const forwarded = forwardedRequest(fetchMock)
+    expect(forwarded.headers.get('x-kvit-proxy-secret')).toBe(proxySecret)
+    expect(forwarded.headers.get('x-kvit-visitor-ip')).toBe(visitorAddress)
+    expect(forwarded.headers.get('x-forwarded-for')).toBeNull()
+  })
+
+  it('replaces visitor-sent x-kvit-proxy-secret and x-kvit-visitor-ip with its own values', async () => {
+    const fetchMock = stubUpstream(new Response('Healthy'))
+
+    await proxyToApi(
+      visitorRequest('https://kvit-mk.pages.dev/api/health', {
+        headers: {
+          'x-kvit-proxy-secret': 'guessed-by-the-visitor',
+          'x-kvit-visitor-ip': '1.2.3.4',
+        },
+      }),
+      apiOrigin,
+      proxySecret,
+    )
+
+    const forwarded = forwardedRequest(fetchMock)
+    expect(forwarded.headers.get('x-kvit-proxy-secret')).toBe(proxySecret)
+    expect(forwarded.headers.get('x-kvit-visitor-ip')).toBe(visitorAddress)
+  })
+
+  it('drops client-supplied forwarding headers and keeps the other headers', async () => {
     const fetchMock = stubUpstream(new Response('Healthy'))
 
     await proxyToApi(
@@ -167,16 +252,17 @@ describe('proxyToApi', () => {
         },
       }),
       apiOrigin,
+      proxySecret,
     )
 
     const forwarded = forwardedRequest(fetchMock)
-    expect(forwarded.headers.get('x-forwarded-for')).toBe(visitorAddress)
     expect(forwarded.headers.get('x-request-id')).toBe('keep-me')
     for (const name of [
       'cf-connecting-ip',
       'cf-connecting-ipv6',
       'forwarded',
       'true-client-ip',
+      'x-forwarded-for',
       'x-forwarded-host',
       'x-forwarded-port',
       'x-forwarded-proto',
@@ -186,14 +272,15 @@ describe('proxyToApi', () => {
     }
   })
 
-  it('answers 500 with a clear message when cf-connecting-ip is missing', async () => {
+  it('answers 500 with a clear message when cf-connecting-ip is missing, even if the visitor sent x-kvit-visitor-ip', async () => {
     const fetchMock = stubUpstream(new Response('Healthy'))
 
     const response = await proxyToApi(
       new Request('https://kvit-mk.pages.dev/api/health', {
-        headers: { 'x-forwarded-for': '1.2.3.4' },
+        headers: { 'x-kvit-visitor-ip': '1.2.3.4', 'x-forwarded-for': '1.2.3.4' },
       }),
       apiOrigin,
+      proxySecret,
     )
 
     expect(response.status).toBe(500)
@@ -214,7 +301,7 @@ describe('proxyToApi', () => {
   ])('rejects "%s" with 400 before calling the API', async (url) => {
     const fetchMock = stubUpstream(new Response('Healthy'))
 
-    const response = await proxyToApi(visitorRequest(url), apiOrigin)
+    const response = await proxyToApi(visitorRequest(url), apiOrigin, proxySecret)
 
     expect(response.status).toBe(400)
     expect(await response.text()).toBe(
@@ -229,6 +316,7 @@ describe('proxyToApi', () => {
     await proxyToApi(
       visitorRequest('https://kvit-mk.pages.dev/api//evil.example/x'),
       apiOrigin,
+      proxySecret,
     )
 
     expect(forwardedRequest(fetchMock).url).toBe(
@@ -249,6 +337,7 @@ describe('proxyToApi', () => {
     const response = await proxyToApi(
       visitorRequest('https://kvit-mk.pages.dev/api/health'),
       apiOrigin,
+      proxySecret,
     )
 
     expect(response.status).toBe(502)
@@ -271,6 +360,7 @@ describe('proxyToApi', () => {
       const response = await proxyToApi(
         visitorRequest('https://kvit-mk.pages.dev/api/groups/7', { method }),
         apiOrigin,
+        proxySecret,
       )
 
       const forwarded = forwardedRequest(fetchMock)
@@ -289,6 +379,7 @@ describe('proxyToApi', () => {
         body: '{"name":"Greece"}',
       }),
       apiOrigin,
+      proxySecret,
     )
 
     expect(await forwardedRequest(fetchMock).text()).toBe('{"name":"Greece"}')
@@ -300,11 +391,43 @@ describe('onRequest', () => {
     vi.unstubAllGlobals()
   })
 
-  function context(request: Request, env: { API_ORIGIN?: string }) {
+  function context(
+    request: Request,
+    env: { API_ORIGIN?: string; API_PROXY_SECRET?: string },
+  ) {
     return { request, env } as unknown as Parameters<typeof onRequest>[0]
   }
 
-  it('forwards the request to the API_ORIGIN from the Cloudflare environment', async () => {
+  it('forwards the request to the API_ORIGIN with the API_PROXY_SECRET from the Cloudflare environment', async () => {
+    const fetchMock = stubUpstream(new Response('Healthy'))
+
+    const response = await onRequest(
+      context(visitorRequest('https://kvit-mk.pages.dev/api/health'), {
+        API_ORIGIN: apiOrigin,
+        API_PROXY_SECRET: proxySecret,
+      }),
+    )
+
+    const forwarded = forwardedRequest(fetchMock)
+    expect(response.status).toBe(200)
+    expect(forwarded.url).toBe('https://kvit-mk-api.onrender.com/api/health')
+    expect(forwarded.headers.get('x-kvit-proxy-secret')).toBe(proxySecret)
+  })
+
+  it('answers 500 when the Cloudflare environment has no API_ORIGIN', async () => {
+    const fetchMock = stubUpstream(new Response('Healthy'))
+
+    const response = await onRequest(
+      context(visitorRequest('https://kvit-mk.pages.dev/api/health'), {
+        API_PROXY_SECRET: proxySecret,
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('answers 500 when the Cloudflare environment has no API_PROXY_SECRET', async () => {
     const fetchMock = stubUpstream(new Response('Healthy'))
 
     const response = await onRequest(
@@ -313,20 +436,10 @@ describe('onRequest', () => {
       }),
     )
 
-    expect(response.status).toBe(200)
-    expect(forwardedRequest(fetchMock).url).toBe(
-      'https://kvit-mk-api.onrender.com/api/health',
-    )
-  })
-
-  it('answers 500 when the Cloudflare environment has no API_ORIGIN', async () => {
-    const fetchMock = stubUpstream(new Response('Healthy'))
-
-    const response = await onRequest(
-      context(visitorRequest('https://kvit-mk.pages.dev/api/health'), {}),
-    )
-
     expect(response.status).toBe(500)
+    expect(await response.text()).toBe(
+      'Kvit proxy is misconfigured: API_PROXY_SECRET is not set',
+    )
     expect(fetchMock).not.toHaveBeenCalled()
   })
 })

@@ -20,5 +20,6 @@ namespace Kvit.Domain.Results
         public const string AUTH_NOT_SIGNED_IN = "AUTH_NOT_SIGNED_IN";
         public const string TIME_ZONE_INVALID = "TIME_ZONE_INVALID";
         public const string LANGUAGE_INVALID = "LANGUAGE_INVALID";
+        public const string RATE_LIMITED = "RATE_LIMITED";
     }
 }

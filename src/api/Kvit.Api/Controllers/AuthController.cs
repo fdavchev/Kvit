@@ -5,6 +5,7 @@ using Kvit.Contracts.Me;
 using Kvit.Domain.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Kvit.Api.Controllers
 {
@@ -13,6 +14,7 @@ namespace Kvit.Api.Controllers
     public sealed class AuthController(IDispatcher _dispatcher) : BaseController
     {
         [HttpPost("register")]
+        [EnableRateLimiting("sign-up")]
         public async Task<ActionResult<MeResponse>> Register(RegisterRequest request, CancellationToken cancellationToken)
         {
             RegisterCommand command = new(request.DisplayName, request.Email, request.Password, request.TimeZone, request.Language);
@@ -21,6 +23,7 @@ namespace Kvit.Api.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("log-in")]
         public async Task<ActionResult<MeResponse>> LogIn(LogInRequest request, CancellationToken cancellationToken)
         {
             LogInCommand command = new(request.Email, request.Password, request.TimeZone);

@@ -27,7 +27,7 @@ namespace Kvit.Api.Tests.Persistence
             await context.Database.MigrateAsync(TestContext.Current.CancellationToken);
         }
 
-        public ValueTask DisposeAsync()
+        public virtual ValueTask DisposeAsync()
         {
             return _factory.DisposeAsync();
         }
