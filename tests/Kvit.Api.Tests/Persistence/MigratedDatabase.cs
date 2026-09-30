@@ -32,6 +32,11 @@ namespace Kvit.Api.Tests.Persistence
             return _factory.DisposeAsync();
         }
 
+        public KvitApiFactory CreateAnotherInstance()
+        {
+            return _factory.CreateAnotherInstanceOnTheSameDatabase();
+        }
+
         public IServiceScope CreateScope()
         {
             return _factory.Services.CreateScope();

@@ -53,6 +53,7 @@ dotnet user-secrets set "ConnectionStrings:KvitDatabase" "Host=localhost;Port=54
 **If it fails:** send me the text it shows.
 
 ### Step 5: create the tables
+> **On a new PC, do Part 3, Step 2 (the certificate) first.** Since Step 2b this command needs it too. On your PC now it is already done.
 ```
 dotnet ef database update --project src/api/Kvit.Infrastructure --startup-project src/api/Kvit.Api
 ```
@@ -115,3 +116,46 @@ dotnet ef database update --project src/api/Kvit.Infrastructure --startup-projec
 dotnet test Kvit.slnx
 ```
 **You should see:** `total: 403`, `failed: 0`, `succeeded: 403` (the first run is slower while it starts a test database).
+
+## Part 3: the login-key certificate (Step 2b)
+
+### What changed for you
+The login cookie is locked with secret keys. From now on those keys are kept in your database (not in a file), and they are locked with a **certificate**: a small secret file that only your PC and, later, the online server know. One command makes it and saves it in your private secrets, so you never copy anything by hand.
+
+**From this step on, the local API refuses to start until you have done Step 2 below.** Its error message tells you what to do. The same goes for the `dotnet ef` commands from Parts 1 and 2: on a new PC, do Step 2 below before them.
+
+### Step 1: keep Docker Desktop open
+The script itself does not need Docker, but Step 4 starts the API, which reads the database. Open Docker Desktop and check that `kvit-postgres` has a green dot.
+
+### Step 2: make the certificate (once)
+In the terminal, in the Kvit folder:
+```
+dotnet run scripts/NewDataProtectionCertificate.cs
+```
+**You should see** (the first run takes a few seconds while it compiles):
+- `Saved DataProtection:CertificateBase64 and DataProtection:CertificatePassword to the user secrets of src/api/Kvit.Api.`
+- `The certificate expires on 20xx-xx-xx.` (10 years from today.)
+
+**If you run it a second time** it says `Nothing changed: ...` on purpose. Replacing the certificate would make every saved login unreadable and log everybody out. Only add `-- --force` at the end if you really want that.
+
+**If it fails:** send me the text it shows.
+
+### Step 3: check that it was saved (this shows names only, never the values)
+```
+(dotnet user-secrets list --project src/api/Kvit.Api) -replace ' =.*',''
+```
+**You should see three names:** `ConnectionStrings:KvitDatabase`, `DataProtection:CertificateBase64` and `DataProtection:CertificatePassword`.
+(Do not run `dotnet user-secrets list` without the part after it: it would print the password on screen.)
+
+### Step 4: start the API and stop it again
+```
+dotnet run --project src/api/Kvit.Api
+```
+**You should see:** a few grey lines about `data_protection_keys` (the app reading and, the first time, creating its login key in the database; this is normal), then `Now listening on: http://localhost:5018`.
+Open `http://localhost:5018/api/health` in the browser: it shows `Healthy`. Then go back to the terminal and press **Ctrl+C** to stop the API.
+
+**If it fails:**
+- `The setting DataProtection:CertificateBase64 is missing or empty`: Step 2 was not done.
+- `The setting ConnectionStrings:KvitDatabase is missing or empty`: do Part 1, Step 4.
+- `Failed to connect` or `Connection refused`: the database is not running; do Step 1.
+- `Unable to retrieve the decryption key` in the log: the database holds a login key made with a different certificate (for example after `--force`). The app carries on and makes a new key; everybody has to log in again. To tidy up, run `docker exec kvit-postgres psql -U kvit -d kvit -c "delete from data_protection_keys"`.

@@ -10,6 +10,7 @@ builder.Services.AddHealthChecks();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 builder.Services.AddAuth();
+builder.Services.AddDataProtectionKeys(DataProtectionSetting.LoadCertificate(builder.Configuration));
 
 WebApplication app = builder.Build();
 

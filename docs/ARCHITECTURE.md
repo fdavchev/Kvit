@@ -132,6 +132,8 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
 - The Dockerfile builds on `sdk:10.0` and runs on `aspnet:10.0` as the non-root `app` user. It has **no build arguments** (no secret can end up in the image) and **no port** (Render sets `ASPNETCORE_HTTP_PORTS=10000`). **Every new project's `.csproj` needs a `COPY` line before `dotnet restore`**; CI's backend job ends with `docker build`, so a missing line fails CI.
 - The build enforces style: `var` (IDE0008), file-scoped namespaces (IDE0160) and a namespace that doesn't match its folder (IDE0130) are errors; primary constructors, collection expressions and switch expressions are warnings, which `TreatWarningsAsErrors` turns into errors. "No comments" and "file name = class name" can't be checked by the compiler and stay review rules. Generated migrations are marked `generated_code` in `.editorconfig`.
 
+- **`dotnet ef` needs every start-up setting that is read before `Build()`**: `ConnectionStrings:KvitDatabase` and the two `DataProtection` settings (the script `scripts/NewDataProtectionCertificate.cs` makes the latter for local work; servers use environment variables).
+
 ## Code style
 - **Every `.csproj`:** `Nullable=enable`, `ImplicitUsings=enable`, **`TreatWarningsAsErrors=true`**.
 - **Syntax:** primary constructors, collection expressions `[]`, switch expressions.

@@ -32,6 +32,8 @@
 
 - [ ] Make a successful log-in save its changes without Identity's concurrency stamp (one `ExecuteUpdate` for `lockout_count` and `time_zone`, only when they change). Today two log-ins of the same account at the very same moment can give one 500; retrying works (Step 2a review)
 
+- [ ] Warn loudly (log, or fail with a clear message) when the login-key certificate is expired or about to expire (it is valid 10 years; whether an expired one still decrypts is only from the source), and check its `NotBefore` (Step 2b code review)
+
 ## Skipped on purpose
 - CI runs twice on a pull-request branch (one run for `push`, one for `pull_request`; review finding 01-5, 2026-09-29). Left as it is: the second run tests the merge result with `main`, the cost is only free GitHub minutes, and limiting `push` to `main` would drop the check on a branch that has no pull request yet. Revisit only if the free minutes ever run short.
 

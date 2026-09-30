@@ -118,7 +118,7 @@ namespace Kvit.Api.Tests.Auth
             };
         }
 
-        private static WebApplicationFactoryClientOptions HttpsWithoutCookies()
+        public static WebApplicationFactoryClientOptions HttpsWithoutCookies()
         {
             return new WebApplicationFactoryClientOptions
             {

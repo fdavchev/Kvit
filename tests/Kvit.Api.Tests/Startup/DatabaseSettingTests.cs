@@ -7,7 +7,6 @@ namespace Kvit.Api.Tests.Startup
     public class DatabaseSettingTests
     {
         private const string ConnectionStringKey = "ConnectionStrings:KvitDatabase";
-        private const string ClosedPortConnectionString = "Host=127.0.0.1;Port=1;Database=kvit;Username=kvit;Timeout=2";
 
         [Theory]
         [InlineData(null)]
@@ -20,7 +19,7 @@ namespace Kvit.Api.Tests.Startup
             Exception exception = Assert.ThrowsAny<Exception>(() => factory.CreateClient());
 
             Assert.Contains(
-                ExceptionChainOf(exception),
+                ExceptionChain.Of(exception),
                 candidate => candidate is InvalidOperationException && candidate.Message.Contains(ConnectionStringKey));
         }
 
@@ -29,7 +28,7 @@ namespace Kvit.Api.Tests.Startup
         [InlineData("/api/health")]
         public async Task Health_WithTheDatabaseOnAClosedPort_StillAnswersHealthy(string path)
         {
-            using KvitApiFactory factory = KvitApiFactory.WithConnectionString(ClosedPortConnectionString);
+            using KvitApiFactory factory = KvitApiFactory.WithConnectionString(KvitApiFactory.UnreachableConnectionString);
             using HttpClient client = factory.CreateClient();
 
             HttpResponseMessage response = await client.GetAsync(path, TestContext.Current.CancellationToken);
@@ -37,17 +36,6 @@ namespace Kvit.Api.Tests.Startup
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Equal("Healthy", body);
-        }
-
-        private static List<Exception> ExceptionChainOf(Exception exception)
-        {
-            List<Exception> chain = [];
-            for (Exception? current = exception; current is not null; current = current.InnerException)
-            {
-                chain.Add(current);
-            }
-
-            return chain;
         }
     }
 }
