@@ -75,11 +75,19 @@ Host=ep-something-pooler.eu-central-1.aws.neon.tech;Database=neondb;Username=neo
 
 Open PowerShell in `C:\Users\Davchev\Projects\Kvit`. Make sure the Kvit API is **not running** (a running API locks its files on Windows and the commands below fail). Run the commands **one at a time**.
 
-1. Copy the **DIRECT** line from your notes file (select the whole line, Ctrl+C). Then run:
+1. Run this command. It waits for you (the cursor blinks after the text, that is normal):
    ```
-   $env:ConnectionStrings__KvitDatabase = Get-Clipboard
+   $env:ConnectionStrings__KvitDatabase = (Read-Host 'Paste the DIRECT line here, then press Enter').Trim()
    ```
-   - You should see: nothing printed. The string now lives only in this PowerShell window, which overrides your local database for as long as the window is open.
+   Now go to Notepad, click inside the `Host=...` line under `DIRECT:`, press Home, then Shift+End, then Ctrl+C. Go back to PowerShell, **right-click** inside the window (that pastes), then press Enter.
+   - Copying the line only **after** the command is running matters: copying the command from this guide replaces what is on the clipboard.
+   - You should see: the line on your screen (it is your own screen) and then the prompt again. The string now lives only in this PowerShell window, which overrides your local database for as long as the window is open.
+   - Check its shape without showing it (both lines must print `True`):
+     ```
+     $env:ConnectionStrings__KvitDatabase -match '^Host=ep-[^;]+;Database=[^;]+;Username=[^;]+;Password=[^;]+;SSL Mode=VerifyFull;Channel Binding=Require$'
+     $env:ConnectionStrings__KvitDatabase -notmatch 'pooler'
+     ```
+   - If a line prints `False`, don't go on: redo the copy (select only the `Host=...` line, not the `DIRECT:` heading) or tell the Claude session which line printed `False`.
 2. Check that the first migration list shows everything as waiting:
    ```
    dotnet ef migrations list --project src/api/Kvit.Infrastructure --startup-project src/api/Kvit.Api
