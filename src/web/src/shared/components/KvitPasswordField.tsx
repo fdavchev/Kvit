@@ -1,4 +1,5 @@
-import type { ComponentProps } from 'react'
+import { useState, type ComponentProps } from 'react'
+import { KvitPasswordToggle } from './KvitPasswordToggle'
 import { KvitTextField } from './KvitTextField'
 
 interface KvitPasswordFieldProps {
@@ -12,13 +13,20 @@ interface KvitPasswordFieldProps {
 }
 
 export function KvitPasswordField(props: KvitPasswordFieldProps) {
+  const [isShown, setIsShown] = useState<boolean>(false)
   return (
     <KvitTextField
       {...props}
-      type="password"
+      type={isShown ? 'text' : 'password'}
       autoCapitalize="none"
       autoCorrect="off"
       spellCheck={false}
+      trailing={
+        <KvitPasswordToggle
+          isShown={isShown}
+          onToggle={() => setIsShown((wasShown) => !wasShown)}
+        />
+      }
     />
   )
 }

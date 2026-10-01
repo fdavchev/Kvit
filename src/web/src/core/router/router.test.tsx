@@ -12,6 +12,7 @@ import { problemResponse, stubFetch } from '@/test/apiTestHelpers'
 import { typeInto } from '@/test/formTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import { testMe } from '@/test/testMe'
+import { stubDeviceColorScheme } from '@/test/themeTestHelpers'
 import { translated } from '@/test/translated'
 import { routeObjects } from './router'
 import { routes } from './routes'
@@ -79,6 +80,10 @@ describe('router error element', () => {
 })
 
 describe('routes followed through the real route table', () => {
+  beforeEach(() => {
+    stubDeviceColorScheme('light')
+  })
+
   afterEach(() => {
     vi.unstubAllGlobals()
   })

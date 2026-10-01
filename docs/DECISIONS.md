@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-01: Phase 5 (first deploy): done and merged, the rules that stay
+The whole Phase 5 decision log (migration path, Postgres 18, the web address and Google, how secrets are handled, the CI-driven Render deploy, the Welcome light/dark button, the show/hide password button, rejected alternatives) moved word for word to the end of `reports/2026-10-01-phase-05-first-deploy.md`, section "Decisions and rejected alternatives". What stays true for the product and the setup:
+- **Address:** `https://kvit-mk.pages.dev` (API `kvit-mk-api.onrender.com`). A paid name can be attached later with no code change, only if Filip decides to pay.
+- **Hosting:** Neon (Postgres 18), Render free, Cloudflare Pages, all free with no card. Database changes are applied by CI before the deploy; CI deploys to Render and waits until live; Render's Auto-Deploy is Off.
+- **Postgres 18** locally, in the tests and on Neon.
+- **Screens:** every password box has a show/hide eye button; the Welcome screen has a round moon/sun button left of the EN/МК switch that flips light and dark and is remembered on that phone ("Same as device" stays in Settings).
+- **Google sign-in on `pages.dev`:** works without brand verification; people see the address instead of "Kvit" on Google's window. Filip accepted that for now.
+
 ## 2026-10-01: Phase 4 (database + email accounts): done and merged, the product rules that stay
 The whole Phase 4 decision log (technical decisions, rejected alternatives, code-review findings, the three mockup rounds, the approved Macedonian wording tables, every step block) moved word for word to the end of `reports/2026-10-01-phase-04-accounts.md`, section "Decisions and rejected alternatives". What the app does, as Filip decided it:
 

@@ -7,6 +7,7 @@ import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitLanguageSwitch } from '@/shared/components/KvitLanguageSwitch'
 import { KvitLinkButton } from '@/shared/components/KvitLinkButton'
 import { KvitScreen } from '@/shared/components/KvitScreen'
+import { KvitThemeToggle } from '@/shared/components/KvitThemeToggle'
 import { useApiHealth } from '../hooks/useApiHealth'
 
 export function WelcomeScreen() {
@@ -31,7 +32,8 @@ export function WelcomeScreen() {
   return (
     <KvitScreen>
       <header className="flex flex-1 flex-col">
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end gap-2">
+          <KvitThemeToggle />
           <KvitLanguageSwitch
             language={language}
             onChange={(newLanguage) => void switchLanguage(newLanguage)}

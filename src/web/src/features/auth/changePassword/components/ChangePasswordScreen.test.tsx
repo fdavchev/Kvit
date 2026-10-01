@@ -122,6 +122,18 @@ describe('ChangePasswordScreen', () => {
     expect(field.getAttribute('autocomplete')).toBe(autoComplete)
   })
 
+  it('lets the person show the current and the new password independently', async () => {
+    await renderChangePassword()
+    const showName = translated('en', 'common.showPassword')
+
+    const [currentButton] = screen.getAllByRole('button', { name: showName })
+    fireEvent.click(currentButton)
+
+    expect(fieldLabelled(translated('en', 'auth.changePassword.current')).type).toBe('text')
+    expect(fieldLabelled(translated('en', 'auth.changePassword.new')).type).toBe('password')
+    expect(screen.getAllByRole('button', { name: showName })).toHaveLength(1)
+  })
+
   it('explains the password rule under the new-password field', async () => {
     await renderChangePassword()
 
