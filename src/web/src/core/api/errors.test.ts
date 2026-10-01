@@ -1,6 +1,29 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import en from '@/core/i18n/locales/en.json'
+import mk from '@/core/i18n/locales/mk.json'
 import { ApiError } from './apiClient'
 import { errorMessageKey } from './errors'
+
+const mappedErrorCodes = [
+  'AUTH_INVALID_CREDENTIALS',
+  'AUTH_EMAIL_TAKEN',
+  'AUTH_EMAIL_INVALID',
+  'AUTH_PASSWORD_TOO_WEAK',
+  'AUTH_DISPLAY_NAME_INVALID',
+  'AUTH_LOCKED_OUT',
+  'AUTH_NOT_SIGNED_IN',
+  'TIME_ZONE_INVALID',
+  'LANGUAGE_INVALID',
+  'RATE_LIMITED',
+  'AUTH_MUST_CHANGE_PASSWORD',
+  'AUTH_CURRENT_PASSWORD_WRONG',
+  'AUTH_PASSWORD_UNCHANGED',
+]
+
+const errorTexts: Record<'en' | 'mk', Record<string, unknown>> = {
+  en: en.errors,
+  mk: mk.errors,
+}
 
 describe('errorMessageKey', () => {
   afterEach(() => {
@@ -58,5 +81,24 @@ describe('errorMessageKey', () => {
 
   it('uses the generic message for an error that is not an ApiError', () => {
     expect(errorMessageKey(new Error('boom'))).toBe('errors.generic')
+  })
+
+  it.each(mappedErrorCodes)('maps %s to its own translation key without logging', (code) => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const error = new ApiError('POST /api/x failed with status 400', {
+      httpStatus: 400,
+      errorCode: code,
+    })
+
+    expect(errorMessageKey(error)).toBe(`errors.${code}`)
+    expect(consoleError).not.toHaveBeenCalled()
+  })
+
+  it.each(
+    (['en', 'mk'] as const).flatMap((language) =>
+      mappedErrorCodes.map((code) => [language, code] as const),
+    ),
+  )('has a non-empty %s text for %s', (language, code) => {
+    expect(errorTexts[language][code]).toEqual(expect.stringMatching(/\S/))
   })
 })

@@ -1,0 +1,133 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html {
+  color-scheme: light dark;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  font-family: system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  background: var(--bg);
+  color: var(--ink);
+  caret-color: var(--caret);
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.hero,
+.welcome-body,
+.screen-header,
+.form,
+.home-body {
+  padding-inline: max(24px, env(safe-area-inset-left)) max(24px, env(safe-area-inset-right));
+}
+
+.welcome-body,
+.form,
+.home-body {
+  padding-bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px));
+}
+
+.btn,
+.lang-option,
+.avatar {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  transition:
+    transform 100ms ease-out,
+    background-color 150ms ease-out;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding-inline: 20px;
+  border: 0;
+  font: inherit;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn:active,
+.lang-option:active,
+.avatar:active {
+  transform: scale(0.97);
+}
+
+.lang {
+  display: flex;
+  align-self: flex-end;
+}
+
+.lang-option {
+  border: 0;
+  font: inherit;
+}
+
+.actions,
+.fields,
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.input {
+  width: 100%;
+  font: inherit;
+  font-size: max(16px, 1.0625rem);
+}
+
+.input:focus-visible {
+  outline-offset: 0;
+}
+
+.hint,
+.note {
+  text-wrap: pretty;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .lang-option,
+  .avatar {
+    transition: none;
+  }
+
+  .btn:active,
+  .lang-option:active,
+  .avatar:active {
+    transform: none;
+  }
+}

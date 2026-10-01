@@ -111,8 +111,12 @@ Branch `feat/04-accounts`, built in four steps (database, accounts, rate limitin
 - **Time zone:** no picker in this phase. A phone that reports no usable zone gets `TIME_ZONE_INVALID`: "We couldn't read your phone's time zone, so this isn't possible on this device for now." BACKLOG: a picker plus Settings "Choose manually" (needs an endpoint that sets `is_time_zone_manual`), and the message gets "Choose manually" back then.
 - **`RATE_LIMITED` text says "a few minutes", not "a minute"** (the sign-up window is 10 minutes).
 - **The log-in screen shows "Forgot your password? Ask Filip to reset it."** (Filip, 2026-09-30).
+- **Run A built 2026-10-01 (coder, source-checked in react-router 8.4.0 and @tanstack/query-core 5.103.2).** Log-out removes every query except `['me']`, clears the mutation cache, then sets `['me']` to `null`; it does NOT call `queryClient.clear()` first. *Why:* removing a query does not notify a mounted screen that watches it (`queryCache.remove` only destroys it), so a guard already on screen would never hear the later `null` and would stay put (shown by a throwaway test). End state is the same: an empty cache with `['me']` null; clearing the mutation cache also drops the passwords the mutations remembered.
+- **`['me']` keeps TanStack's default 3 retries on purpose** (a network blip costs a few seconds of spinner, then the error screen with Try again); the sleeping server (about a minute) is the later waking-up screen's job. Window-focus refetch is off for all queries (`createQueryClient`), mutations never retry.
+- **`updateCachedMe` throws a clear error when nobody is in the `['me']` cache** instead of quietly doing nothing (language change and password change). The 401/403 numbers and the JSON-body helper `jsonRequest` live once in `apiClient.ts`; the shared check of the `me` answer (`parseMe`) lives in `meService.ts` and `authService` imports it.
+- **Until run B wires the routes,** a signed-in visitor at `/` sees a blank page (the guard has no child route), and a visitor who must change the password lands on the Not Found screen (no `/change-password` route yet).
 
-**Macedonian wording approved by Filip on 2026-09-30 ("the Macedonian list is good"); every line below may go into `mk.json` as written.** Still to be proposed and approved: the three Step 3b codes (`AUTH_MUST_CHANGE_PASSWORD`, `AUTH_CURRENT_PASSWORD_WRONG`, `AUTH_PASSWORD_UNCHANGED`) and the Change-password screen texts.
+**Macedonian wording approved by Filip on 2026-09-30 ("the Macedonian list is good"); every line below may go into `mk.json` as written.** The Step 3b codes and the Change-password and Home texts were approved on 2026-10-01, see the second table below.
 
 | Where | English | Macedonian |
 |---|---|---|
@@ -139,6 +143,27 @@ Branch `feat/04-accounts`, built in four steps (database, accounts, rate limitin
 | TIME_ZONE_INVALID | We couldn't read your phone's time zone, so this isn't possible on this device for now. | Не можевме да ја прочитаме временската зона на телефонот, па засега ова не е можно на овој уред. |
 | LANGUAGE_INVALID | That language isn't supported. | Тој јазик не е поддржан. |
 | RATE_LIMITED | Too many tries. Wait a few minutes and try again. | Премногу обиди. Почекај неколку минути и обиди се повторно. |
+
+**Second batch of Macedonian wording, approved by Filip on 2026-10-01** (same rule: may go into `mk.json` as written).
+
+| Where | English | Macedonian |
+|---|---|---|
+| AUTH_MUST_CHANGE_PASSWORD | Choose a new password to continue. | Избери нова лозинка за да продолжиш. |
+| AUTH_CURRENT_PASSWORD_WRONG | Wrong password. (Filip shortened it) | Погрешна лозинка. |
+| AUTH_PASSWORD_UNCHANGED | The new password must be different from the old one. | Новата лозинка мора да се разликува од старата. |
+| Change password: title, button in Settings | Change password | Промени лозинка |
+| Change password: note after a reset | Your password was reset. Choose a new one to continue. | Лозинката ти е ресетирана. Избери нова за да продолжиш. |
+| Change password: field | Current password | Тековна лозинка |
+| Change password: field | New password | Нова лозинка |
+| Change password: save button | Save new password | Зачувај ја новата лозинка |
+| After saving (toast) | Password changed. | Лозинката е променета. |
+| Home placeholder line (Filip kept "салда") | Your groups and balances will appear here. | Твоите групи и салда ќе се појават овде. |
+
+**Look of the first screens, decided with Filip on 2026-10-01 after three mockup rounds** (reference images and sources: `docs/design/2026-10-01-round-3/`, the sources in `source/` with every colour in `palette.css`; `python render.py --orange "#..."` re-renders). The build (Step 4 run B) follows these images.
+- **Welcome:** direction A's layout (centred wordmark, "Квит сме." and "We're even.", pitch, "Continue with Google" as the main button, a soft "Sign up with email", a link, EN · МК switch top right). **Sign up and Log in:** plain title (no header block), fields, button, link; the Log in group is vertically centred on the screen. **Home (temporary):** "Hi, name" at the top left, a round button with the person's initial at the top right that opens Settings, one quiet line "Your groups and balances will appear here.", no numbers and no header. The real dashboard (screen 5) is Phase 11 and its layout stays Filip's call that day.
+- **Light:** peach background `#ffd9a8` on every screen, titles dark brown, main buttons deep orange `#b54a00` with white text, soft secondary button `#fff1dc`, white fields with a tan border `#9c6f47`, link underline `#b54a00`, wordmark deep orange. **Dark:** Filip's colour `#351F1B` on every screen (fields, secondary button and borders mixed from that hue, never grey or black), cream text, main buttons peach `#ffd9a8` with `#351F1B` text, the "Kvit" wordmark peach `#ffd9a8` like the buttons (Filip, 2026-10-01); links and link underlines stay bright orange `#ffa53a`. *Why peach buttons in dark:* Filip disliked the bright-orange buttons; peach ties dark to light and has 11.55:1 contrast.
+- **One main-button look across the app** (deep orange with white text in light, peach in dark) so the same action never looks different on two screens. All text pairs at least 4.5:1 (large text and button or field edges at least 3:1); the mockup script checks 72 pairs and stops loudly when a colour change breaks one (it did with `#C2410C` and with `#5a3a33`). Weak points, accepted: the light field border is 3.29:1 and the light button edge 3.99:1 (both pass, modest margin), and the secondary button's fill is not 3:1 as a shape (its label is).
+- **Still open:** a back arrow on Sign up and Log in (Claude recommends yes), and the specific orange Filip may send (the tool checks contrast for it; the pale tints do not follow `--orange` and need adjusting by hand for a very different shade). **mobile-native** rules (no tap flash, 16 px inputs, `100dvh`, safe-area padding, `theme-color` per scheme, hover only on devices with a mouse) go into the real build; they cannot be seen in desktop screenshots, so they need a real phone in Phase 5.
 
 ## 2026-09-25: Web addresses, README and licence
 - **Addresses:** the website will be **`kvit-mk.pages.dev`** and the API **`kvit-mk-api.onrender.com`**.

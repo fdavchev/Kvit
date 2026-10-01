@@ -1,25 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { captureError, stubFetch } from '@/test/apiTestHelpers'
 import { ApiError, apiRequest } from './apiClient'
-
-function stubFetch(result: Response | Error) {
-  const fetchMock = vi.fn(async () => {
-    if (result instanceof Error) {
-      throw result
-    }
-    return result
-  })
-  vi.stubGlobal('fetch', fetchMock)
-  return fetchMock
-}
-
-async function captureError(promise: Promise<unknown>): Promise<unknown> {
-  try {
-    await promise
-  } catch (error) {
-    return error
-  }
-  throw new Error('Expected the request to fail, but it succeeded')
-}
 
 describe('apiRequest', () => {
   afterEach(() => {

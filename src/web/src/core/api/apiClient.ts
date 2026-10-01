@@ -19,8 +19,19 @@ export class ApiError extends Error {
   }
 }
 
+export const unauthorizedStatus = 401
+export const forbiddenStatus = 403
+
 const jsonMediaTypes = ['application/json', 'application/problem+json']
 const noContentStatus = 204
+
+export function jsonRequest(method: 'POST' | 'PUT', body: unknown): RequestInit {
+  return {
+    method,
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  }
+}
 
 export async function apiRequest(
   path: string,

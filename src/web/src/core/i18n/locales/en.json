@@ -9,7 +9,20 @@
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
-    "network": "Can't reach the server. Check your connection and try again."
+    "network": "Can't reach the server. Check your connection and try again.",
+    "AUTH_INVALID_CREDENTIALS": "Wrong email or password.",
+    "AUTH_EMAIL_TAKEN": "This email already has an account. Log in, or use a different email.",
+    "AUTH_EMAIL_INVALID": "Enter a valid email address.",
+    "AUTH_PASSWORD_TOO_WEAK": "The password needs at least 8 characters, one capital letter and one number.",
+    "AUTH_DISPLAY_NAME_INVALID": "Enter your name (up to 60 characters).",
+    "AUTH_LOCKED_OUT": "Too many wrong passwords. Wait a few minutes and try again.",
+    "AUTH_NOT_SIGNED_IN": "Your session ended. Log in again.",
+    "TIME_ZONE_INVALID": "We couldn't read your phone's time zone, so this isn't possible on this device for now.",
+    "LANGUAGE_INVALID": "That language isn't supported.",
+    "RATE_LIMITED": "Too many tries. Wait a few minutes and try again.",
+    "AUTH_MUST_CHANGE_PASSWORD": "Choose a new password to continue.",
+    "AUTH_CURRENT_PASSWORD_WRONG": "Wrong password.",
+    "AUTH_PASSWORD_UNCHANGED": "The new password must be different from the old one."
   },
   "language": {
     "label": "Language",
