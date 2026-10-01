@@ -186,6 +186,22 @@ You never type these. When you need one, tell the Claude session which, and it p
 
 ---
 
+# Part 4 (before the merge): let CI deploy to Render and show it on GitHub
+
+**What this does:** after you merge, GitHub runs the tests, applies database changes to Neon, then asks Render to deploy that exact version and waits until it is live. You see the result as a line in the CI list (red if it fails). For that, GitHub needs your Render key, and Render's own automatic deploy must be switched off so it does not deploy twice.
+
+Do these **in this order, right before you click Merge** (not earlier, because with Auto-Deploy off and no CI step on `main` yet, nothing would deploy):
+
+1. **Variable (not secret):** GitHub → repository `kvit` → **Settings** → **Secrets and variables** → **Actions** → tab **Variables** → **New repository variable**. Name `RENDER_SERVICE_ID`, value `srv-dava8maj9qps73e84kl0` → **Add variable**.
+2. **Secret:** same page, tab **Secrets** → **New repository secret**. Name `RENDER_API_KEY`. The Claude session puts the key on your clipboard (say "key for GitHub"); you click the Secret box, Ctrl+V, **Add secret**.
+3. **Render:** service `kvit-mk-api` → **Settings** → **Build & Deploy** (or **Deploy**) → **Auto-Deploy** → **No / Off** → save.
+4. Merge the pull request.
+5. Watch GitHub: the **CI** run on `main` should end with the step **Deploy to Render and wait until it is live** in green (it takes 5 to 10 minutes). Open `https://kvit-mk.pages.dev` after it.
+
+**If it goes wrong:** the step is red with a message. Common ones: a missing secret or variable (it names which), `queued` (another deploy was running, run the CI job again), `build_failed` (look at the Render log). To go back to the old way: in Render set **Auto-Deploy** back to **After CI Checks Pass**, and tell the Claude session to remove the step.
+
+---
+
 # Part 3 (Step 3b): Cloudflare Pages: the website
 
 **What this does:** Cloudflare Pages is the free home of the website. It also runs a tiny forwarding program (the "Pages Function") that passes every `/api/...` request on to Render and adds the proxy secret. Your API address is `https://kvit-mk-api.onrender.com`.

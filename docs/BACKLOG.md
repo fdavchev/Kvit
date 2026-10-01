@@ -64,3 +64,6 @@
 - **A paid name** (about 10 € a year, needs a card) can be attached to Cloudflare Pages later with no code change, only if Filip decides to pay.
 - **Older Kvit screenshots in `fdavchev.github.io`** (`v2/src/assets/screenshots/kvit-welcome.png`, `kvit-api-scalar.png`) are out of date (desktop Welcome before the theme button; the Phase 1 API page). Filip's portfolio, not part of this repository.
 - **Render health checks and the free sleep:** whether Render's `/health` checks keep a free server awake is NOT VERIFIED; the live run (Step 4) shows it.
+- **Render logs show every SQL command** (EF Core Information level, parameters hidden as `?`). Harmless but noisy; set the Render variable `Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command` to `Warning` if the log gets hard to read.
+- **Render rebuilds on every commit to `main`**, even docs-only or website-only ones. Render "Build Filters" (folder list) could limit it to `src/api`; how Render's free build allowance works is NOT VERIFIED.
+- **Test account in Neon:** `phase5-check@example.com` (created by the sign-up-limit test, password `Sunce2026`). Delete it from Neon's Tables view or with a SQL command before real users arrive.

@@ -24,11 +24,26 @@ Branch `chore/05-first-deploy`, PR #7 (open). Steps 1 and 2 are in their own rep
 | Screenshots are real pages of the running app (checked two by eye) | VERIFIED by live run |
 | Render settings Health Check Path `/health` and Auto-Deploy "After CI Checks Pass" | NOT VERIFIED (Filip's step, not confirmed) |
 | Cloudflare variables set for Production AND Preview | NOT VERIFIED |
-| Visitor-address chain (made-up headers through Cloudflare), sign-up through the site, still logged in after a Render redeploy, sign-up limit 429, Neon not woken by `/health`, wake-up times | NOT VERIFIED (Step 4) |
+| Visitor-address chain: 12 log-ins through the site, each with different made-up `X-Forwarded-For`, `X-Kvit-Visitor-Ip`, `True-Client-IP`, `X-Real-IP`: #1 to #10 answered 401, #11 and #12 answered 429 (the API counted one real address and ignored the fakes; Render passes the proxy's headers through) | VERIFIED by live run |
+| A made-up `CF-Connecting-IP` sent through the site is refused by Cloudflare itself (403, "error code: 1000"); Cloudflare's error-1000 page lists "The request includes a CF-Connecting-IP header" as a cause | VERIFIED by live run and by Cloudflare's docs |
+| Sign-up limit: sign-up #1 created an account (200), #2 to #5 answered 400 `AUTH_EMAIL_TAKEN`, #6 and #7 answered 429 `RATE_LIMITED` (5 counted in 10 minutes, as decided) | VERIFIED by live run (test account `phase5-check@example.com` now exists in Neon) |
+| Still logged in on `kvit-mk.pages.dev` after a manual Render deploy (proves the login keys live in Postgres) | REPORTED by Filip (his browser session); the API log he pasted shows the cookie's user being loaded from Neon |
+| Cookie round trip from curl (sign-up then `/api/auth/me`) | NOT VERIFIED (my curl cookie jar was overwritten by the later requests; a test mistake, not an app result) |
+| Neon not woken by `/health`, wake-up times of Render and Neon, sign-up on a real phone | NOT VERIFIED (still to do) |
 | The `libgssapi_krb5.so.2` line in Render's log is harmless | VERIFIED indirectly (the 401 above); cause NOT VERIFIED from docs |
 | Migration step on `main` in CI | NOT VERIFIED (first run at the merge) |
 | Google accepts `kvit-mk.pages.dev` as an authorized domain | NOT VERIFIED |
 | Real phone checks (status bar, zoom, keyboard, notch, tap flash, 44 px, theme default) | NOT VERIFIED |
+
+## Render deploy driven by CI (added scope, built after the live proofs)
+| Claim | Label |
+|---|---|
+| The Render API works on the free plan: a read-only list of the service's deploys answered; service `kvit-mk-api`, plan `free`, `autoDeployTrigger` = `checksPass` (confirms the Auto-Deploy setting) | VERIFIED by live run |
+| `scripts/RenderDeploy.cs` `--watch-latest` run against the real Render service printed `deploy dep-...: live` and exited 0 (real response shapes accepted) | VERIFIED by live run |
+| 9 tests against a fake Render server (live after polling, build_failed, unknown status, 401, timeout, missing key, 202 queued, watch-latest, key never printed); full suite 517/517, build 0 warnings | VERIFIED by automated test |
+| The trigger call (`POST .../deploys` with `commitId`) against the real Render | NOT VERIFIED (first run at the merge; Auto-Deploy must be Off) |
+| The three new CI steps on GitHub's runner | NOT VERIFIED (first run at the merge) |
+| The line shows on the commit on `main`, not in the pull-request box | VERIFIED in GitHub's docs |
 
 ## Notes
 - A first attempt to start the local API failed only because it ran without Development mode (no user secrets); fixed by setting `ASPNETCORE_ENVIRONMENT=Development`. The local API and dev server were stopped at the end.
