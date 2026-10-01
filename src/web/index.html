@@ -3,18 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
     <meta
       name="theme-color"
-      content="#ffffff"
+      content="#ffd9a8"
       media="(prefers-color-scheme: light)"
     />
     <meta
       name="theme-color"
-      content="#1c1917"
+      content="#351f1b"
       media="(prefers-color-scheme: dark)"
     />
+    <script>
+      try {
+        const theme = localStorage.getItem('kvit.theme')
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.dataset.theme = theme
+          const color = document.querySelector(
+            `meta[name="theme-color"][media="(prefers-color-scheme: ${theme})"]`,
+          ).content
+          document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
+            meta.content = color
+          })
+        }
+      } catch (error) {
+        console.warn('Could not apply the saved "kvit.theme" before the first paint', error)
+      }
+    </script>
     <title>Kvit</title>
   </head>
   <body>

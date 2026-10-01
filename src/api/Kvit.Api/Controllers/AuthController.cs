@@ -1,4 +1,5 @@
 using Kvit.Api.Authorization;
+using Kvit.Api.RateLimiting;
 using Kvit.Application.Commands.Auth;
 using Kvit.Application.Dispatching;
 using Kvit.Contracts.Auth;
@@ -15,7 +16,7 @@ namespace Kvit.Api.Controllers
     {
         [HttpPost("register")]
         [AllowAnonymous]
-        [EnableRateLimiting("sign-up")]
+        [ServiceFilter<SignUpLimitFilter>]
         public async Task<ActionResult<MeResponse>> Register(RegisterRequest request, CancellationToken cancellationToken)
         {
             RegisterCommand command = new(request.DisplayName, request.Email, request.Password, request.TimeZone, request.Language);

@@ -6,7 +6,7 @@
 
 ## Everywhere
 - **Phone first:** designed for 360 px width, then grows.
-- **Dark mode** follows the phone's setting.
+- **Dark mode** follows the phone's or PC's setting by default; Settings can force Light or Dark (2026-10-02).
 - **Every text** comes from `en.json` / `mk.json`. `<html lang>` switches to `mk` for Macedonian.
 - **Bottom bar (proposal):** Home · Groups · Settings. Release 2 adds **Budget** between Groups and Settings.
 - **Undo toast** instead of "Are you sure?": every delete shows "Deleted · Undo" for a few seconds.
@@ -144,6 +144,7 @@ The speed screen (DECISIONS "Speed details"):
 - Language: **English / Македонски**.
 - Time zone: detected automatically, shown as text, with **Choose manually**.
 - **Log out.**
+- **Theme:** Same as device (default) · Light · Dark (decided 2026-10-02).
 - Link to the privacy page.
 
 ### 19. Privacy, `/privacy` (public)

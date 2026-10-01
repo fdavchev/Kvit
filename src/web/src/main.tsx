@@ -7,8 +7,11 @@ import { createQueryClient } from '@/core/api/queryClient'
 import { startI18n } from '@/core/i18n/i18n'
 import { router } from '@/core/router/router'
 import { renderStartupFailure } from '@/core/startup/renderStartupFailure'
+import { startTheme } from '@/core/theme/startTheme'
 import { KvitToaster } from '@/shared/components/KvitToaster'
 import './index.css'
+
+startTheme()
 
 const rootElement = document.getElementById('root')
 if (rootElement === null) {

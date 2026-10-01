@@ -10,9 +10,11 @@ namespace Kvit.Api.Tests.Auth
         public const string DefaultTimeZone = "Europe/Skopje";
         public const string WrongPassword = "Wrong-password-1";
 
-        public static Task<HttpResponseMessage> RegisterAsync(HttpClient client, RegistrationForm form)
+        public const string RegisterPath = "/api/auth/register";
+
+        public static string RegistrationJson(RegistrationForm form)
         {
-            string json = JsonSerializer.Serialize(new
+            return JsonSerializer.Serialize(new
             {
                 displayName = form.DisplayName,
                 email = form.Email,
@@ -20,8 +22,11 @@ namespace Kvit.Api.Tests.Auth
                 timeZone = form.TimeZone,
                 language = form.Language,
             });
+        }
 
-            return PostJsonAsync(client, "/api/auth/register", json);
+        public static Task<HttpResponseMessage> RegisterAsync(HttpClient client, RegistrationForm form)
+        {
+            return PostJsonAsync(client, RegisterPath, RegistrationJson(form));
         }
 
         public static Task<HttpResponseMessage> LogInAsync(HttpClient client, string email, string password, string timeZone = DefaultTimeZone)

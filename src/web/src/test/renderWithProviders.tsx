@@ -1,7 +1,7 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
 import { render, renderHook, type RenderHookResult } from '@testing-library/react'
 import type { i18n as I18nInstance } from 'i18next'
-import { createElement, type ReactNode } from 'react'
+import { createElement, type ReactElement, type ReactNode } from 'react'
 import { I18nextProvider } from 'react-i18next'
 import { createMemoryRouter, type DataRouter, type RouteObject } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
@@ -12,6 +12,7 @@ import type { Language } from '@/core/i18n/language'
 interface RenderOptions {
   language?: Language
   seedCache?: (queryClient: QueryClient) => void
+  prepareI18n?: (i18n: I18nInstance) => void
 }
 
 interface Providers {
@@ -41,6 +42,7 @@ async function createProviders(options: RenderOptions): Promise<Providers> {
   })
   options.seedCache?.(queryClient)
   const i18n = await createI18n(options.language ?? 'en')
+  options.prepareI18n?.(i18n)
 
   const withProviders = ({ children }: { children: ReactNode }): ReactNode =>
     createElement(
@@ -70,4 +72,19 @@ export async function renderRoutesWithProviders(
   const router = createMemoryRouter(routeObjects, { initialEntries: [initialPath] })
   render(<RouterProvider router={router} />, { wrapper: withProviders })
   return { router, queryClient, i18n }
+}
+
+export async function renderElementWithProviders(
+  element: ReactElement,
+  path: string,
+  options: RenderOptions = {},
+): Promise<RoutesRender> {
+  return renderRoutesWithProviders(
+    [
+      { path, element },
+      { path: '*', element: <p>another page</p> },
+    ],
+    path,
+    options,
+  )
 }

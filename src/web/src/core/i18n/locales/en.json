@@ -5,7 +5,8 @@
   "common": {
     "comingSoon": "Coming soon",
     "loading": "Loading…",
-    "retry": "Try again"
+    "retry": "Try again",
+    "back": "Back"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -36,6 +37,40 @@
     "continueWithGoogle": "Continue with Google",
     "signUpWithEmail": "Sign up with email",
     "haveAccount": "I already have an account"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "At least 8 characters, one capital letter and one number.",
+    "signUp": {
+      "title": "Create account",
+      "name": "Your name"
+    },
+    "logIn": {
+      "title": "Log in",
+      "noAccount": "I don't have an account",
+      "forgot": "Forgot your password? Ask Filip to reset it."
+    },
+    "changePassword": {
+      "title": "Change password",
+      "resetNote": "Your password was reset. Choose a new one to continue.",
+      "current": "Current password",
+      "new": "New password",
+      "submit": "Save new password",
+      "done": "Password changed."
+    }
+  },
+  "home": {
+    "greeting": "Hi, {{name}}",
+    "placeholder": "Your groups and balances will appear here."
+  },
+  "settings": {
+    "title": "Settings",
+    "logOut": "Log out",
+    "theme": "Theme",
+    "themeSystem": "Same as device",
+    "themeLight": "Light",
+    "themeDark": "Dark"
   },
   "notFound": {
     "title": "Page not found",
