@@ -1,14 +1,13 @@
 # Status: Kvit
 
-_Last updated: 2026-10-01 (Phase 4 complete and merged; Phase 5 is next)_
+_Last updated: 2026-10-01 (Phase 5, Step 1 done on the branch, not yet committed)_
 
 ## Where we stopped
-- Branch: `feat/04-accounts` merged into `main` as PR #6 (2026-10-01); last feature commit `65a6064`. Next branch: `chore/05-first-deploy`.
-- Uncommitted changes: none (the wrap-up docs are the last commit before the merge).
-- Last thing done: Phase 4 is finished. Database, email accounts, rate limits and the proxy gate, reset by hand with a forced password change, and the frontend (Welcome, Sign up, Log in, Home placeholder, Settings with language and theme, Change password) in the approved look. Filip tested the screens himself and said everything looks fine. Report: `docs/reports/2026-10-01-phase-04-accounts.md` (its last section holds the Phase 4 decision log).
+- Branch: `chore/05-first-deploy` (Phase 4 is merged as PR #6). Uncommitted: Step 1 (design-time factory, CI migration steps, 6 tests, docs).
+- Last thing done: Phase 5 plan approved. Step 1 built: `AppDbContextFactory` and `UseKvitDatabase`, plus CI steps that check for forgotten migrations and, on `main`, apply migrations to Neon with a bundle. 508/508 backend tests, 0 warnings. Report: `docs/reports/2026-10-01-phase-05-step-1-migration-path.md`. The Phase 5 decision log is at the top of `docs/DECISIONS.md`.
 
 ## Next step
-Phase 5, first deploy. Claude proposes the plan (Neon, Render, Cloudflare Pages, the shared proxy secret, a separate online certificate, how migrations reach Neon) and waits for Filip's go. Filip then creates the free accounts with `docs/guides/free-hosting-setup.md` (Part A and B1 to B3, B5). No card anywhere.
+Phase 5, Step 2: Filip commits Step 1, creates the Neon project (Postgres 17, Frankfurt), applies the first migration from his PC and adds the GitHub secret `NEON_DIRECT_CONNECTION_STRING` (before the merge, or CI on `main` goes red on purpose). Claude writes `docs/guides/phase-05-go-online.md` for it. No card anywhere.
 
 ## Then
 - Test on Filip's real phone: sign up, close the browser, come back still logged in; the phone-only items listed in `docs/ROADMAP.md` Phase 5.

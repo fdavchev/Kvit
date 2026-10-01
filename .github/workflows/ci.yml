@@ -35,6 +35,39 @@ jobs:
       - name: Docker build
         run: docker build -f src/api/Dockerfile .
 
+      - name: Restore the .NET tools
+        run: dotnet tool restore
+
+      - name: Check that every model change has a migration
+        env:
+          ConnectionStrings__KvitDatabase: Host=localhost;Database=ci-design-time
+        run: dotnet ef migrations has-pending-model-changes --project src/api/Kvit.Infrastructure --startup-project src/api/Kvit.Api --configuration Release --no-build
+
+      - name: Check the Neon secret is set
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          NEON_DIRECT_CONNECTION_STRING: ${{ secrets.NEON_DIRECT_CONNECTION_STRING }}
+        run: |
+          if [ -z "$NEON_DIRECT_CONNECTION_STRING" ]; then
+            echo "::error::The repository secret NEON_DIRECT_CONNECTION_STRING is missing or empty, so the migrations cannot be applied to Neon. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Build the migration bundle
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          ASPNETCORE_ENVIRONMENT: Production
+          ConnectionStrings__KvitDatabase: Host=localhost;Database=ci-design-time
+        run: dotnet ef migrations bundle --project src/api/Kvit.Infrastructure --startup-project src/api/Kvit.Api --configuration Release --no-build --output "$RUNNER_TEMP/efbundle" --force
+
+      - name: Apply the database migrations to Neon
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          ASPNETCORE_ENVIRONMENT: Production
+          ConnectionStrings__KvitDatabase: ${{ secrets.NEON_DIRECT_CONNECTION_STRING }}
+        run: |
+          "$RUNNER_TEMP/efbundle"
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

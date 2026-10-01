@@ -53,7 +53,7 @@ dotnet user-secrets set "ConnectionStrings:KvitDatabase" "Host=localhost;Port=54
 **If it fails:** send me the text it shows.
 
 ### Step 5: create the tables
-> **On a new PC, do Part 3, Step 2 (the certificate) first.** Since Step 2b this command needs it too. On your PC now it is already done.
+> **Since Phase 5 this command needs only the database connection string** (Part 1, Step 4). The certificate is not needed for `dotnet ef` any more.
 ```
 dotnet ef database update --project src/api/Kvit.Infrastructure --startup-project src/api/Kvit.Api
 ```
@@ -122,7 +122,7 @@ dotnet test Kvit.slnx
 ### What changed for you
 The login cookie is locked with secret keys. From now on those keys are kept in your database (not in a file), and they are locked with a **certificate**: a small secret file that only your PC and, later, the online server know. One command makes it and saves it in your private secrets, so you never copy anything by hand.
 
-**From this step on, the local API refuses to start until you have done Step 2 below.** Its error message tells you what to do. The same goes for the `dotnet ef` commands from Parts 1 and 2: on a new PC, do Step 2 below before them.
+**From this step on, the local API refuses to start until you have done Step 2 below.** Its error message tells you what to do. (Since Phase 5 the `dotnet ef` commands from Parts 1 and 2 no longer need it.)
 
 ### Step 1: keep Docker Desktop open
 The script itself does not need Docker, but Step 4 starts the API, which reads the database. Open Docker Desktop and check that `kvit-postgres` has a green dot.

@@ -1,5 +1,29 @@
 # Decisions
 
+## 2026-10-01: Phase 5 (first deploy): decision log, in progress
+Facts behind these choices were re-checked against official docs on 2026-10-01 (`reports/2026-10-01-phase-05-step-1-migration-path.md`).
+
+**Step 1 (migration path)**
+- **Migrations reach Neon through an EF migration bundle run by CI,** as steps at the end of the existing `backend` job, on a push to `main` only, with the **direct** Neon string from the GitHub secret `NEON_DIRECT_CONNECTION_STRING`.
+  - *Why:* Microsoft's guide (updated 2026-08) says "for automated deployment, use a migration bundle". Render's "After CI Checks Pass" waits for all checks on the commit and skips the deploy if one fails, so a failed migration stops the deploy.
+  - *Why steps and not a new job:* whether a job queued behind `needs:` already counts as a check when Render looks is not documented. Steps inside `backend` have no such gap and need no ruleset change.
+  - *Rejected:* the app migrating itself at start-up (every Render wake-up would touch Neon); `dotnet ef database update` in CI (Microsoft: development only); a SQL script (needs a manual review step and skips EF's migration lock).
+- **A design-time factory (`AppDbContextFactory`) in `Kvit.Api`,** so `dotnet ef` and the bundle need only the connection string. EF's tools return before running `Program.cs` when a factory exists and there is one context (EF source, release/10.0).
+  - *Why:* the online certificate never has to go to GitHub, and local `dotnet ef` no longer needs the certificate settings.
+  - *Rejected:* putting the certificate in GitHub secrets (two more secrets in one more place).
+  - The `UseNpgsql` + snake_case setup became one method, `UseKvitDatabase`, used by the app and the factory.
+- **The bundle is built with a harmless placeholder connection string and run with the secret.** Creating the bundle starts the context through the factory, so it needs a string even though it does not connect. Only the step that runs the bundle sees the secret, so the build step (project code) never does.
+- **A CI guard, `dotnet ef migrations has-pending-model-changes`,** runs on every push and fails when the model changed without a migration. Proven locally: exit 0 with no change, exit 1 after a change.
+- **Migrations must be backward-compatible** with the code still running, because they run before the new code is live (rule added to `ARCHITECTURE.md` Part 1).
+- **`EnableRetryOnFailure` is not adopted** unless the live run shows Neon's wake-up failing the first request. Neon says it wakes in "a few hundred milliseconds" but not whether a connection waits (NOT VERIFIED). Step 4 measures it. If it fails, `IUnitOfWork` must run the whole unit of work inside `CreateExecutionStrategy().ExecuteAsync`, because EF throws on user-started transactions.
+
+**The web address**
+- **Stays `kvit-mk.pages.dev`** (Filip asked for a free name like `kvit.something`; researched 2026-10-01).
+  - *Rejected:* is-a.dev and js.org (their terms forbid an app like Kvit); eu.org (commercial use strongly discouraged, and Google would very likely refuse it as an authorized domain); DigitalPlat us.kg (spam blocklist, suspended once); pp.ua (allowed, but publishes the owner's name and phone number and needs a manual yearly renewal).
+  - A paid name (about 10 € a year, needs a card) can be attached later with no code change, only if Filip decides to pay.
+- **Google sign-in on `pages.dev`: works with conditions.** Only openid, email and profile means no app verification, no warning screen and no 100-user cap. Brand verification (the "Kvit" name and logo on Google's window) needs a DNS record, impossible on `pages.dev`, so people see "kvit-mk.pages.dev". Preview addresses cannot sign in. Whether Google accepts `kvit-mk.pages.dev` as an authorized domain is NOT VERIFIED, and Filip tests it in Step 3.
+- **Filip, 2026-10-01:** seeing "kvit-mk.pages.dev" in Google's window instead of "Kvit" is fine for now. Revisit a paid name only if users find it confusing or Google refuses the address.
+
 ## 2026-10-01: Phase 4 (database + email accounts): done and merged, the product rules that stay
 The whole Phase 4 decision log (technical decisions, rejected alternatives, code-review findings, the three mockup rounds, the approved Macedonian wording tables, every step block) moved word for word to the end of `reports/2026-10-01-phase-04-accounts.md`, section "Decisions and rejected alternatives". What the app does, as Filip decided it:
 
