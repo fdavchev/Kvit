@@ -1,13 +1,13 @@
+using Kvit.Api.Tests.Hosting;
 using Kvit.Domain.Results;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Kvit.Api.Tests.Controllers
 {
-    public class BaseControllerTests(WebApplicationFactory<Program> _factory) : IClassFixture<WebApplicationFactory<Program>>
+    public class BaseControllerTests(KvitApiFactory _factory) : IClassFixture<KvitApiFactory>
     {
         private const string ErrorMessage = "Group was not found.";
         private const string ErrorCode = "TEST_NOT_FOUND";

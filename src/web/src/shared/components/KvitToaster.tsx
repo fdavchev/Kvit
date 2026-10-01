@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { Toaster } from 'sonner'
+import { useTheme } from '@/core/theme/useTheme'
 
 const toasterStyle: CSSProperties & Record<`--${string}`, string> = {
   '--normal-bg': 'var(--popover)',
@@ -9,5 +10,6 @@ const toasterStyle: CSSProperties & Record<`--${string}`, string> = {
 }
 
 export function KvitToaster() {
-  return <Toaster theme="system" position="bottom-center" style={toasterStyle} />
+  const { theme } = useTheme()
+  return <Toaster theme={theme} position="bottom-center" style={toasterStyle} />
 }

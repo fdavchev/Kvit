@@ -41,7 +41,7 @@ Only the projects needed now; `Kvit.Contracts` and `Kvit.Infrastructure` arrive 
 
 ## Phase 2: Frontend skeleton · `feat/02-frontend-skeleton`
 - [x] `src/web` from the official Vite `react-ts` template (it installs TypeScript 6.0 and oxlint; VERIFIED from the template's `package.json`, create-vite 9.2.1)
-- [x] **Try TypeScript 7:** switch, run lint + build + test; keep it if all pass, otherwise stay on 6.0 and log why in `DECISIONS.md` — **kept** (VERIFIED: `npm run lint`/`build`/`test` all pass on TS 7.0.2)
+- [x] **Try TypeScript 7:** switch, run lint + build + test; keep it if all pass, otherwise stay on 6.0 and log why in `reports/2026-09-26-phase-02-frontend-skeleton.md` — **kept** (VERIFIED: `npm run lint`/`build`/`test` all pass on TS 7.0.2)
 - [x] Styling: Tailwind CSS v4 + CSS variables as design tokens (light and dark), shadcn/ui (Base UI) set up with its files in `shared/components/ui/`, Sonner for toasts
 - [x] React Router with the route table and a `<RequireAuth>` placeholder
 - [x] react-i18next with `en.json` / `mk.json`, `<html lang>` switching, a plural test (21 → "one" in Macedonian)
@@ -55,7 +55,7 @@ Only the projects needed now; `Kvit.Contracts` and `Kvit.Infrastructure` arrive 
 - [x] **Filip:** commit, push, open the pull request, see CI go green on GitHub, merge into `main` (PR #2 merged 2026-09-26; CI green on the branch and on `main`)
 
 ## Phase 3: Money core · `feat/03-money-core`
-Pure C# in `Kvit.Domain/MoneyRules/` (not `Money/`, see `DECISIONS.md` 2026-09-29), no database. The heart of the app, tested hardest.
+Pure C# in `Kvit.Domain/MoneyRules/` (not `Money/`, see `reports/2026-09-29-phase-03-money-core.md`), no database. The heart of the app, tested hardest.
 - [x] `Currency`, `Money(long MinorUnits, Currency Currency)`; adding two currencies is a failure
 - [x] Rounding step per currency (MKD to whole denars, EUR to the cent)
 - [x] The four split functions (Equal + extras, Exact, Percentage, Shares), leftover to the payer
@@ -67,29 +67,36 @@ Pure C# in `Kvit.Domain/MoneyRules/` (not `Money/`, see `DECISIONS.md` 2026-09-2
 - [x] **Filip:** commit, push, open the pull request, see CI go green on GitHub, merge into `main` (PR #4 merged 2026-09-29)
 
 ## Phase 4: Database + email accounts · `feat/04-accounts`
-- [ ] `Kvit.Contracts` (request/response shapes) and `Kvit.Infrastructure`: `AppDbContext`, snake_case naming, Identity with `Guid` ids, the Kvit user columns
-- [ ] Add each new project's `.csproj` to the `COPY` lines of `src/api/Dockerfile` (`Kvit.Infrastructure`, `Kvit.Contracts`). Without them `dotnet restore` inside the image fails, and only Render's deploy would show it (review 01-1; CI builds the image from Step 2 of the review-fix branch, so the CI run on this phase's PR catches a missing line)
-- [ ] A test that the Scrutor scan in `Register.Application.cs` registers the first real handler: resolve it through the real `AddApplication()` and send a request through the dispatcher. Today the scan finds zero handlers and no test proves it works (review 01-2)
-- [ ] A fallback authorization policy that requires a signed-in user, with `/health` and `/api/health` explicitly marked anonymous, so a controller written without `[Authorize]` is closed, not open. It can't be built before an auth scheme exists, so it belongs here. Test: an endpoint without `[Authorize]` answers 401, and both health routes still answer 200 without a login (review 01-3)
-- [ ] Per-IP rate limiting reads the visitor address the Cloudflare proxy forwards: the proxy sets `X-Forwarded-For` from `cf-connecting-ip` (see `DECISIONS.md` 2026-09-29), read through ASP.NET's forwarded-headers middleware, not `HttpContext.Connection.RemoteIpAddress` (that is Cloudflare's or Render's own address). Also decide how the API refuses a client-supplied `X-Forwarded-For` on direct `onrender.com` requests, and check what Render's load balancer does to the header (see the trap in `ARCHITECTURE.md`). Test that a client-supplied `X-Forwarded-For` doesn't change the address the limiter counts
-- [ ] Data Protection keys in Postgres, encrypted with a certificate (and a small script that makes the certificate)
-- [ ] Login cookie: HttpOnly, Secure, SameSite=Lax (or Strict), long-lived. This is the only CSRF protection: there is no anti-forgery token, and the API is also reachable directly on `onrender.com`. Checked by the cookie-flags test below (review 02-9)
-- [ ] Own auth endpoints: register (name + email + password), log in, log out, "me". Not `MapIdentityApi`: it has no name field, no Google, and exposes password-reset/2FA endpoints we can't support without email (decided 2026-09-25)
-- [ ] Rate limiting on log-in and sign-up; time zone and language saved from the phone
-- [ ] `usage_events` table + `SignedUp` event
-- [ ] First migration; `compose.yaml` with a local Postgres 17 (no password, only reachable from this PC); connection string through `dotnet user-secrets`
-- [ ] `Kvit.Api.Tests` with Testcontainers (a real Postgres in Docker): register → me → log out, wrong password, rate limit, cookie flags
-- [ ] Frontend: Sign up, Log in, `RequireAuth`, Settings (language, log out)
-- **Done when:** all tests pass; sign up → log out → log in works in the browser at phone width.
+- [x] `Kvit.Contracts` (request/response shapes) and `Kvit.Infrastructure`: `AppDbContext`, snake_case naming, Identity with `Guid` ids, the Kvit user columns. **Done in Steps 1 and 2a (VERIFIED by automated test, 403/403)**
+- [x] Add each new project's `.csproj` to the `COPY` lines of `src/api/Dockerfile` (`Kvit.Infrastructure`, `Kvit.Contracts`). Without them `dotnet restore` inside the image fails, and only Render's deploy would show it (review 01-1; CI builds the image from Step 2 of the review-fix branch, so the CI run on this phase's PR catches a missing line). **Both lines done in Steps 1 and 2a (image builds, VERIFIED by live run)**
+- [x] **Done in Step 2a (VERIFIED by automated test).** A test that the Scrutor scan in `Register.Application.cs` registers the first real handler: resolve it through the real `AddApplication()` and send a request through the dispatcher. Today the scan finds zero handlers and no test proves it works (review 01-2)
+- [x] **Done in Step 2a (VERIFIED by automated test); side effect: an unknown path now answers 401 to an anonymous visitor (`DECISIONS.md`).** A fallback authorization policy that requires a signed-in user, with `/health` and `/api/health` explicitly marked anonymous, so a controller written without `[Authorize]` is closed, not open. It can't be built before an auth scheme exists, so it belongs here. Test: an endpoint without `[Authorize]` answers 401, and both health routes still answer 200 without a login (review 01-3)
+- [x] **Done in Step 3 (VERIFIED by automated test and by live run with `wrangler pages dev`; Render and the real Cloudflare edge NOT VERIFIED until Phase 5).** Per-IP rate limiting reads the visitor address through ASP.NET's forwarded-headers middleware from the header `X-Kvit-Visitor-Ip`, which only the Cloudflare proxy can set (it carries the secret `x-kvit-proxy-secret`; the API answers 403 without it except on the health routes); a client-sent `X-Forwarded-For` does not change the counted address (tested). Render's own `X-Forwarded-For` is no longer used
+- [x] **Done in Step 2b (VERIFIED by automated test; the Linux image restart check was run by the coder, not repeated by me).** Data Protection keys in Postgres, encrypted with a certificate (and a small script that makes the certificate)
+- [x] **Done in Step 2a (SameSite=Lax, 90 days; VERIFIED by automated test).** Login cookie: HttpOnly, Secure, SameSite=Lax (or Strict), long-lived. This is the only CSRF protection: there is no anti-forgery token, and the API is also reachable directly on `onrender.com`. Checked by the cookie-flags test below (review 02-9)
+- [x] **Done in Step 2a (VERIFIED by automated test; live curl run reported by the coder).** Own auth endpoints: register (name + email + password), log in, log out, "me". Not `MapIdentityApi`: it has no name field, no Google, and exposes password-reset/2FA endpoints we can't support without email (decided 2026-09-25)
+- [x] **Done in Step 3 (VERIFIED by automated test and by live run with `wrangler pages dev`).** Rate limiting on log-in (10 a minute) and sign-up (5 per 10 minutes) per visitor address, the proxy secret gate and `X-Kvit-Visitor-Ip`; time zone and language saved from the phone (done in Step 2a, VERIFIED by automated test)
+- [x] `usage_events` table + `SignedUp` event. **Table in Step 1, the event written at sign-up in Step 2a (VERIFIED by automated test)**
+- [x] First migration; `compose.yaml` with a local Postgres 17 (no password, only reachable from this PC); connection string through `dotnet user-secrets` (Step 1: VERIFIED by live run; Filip sets his own secret with `guides/phase-04-local-setup.md`)
+- [x] `Kvit.Api.Tests` with Testcontainers (a real Postgres in Docker): register → me → log out, wrong password, rate limit, cookie flags. **Done: Testcontainers setup and database tests (Step 1); register → me → log out, wrong password, lock ladder, cookie flags (Step 2a); rate limits, proxy gate, address grouping (Step 3). 452 tests, VERIFIED by automated test**
+- [x] **Step 3b (done 2026-10-01; VERIFIED by automated test, 493/493; the script run on a throwaway database was REPORTED by the coder):** password reset by hand for Filip (`scripts/ResetPassword.cs`: temporary password shown once, only its hash saved), `must_change_password` enforced by the API, `POST /api/auth/change-password`, three new error codes. Filip never sees anyone's real password
+- [x] **Done 2026-10-01 (VERIFIED by automated test, 437/437; browser runs REPORTED by the tester; Filip's own click-through REPORTED by Filip; a real phone is Phase 5):** Frontend: Sign up, Log in (with "Forgot your password? Ask Filip to reset it."), `RequireAuth`, forced change-password screen, Settings (language, theme, change password, log out). Report: `reports/2026-10-01-phase-04-step-4-frontend.md`
+- [x] **Filip:** commit, push, open the pull request, see CI go green on GitHub, merge into `main` (PR #6 merged 2026-10-01; CI green on the branch and on `main`)
+- **Done when:** all tests pass; sign up → log out → log in works in the browser at phone width. **Reached 2026-10-01** (502 backend and 437 frontend tests pass; Filip tested it himself and said everything looks fine). Report: `reports/2026-10-01-phase-04-accounts.md`
 - **Filip:** Docker Desktop running; run the one-time local setup commands (a guide is written in this phase).
 
 ## Phase 5: First deploy · `chore/05-first-deploy`
 Put the skeleton online early, so the hosting traps show up before there are features.
-- [ ] Forwarded headers for Render (`KnownIPNetworks`), production settings
-- [ ] On the deployed site, prove the visitor-address chain on the real Cloudflare: send a request with a made-up `X-Forwarded-For` and `CF-Connecting-IP` and check that the API sees your own address, not the made-up one (locally this was only checked with `wrangler pages dev`, review 02-1)
+- [ ] Production settings: make the proxy secret once and set it as `Proxy__SharedSecret` on Render and `API_PROXY_SECRET` on Cloudflare (same value, `guides/free-hosting-setup.md` B2/B3). Render refuses to start without it, on purpose. Phase 4 Step 3 already built the forwarded-headers reading (no `KnownIPNetworks` work is left)
+- [ ] On the deployed site, prove the visitor-address chain on the real Cloudflare: send a request with a made-up `X-Forwarded-For` and `CF-Connecting-IP` and check that the API sees your own address, not the made-up one (locally this was only checked with `wrangler pages dev`, review 02-1). Also prove that Render passes `x-kvit-proxy-secret` and `x-kvit-visitor-ip` through untouched (a request without the secret must get 403 from `onrender.com`, one through Cloudflare must work)
 - [ ] How migrations reach Neon (proposal: a CI step runs an EF migration bundle with the **direct** connection string from a GitHub secret, before Render deploys; alternative: the app migrates at startup over the direct connection)
+- [ ] **The online database always has a password.** Neon's connection string contains one; it goes only into Render's secret settings and the GitHub secret used for migrations, never into the repository. The passwordless local database (`compose.yaml`, `trust`) is for this PC only. If `compose.yaml` is ever used anywhere except this PC, or the port is ever opened beyond `127.0.0.1`, first switch it to a password kept in an ignored `.env` file or in `dotnet user-secrets` (Filip, Step 1 review)
+- [ ] Neon: create the project on Postgres 17 (same major version as `compose.yaml` and the tests). Decide on `EnableRetryOnFailure` for the first request after Neon's idle suspend, once its real wake-up time is seen. If adopted, `IUnitOfWork` must run a whole unit of work inside the execution strategy, because EF's retry refuses user-started transactions (Step 1 code review)
+- [ ] Make a separate certificate for the online app with `dotnet run scripts/NewDataProtectionCertificate.cs -- --project <a throwaway project>` (never reuse the local one) and put its two values into Render (`DataProtection__CertificateBase64`, `DataProtection__CertificatePassword`) and into the GitHub secrets for the CI migration step. `dotnet ef` and the migration bundle run `Program.cs`, so the CI step needs both DataProtection settings and the connection string (Step 2b). Option to decide then: an `IDesignTimeDbContextFactory` in `Kvit.Infrastructure`, so `dotnet ef` and the bundle need only the connection string and the certificate never reaches the migration job (Step 2b code review)
 - [ ] Fill in every «from the session» value in `guides/free-hosting-setup.md`
 - [ ] Once the site is live: a **"Try it: kvit-mk.pages.dev"** link at the very top of `README.md`, so visitors see it's a real, working app (Filip, 2026-09-25). Also put the address in GitHub's **About → Website** field
+- [ ] How to run `scripts/ResetPassword.cs` against the online database: its connection string through the environment variable `ConnectionStrings__KvitDatabase` on Filip's PC (the variable wins over local secrets); write the exact steps into `guides/reset-a-password.md` once Neon exists
+- [ ] On a real phone, check what a desktop screenshot cannot show (`reports/2026-10-01-phase-04-step-4-frontend.md`): status-bar colour in light, dark and the Settings theme choice, no page zoom on tapping an input, the right keyboard for email, padding at the notch and home bar, no grey tap flash, 44 px tap areas, the 'Same as device' default on the phone
 - **Filip:** hosting guide Part B1–B3 and B5; test on his iPhone/Android: sign up, close the browser, come back, still logged in.
 - **Done when:** `https://kvit-mk.pages.dev` loads; sign-up works through the proxy; after a manual Render redeploy the user is **still logged in** (proves the database key storage); `/health` never wakes Neon.
 
@@ -119,7 +126,7 @@ Put the skeleton online early, so the hosting traps show up before there are fea
 
 ## Phase 9: Balances + settle up · `feat/09-settle-up`
 - [ ] Balances per currency; "who pays whom"
-- [ ] Pass `Balances.Calculate` every member the group has ever had, **including removed and left members** (`removed_at` set), in joining order; otherwise it throws by design (see `DECISIONS.md` 2026-09-29, follow-up)
+- [ ] Pass `Balances.Calculate` every member the group has ever had, **including removed and left members** (`removed_at` set), in joining order; otherwise it throws by design (see `reports/2026-09-29-phase-03-money-core.md`, follow-up)
 - [ ] Settlements: record, confirm, reject, cancel, delete; owner acts for plain names
 - [ ] Zero-balance rules for leave / remove / delete group
 - [ ] Screens 11, 12; "Needs you" items for pending payments

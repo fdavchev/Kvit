@@ -100,6 +100,7 @@ The building session will give you some exact values: folder names and the names
    |---|---|
    | `ASPNETCORE_HTTP_PORTS` | `10000` (makes .NET listen where Render expects) |
    | «database setting name from the session» | your **POOLED** connection string from A1 |
+   | `Proxy__SharedSecret` | the **proxy secret** (see «Make the proxy secret» below; the **same** value goes into Cloudflare in B3). Without it the app refuses to start, on purpose |
    | «Google client id setting from the session» | the Client ID from B4 (add it after B4) |
    | others «from the session» | … |
 4. Click **Deploy Web Service**.
@@ -109,6 +110,15 @@ The building session will give you some exact values: folder names and the names
    - **Health Check Path:** `/health`
    - **Auto-Deploy:** **After CI Checks Pass**, so it only goes online when the tests passed on GitHub.
 6. **Check:** open `https://kvit-mk-api.onrender.com/health` in your browser. It should show a short "healthy" message. If it takes about a minute, that's the free server waking up. That's normal.
+
+### Make the proxy secret (once, before B2 step 3)
+1. Open PowerShell (any folder) and paste these two lines:
+   ```
+   $b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b)
+   ($b | ForEach-Object { $_.ToString('x2') }) -join ''
+   ```
+   **You should see:** one line of 64 letters and digits.
+2. Copy that line into your secrets file under the heading `PROXY SECRET`, then paste it from there into both places (Render in B2, Cloudflare in B3). Never put it in the repository or in a chat. If you ever think it leaked, make a new one and change it in **both** places, then redeploy both.
 
 ## B3. Cloudflare Pages: put the website online
 1. In Cloudflare, open **Workers & Pages** → **Create application** → **Pages** → **Connect to Git** (it may say "Import an existing Git repository"). Log in to GitHub and click **Install & Authorize**, allowing only the `kvit` repository. Select `kvit` and click **Begin setup**.
@@ -123,6 +133,7 @@ The building session will give you some exact values: folder names and the names
    | Root directory (advanced) | `src/web` |
 3. Under **Environment variables (advanced)**, add:
    - `API_ORIGIN` = your Render address from B2 (e.g. `https://kvit-mk-api.onrender.com`, **no slash at the end**).
+   - `API_PROXY_SECRET` = the same **proxy secret** as `Proxy__SharedSecret` in Render (B2). Use the **Encrypt** option if Cloudflare offers it for this variable. It is the password that tells Kvit's server "this request came through my own website, not straight from the internet". Nothing works without it: the website answers 500.
    - `NODE_VERSION` = `24` (Cloudflare's build machine defaults to Node 22.16, which is too old for React Router 8.4; the frontend pins Node 24 itself via `src/web/.nvmrc`, but Cloudflare's own build step needs this variable too).
    - Anything else «from the session».
 4. Click **Save and Deploy**.

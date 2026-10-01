@@ -3,13 +3,17 @@ import { createI18n } from './i18n'
 import en from './locales/en.json'
 import mk from './locales/mk.json'
 
-function collectKeys(node: object, prefix = ''): string[] {
-  return Object.entries(node).flatMap(([key, value]) => {
+function collectTexts(node: object, prefix = ''): [string, unknown][] {
+  return Object.entries(node).flatMap(([key, value]): [string, unknown][] => {
     const path = prefix === '' ? key : `${prefix}.${key}`
     return typeof value === 'object' && value !== null
-      ? collectKeys(value, path)
-      : [path]
+      ? collectTexts(value, path)
+      : [[path, value]]
   })
+}
+
+function collectKeys(node: object): string[] {
+  return collectTexts(node).map(([path]) => path)
 }
 
 describe('i18n', () => {
@@ -32,6 +36,17 @@ describe('i18n', () => {
 
   it('has exactly the same keys in en.json and mk.json', () => {
     expect(collectKeys(mk).sort()).toEqual(collectKeys(en).sort())
+  })
+
+  it.each([
+    ['en', en, []],
+    ['mk', mk, ['welcome.taglineTranslation']],
+  ])('has no empty text in %s.json except the allowed ones', (_name, locale, allowedEmptyKeys) => {
+    const emptyKeys = collectTexts(locale)
+      .filter(([, text]) => text === '')
+      .map(([path]) => path)
+
+    expect(emptyKeys).toEqual(allowedEmptyKeys)
   })
 
   it('translates a Welcome string in each language', async () => {

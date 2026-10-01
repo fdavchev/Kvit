@@ -1,13 +1,17 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { I18nextProvider } from 'react-i18next'
 import { RouterProvider } from 'react-router/dom'
+import { createQueryClient } from '@/core/api/queryClient'
 import { startI18n } from '@/core/i18n/i18n'
 import { router } from '@/core/router/router'
 import { renderStartupFailure } from '@/core/startup/renderStartupFailure'
+import { startTheme } from '@/core/theme/startTheme'
 import { KvitToaster } from '@/shared/components/KvitToaster'
 import './index.css'
+
+startTheme()
 
 const rootElement = document.getElementById('root')
 if (rootElement === null) {
@@ -18,7 +22,7 @@ const i18n = await startI18n().catch((error: unknown) => {
   renderStartupFailure(rootElement, error)
   throw error
 })
-const queryClient = new QueryClient()
+const queryClient = createQueryClient()
 
 createRoot(rootElement).render(
   <StrictMode>

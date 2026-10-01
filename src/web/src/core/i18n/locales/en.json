@@ -5,11 +5,25 @@
   "common": {
     "comingSoon": "Coming soon",
     "loading": "Loading…",
-    "retry": "Try again"
+    "retry": "Try again",
+    "back": "Back"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
-    "network": "Can't reach the server. Check your connection and try again."
+    "network": "Can't reach the server. Check your connection and try again.",
+    "AUTH_INVALID_CREDENTIALS": "Wrong email or password.",
+    "AUTH_EMAIL_TAKEN": "This email already has an account. Log in, or use a different email.",
+    "AUTH_EMAIL_INVALID": "Enter a valid email address.",
+    "AUTH_PASSWORD_TOO_WEAK": "The password needs at least 8 characters, one capital letter and one number.",
+    "AUTH_DISPLAY_NAME_INVALID": "Enter your name (up to 60 characters).",
+    "AUTH_LOCKED_OUT": "Too many wrong passwords. Wait a few minutes and try again.",
+    "AUTH_NOT_SIGNED_IN": "Your session ended. Log in again.",
+    "TIME_ZONE_INVALID": "We couldn't read your phone's time zone, so this isn't possible on this device for now.",
+    "LANGUAGE_INVALID": "That language isn't supported.",
+    "RATE_LIMITED": "Too many tries. Wait a few minutes and try again.",
+    "AUTH_MUST_CHANGE_PASSWORD": "Choose a new password to continue.",
+    "AUTH_CURRENT_PASSWORD_WRONG": "Wrong password.",
+    "AUTH_PASSWORD_UNCHANGED": "The new password must be different from the old one."
   },
   "language": {
     "label": "Language",
@@ -23,6 +37,40 @@
     "continueWithGoogle": "Continue with Google",
     "signUpWithEmail": "Sign up with email",
     "haveAccount": "I already have an account"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "At least 8 characters, one capital letter and one number.",
+    "signUp": {
+      "title": "Create account",
+      "name": "Your name"
+    },
+    "logIn": {
+      "title": "Log in",
+      "noAccount": "I don't have an account",
+      "forgot": "Forgot your password? Ask Filip to reset it."
+    },
+    "changePassword": {
+      "title": "Change password",
+      "resetNote": "Your password was reset. Choose a new one to continue.",
+      "current": "Current password",
+      "new": "New password",
+      "submit": "Save new password",
+      "done": "Password changed."
+    }
+  },
+  "home": {
+    "greeting": "Hi, {{name}}",
+    "placeholder": "Your groups and balances will appear here."
+  },
+  "settings": {
+    "title": "Settings",
+    "logOut": "Log out",
+    "theme": "Theme",
+    "themeSystem": "Same as device",
+    "themeLight": "Light",
+    "themeDark": "Dark"
   },
   "notFound": {
     "title": "Page not found",

@@ -6,7 +6,7 @@ namespace Kvit.Api.Controllers
     [ApiController]
     public abstract class BaseController : ControllerBase
     {
-        private const string ErrorCodeExtensionKey = "errorCode";
+        public const string ErrorCodeExtensionKey = "errorCode";
 
         protected ActionResult Result(Result result)
         {

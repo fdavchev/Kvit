@@ -1,10 +1,12 @@
 interface Env {
   API_ORIGIN?: string
+  API_PROXY_SECRET?: string
 }
 
 const apiPathPrefix = '/api/'
 const visitorAddressHeader = 'cf-connecting-ip'
-const forwardedForHeader = 'x-forwarded-for'
+const proxySecretHeader = 'x-kvit-proxy-secret'
+const kvitVisitorAddressHeader = 'x-kvit-visitor-ip'
 const headersDroppedFromVisitor: readonly string[] = [
   'cf-connecting-ip',
   'cf-connecting-ipv6',
@@ -14,16 +16,19 @@ const headersDroppedFromVisitor: readonly string[] = [
   'x-forwarded-host',
   'x-forwarded-port',
   'x-forwarded-proto',
+  'x-kvit-proxy-secret',
+  'x-kvit-visitor-ip',
   'x-real-ip',
 ]
 const localHostnames: readonly string[] = ['localhost', '127.0.0.1', '[::1]']
 
 export const onRequest: PagesFunction<Env> = ({ request, env }) =>
-  proxyToApi(request, env.API_ORIGIN)
+  proxyToApi(request, env.API_ORIGIN, env.API_PROXY_SECRET)
 
 export async function proxyToApi(
   request: Request,
   apiOrigin: string | undefined,
+  proxySecret: string | undefined,
 ): Promise<Response> {
   if (apiOrigin === undefined || apiOrigin.trim() === '') {
     return configurationError('API_ORIGIN is not set')
@@ -33,6 +38,9 @@ export async function proxyToApi(
     return configurationError(
       `API_ORIGIN must be an https origin like https://kvit-mk-api.onrender.com (http is only allowed for localhost), got "${apiOrigin}"`,
     )
+  }
+  if (proxySecret === undefined || proxySecret.trim() === '') {
+    return configurationError('API_PROXY_SECRET is not set')
   }
 
   const visitorAddress: string | null = request.headers.get(visitorAddressHeader)
@@ -58,7 +66,8 @@ export async function proxyToApi(
   for (const name of headersDroppedFromVisitor) {
     headers.delete(name)
   }
-  headers.set(forwardedForHeader, visitorAddress)
+  headers.set(proxySecretHeader, proxySecret)
+  headers.set(kvitVisitorAddressHeader, visitorAddress)
 
   const body: ArrayBuffer | null =
     request.body === null ? null : await request.arrayBuffer()

@@ -14,7 +14,8 @@
 - [ ] "Share balances" button: turns a group's balances into a text message and opens the phone's share menu (Viber, WhatsApp…). A free reminder, with no bot needed. Checked 2026-09-24: the phone's share menu (Web Share API), `wa.me` links and `viber://forward` links are all free. Desktop Chrome has no share menu, so show WhatsApp/Viber buttons there.
 - [ ] Joining a group without an account: open the invite link, tap your name, and the device remembers you.
 - [ ] Keeping the server awake: ask Render support whether pings are allowed, or move to a cheap paid plan if there are real daily users.
-- [ ] Forgot password / password reset by email (needs Gmail SMTP)
+- [ ] Time zone: a picker on Sign up and Log in only when the phone reports no usable zone, plus Settings → "Choose manually" (needs an endpoint that saves the zone and sets `is_time_zone_manual`). When it exists, the `TIME_ZONE_INVALID` text gets "Choose manually" back (Filip, 2026-09-30)
+- [ ] Forgot password / password reset by email (needs Gmail SMTP) When it exists, the Log in note "Forgot your password? Ask Filip to reset it." becomes a "Reset password" link (Filip's joke idea: keep "Ask Filip to reset it" beside it). Until then Filip resets by hand with `scripts/ResetPassword.cs` (Phase 4, Step 3b)
 - [ ] "Delete my account" and automatic cleanup (Filip's idea, 2026-09-25):
   - **Deleting an account:** for 30 days **nothing is wiped**. The account is only switched off and the user can still change their mind by logging in. After 30 days the email, login and personal budget are permanently removed. In groups, the person **turns into a plain-name member with their name** (like "Grandma"), not "Deleted user", so the group history still reads "Marko paid 2,400". Their shares stay because other people's balances depend on them. (Changed 2026-09-25, Filip's answer.)
   - **Also cleaned up after 30 days:** expenses marked deleted, and old invite links.
@@ -29,6 +30,18 @@
   - plus Neon's built-in restore window,
   - GitHub emails you if the job fails.
   - Check: whether artifacts on a public repository are downloadable by anyone, and that scheduled jobs stop after about 60 days without repository activity.
+
+- [ ] Make a successful log-in save its changes without Identity's concurrency stamp (one `ExecuteUpdate` for `lockout_count` and `time_zone`, only when they change). Today two log-ins of the same account at the very same moment can give one 500; retrying works (Step 2a review)
+
+- [ ] Warn loudly (log, or fail with a clear message) when the login-key certificate is expired or about to expire (it is valid 10 years; whether an expired one still decrypts is only from the source), and check its `NotBefore` (Step 2b code review)
+
+- [ ] A real desktop layout for the web (a wider column, larger text, sidebar and several columns); it comes with the dashboard in Phase 11. Today the five Phase 4 screens are a centred 400 px column on a wide window (Filip, 2026-10-01)
+- [ ] Theme choice kept on the account instead of only on the device, so it follows the person to another phone
+- [ ] Show the field-level server errors next to the field (the email field for `AUTH_EMAIL_TAKEN`, the password field for `AUTH_PASSWORD_TOO_WEAK`); `KvitTextField` already has an unused `invalid` prop
+- [ ] `Retry-After` is the whole window (60 or 600 seconds), not the time left; show or send the time left if a countdown is ever wanted
+- [ ] Check on the deployed site: `net::ERR_ABORTED` that the browser tool logged on 204 answers through the Vite proxy (language, log out, change password; the answers were 204 and the app worked), and the one white frame of the Vite dev server before a saved dark theme appears (the production build has none)
+- [ ] Small look items from the browser checks: the 'Coming soon' toast on Welcome covers the 'I already have an account' link while it shows; big titles wrap to two lines in places ("Change password", Macedonian "Направи профил"); Settings' 'Change password' and 'Log out' look the same; the apostrophe in "I don't have an account" is straight in the app and curly in the mockup
+- [ ] The sign-up and log-in counters are in memory and restart with the free Render instance; a window can let a burst through at its end (accepted for the first version)
 
 ## Skipped on purpose
 - CI runs twice on a pull-request branch (one run for `push`, one for `pull_request`; review finding 01-5, 2026-09-29). Left as it is: the second run tests the merge result with `main`, the cost is only free GitHub minutes, and limiting `push` to `main` would drop the check on a branch that has no pull request yet. Revisit only if the free minutes ever run short.

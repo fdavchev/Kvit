@@ -1,3 +1,9 @@
 export const endpoints = {
   health: '/api/health',
+  register: '/api/auth/register',
+  logIn: '/api/auth/login',
+  logOut: '/api/auth/logout',
+  changePassword: '/api/auth/change-password',
+  me: '/api/me',
+  meLanguage: '/api/me/language',
 } as const

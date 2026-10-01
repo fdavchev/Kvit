@@ -1,0 +1,19 @@
+:root {
+  --orange: #ffa53a;
+  --orange-deep: #b54a00;
+  --orange-50: #fff1dc;
+  --orange-200: #ffd9a8;
+  --orange-900: #7a3300;
+  --orange-950: #3d2610;
+  --orange-line: #9c6f47;
+  --dark-bg: #351f1b;
+  --dark-button: #ffd9a8;
+  --dark-field: color-mix(in srgb, var(--dark-bg) 78%, black);
+  --dark-raised: color-mix(in srgb, var(--dark-bg) 82%, var(--orange));
+  --dark-line: color-mix(in srgb, var(--dark-bg) 45%, var(--orange));
+  --white: #ffffff;
+  --stone-300: #d6d3d1;
+  --stone-700: #44403c;
+  --shadow: rgb(61 38 16 / 18%);
+  --sheet-shadow: rgb(28 25 23 / 14%);
+}

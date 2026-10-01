@@ -1,7 +1,24 @@
 import { ApiError } from './apiClient'
 
 const proxyCannotReachApiStatus = 502
-const errorCodeMessageKeys = new Map<string, string>()
+const translatedErrorCodes = [
+  'AUTH_INVALID_CREDENTIALS',
+  'AUTH_EMAIL_TAKEN',
+  'AUTH_EMAIL_INVALID',
+  'AUTH_PASSWORD_TOO_WEAK',
+  'AUTH_DISPLAY_NAME_INVALID',
+  'AUTH_LOCKED_OUT',
+  'AUTH_NOT_SIGNED_IN',
+  'TIME_ZONE_INVALID',
+  'LANGUAGE_INVALID',
+  'RATE_LIMITED',
+  'AUTH_MUST_CHANGE_PASSWORD',
+  'AUTH_CURRENT_PASSWORD_WRONG',
+  'AUTH_PASSWORD_UNCHANGED',
+]
+const errorCodeMessageKeys = new Map<string, string>(
+  translatedErrorCodes.map((code) => [code, `errors.${code}`]),
+)
 
 export function errorMessageKey(error: unknown): string {
   if (!(error instanceof ApiError)) {

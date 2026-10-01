@@ -5,9 +5,9 @@ Filip is a beginner at .NET and React: explain each new concept in one or two pl
 
 ## Read first
 1. `docs/STATUS.md`, `docs/ROADMAP.md`: where we stopped, which phase is next.
-2. `docs/DECISIONS.md`: **what** to build (source of truth for features and rules).
-3. `docs/ARCHITECTURE.md`: **how** the code is shaped, plus the working rules (propose then wait, never guess, no comments).
-4. `docs/DATA-MODEL.md`, `docs/SCREENS.md`: tables, money rules, screens and tap counts.
+2. `docs/DECISIONS.md`: **what** to build (source of truth for features and rules), plus the log of the phase in progress. Finished phases' logs are at the end of their reports in `docs/reports/`.
+3. `docs/ARCHITECTURE.md`: **how** the code is shaped, plus the working rules (propose then wait, never guess, no comments) and "Where to write what". Read the headings first, then the Parts that apply (backend: 1, 3, 4; frontend: 2, 3, 4).
+4. `docs/DATA-MODEL.md`, `docs/SCREENS.md`: tables, money rules, screens and tap counts. Read only the tables and screens the step touches.
 5. `docs/BACKLOG.md`: **not** in the first version. Don't build it.
 
 ## Stack

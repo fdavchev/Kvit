@@ -59,6 +59,10 @@ Identity is Microsoft's ready-made login system. It brings its own `users` table
 | `is_time_zone_manual` | bool, default false | When true, the phone's zone no longer overwrites it |
 | `google_picture_url` | text null | From Google's `profile` scope. Everyone else gets initials on a colour worked out from their id (no column needed) |
 | `created_at` | timestamptz | |
+| `lockout_count` | int, default 0 | How many times the account has been locked in a row. Sets the next lock time: 5, then 10, then 15 minutes every time after; a successful log-in sets it back to 0 (DECISIONS, Phase 4) |
+| `must_change_password` | bool, default false | Set when Filip resets a password by hand. While true the API refuses everything except `me`, log out and change password, until the person sets a new password (DECISIONS, Phase 4, Step 3b). Built in Step 3b (migration `MustChangePassword`) |
+
+Built in Phase 4 (Steps 1 and 2a). Identity's own indexes are renamed to `ix_users_normalized_email` (**unique**: one account per email), `ix_users_normalized_user_name` (unique; the user name is the email) and `ix_roles_normalized_name` (unique). Check constraints: `language` is `'en'` or `'mk'`; `display_name` and `time_zone` are not empty; `created_at` is not the year 0001. `display_name` is `varchar(60)`.
 
 Identity's side tables (`user_logins`, `user_claims`, `user_tokens`, `roles`, `user_roles`, `role_claims`) come with it. Kvit uses:
 - **`user_logins`** for Google: one row with `login_provider = 'Google'` and `provider_key` = Google's `sub` (the user's permanent Google id).
@@ -208,8 +212,8 @@ For the admin statistics page (Release 3), but **recorded from Release 1** so no
 | Column | Type | Notes |
 |---|---|---|
 | `id` | bigint, auto-numbered | |
-| `user_id` | uuid null | |
-| `type` | text `'SignedUp'` / `'Active'` / `'JoinedViaInvite'` / `'GroupCreated'` / `'ExpenseAdded'` / `'SettlementConfirmed'` | |
+| `user_id` | uuid null, FK → users, ON DELETE SET NULL | Deleting an account keeps its events (counts stay right) with `user_id` empty. A plain index on this column is kept for that delete (Phase 4, Step 1) |
+| `type` | text `'SignedUp'` / `'Active'` / `'JoinedViaInvite'` / `'GroupCreated'` / `'ExpenseAdded'` / `'SettlementConfirmed'` | A check constraint allows only these six |
 | `detail` | text null | `'Email'` or `'Google'` for `SignedUp` |
 | `occurred_at` | timestamptz | |
 | `occurred_on` | date (UTC day) | |
