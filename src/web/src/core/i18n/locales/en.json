@@ -6,7 +6,11 @@
     "comingSoon": "Coming soon",
     "loading": "Loading…",
     "retry": "Try again",
-    "back": "Back"
+    "back": "Back",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "switchToDarkMode": "Switch to dark mode",
+    "switchToLightMode": "Switch to light mode"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",

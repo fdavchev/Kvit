@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import type { Language } from '@/core/i18n/language'
 import type { ThemeChoice } from '@/core/theme/theme'
 import { translated } from './translated'
@@ -8,6 +9,8 @@ export const themeColors: Record<ColorScheme, string> = {
   light: '#ffd9a8',
   dark: '#351f1b',
 }
+
+const darkSchemeQuery = '(prefers-color-scheme: dark)'
 
 const themeTextKeys: Record<ThemeChoice, string> = {
   system: 'settings.themeSystem',
@@ -27,6 +30,24 @@ export function resetThemeDocument(): void {
     meta.setAttribute('media', `(prefers-color-scheme: ${scheme})`)
     document.head.appendChild(meta)
   }
+}
+
+export function stubDeviceColorScheme(scheme: ColorScheme): void {
+  vi.stubGlobal('matchMedia', (query: string): MediaQueryList => {
+    if (query !== darkSchemeQuery) {
+      throw new Error(`The test device only answers "${darkSchemeQuery}", but matchMedia got "${query}"`)
+    }
+    return {
+      matches: scheme === 'dark',
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }
+  })
 }
 
 export function themeColorOf(scheme: ColorScheme): string | undefined {

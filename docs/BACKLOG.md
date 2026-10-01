@@ -55,3 +55,12 @@
 
 ## Moved into the first version
 - EUR alongside MKD. Filip wants both from the start: MKD for everyday use, EUR for trips. Decided 2026-09-24.
+
+## Found during Phase 5 (2026-10-01)
+- **Cloudflare calls Pages "legacy".** The new dashboard puts the Workers flow first and hides Pages behind "Need to use the legacy Pages workflow? Continue to Pages". Pages still works and its docs show no end date. Revisit if Cloudflare announces one: the same site can run as a Worker, but the forwarding function and a config file would change.
+- **Harmless log line on Render:** `libgssapi_krb5.so.2: cannot open shared object file`. The database driver looks for a Kerberos library the slim image lacks; the live log-in test (401 from Neon) shows nothing is broken. Fix only if it clutters logs: install the library in the Dockerfile.
+- **Theme icon does not follow the phone live.** With the choice "Same as device", if the phone switches light/dark while Kvit is open, the Welcome moon/sun icon updates on the next redraw, not instantly (`KvitThemeToggle` reads `matchMedia` during render).
+- **Google sign-in on `pages.dev`:** whether Google accepts `kvit-mk.pages.dev` under Authorized domains is NOT VERIFIED (Filip tests it for 2 minutes in Google Auth Platform → Branding). Brand verification (the "Kvit" name and logo on Google's window) cannot work on `pages.dev`; people see the address. Preview addresses cannot sign in.
+- **A paid name** (about 10 € a year, needs a card) can be attached to Cloudflare Pages later with no code change, only if Filip decides to pay.
+- **Older Kvit screenshots in `fdavchev.github.io`** (`v2/src/assets/screenshots/kvit-welcome.png`, `kvit-api-scalar.png`) are out of date (desktop Welcome before the theme button; the Phase 1 API page). Filip's portfolio, not part of this repository.
+- **Render health checks and the free sleep:** whether Render's `/health` checks keep a free server awake is NOT VERIFIED; the live run (Step 4) shows it.

@@ -6,7 +6,11 @@
     "comingSoon": "Наскоро",
     "loading": "Се вчитува…",
     "retry": "Обиди се повторно",
-    "back": "Назад"
+    "back": "Назад",
+    "showPassword": "Покажи ја лозинката",
+    "hidePassword": "Сокриј ја лозинката",
+    "switchToDarkMode": "Префрли на темен режим",
+    "switchToLightMode": "Префрли на светол режим"
   },
   "errors": {
     "generic": "Нешто тргна наопаку. Обиди се повторно.",

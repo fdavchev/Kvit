@@ -142,5 +142,71 @@ Repository → **Settings** → **Advanced Security** (may be called "Code secur
 
 ---
 
-# Part 2 (Step 3): coming next
-The online certificate, the proxy secret, the Render service and Cloudflare Pages. The Claude session writes it after Part 1 is done.
+# Part 2 (Step 3a): the online certificate, the proxy secret, the Render service
+
+**What this does:** Render is the free computer that runs Kvit's backend. Before it starts, Kvit needs three secrets it can't live without. The Claude session already made them on 2026-10-01 and saved them in your private notes file (`Desktop\secrets\kvit-secrets.txt`), at the end of the file, under these headings:
+- `ONLINE CERTIFICATE BASE64` and `ONLINE CERTIFICATE PASSWORD`: the lock for Kvit's login keys. **Keep them forever.** If both are lost, a new pair logs everybody out.
+- `PROXY SECRET`: the shared password between Cloudflare and Render (the same value goes into both).
+
+You never type these. When you need one, tell the Claude session which, and it puts the value on your clipboard; you right-click-paste it into the box on the website.
+
+## 1. Accounts (free, no card)
+- **Render:** go to dashboard.render.com/register → **GitHub** → allow it. (`free-hosting-setup.md`, A2.)
+- **Cloudflare:** go to dash.cloudflare.com → **Sign up** (email + password) → confirm your email. (A3.)
+- If either asks for a bank card, stop and tell the Claude session.
+
+## 2. Create the Render service (`free-hosting-setup.md`, B2, with these exact values)
+1. In Render: **+ New** → **Web Service** → **Git Provider** → **GitHub**. When it asks which repositories, choose **Only select repositories** → `kvit`. Select `kvit` and click **Connect**.
+2. Fill in:
+   | Field | Value |
+   |---|---|
+   | Name | `kvit-mk-api` |
+   | Region | **Frankfurt** (can't be changed later) |
+   | Branch | `main` |
+   | Language | **Docker** |
+   | Root Directory | leave empty |
+   | Dockerfile Path | `src/api/Dockerfile` |
+   | Instance Type | **Free** |
+3. **Environment Variables** (**Add Environment Variable** for each; the Name is typed exactly as written). Do not click **Deploy** yet:
+   | Name | Value |
+   |---|---|
+   | `ASPNETCORE_HTTP_PORTS` | `10000` (you type it) |
+   | `ConnectionStrings__KvitDatabase` | the POOLED line (Claude puts it on your clipboard) |
+   | `DataProtection__CertificateBase64` | the certificate (clipboard) |
+   | `DataProtection__CertificatePassword` | the certificate password (clipboard) |
+   | `Proxy__SharedSecret` | the proxy secret (clipboard) |
+   The names have **two underscores** `__` in the middle where there is a dot or colon in the setting.
+4. Tell the Claude session "ready for the first value". It puts one value on your clipboard at a time and tells you which box it is for.
+
+## 3. After the values are in
+1. Click **Deploy Web Service**. The first build takes 5 to 10 minutes. You should see a log, then **Live** in green. Your address is at the top: `https://kvit-mk-api.onrender.com`.
+2. **Settings** of the service: **Health Check Path** = `/health`, and **Auto-Deploy** = **After CI Checks Pass**. Instance type stays **Free**.
+3. Tell the Claude session that it is live. It checks the address from its side.
+4. If the build fails, send the last 20 lines of the log (they never contain the secrets).
+
+---
+
+# Part 3 (Step 3b): Cloudflare Pages: the website
+
+**What this does:** Cloudflare Pages is the free home of the website. It also runs a tiny forwarding program (the "Pages Function") that passes every `/api/...` request on to Render and adds the proxy secret. Your API address is `https://kvit-mk-api.onrender.com`.
+
+1. In Cloudflare: **Workers & Pages** → **Create application** → look for **Pages** → **Connect to Git** (it may say "Import an existing Git repository"). Log in to GitHub, click **Install & Authorize**, choose **Only select repositories** → `kvit`. Select `kvit` and click **Begin setup**.
+   - If you only see "Workers" and no Pages option, tell the Claude session what the page says.
+2. Fill in:
+   | Field | Value |
+   |---|---|
+   | Project name | `kvit-mk` |
+   | Production branch | `main` |
+   | Framework preset | **React (Vite)** |
+   | Build command | `npm run build` |
+   | Build output directory | `dist` |
+   | Root directory (advanced) | `src/web` |
+3. **Environment variables (advanced)**, add three:
+   | Name | Value |
+   |---|---|
+   | `API_ORIGIN` | `https://kvit-mk-api.onrender.com` (you type it; **no slash at the end**) |
+   | `NODE_VERSION` | `24` (you type it) |
+   | `API_PROXY_SECRET` | the proxy secret (the Claude session puts it on your clipboard; use **Encrypt** or "Secret" if it is offered) |
+4. Click **Save and Deploy**. You should see a build log, then **Success**, and the address `https://kvit-mk.pages.dev`.
+5. **Settings → Variables and Secrets:** make sure the three variables are set for **both Production and Preview**. After any change here, redeploy: **Deployments** → the latest one → **⋯** → **Retry deployment**.
+6. Tell the Claude session "site is up". It tests the address from its side.

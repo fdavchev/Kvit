@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { routes } from '@/core/router/routes'
 import { stubFetch } from '@/test/apiTestHelpers'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
+import { appliedTheme, resetThemeDocument, stubDeviceColorScheme } from '@/test/themeTestHelpers'
 import { translated } from '@/test/translated'
 import { WelcomeScreen } from './WelcomeScreen'
 
@@ -18,6 +19,8 @@ async function renderWelcome(options: { prepareI18n?: (i18n: I18nInstance) => vo
 describe('WelcomeScreen', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    resetThemeDocument()
+    stubDeviceColorScheme('light')
     vi.clearAllMocks()
   })
 
@@ -59,6 +62,27 @@ describe('WelcomeScreen', () => {
       expect(i18n.language).toBe('mk')
     })
     expect(toast.error).not.toHaveBeenCalled()
+  })
+
+  it('shows one theme button in the top row, right before the language switch', async () => {
+    await renderWelcome()
+
+    const themeButton = screen.getByRole('button', {
+      name: translated('en', 'common.switchToDarkMode'),
+    })
+    const languageGroup = screen.getByRole('group', { name: translated('en', 'language.label') })
+
+    expect(themeButton.nextElementSibling).toBe(languageGroup)
+  })
+
+  it('switches the page to dark when the theme button is pressed on a light device', async () => {
+    await renderWelcome()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: translated('en', 'common.switchToDarkMode') }),
+    )
+
+    expect(appliedTheme()).toBe('dark')
   })
 
   it('shows the generic error toast, logs the cause and remembers nothing when the language cannot be changed', async () => {
