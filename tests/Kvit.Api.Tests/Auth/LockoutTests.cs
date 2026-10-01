@@ -7,8 +7,6 @@ namespace Kvit.Api.Tests.Auth
 {
     public class LockoutTests(AuthApp _app) : IClassFixture<AuthApp>
     {
-        private const string WrongPassword = "Wrong-password-1";
-
         [Fact]
         public async Task LogIn_FirstFourWrongPasswords_Answer401AndCountTheFailures()
         {
@@ -18,7 +16,7 @@ namespace Kvit.Api.Tests.Auth
 
             for (int attempt = 1; attempt <= 4; attempt++)
             {
-                HttpResponseMessage response = await AuthRequests.LogInAsync(client, form.Email, WrongPassword);
+                HttpResponseMessage response = await AuthRequests.LogInAsync(client, form.Email, AuthRequests.WrongPassword);
 
                 await ProblemResponse.AssertAsync(response, HttpStatusCode.Unauthorized, ResultCodes.AUTH_INVALID_CREDENTIALS);
             }
@@ -36,7 +34,7 @@ namespace Kvit.Api.Tests.Auth
             await _app.CreateAccountAsync(form);
             HttpClient client = _app.CreateClient();
 
-            HttpResponseMessage fifth = await LockAccountAsync(client, form.Email);
+            HttpResponseMessage fifth = await AuthRequests.LockByWrongLogInsAsync(client, form.Email);
 
             await ProblemResponse.AssertAsync(fifth, HttpStatusCode.Forbidden, ResultCodes.AUTH_LOCKED_OUT);
             AppUser user = await _app.FindUserAsync(form.Email);
@@ -50,7 +48,7 @@ namespace Kvit.Api.Tests.Auth
             RegistrationForm form = RegistrationForm.Valid();
             await _app.CreateAccountAsync(form);
             HttpClient client = _app.CreateClient();
-            await LockAccountAsync(client, form.Email);
+            await AuthRequests.LockByWrongLogInsAsync(client, form.Email);
 
             HttpResponseMessage response = await AuthRequests.LogInAsync(client, form.Email, form.Password);
 
@@ -66,7 +64,7 @@ namespace Kvit.Api.Tests.Auth
             await _app.CreateAccountAsync(locked);
             await _app.CreateAccountAsync(bystander);
             HttpClient client = _app.CreateClient();
-            await LockAccountAsync(client, locked.Email);
+            await AuthRequests.LockByWrongLogInsAsync(client, locked.Email);
 
             HttpResponseMessage response = await AuthRequests.LogInAsync(client, bystander.Email, bystander.Password);
 
@@ -83,7 +81,7 @@ namespace Kvit.Api.Tests.Auth
 
             foreach ((int expectedLockoutCount, int minMinutes, int maxMinutes) in rungs)
             {
-                HttpResponseMessage fifth = await LockAccountAsync(client, form.Email);
+                HttpResponseMessage fifth = await AuthRequests.LockByWrongLogInsAsync(client, form.Email);
 
                 await ProblemResponse.AssertAsync(fifth, HttpStatusCode.Forbidden, ResultCodes.AUTH_LOCKED_OUT);
                 AppUser user = await _app.FindUserAsync(form.Email);
@@ -99,9 +97,9 @@ namespace Kvit.Api.Tests.Auth
             RegistrationForm form = RegistrationForm.Valid();
             await _app.CreateAccountAsync(form);
             HttpClient client = _app.CreateClient();
-            await LockAccountAsync(client, form.Email);
+            await AuthRequests.LockByWrongLogInsAsync(client, form.Email);
             await _app.EndLockAsync(form.Email);
-            HttpResponseMessage wrong = await AuthRequests.LogInAsync(client, form.Email, WrongPassword);
+            HttpResponseMessage wrong = await AuthRequests.LogInAsync(client, form.Email, AuthRequests.WrongPassword);
             Assert.Equal(HttpStatusCode.Unauthorized, wrong.StatusCode);
 
             HttpResponseMessage right = await AuthRequests.LogInAsync(client, form.Email, form.Password);
@@ -110,7 +108,7 @@ namespace Kvit.Api.Tests.Auth
             AppUser afterSuccess = await _app.FindUserAsync(form.Email);
             Assert.Equal(0, afterSuccess.LockoutCount);
             Assert.Equal(0, afterSuccess.AccessFailedCount);
-            HttpResponseMessage fifth = await LockAccountAsync(client, form.Email);
+            HttpResponseMessage fifth = await AuthRequests.LockByWrongLogInsAsync(client, form.Email);
             await ProblemResponse.AssertAsync(fifth, HttpStatusCode.Forbidden, ResultCodes.AUTH_LOCKED_OUT);
             AppUser lockedAgain = await _app.FindUserAsync(form.Email);
             Assert.Equal(1, lockedAgain.LockoutCount);
@@ -129,7 +127,7 @@ namespace Kvit.Api.Tests.Auth
 
             for (int attempt = 1; attempt <= 6; attempt++)
             {
-                HttpResponseMessage response = await AuthRequests.LogInAsync(client, unknownEmail, WrongPassword);
+                HttpResponseMessage response = await AuthRequests.LogInAsync(client, unknownEmail, AuthRequests.WrongPassword);
 
                 await ProblemResponse.AssertAsync(response, HttpStatusCode.Unauthorized, ResultCodes.AUTH_INVALID_CREDENTIALS);
             }
@@ -147,18 +145,6 @@ namespace Kvit.Api.Tests.Auth
             DateTimeOffset lockEnd = user.LockoutEnd ?? throw new InvalidOperationException($"LockoutEnd is null for '{user.Email}', but the account should be locked.");
 
             Assert.InRange(lockEnd - DateTimeOffset.UtcNow, TimeSpan.FromMinutes(minMinutes), TimeSpan.FromMinutes(maxMinutes));
-        }
-
-        private static async Task<HttpResponseMessage> LockAccountAsync(HttpClient client, string email)
-        {
-            for (int attempt = 1; attempt <= 4; attempt++)
-            {
-                HttpResponseMessage response = await AuthRequests.LogInAsync(client, email, WrongPassword);
-
-                Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-            }
-
-            return await AuthRequests.LogInAsync(client, email, WrongPassword);
         }
     }
 }

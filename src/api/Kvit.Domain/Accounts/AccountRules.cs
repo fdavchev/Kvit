@@ -50,6 +50,22 @@ namespace Kvit.Domain.Accounts
             return Result.Ok();
         }
 
+        public static Result ValidateNewPassword(string currentPassword, string newPassword)
+        {
+            Result passwordRule = ValidatePassword(newPassword);
+            if (!passwordRule.IsSuccess)
+            {
+                return passwordRule;
+            }
+
+            if (string.Equals(currentPassword, newPassword, StringComparison.Ordinal))
+            {
+                return Result.Failure("The new password must be different from the current one.", ResultCodes.AUTH_PASSWORD_UNCHANGED);
+            }
+
+            return Result.Ok();
+        }
+
         public static Result ValidateLanguage(string language)
         {
             if (!SupportedLanguages.Contains(language, StringComparer.Ordinal))

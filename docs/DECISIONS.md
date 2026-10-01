@@ -88,6 +88,58 @@ Branch `feat/04-accounts`, built in four steps (database, accounts, rate limitin
 - **The 429 body is built with the registered `ProblemDetailsFactory` and the same `errorCode` key as `BaseController`** (now `public const`), so it has the same shape as every other failure. The English `detail` text is for people reading the raw answer; the screen shows the translation of `RATE_LIMITED`.
 - **Tests give every in-memory request its own address** (a test-only startup filter, active only when the gate is off), otherwise all tests share one address and trip the 5-sign-ups limit. Gate-on tests send the secret and a chosen visitor address.
 
+**Step 3b (password reset by hand, must-change-password, change password), decided 2026-09-30 with Filip, before the frontend.** Report: `reports/2026-10-01-phase-04-step-3b-password-reset.md`. Built 2026-10-01.
+- **Filip's rules:** nobody, including Filip as admin, may see a user's password (already true: Identity stores only a salted hash; `RegisterTests` checks the stored value is not the password). Filip sees only the **temporary password** he hands out after a reset, and that password must stop working as soon as the person has set their own. *Why full and not minimal:* a temporary password that stays valid forever means Filip knows that person's password for good. *Rejected:* script only, with "Change password" left for later.
+- **Reset by hand:** `scripts/ResetPassword.cs` (a .NET file-based app like the certificate script, run on Filip's PC, also against Neon later with its connection string). Given an email it makes a random temporary password that passes `AccountRules`, prints it once in the terminal, saves only its hash, sets `must_change_password`, clears the lock (`lockout_count`, lock end, failed count) and changes the security stamp so old sessions stop working. An unknown email changes nothing and exits with a clear error. The reset logic itself lives in a tested class (real Postgres), the script is thin, hashing code is not duplicated.
+- **New column `users.must_change_password`** (bool, not null, default false) and `MeResponse.MustChangePassword`. While it is true the API answers 403 `AUTH_MUST_CHANGE_PASSWORD` to every signed-in endpoint except `GET /api/me`, `POST /api/auth/logout` and `POST /api/auth/change-password`. *Why on the server:* a screen that redirects is not protection.
+- **`POST /api/auth/change-password` (`currentPassword`, `newPassword`):** 204 on success; clears the flag, saves the new hash, changes the security stamp (other sessions end) and re-issues this session's cookie. A wrong current password answers 400 `AUTH_CURRENT_PASSWORD_WRONG` and counts in the same lock ladder as log-in (otherwise a stolen session could guess the password with no limit); the new password follows the one password rule (`AUTH_PASSWORD_TOO_WEAK`) and must differ from the current one (400 `AUTH_PASSWORD_UNCHANGED`, otherwise the temporary password could be "changed" to itself). It uses the `log-in` rate-limit policy. It answers 400, not 401, so the frontend's 401 handler does not sign the person out for a typo.
+- **New error codes:** `AUTH_MUST_CHANGE_PASSWORD`, `AUTH_CURRENT_PASSWORD_WRONG`, `AUTH_PASSWORD_UNCHANGED` (13 error codes for the phase in total; each needs an EN and MK text approved by Filip).
+- **The reset class returns `string?`** (the temporary password, or null when no account has that email) and is called `PasswordResetService` in `Kvit.Infrastructure/Auth`. *Why not a `Result` with an error code:* it is an operator tool, not an answer to a visitor, and a code there would show up in the "every code has a translation" check without ever being shown to anyone.
+- **The security stamp is checked on every request (`SecurityStampValidatorOptions.ValidationInterval = TimeSpan.Zero`).** *Why:* Identity's default checks only every 30 minutes, so a session that should die after a reset or a password change would live on for up to half an hour. *Cost:* one extra indexed lookup per request. *Rejected:* the 30-minute default, and a custom interval (not testable without a clock).
+- **How the 403 is enforced (coder, source-checked in release/10.0):** `PasswordChangedRequirement` sits on both the default and the fallback policy, so it covers endpoints with and without `[Authorize]`; an anonymous request is left to the "signed in" rule (still 401). The flag travels as a claim `kvit:must_change_password` added by `KvitUserClaimsPrincipalFactory`. *Why a claim, not a database read per request:* with the security stamp checked on every request Identity already loads the user and rebuilds the claims, so the claim is the current database value for free, and the flag only changes together with a new stamp (reset) or a re-issued cookie (change password), so it cannot go stale. A signed-in login with no such claim throws. *Consequence:* a signed-in person with the flag set who asks for a path that does not exist gets 403, not 404 (the fallback policy also runs then). `MustChangePasswordResultHandler` writes the 403 body through one shared writer (`Problems/ErrorProblem.cs`, also used by the 429).
+- **`[AllowAnonymous]` moved from `AuthController`'s class to register, log-in and log-out.** With it on the class, ASP.NET ignores an `[Authorize]` on any action of that controller, and change-password needs `[Authorize]`.
+- **Order of checks in change-password:** the new password is checked first (too weak, then same as current) and only then the current password against the database, so a request that fails the first two does not count as a wrong try. A successful change sets `lockout_count` to 0, like a successful log-in.
+- **Temporary password:** 12 characters from `RandomNumberGenerator.GetString`, without 0, O, 1, l, I (Filip reads it aloud), retried until it passes `AccountRules.ValidatePassword`. Removing the old password and adding the new one happens in one transaction; Identity hashes it and changes the stamp.
+- **The script references the whole API project (`#:project ../src/api/Kvit.Api/Kvit.Api.csproj`) and calls `AddInfrastructure()` and `AddAuth()`**, so Identity's settings are not copied (its default rules would refuse the temporary password); `#:property PublishAot=false` because file-based apps default to native AOT, which EF Core and Identity do not support. It reads the connection string with the configuration library from the API's user secrets, then environment variables, so `ConnectionStrings__KvitDatabase` wins (for Neon later). It does not shell out to `dotnet user-secrets` like the certificate script. CI compiles it in the `backend` job.
+- **Later, when email reset exists (BACKLOG):** the Log in note becomes a "Reset password" link; Filip suggested keeping "Ask Filip to reset it" next to it as a small joke.
+
+**Step 4 (frontend), decisions made in the proposal, 2026-09-30.**
+- **The `me` query:** a 401 becomes `null` (signed out); any other failure shows the translated error with a retry button and is never read as signed out. `RequireAuth` shows a spinner while asking, sends signed-out visitors to `/welcome`, and a signed-in person with `mustChangePassword` to `/change-password`. The log-in and sign-up answers go straight into the `['me']` cache. Log-out empties the whole cache.
+- **Global handler:** a 401 sets `['me']` to `null` except `AUTH_INVALID_CREDENTIALS` (a wrong password at log-in is not a sign-out); a 403 `AUTH_MUST_CHANGE_PASSWORD` refreshes `['me']`. `apiClient` stays unchanged.
+- **No password-rule check in the browser:** the rule lives once in the Domain; the server's answer is shown under the form. **No `user-event` package:** tests use `fireEvent` like the existing ones. No redirect for a signed-in person who opens `/login` (a second "who am I" request on public screens for a bookmark-only case).
+- **`LanguageSwitch` moves to `shared/components` as a display-only `KvitLanguageSwitch`** (props: language, `onChange`); Welcome passes "just change it", Settings passes "call `PUT /api/me/language`, then change it".
+- **Time zone:** no picker in this phase. A phone that reports no usable zone gets `TIME_ZONE_INVALID`: "We couldn't read your phone's time zone, so this isn't possible on this device for now." BACKLOG: a picker plus Settings "Choose manually" (needs an endpoint that sets `is_time_zone_manual`), and the message gets "Choose manually" back then.
+- **`RATE_LIMITED` text says "a few minutes", not "a minute"** (the sign-up window is 10 minutes).
+- **The log-in screen shows "Forgot your password? Ask Filip to reset it."** (Filip, 2026-09-30).
+
+**Macedonian wording approved by Filip on 2026-09-30 ("the Macedonian list is good"); every line below may go into `mk.json` as written.** Still to be proposed and approved: the three Step 3b codes (`AUTH_MUST_CHANGE_PASSWORD`, `AUTH_CURRENT_PASSWORD_WRONG`, `AUTH_PASSWORD_UNCHANGED`) and the Change-password screen texts.
+
+| Where | English | Macedonian |
+|---|---|---|
+| Sign up title and button | Create account | Направи профил |
+| Name field | Your name | Твоето име |
+| Email field | Email | Е-пошта |
+| Password field | Password | Лозинка |
+| Password hint | At least 8 characters, one capital letter and one number. | Најмалку 8 знаци, една голема буква и една цифра. |
+| Log in title and button | Log in | Најави се |
+| Log in, link to sign up | I don't have an account | Немам профил |
+| Sign up, link to log in | I already have an account (existing key) | Веќе имам профил (existing) |
+| Log in, forgot note | Forgot your password? Ask Filip to reset it. | Ја заборави лозинката? Побарај од Filip да ти ја ресетира. |
+| Home | Hi, {{name}} | Здраво, {{name}} |
+| Settings link and title | Settings | Поставки |
+| Settings | Log out | Одјави се |
+| Settings, back | Back | Назад |
+| AUTH_INVALID_CREDENTIALS | Wrong email or password. | Погрешна е-пошта или лозинка. |
+| AUTH_EMAIL_TAKEN | This email already has an account. Log in, or use a different email. | Оваа е-пошта веќе има профил. Најави се или користи друга е-пошта. |
+| AUTH_EMAIL_INVALID | Enter a valid email address. | Внеси исправна е-пошта. |
+| AUTH_PASSWORD_TOO_WEAK | The password needs at least 8 characters, one capital letter and one number. | Лозинката треба да има најмалку 8 знаци, една голема буква и една цифра. |
+| AUTH_DISPLAY_NAME_INVALID | Enter your name (up to 60 characters). | Внеси го твоето име (најмногу 60 знаци). |
+| AUTH_LOCKED_OUT | Too many wrong passwords. Wait a few minutes and try again. | Премногу погрешни лозинки. Почекај неколку минути и обиди се повторно. |
+| AUTH_NOT_SIGNED_IN | Your session ended. Log in again. | Сесијата заврши. Најави се повторно. |
+| TIME_ZONE_INVALID | We couldn't read your phone's time zone, so this isn't possible on this device for now. | Не можевме да ја прочитаме временската зона на телефонот, па засега ова не е можно на овој уред. |
+| LANGUAGE_INVALID | That language isn't supported. | Тој јазик не е поддржан. |
+| RATE_LIMITED | Too many tries. Wait a few minutes and try again. | Премногу обиди. Почекај неколку минути и обиди се повторно. |
+
 ## 2026-09-25: Web addresses, README and licence
 - **Addresses:** the website will be **`kvit-mk.pages.dev`** and the API **`kvit-mk-api.onrender.com`**.
   - `kvit.pages.dev` and `kvit-app.pages.dev` are taken (both answered with a live site). `kvit-api.onrender.com` gave no answer within 70 seconds, while unused Render names answer at once with "no server", so it's treated as taken. (VERIFIED by live requests on 2026-09-25.)

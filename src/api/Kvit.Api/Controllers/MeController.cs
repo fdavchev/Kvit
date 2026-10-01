@@ -1,3 +1,4 @@
+using Kvit.Api.Authorization;
 using Kvit.Application.Commands.Me;
 using Kvit.Application.Dispatching;
 using Kvit.Application.Queries.Me;
@@ -13,6 +14,7 @@ namespace Kvit.Api.Controllers
     public sealed class MeController(IDispatcher _dispatcher) : BaseController
     {
         [HttpGet]
+        [AllowedWithTemporaryPassword]
         public async Task<ActionResult<MeResponse>> Get(CancellationToken cancellationToken)
         {
             Result<MeResponse> result = await _dispatcher.Query<GetMeQuery, MeResponse>(new GetMeQuery(), cancellationToken);

@@ -71,6 +71,7 @@ public class CreateExpenseCommandHandler(
 ## Controllers
 - Inherit `BaseController` and give each controller its own `[Route("api/...")]`. **Everything is closed by default** (a fallback authorization policy requires a signed-in user); `[AllowAnonymous]` opens an endpoint on purpose (only register, log in, log out and the health routes). An anonymous request to an unknown path answers 401, not 404 (Phase 4, Step 2a).
 - **Thin:** build the query or command, `await _dispatcher.Send(...)`, `return Result(result);`.
+- **Temporary password:** a signed-in account with `must_change_password` is refused (403 `AUTH_MUST_CHANGE_PASSWORD`) on every endpoint except the ones marked `[AllowedWithTemporaryPassword]` (`GET /api/me`, change password; log-out is `[AllowAnonymous]`). The rule lives on the default and fallback policies (`Authorization/PasswordChangedRequirement.cs`). Put `[AllowAnonymous]` on the single actions, never on the controller class: with it on the class, ASP.NET ignores an `[Authorize]` on its actions (Step 3b).
 - **Rate limits** are named policies on the action (`[EnableRateLimiting("log-in")]`, `"sign-up"`), defined in `Registers/Register.RateLimiting.cs`, counted per visitor address. A new endpoint that takes a password, a code or an invite link needs one too.
 - **Ids in the route:** the id that scopes the request goes in the route (`groups/{groupId}/expenses`). Only genuine filters go in `[FromQuery]`.
 

@@ -14,7 +14,8 @@
 - [ ] "Share balances" button: turns a group's balances into a text message and opens the phone's share menu (Viber, WhatsApp…). A free reminder, with no bot needed. Checked 2026-09-24: the phone's share menu (Web Share API), `wa.me` links and `viber://forward` links are all free. Desktop Chrome has no share menu, so show WhatsApp/Viber buttons there.
 - [ ] Joining a group without an account: open the invite link, tap your name, and the device remembers you.
 - [ ] Keeping the server awake: ask Render support whether pings are allowed, or move to a cheap paid plan if there are real daily users.
-- [ ] Forgot password / password reset by email (needs Gmail SMTP)
+- [ ] Time zone: a picker on Sign up and Log in only when the phone reports no usable zone, plus Settings → "Choose manually" (needs an endpoint that saves the zone and sets `is_time_zone_manual`). When it exists, the `TIME_ZONE_INVALID` text gets "Choose manually" back (Filip, 2026-09-30)
+- [ ] Forgot password / password reset by email (needs Gmail SMTP) When it exists, the Log in note "Forgot your password? Ask Filip to reset it." becomes a "Reset password" link (Filip's joke idea: keep "Ask Filip to reset it" beside it). Until then Filip resets by hand with `scripts/ResetPassword.cs` (Phase 4, Step 3b)
 - [ ] "Delete my account" and automatic cleanup (Filip's idea, 2026-09-25):
   - **Deleting an account:** for 30 days **nothing is wiped**. The account is only switched off and the user can still change their mind by logging in. After 30 days the email, login and personal budget are permanently removed. In groups, the person **turns into a plain-name member with their name** (like "Grandma"), not "Deleted user", so the group history still reads "Marko paid 2,400". Their shares stay because other people's balances depend on them. (Changed 2026-09-25, Filip's answer.)
   - **Also cleaned up after 30 days:** expenses marked deleted, and old invite links.

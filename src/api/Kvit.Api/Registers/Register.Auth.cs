@@ -1,3 +1,4 @@
+using Kvit.Api.Authorization;
 using Kvit.Domain.Accounts;
 using Kvit.Infrastructure.Auth;
 using Kvit.Infrastructure.Persistence;
@@ -33,7 +34,10 @@ namespace Kvit.Api.Registers
                     options.Lockout.DefaultLockoutTimeSpan = LockoutLadder.LockDurationFor(1);
                 })
                 .AddEntityFrameworkStores<AppDbContext>()
-                .AddSignInManager();
+                .AddSignInManager()
+                .AddClaimsPrincipalFactory<KvitUserClaimsPrincipalFactory>();
+
+            services.Configure<SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.Zero);
 
             services.ConfigureApplicationCookie(options =>
             {
@@ -48,9 +52,16 @@ namespace Kvit.Api.Registers
                 options.Events.OnRedirectToAccessDenied = context => AnswerWithStatus(context.Response, StatusCodes.Status403Forbidden);
             });
 
-            services.AddAuthorization(options => options.FallbackPolicy = new AuthorizationPolicyBuilder()
+            AuthorizationPolicy signedInPolicy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .Build());
+                .AddRequirements(new PasswordChangedRequirement())
+                .Build();
+            services.AddAuthorization(options =>
+            {
+                options.DefaultPolicy = signedInPolicy;
+                options.FallbackPolicy = signedInPolicy;
+            });
+            services.AddSingleton<IAuthorizationMiddlewareResultHandler, MustChangePasswordResultHandler>();
 
             return services;
         }

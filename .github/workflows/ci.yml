@@ -26,6 +26,9 @@ jobs:
       - name: Build the certificate script
         run: dotnet build scripts/NewDataProtectionCertificate.cs --configuration Release
 
+      - name: Build the password reset script
+        run: dotnet build scripts/ResetPassword.cs --configuration Release
+
       - name: Test
         run: dotnet test Kvit.slnx --no-build --configuration Release
 

@@ -8,17 +8,17 @@ namespace Kvit.Api.Tests.Auth
     public class MeTests(AuthApp _app) : IClassFixture<AuthApp>
     {
         [Fact]
-        public async Task Me_LoggedIn_AnswersExactlyTheFiveAccountFields()
+        public async Task Me_LoggedIn_AnswersExactlyTheSixAccountFields()
         {
             RegistrationForm form = RegistrationForm.Valid();
-            HttpClient client = await LoggedInClientAsync(form);
+            HttpClient client = await _app.CreateRegisteredClientAsync(form);
 
             HttpResponseMessage response = await AuthRequests.GetMeAsync(client);
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             JsonElement body = await AuthRequests.ReadJsonAsync(response);
             string[] propertyNames = [.. body.EnumerateObject().Select(property => property.Name).Order(StringComparer.Ordinal)];
-            string[] expectedNames = ["displayName", "email", "id", "language", "timeZone"];
+            string[] expectedNames = ["displayName", "email", "id", "language", "mustChangePassword", "timeZone"];
             Assert.Equal(expectedNames, propertyNames);
         }
 
@@ -38,6 +38,7 @@ namespace Kvit.Api.Tests.Auth
             Assert.Equal(form.Email, body.GetProperty("email").GetString());
             Assert.Equal("mk", body.GetProperty("language").GetString());
             Assert.Equal("America/New_York", body.GetProperty("timeZone").GetString());
+            Assert.False(body.GetProperty("mustChangePassword").GetBoolean());
         }
 
         [Fact]
@@ -45,8 +46,8 @@ namespace Kvit.Api.Tests.Auth
         {
             RegistrationForm first = RegistrationForm.Valid();
             RegistrationForm second = RegistrationForm.Valid();
-            HttpClient firstClient = await LoggedInClientAsync(first);
-            HttpClient secondClient = await LoggedInClientAsync(second);
+            HttpClient firstClient = await _app.CreateRegisteredClientAsync(first);
+            HttpClient secondClient = await _app.CreateRegisteredClientAsync(second);
 
             HttpResponseMessage firstResponse = await AuthRequests.GetMeAsync(firstClient);
             HttpResponseMessage secondResponse = await AuthRequests.GetMeAsync(secondClient);
@@ -84,7 +85,7 @@ namespace Kvit.Api.Tests.Auth
         public async Task ChangeLanguage_SupportedLanguage_Answers204AndStoresIt(string startLanguage, string newLanguage)
         {
             RegistrationForm form = RegistrationForm.Valid() with { Language = startLanguage };
-            HttpClient client = await LoggedInClientAsync(form);
+            HttpClient client = await _app.CreateRegisteredClientAsync(form);
 
             HttpResponseMessage response = await AuthRequests.ChangeLanguageAsync(client, newLanguage);
 
@@ -96,7 +97,7 @@ namespace Kvit.Api.Tests.Auth
         public async Task ChangeLanguage_ThenMe_AnswersTheNewLanguage()
         {
             RegistrationForm form = RegistrationForm.Valid() with { Language = "en" };
-            HttpClient client = await LoggedInClientAsync(form);
+            HttpClient client = await _app.CreateRegisteredClientAsync(form);
             await AuthRequests.ChangeLanguageAsync(client, "mk");
 
             HttpResponseMessage me = await AuthRequests.GetMeAsync(client);
@@ -112,7 +113,7 @@ namespace Kvit.Api.Tests.Auth
         public async Task ChangeLanguage_UnsupportedLanguage_Answers400AndKeepsTheStoredLanguage(string language)
         {
             RegistrationForm form = RegistrationForm.Valid() with { Language = "en" };
-            HttpClient client = await LoggedInClientAsync(form);
+            HttpClient client = await _app.CreateRegisteredClientAsync(form);
 
             HttpResponseMessage response = await AuthRequests.ChangeLanguageAsync(client, language);
 
@@ -128,15 +129,6 @@ namespace Kvit.Api.Tests.Auth
             HttpResponseMessage response = await AuthRequests.ChangeLanguageAsync(client, "mk");
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        }
-
-        private async Task<HttpClient> LoggedInClientAsync(RegistrationForm form)
-        {
-            HttpClient client = _app.CreateClient();
-            HttpResponseMessage response = await AuthRequests.RegisterAsync(client, form);
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-            return client;
         }
     }
 }

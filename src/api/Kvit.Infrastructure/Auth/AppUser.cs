@@ -22,5 +22,7 @@ namespace Kvit.Infrastructure.Auth
         public DateTimeOffset CreatedAt { get; set; }
 
         public int LockoutCount { get; set; }
+
+        public bool MustChangePassword { get; set; }
     }
 }

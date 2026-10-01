@@ -11,10 +11,12 @@ namespace Kvit.Api.Tests.RateLimiting
     {
         private const string LogInPath = "/api/auth/login";
         private const string RegisterPath = "/api/auth/register";
+        private const string ChangePasswordPath = "/api/auth/change-password";
         private const string ForwardedForHeader = "X-Forwarded-For";
 
         [Theory]
         [InlineData(LogInPath, 10)]
+        [InlineData(ChangePasswordPath, 10)]
         [InlineData(RegisterPath, 5)]
         public async Task Request_AfterTheAllowedNumberFromOneAddress_Answers429RateLimited(string path, int allowed)
         {
@@ -28,6 +30,7 @@ namespace Kvit.Api.Tests.RateLimiting
 
         [Theory]
         [InlineData(LogInPath, 10)]
+        [InlineData(ChangePasswordPath, 10)]
         [InlineData(RegisterPath, 5)]
         public async Task RefusedRequest_CarriesARetryAfterInWholeSeconds(string path, int allowed)
         {
@@ -43,6 +46,7 @@ namespace Kvit.Api.Tests.RateLimiting
 
         [Theory]
         [InlineData(LogInPath, 10)]
+        [InlineData(ChangePasswordPath, 10)]
         [InlineData(RegisterPath, 5)]
         public async Task AnotherAddress_IsStillAllowedWhileOneAddressIsRefused(string path, int allowed)
         {
@@ -59,6 +63,7 @@ namespace Kvit.Api.Tests.RateLimiting
 
         [Theory]
         [InlineData(LogInPath, 10)]
+        [InlineData(ChangePasswordPath, 10)]
         [InlineData(RegisterPath, 5)]
         public async Task ClientSentXForwardedFor_DoesNotChangeTheCountedAddress(string path, int allowed)
         {

@@ -19,6 +19,7 @@ namespace Kvit.Api.Registers
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<PasswordResetService>();
 
             return services;
         }

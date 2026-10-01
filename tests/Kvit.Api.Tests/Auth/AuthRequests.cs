@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using Xunit;
@@ -7,6 +8,7 @@ namespace Kvit.Api.Tests.Auth
     public static class AuthRequests
     {
         public const string DefaultTimeZone = "Europe/Skopje";
+        public const string WrongPassword = "Wrong-password-1";
 
         public static Task<HttpResponseMessage> RegisterAsync(HttpClient client, RegistrationForm form)
         {
@@ -32,6 +34,25 @@ namespace Kvit.Api.Tests.Auth
         public static Task<HttpResponseMessage> LogOutAsync(HttpClient client)
         {
             return client.PostAsync("/api/auth/logout", null, TestContext.Current.CancellationToken);
+        }
+
+        public static async Task<HttpResponseMessage> LockByWrongLogInsAsync(HttpClient client, string email)
+        {
+            for (int attempt = 1; attempt <= 4; attempt++)
+            {
+                HttpResponseMessage response = await LogInAsync(client, email, WrongPassword);
+
+                Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+            }
+
+            return await LogInAsync(client, email, WrongPassword);
+        }
+
+        public static Task<HttpResponseMessage> ChangePasswordAsync(HttpClient client, string currentPassword, string newPassword)
+        {
+            string json = JsonSerializer.Serialize(new { currentPassword, newPassword });
+
+            return PostJsonAsync(client, "/api/auth/change-password", json);
         }
 
         public static Task<HttpResponseMessage> GetMeAsync(HttpClient client)

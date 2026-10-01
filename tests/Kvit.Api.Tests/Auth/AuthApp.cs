@@ -7,6 +7,7 @@ using Kvit.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using Xunit;
 
 namespace Kvit.Api.Tests.Auth
@@ -45,6 +46,58 @@ namespace Kvit.Api.Tests.Auth
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             return (await AuthRequests.ReadJsonAsync(response)).GetProperty("id").GetGuid();
+        }
+
+        public async Task<HttpClient> CreateRegisteredClientAsync(RegistrationForm form)
+        {
+            HttpClient client = CreateClient();
+
+            HttpResponseMessage response = await AuthRequests.RegisterAsync(client, form);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return client;
+        }
+
+        public async Task<HttpClient> CreateLoggedInClientAsync(string email, string password)
+        {
+            HttpClient client = CreateClient();
+
+            HttpResponseMessage response = await AuthRequests.LogInAsync(client, email, password);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return client;
+        }
+
+        public async Task<string?> ResetPasswordAsync(string email)
+        {
+            using IServiceScope scope = CreateScope();
+            PasswordResetService service = ActivatorUtilities.CreateInstance<PasswordResetService>(scope.ServiceProvider);
+
+            return await service.ResetAsync(email, TestContext.Current.CancellationToken);
+        }
+
+        public async Task<string> ResetExistingAccountAsync(string email)
+        {
+            return await ResetPasswordAsync(email)
+                ?? throw new InvalidOperationException($"No account has the email '{email}', so no temporary password was made.");
+        }
+
+        public async Task<ResetAccount> CreateResetAccountAsync()
+        {
+            RegistrationForm form = RegistrationForm.Valid();
+            await CreateAccountAsync(form);
+            string temporaryPassword = await ResetExistingAccountAsync(form.Email);
+
+            return new ResetAccount(form, temporaryPassword);
+        }
+
+        public async Task<bool> MustChangePasswordAsync(string email)
+        {
+            List<string?> values = await QueryAsync(
+                "SELECT must_change_password::text FROM users WHERE email = @email",
+                new NpgsqlParameter("email", email));
+
+            return bool.Parse(Assert.Single(values) ?? throw new InvalidOperationException($"must_change_password is null for '{email}'."));
         }
 
         public async Task<AppUser> FindUserAsync(string email)

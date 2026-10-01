@@ -25,6 +25,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
             builder.Property(user => user.DisplayName).HasMaxLength(60);
             builder.Property(user => user.IsTimeZoneManual).HasDefaultValue(false);
             builder.Property(user => user.LockoutCount).HasDefaultValue(0);
+            builder.Property(user => user.MustChangePassword).HasDefaultValue(false);
         }
     }
 }

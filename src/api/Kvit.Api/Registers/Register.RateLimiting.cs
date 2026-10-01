@@ -1,10 +1,8 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
-using Kvit.Api.Controllers;
+using Kvit.Api.Problems;
 using Kvit.Api.RateLimiting;
 using Kvit.Domain.Results;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
 
 namespace Kvit.Api.Registers
@@ -55,14 +53,11 @@ namespace Kvit.Api.Registers
             HttpContext httpContext = context.HttpContext;
             httpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
 
-            ProblemDetailsFactory problemDetailsFactory = httpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
-            ProblemDetails problem = problemDetailsFactory.CreateProblemDetails(
+            await ErrorProblem.WriteAsync(
                 httpContext,
-                statusCode: StatusCodes.Status429TooManyRequests,
-                detail: $"Too many attempts from this address. Try again in {retryAfterSeconds} seconds.");
-            problem.Extensions[BaseController.ErrorCodeExtensionKey] = ResultCodes.RATE_LIMITED;
-
-            await TypedResults.Problem(problem).ExecuteAsync(httpContext);
+                StatusCodes.Status429TooManyRequests,
+                $"Too many attempts from this address. Try again in {retryAfterSeconds} seconds.",
+                ResultCodes.RATE_LIMITED);
         }
     }
 }

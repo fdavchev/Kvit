@@ -18,6 +18,9 @@ namespace Kvit.Domain.Results
         public const string AUTH_DISPLAY_NAME_INVALID = "AUTH_DISPLAY_NAME_INVALID";
         public const string AUTH_LOCKED_OUT = "AUTH_LOCKED_OUT";
         public const string AUTH_NOT_SIGNED_IN = "AUTH_NOT_SIGNED_IN";
+        public const string AUTH_MUST_CHANGE_PASSWORD = "AUTH_MUST_CHANGE_PASSWORD";
+        public const string AUTH_CURRENT_PASSWORD_WRONG = "AUTH_CURRENT_PASSWORD_WRONG";
+        public const string AUTH_PASSWORD_UNCHANGED = "AUTH_PASSWORD_UNCHANGED";
         public const string TIME_ZONE_INVALID = "TIME_ZONE_INVALID";
         public const string LANGUAGE_INVALID = "LANGUAGE_INVALID";
         public const string RATE_LIMITED = "RATE_LIMITED";

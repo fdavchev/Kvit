@@ -22,6 +22,7 @@ namespace Kvit.Infrastructure.Auth
         private const string InvalidCredentialsMessage = "The email or the password is wrong.";
         private const string LockedOutMessage = "Too many wrong passwords in a row. The account is locked for a few minutes.";
         private const string NotSignedInMessage = "Nobody is signed in.";
+        private const string CurrentPasswordWrongMessage = "The current password is wrong.";
 
         public async Task<Result<MeResponse>> CreateAccountAsync(NewAccount account, CancellationToken cancellationToken)
         {
@@ -67,26 +68,13 @@ namespace Kvit.Infrastructure.Auth
                 return Result.Unauthorized<MeResponse>(InvalidCredentialsMessage, ResultCodes.AUTH_INVALID_CREDENTIALS);
             }
 
-            if (await _userManager.IsLockedOutAsync(user))
+            PasswordCheck check = await CheckPasswordAsync(user, password);
+            if (check == PasswordCheck.Locked)
             {
                 return Result.Forbid<MeResponse>(LockedOutMessage, ResultCodes.AUTH_LOCKED_OUT);
             }
 
-            SignInResult check = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
-            if (check.IsLockedOut)
-            {
-                user.LockoutCount++;
-                user.LockoutEnd = _timeProvider.GetUtcNow() + LockoutLadder.LockDurationFor(user.LockoutCount);
-                await UpdateAsync(user);
-                return Result.Forbid<MeResponse>(LockedOutMessage, ResultCodes.AUTH_LOCKED_OUT);
-            }
-
-            if (check.IsNotAllowed || check.RequiresTwoFactor)
-            {
-                throw new InvalidOperationException($"Identity answered '{check}' for user {user.Id}, but Kvit turns on neither confirmed accounts nor two-factor log-in.");
-            }
-
-            if (!check.Succeeded)
+            if (check == PasswordCheck.Wrong)
             {
                 return Result.Unauthorized<MeResponse>(InvalidCredentialsMessage, ResultCodes.AUTH_INVALID_CREDENTIALS);
             }
@@ -100,6 +88,32 @@ namespace Kvit.Infrastructure.Auth
             await UpdateAsync(user);
 
             return Result.Ok(MeResponseOf(user));
+        }
+
+        public async Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken)
+        {
+            AppUser? user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user is null)
+            {
+                return Result.Unauthorized(NotSignedInMessage, ResultCodes.AUTH_NOT_SIGNED_IN);
+            }
+
+            PasswordCheck check = await CheckPasswordAsync(user, currentPassword);
+            if (check == PasswordCheck.Locked)
+            {
+                return Result.Forbid(LockedOutMessage, ResultCodes.AUTH_LOCKED_OUT);
+            }
+
+            if (check == PasswordCheck.Wrong)
+            {
+                return Result.Failure(CurrentPasswordWrongMessage, ResultCodes.AUTH_CURRENT_PASSWORD_WRONG);
+            }
+
+            user.LockoutCount = 0;
+            user.MustChangePassword = false;
+            IdentityResultChecks.ThrowIfFailed(await _userManager.ChangePasswordAsync(user, currentPassword, newPassword), $"change the password of user {user.Id}");
+
+            return Result.Ok();
         }
 
         public async Task SignInAsync(Guid userId)
@@ -129,13 +143,33 @@ namespace Kvit.Infrastructure.Auth
             return Result.Ok();
         }
 
+        private async Task<PasswordCheck> CheckPasswordAsync(AppUser user, string password)
+        {
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                return PasswordCheck.Locked;
+            }
+
+            SignInResult check = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
+            if (check.IsLockedOut)
+            {
+                user.LockoutCount++;
+                user.LockoutEnd = _timeProvider.GetUtcNow() + LockoutLadder.LockDurationFor(user.LockoutCount);
+                await UpdateAsync(user);
+                return PasswordCheck.Locked;
+            }
+
+            if (check.IsNotAllowed || check.RequiresTwoFactor)
+            {
+                throw new InvalidOperationException($"Identity answered '{check}' for user {user.Id}, but Kvit turns on neither confirmed accounts nor two-factor log-in.");
+            }
+
+            return check.Succeeded ? PasswordCheck.Right : PasswordCheck.Wrong;
+        }
+
         private async Task UpdateAsync(AppUser user)
         {
-            IdentityResult updated = await _userManager.UpdateAsync(user);
-            if (!updated.Succeeded)
-            {
-                throw new InvalidOperationException($"Identity refused to update user {user.Id}: {Describe(updated)}");
-            }
+            IdentityResultChecks.ThrowIfFailed(await _userManager.UpdateAsync(user), $"update user {user.Id}");
         }
 
         private static bool IsEmailUniqueViolation(DbUpdateException exception)
@@ -152,7 +186,7 @@ namespace Kvit.Infrastructure.Auth
             Result<MeResponse>?[] failures = [.. result.Errors.Select(error => RegistrationFailureFor(error.Code))];
             if (failures.Any(failure => failure is null))
             {
-                throw new InvalidOperationException($"Identity refused the new account with an error Kvit does not map: {Describe(result)}");
+                throw new InvalidOperationException($"Identity refused the new account with an error Kvit does not map: {IdentityResultChecks.Describe(result)}");
             }
 
             return failures[0]!;
@@ -170,16 +204,11 @@ namespace Kvit.Infrastructure.Auth
             };
         }
 
-        private static string Describe(IdentityResult result)
-        {
-            return string.Join("; ", result.Errors.Select(error => $"{error.Code}: {error.Description}"));
-        }
-
         private static MeResponse MeResponseOf(AppUser user)
         {
             string email = user.Email ?? throw new InvalidOperationException($"User {user.Id} has no email.");
 
-            return new MeResponse(user.Id, user.DisplayName, email, user.Language, user.TimeZone);
+            return new MeResponse(user.Id, user.DisplayName, email, user.Language, user.TimeZone, user.MustChangePassword);
         }
     }
 }

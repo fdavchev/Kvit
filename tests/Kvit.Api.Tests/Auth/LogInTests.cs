@@ -8,8 +8,6 @@ namespace Kvit.Api.Tests.Auth
 {
     public class LogInTests(AuthApp _app) : IClassFixture<AuthApp>
     {
-        private const string WrongPassword = "Wrong-password-1";
-
         [Fact]
         public async Task LogIn_RightPassword_Answers200WithTheAccountFields()
         {
@@ -26,6 +24,7 @@ namespace Kvit.Api.Tests.Auth
             Assert.Equal(form.Email, body.GetProperty("email").GetString());
             Assert.Equal("mk", body.GetProperty("language").GetString());
             Assert.Equal("Europe/Skopje", body.GetProperty("timeZone").GetString());
+            Assert.False(body.GetProperty("mustChangePassword").GetBoolean());
         }
 
         [Fact]
@@ -47,7 +46,7 @@ namespace Kvit.Api.Tests.Auth
             await _app.CreateAccountAsync(form);
             HttpClient client = _app.CreateClient();
 
-            HttpResponseMessage response = await AuthRequests.LogInAsync(client, form.Email, WrongPassword);
+            HttpResponseMessage response = await AuthRequests.LogInAsync(client, form.Email, AuthRequests.WrongPassword);
 
             await ProblemResponse.AssertAsync(response, HttpStatusCode.Unauthorized, ResultCodes.AUTH_INVALID_CREDENTIALS);
         }
@@ -81,8 +80,8 @@ namespace Kvit.Api.Tests.Auth
             await _app.CreateAccountAsync(form);
             HttpClient client = _app.CreateClient();
 
-            HttpResponseMessage wrongPassword = await AuthRequests.LogInAsync(client, form.Email, WrongPassword);
-            HttpResponseMessage unknownEmail = await AuthRequests.LogInAsync(client, RegistrationForm.UniqueEmail(), WrongPassword);
+            HttpResponseMessage wrongPassword = await AuthRequests.LogInAsync(client, form.Email, AuthRequests.WrongPassword);
+            HttpResponseMessage unknownEmail = await AuthRequests.LogInAsync(client, RegistrationForm.UniqueEmail(), AuthRequests.WrongPassword);
 
             JsonElement wrongPasswordBody = await AuthRequests.ReadJsonAsync(wrongPassword);
             JsonElement unknownEmailBody = await AuthRequests.ReadJsonAsync(unknownEmail);
@@ -103,7 +102,7 @@ namespace Kvit.Api.Tests.Auth
             await _app.CreateAccountAsync(form);
             HttpClient client = _app.CreateClient();
 
-            HttpResponseMessage response = await AuthRequests.LogInAsync(client, form.Email, WrongPassword);
+            HttpResponseMessage response = await AuthRequests.LogInAsync(client, form.Email, AuthRequests.WrongPassword);
 
             Assert.Null(AuthCookie.Find(response));
         }

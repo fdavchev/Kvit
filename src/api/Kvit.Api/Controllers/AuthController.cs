@@ -1,3 +1,4 @@
+using Kvit.Api.Authorization;
 using Kvit.Application.Commands.Auth;
 using Kvit.Application.Dispatching;
 using Kvit.Contracts.Auth;
@@ -9,11 +10,11 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace Kvit.Api.Controllers
 {
-    [AllowAnonymous]
     [Route("api/auth")]
     public sealed class AuthController(IDispatcher _dispatcher) : BaseController
     {
         [HttpPost("register")]
+        [AllowAnonymous]
         [EnableRateLimiting("sign-up")]
         public async Task<ActionResult<MeResponse>> Register(RegisterRequest request, CancellationToken cancellationToken)
         {
@@ -23,6 +24,7 @@ namespace Kvit.Api.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         [EnableRateLimiting("log-in")]
         public async Task<ActionResult<MeResponse>> LogIn(LogInRequest request, CancellationToken cancellationToken)
         {
@@ -32,9 +34,21 @@ namespace Kvit.Api.Controllers
         }
 
         [HttpPost("logout")]
+        [AllowAnonymous]
         public async Task<ActionResult> LogOut(CancellationToken cancellationToken)
         {
             Result result = await _dispatcher.Send(new LogOutCommand(), cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("change-password")]
+        [Authorize]
+        [AllowedWithTemporaryPassword]
+        [EnableRateLimiting("log-in")]
+        public async Task<ActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken cancellationToken)
+        {
+            ChangePasswordCommand command = new(request.CurrentPassword, request.NewPassword);
+            Result result = await _dispatcher.Send(command, cancellationToken);
             return Result(result);
         }
     }

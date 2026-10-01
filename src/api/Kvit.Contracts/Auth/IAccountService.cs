@@ -10,6 +10,8 @@ namespace Kvit.Contracts.Auth
 
         Task<Result<MeResponse>> CheckLogInAsync(string email, string password, string timeZone, CancellationToken cancellationToken);
 
+        Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken);
+
         Task SignInAsync(Guid userId);
 
         Task LogOutAsync();

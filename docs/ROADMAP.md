@@ -79,7 +79,8 @@ Pure C# in `Kvit.Domain/MoneyRules/` (not `Money/`, see `reports/2026-09-29-phas
 - [x] `usage_events` table + `SignedUp` event. **Table in Step 1, the event written at sign-up in Step 2a (VERIFIED by automated test)**
 - [x] First migration; `compose.yaml` with a local Postgres 17 (no password, only reachable from this PC); connection string through `dotnet user-secrets` (Step 1: VERIFIED by live run; Filip sets his own secret with `guides/phase-04-local-setup.md`)
 - [x] `Kvit.Api.Tests` with Testcontainers (a real Postgres in Docker): register → me → log out, wrong password, rate limit, cookie flags. **Done: Testcontainers setup and database tests (Step 1); register → me → log out, wrong password, lock ladder, cookie flags (Step 2a); rate limits, proxy gate, address grouping (Step 3). 452 tests, VERIFIED by automated test**
-- [ ] Frontend: Sign up, Log in, `RequireAuth`, Settings (language, log out)
+- [x] **Step 3b (done 2026-10-01; VERIFIED by automated test, 493/493; the script run on a throwaway database was REPORTED by the coder):** password reset by hand for Filip (`scripts/ResetPassword.cs`: temporary password shown once, only its hash saved), `must_change_password` enforced by the API, `POST /api/auth/change-password`, three new error codes. Filip never sees anyone's real password
+- [ ] Frontend: Sign up, Log in (with "Forgot your password? Ask Filip to reset it."), `RequireAuth`, forced change-password screen, Settings (language, change password, log out)
 - **Done when:** all tests pass; sign up → log out → log in works in the browser at phone width.
 - **Filip:** Docker Desktop running; run the one-time local setup commands (a guide is written in this phase).
 

@@ -159,3 +159,36 @@ Open `http://localhost:5018/api/health` in the browser: it shows `Healthy`. Then
 - `The setting ConnectionStrings:KvitDatabase is missing or empty`: do Part 1, Step 4.
 - `Failed to connect` or `Connection refused`: the database is not running; do Step 1.
 - `Unable to retrieve the decryption key` in the log: the database holds a login key made with a different certificate (for example after `--force`). The app carries on and makes a new key; everybody has to log in again. To tidy up, run `docker exec kvit-postgres psql -U kvit -d kvit -c "delete from data_protection_keys"`.
+
+---
+
+## Part 4: password reset by hand and "change password" (Step 3b)
+
+### What changed for you
+- A new database column was added (`must_change_password`). **Your local database does not have it yet**, so the API will fail on the first request that touches users until you do Step 2 below.
+- You can now reset a friend's password yourself with a small script (`docs/guides/reset-a-password.md`). The script gives you a **temporary password** that you read out to them. They must replace it with their own the first time they log in.
+- You never see anyone's real password: the database only keeps a scrambled version (a hash) that cannot be turned back into the password.
+
+### Step 1: keep Docker Desktop open
+Open Docker Desktop and wait for "Engine running". The `kvit-postgres` container should still show a green dot. (If it is not there: `docker compose up -d` in the Kvit folder.)
+
+### Step 2: apply the new database update
+In the terminal, in the Kvit folder:
+```
+dotnet ef database update --project src/api/Kvit.Infrastructure --startup-project src/api/Kvit.Api
+```
+**You should see:** `Applying migration '20261001075232_MustChangePassword'.` and the last line `Done.`
+
+**If it fails:**
+- `The setting ConnectionStrings:KvitDatabase is missing or empty`: do Part 1, Step 4 again.
+- `The setting DataProtection:CertificateBase64 is missing or empty`: do Part 3, Step 2.
+- `Failed to connect` or `Connection refused`: the database is not running; do Step 1 above.
+
+### Step 3 (optional): check the tests yourself
+```
+dotnet test Kvit.slnx
+```
+**You should see:** `total: 493`, `failed: 0`, `succeeded: 493`.
+
+### Step 4: nothing to try yet
+Your local database has no accounts (sign-up has no screen until the frontend step), so there is nobody to reset. The first real try of the reset script comes after Step 4 of Phase 4.
