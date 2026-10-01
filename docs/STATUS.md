@@ -1,23 +1,27 @@
 # Status: Kvit
 
-_Last updated: 2026-10-02 (Phase 4: Steps 1 to 3b and Step 4 run A committed; Step 4 run B and Step 4c (theme choice, sign-up limit, tap areas, wide-screen polish) built and verified, NOT committed; Filip decides the desktop question, does his click-through, then the merge wrap-up)_
+_Last updated: 2026-10-01 (Phase 4 complete and merged; Phase 5 is next)_
 
 ## Where we stopped
-- **Phase 4 (database + email accounts) is ONE branch, `feat/04-accounts`, and ONE pull request (#6, open).** Filip merges it himself after Step 4 and the phone-width browser test. Plan: top entry of `DECISIONS.md`.
-- **Done, committed and pushed:** Step 1 (database), Step 2a (accounts: register, log in, log out, me, lock ladder, login cookie, fallback policy), Step 2b (login keys in Postgres, encrypted with a certificate made by `scripts/NewDataProtectionCertificate.cs`). Reports: `docs/reports/2026-09-29-phase-04-step-1-database.md`, `...step-2a-accounts.md`, `...step-2b-login-keys.md`. CI on PR #6: `backend` and `frontend` green (VERIFIED by live run, 2026-09-30).
-- **Step 3 (rate limits, visitor address, proxy secret) is DONE and committed (`73a642c`).** Report: `docs/reports/2026-09-30-phase-04-step-3-rate-limits.md`. Backend 452/452, 0 warnings; frontend 97/97; live run with the real API + `wrangler pages dev` + echo server passed.
-- **Step 3b (password reset by hand, must-change-password, change password) is DONE, verified and committed (`abc1068`).** Report: `docs/reports/2026-10-01-phase-04-step-3b-password-reset.md`. Backend: `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 493/493 (was 452). New: column `must_change_password` (migration `MustChangePassword`), `mustChangePassword` in the account answers, 403 `AUTH_MUST_CHANGE_PASSWORD` while the flag is set, `POST /api/auth/change-password`, security stamp checked on every request, `scripts/ResetPassword.cs` (guide: `docs/guides/reset-a-password.md`). The script was proved on a throwaway database (REPORTED by the coder). **Filip's local database still lacks the new migration: `docs/guides/phase-04-local-setup.md` Part 4, Step 2.**
-- **Step 4 (frontend) is BUILT and verified; run B and Step 4c are waiting for Filip's commit.** Report: `docs/reports/2026-10-01-phase-04-step-4-frontend.md` (includes the Step 4c section). Backend `dotnet test Kvit.slnx` 502/502 (0 warnings), frontend `npm test` 437/437 (was 97 before Step 4), lint 0 warnings, build 0 type errors (VERIFIED by automated test); two real-browser checks at 360 px and 1280 px in en/mk x light/dark against the real API on throwaway databases (REPORTED by the tester). Step 4c: Settings theme choice (Same as device default / Light / Dark), sign-up limit counts only requests that pass the cheap checks, 44 px tap areas, forced Change-password spacing, wide-screen polish. Look: `docs/design/2026-10-01-round-3/`.
-- **Still to do in Phase 4:** Filip's decision on the desktop layout (the report says it is still the 400 px phone column on a wide window; a real web layout is Phase 11 unless he wants a bigger step now); Filip's own click-through (the Phase 4 "done when": sign up, log out, log in); then the merge wrap-up (ROADMAP/STATUS/DECISIONS written as merged, the Phase 4 decision log moved word for word to the end of a Phase 4 report, any still-binding rule as one line in ARCHITECTURE; a separate proposal, Claude asks first); Filip merges PR #6 himself.
-- **Answered 2026-09-30:** Filip ran the API after making the certificate, so the one row in `data_protection_keys` (id 3) is his own and stays. He asked for the test "a signed-in visitor gets 404 for the developer pages in Production"; it is in and passes.
-- Phase 5 still proves the visitor-address chain on the real Cloudflare and Render (including that Render passes both Kvit headers through), sets `Proxy__SharedSecret` on Render and `API_PROXY_SECRET` on Cloudflare to the same value, makes a separate online certificate, decides Neon retry and the migration step; Phase 8 has "every error code has a translation key".
-- `START-HERE-PROMPT.md` in a public repo is still Filip's decision. CI running twice on PR branches stays skipped on purpose (`BACKLOG.md`).
+- Branch: `feat/04-accounts` merged into `main` as PR #6 (2026-10-01); last feature commit `65a6064`. Next branch: `chore/05-first-deploy`.
+- Uncommitted changes: none (the wrap-up docs are the last commit before the merge).
+- Last thing done: Phase 4 is finished. Database, email accounts, rate limits and the proxy gate, reset by hand with a forced password change, and the frontend (Welcome, Sign up, Log in, Home placeholder, Settings with language and theme, Change password) in the approved look. Filip tested the screens himself and said everything looks fine. Report: `docs/reports/2026-10-01-phase-04-accounts.md` (its last section holds the Phase 4 decision log).
 
 ## Next step
-Filip commits run B and Step 4c (one commit line in the chat), decides the desktop question, does the click-through (his own database needs no new migration for 4c), then the merge wrap-up proposal.
+Phase 5, first deploy. Claude proposes the plan (Neon, Render, Cloudflare Pages, the shared proxy secret, a separate online certificate, how migrations reach Neon) and waits for Filip's go. Filip then creates the free accounts with `docs/guides/free-hosting-setup.md` (Part A and B1 to B3, B5). No card anywhere.
 
-## Blockers
-- None. Docker Desktop must be on for the tests.
+## Then
+- Test on Filip's real phone: sign up, close the browser, come back still logged in; the phone-only items listed in `docs/ROADMAP.md` Phase 5.
+- Prove the visitor-address chain and the proxy secret on the real Cloudflare and Render.
+- Phase 6: Google sign-in and the privacy page.
+- Phase 7 onward: groups, expenses, balances, then the dashboard (Phase 11, Filip decides its layout, phone and web).
+
+## Blockers and open questions
+- Nothing blocks Phase 5 except Filip creating the accounts. No cost may appear (`CLAUDE.md` hard rule).
+- Still Filip's decision: whether `START-HERE-PROMPT.md` stays in the public repository.
 
 ## Verification state
-See the step reports in `docs/reports/`. Latest: backend 502/502 tests, 0 warnings; frontend 437/437 tests, lint and build clean; two browser runs of all flows on throwaway databases (REPORTED by the tester). NOT VERIFIED anywhere yet: Filip's own click-through, a real phone, the real Cloudflare edge, Render's load balancer (Phase 5).
+- Backend: `dotnet test Kvit.slnx` 502/502, `dotnet build` 0 warnings (VERIFIED by automated test, 2026-10-01).
+- Frontend: `npm test` 437/437, lint 0 warnings, build 0 type errors (VERIFIED by automated test, 2026-10-01).
+- CI on PR #6: `backend` and `frontend` green (VERIFIED by live run).
+- Browser: two Chromium runs REPORTED by the tester; Filip's click-through REPORTED by Filip. NOT VERIFIED: a real phone, the real Cloudflare edge, Render's load balancer, Neon, Google (all Phase 5).

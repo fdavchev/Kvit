@@ -1,6 +1,6 @@
 # Phase 4, Step 3: rate limits, the visitor's address, the proxy secret
 
-Date: 2026-09-30. Branch `feat/04-accounts` (PR #6, open). Tests by the `tester`, code by the `coder`, checked by Claude. Decisions: `DECISIONS.md`, top entry, "Step 3".
+Date: 2026-09-30. Branch `feat/04-accounts` (PR #6, open). Tests by the `tester`, code by the `coder`, checked by Claude. Decisions: `reports/2026-10-01-phase-04-accounts.md` (Decisions section), "Step 3".
 
 ## Labels
 VERIFIED by automated test / VERIFIED by live run: run by me, output read. REPORTED by the coder: the coder ran it, I did not repeat it. NOT VERIFIED: not run.

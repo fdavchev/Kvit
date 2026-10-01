@@ -1,6 +1,6 @@
 # Phase 4, Step 4: the frontend (sign up, log in, session guard, settings, forced password change)
 
-Date: 2026-10-01. Branch `feat/04-accounts` (PR #6, open). Two runs, each tester (failing tests first), check by Claude, Filip's go, then coder. Decisions: `DECISIONS.md`, top entry, "Step 4" blocks and "Look of the first screens". Look: `docs/design/2026-10-01-round-3/` (images and the sources that made them).
+Date: 2026-10-01. Branch `feat/04-accounts` (PR #6, open). Two runs, each tester (failing tests first), check by Claude, Filip's go, then coder. Decisions: `reports/2026-10-01-phase-04-accounts.md` (Decisions section), "Step 4" blocks and "Look of the first screens". Look: `docs/design/2026-10-01-round-3/` (images and the sources that made them).
 
 ## Labels
 VERIFIED by automated test / VERIFIED by live run: run by me, output read. REPORTED by the tester: run by the browser-check agent, I looked at its screenshots (contact sheets) but did not repeat the measurements. REPORTED by the coder: the coder ran it. NOT VERIFIED: not run.
@@ -49,7 +49,7 @@ VERIFIED by automated test / VERIFIED by live run: run by me, output read. REPOR
 
 (Earlier steps: 1 about 369k, 2a about 390k, 2b about 220k to 315k, 3 about 237k, 3b about 365k. Resumed agents carry their history, so their numbers include re-read context.)
 
-## Step 4c (2026-10-02, after Filip's first click-through): theme choice, sign-up limit, tap areas, wide screens
+## Step 4c (2026-10-01, after Filip's first click-through): theme choice, sign-up limit, tap areas, wide screens
 Asked by Filip: a light/dark choice in Settings (default follows the device), typos on Create account must not lock him out for minutes, the app must also look right on the web. Two testers (backend and frontend, tests first), two coders in parallel, a second browser check.
 
 | Check | Result | Label |

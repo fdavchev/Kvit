@@ -1,6 +1,6 @@
 # Phase 4, Step 2a: accounts (without the certificate)
 
-Date: 2026-09-29. Branch `feat/04-accounts`. Tests by the `tester`, code by the `coder`, checked by Claude. Decisions: `DECISIONS.md`, top entry, "Step 2a".
+Date: 2026-09-29. Branch `feat/04-accounts`. Tests by the `tester`, code by the `coder`, checked by Claude. Decisions: `reports/2026-10-01-phase-04-accounts.md` (Decisions section), "Step 2a".
 
 ## Labels
 - **VERIFIED by automated test** / **VERIFIED by live run:** run, output read.

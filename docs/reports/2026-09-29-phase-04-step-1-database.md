@@ -32,7 +32,7 @@ Date: 2026-09-29. Branch `feat/04-accounts`. Built by the `tester` (tests first)
 | Frontend | no frontend file was touched (`git status`); checks not re-run | NOT VERIFIED (not needed) |
 
 ## Decisions made in this step (also in `DECISIONS.md`)
-See the "Step 1" notes in the Phase 4 entry. The main ones: the start-up check first was an `IHostedLifecycleService` and is now one line in `Program.cs` (not `ValidateOnStart`, which throws a different exception type); `usage_events.user_id` is a nullable foreign key with ON DELETE SET NULL; a plain index on `usage_events.user_id` is added on purpose; the role-claims foreign key is named by hand; `AddInfrastructure()` takes no parameter.
+See the "Step 1" notes in the Decisions section of `reports/2026-10-01-phase-04-accounts.md`. The main ones: the start-up check first was an `IHostedLifecycleService` and is now one line in `Program.cs` (not `ValidateOnStart`, which throws a different exception type); `usage_events.user_id` is a nullable foreign key with ON DELETE SET NULL; a plain index on `usage_events.user_id` is added on purpose; the role-claims foreign key is named by hand; `AddInfrastructure()` takes no parameter.
 
 ## Not verified
 - **Why the container exited with code 139 (not 134) when it failed to start without the setting.** The message and the refusal to start were seen; the odd exit code was not looked into. It does not change what Render or you see (the app stops with the clear message), but it is not understood.
@@ -41,7 +41,7 @@ See the "Step 1" notes in the Phase 4 entry. The main ones: the start-up check f
 - A leftover `testcontainers/ryuk` helper container may show in Docker Desktop for a while; Testcontainers removes it by itself.
 
 ## Code review (run after the Step 1 commit, `/code-review` at high effort)
-7 findings; none is a crash or a security hole today. Decisions are in `DECISIONS.md` (top entry, "Code review of Step 1"). Labels: findings NOT VERIFIED by a run (read from the code), each checked against the code and plan by Claude.
+7 findings; none is a crash or a security hole today. Decisions are in `reports/2026-10-01-phase-04-accounts.md` (Decisions section, "Code review of Step 1"). Labels: findings NOT VERIFIED by a run (read from the code), each checked against the code and plan by Claude.
 | Finding | Decision |
 |---|---|
 | `AppUser` defaults hide missing values (`CreatedAt`, `time_zone`, `display_name`) | Accepted, fixed in Step 2a (validation + database checks) |

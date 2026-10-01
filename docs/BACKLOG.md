@@ -35,6 +35,14 @@
 
 - [ ] Warn loudly (log, or fail with a clear message) when the login-key certificate is expired or about to expire (it is valid 10 years; whether an expired one still decrypts is only from the source), and check its `NotBefore` (Step 2b code review)
 
+- [ ] A real desktop layout for the web (a wider column, larger text, sidebar and several columns); it comes with the dashboard in Phase 11. Today the five Phase 4 screens are a centred 400 px column on a wide window (Filip, 2026-10-01)
+- [ ] Theme choice kept on the account instead of only on the device, so it follows the person to another phone
+- [ ] Show the field-level server errors next to the field (the email field for `AUTH_EMAIL_TAKEN`, the password field for `AUTH_PASSWORD_TOO_WEAK`); `KvitTextField` already has an unused `invalid` prop
+- [ ] `Retry-After` is the whole window (60 or 600 seconds), not the time left; show or send the time left if a countdown is ever wanted
+- [ ] Check on the deployed site: `net::ERR_ABORTED` that the browser tool logged on 204 answers through the Vite proxy (language, log out, change password; the answers were 204 and the app worked), and the one white frame of the Vite dev server before a saved dark theme appears (the production build has none)
+- [ ] Small look items from the browser checks: the 'Coming soon' toast on Welcome covers the 'I already have an account' link while it shows; big titles wrap to two lines in places ("Change password", Macedonian "Направи профил"); Settings' 'Change password' and 'Log out' look the same; the apostrophe in "I don't have an account" is straight in the app and curly in the mockup
+- [ ] The sign-up and log-in counters are in memory and restart with the free Render instance; a window can let a burst through at its end (accepted for the first version)
+
 ## Skipped on purpose
 - CI runs twice on a pull-request branch (one run for `push`, one for `pull_request`; review finding 01-5, 2026-09-29). Left as it is: the second run tests the merge result with `main`, the cost is only free GitHub minutes, and limiting `push` to `main` would drop the check on a branch that has no pull request yet. Revisit only if the free minutes ever run short.
 

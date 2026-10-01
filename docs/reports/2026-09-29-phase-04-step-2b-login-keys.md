@@ -1,6 +1,6 @@
 # Phase 4, Step 2b: login keys in Postgres, encrypted with a certificate
 
-Date: 2026-09-29. Branch `feat/04-accounts`. Tests by the `tester`, code by the `coder`, checked by Claude. Decisions: `DECISIONS.md`, top entry, "Step 2b".
+Date: 2026-09-29. Branch `feat/04-accounts`. Tests by the `tester`, code by the `coder`, checked by Claude. Decisions: `reports/2026-10-01-phase-04-accounts.md` (Decisions section), "Step 2b".
 
 ## Labels
 VERIFIED by automated test / VERIFIED by live run: run, output read. REPORTED by the coder: the coder ran it, I did not repeat it. NOT VERIFIED: not run.

@@ -1,6 +1,6 @@
 # Phase 4, Step 3b: password reset by hand, must-change-password, change password
 
-Date: 2026-10-01. Branch `feat/04-accounts` (PR #6, open). Tests by the `tester`, code by the `coder`, checked by Claude. Decisions: `DECISIONS.md`, top entry, "Step 3b". Guides: `guides/reset-a-password.md`, `guides/phase-04-local-setup.md` Part 4.
+Date: 2026-10-01. Branch `feat/04-accounts` (PR #6, open). Tests by the `tester`, code by the `coder`, checked by Claude. Decisions: `reports/2026-10-01-phase-04-accounts.md` (Decisions section), "Step 3b". Guides: `guides/reset-a-password.md`, `guides/phase-04-local-setup.md` Part 4.
 
 ## Labels
 VERIFIED by automated test / VERIFIED by live run: run by me, output read. REPORTED by the coder: the coder ran it, I did not repeat it. NOT VERIFIED: not run.
