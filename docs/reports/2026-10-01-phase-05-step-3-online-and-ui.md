@@ -29,7 +29,10 @@ Branch `chore/05-first-deploy`, PR #7 (open). Steps 1 and 2 are in their own rep
 | Sign-up limit: sign-up #1 created an account (200), #2 to #5 answered 400 `AUTH_EMAIL_TAKEN`, #6 and #7 answered 429 `RATE_LIMITED` (5 counted in 10 minutes, as decided) | VERIFIED by live run (test account `phase5-check@example.com` now exists in Neon) |
 | Still logged in on `kvit-mk.pages.dev` after a manual Render deploy (proves the login keys live in Postgres) | REPORTED by Filip (his browser session); the API log he pasted shows the cookie's user being loaded from Neon |
 | Cookie round trip from curl (sign-up then `/api/auth/me`) | NOT VERIFIED (my curl cookie jar was overwritten by the later requests; a test mistake, not an app result) |
-| Neon not woken by `/health`, wake-up times of Render and Neon, sign-up on a real phone | NOT VERIFIED (still to do) |
+| `/health` does not wake Neon: after 8 quiet minutes (22:25 to 22:33), 10 `/health` calls over 2 minutes (22:33 to 22:35, all 200, 0.11 to 0.39 s), then the first request that needs the database at 22:35:04 took **4.05 s** (Neon had to wake; it would have been awake and fast had `/health` woken it), and a second one right after took 0.54 s | VERIFIED by live run (by timing; the Neon chart was not usable because its clock is 10 minutes off and the console itself can wake the database) |
+| The first database request after Neon slept did not fail (401 as expected, no 500), so `EnableRetryOnFailure` is not needed on this evidence (one sample) | VERIFIED by live run (n = 1) |
+| Render wake-up from sleep: first `/health` after about 20 idle minutes took 22.4 s, then 0.1 to 0.2 s | VERIFIED by live run (n = 1) |
+| Sign-up on a real phone | NOT VERIFIED (still to do, on mobile data) |
 | The `libgssapi_krb5.so.2` line in Render's log is harmless | VERIFIED indirectly (the 401 above); cause NOT VERIFIED from docs |
 | Migration step on `main` in CI | NOT VERIFIED (first run at the merge) |
 | Google accepts `kvit-mk.pages.dev` as an authorized domain | NOT VERIFIED |

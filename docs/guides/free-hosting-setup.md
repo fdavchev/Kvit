@@ -70,7 +70,7 @@ It has two parts:
 
 # PART B: going online (when the building session says so)
 
-The building session will give you some exact values: folder names and the names of the settings. Where this guide says **«from the session»**, use exactly what it gives you.
+The exact values (folder names and the names of the settings) were filled in during Phase 5 (2026-10-01), when this guide was used for real. The step-by-step version for Kvit itself is `phase-05-go-online.md`.
 
 ## B1. GitHub: the public repository
 1. On github.com, click **+** (top right) → **New repository**.
@@ -93,22 +93,23 @@ The building session will give you some exact values: folder names and the names
    | Branch | `main` |
    | Language | **Docker** |
    | Root Directory | leave empty, unless the session says otherwise |
-   | Dockerfile Path | «from the session» (probably `src/api/Dockerfile`) |
+   | Dockerfile Path | `src/api/Dockerfile` |
    | Instance Type | **Free** |
-3. **Environment Variables:** click **Add Environment Variable** for each one the session lists. It will look roughly like this:
+3. **Environment Variables:** click **Add Environment Variable** for each one (two underscores `__` where the setting has a dot or colon):
    | Name | Value |
    |---|---|
    | `ASPNETCORE_HTTP_PORTS` | `10000` (makes .NET listen where Render expects) |
-   | «database setting name from the session» | your **POOLED** connection string from A1 |
+   | `ConnectionStrings__KvitDatabase` | your **POOLED** connection string from A1 (ending in `;No Reset On Close=true`) |
+   | `DataProtection__CertificateBase64` | the online certificate (made with `scripts/NewDataProtectionCertificate.cs`; keep a copy in your notes file, losing it logs everybody out) |
+   | `DataProtection__CertificatePassword` | the certificate's password |
    | `Proxy__SharedSecret` | the **proxy secret** (see «Make the proxy secret» below; the **same** value goes into Cloudflare in B3). Without it the app refuses to start, on purpose |
-   | «Google client id setting from the session» | the Client ID from B4 (add it after B4) |
-   | others «from the session» | … |
+   | the Google client id setting | added in Phase 6 (B4); its name is given then |
 4. Click **Deploy Web Service**.
    - **You should see:** a log scrolling by, then **"Live"** in green (the first build can take 5–10 minutes).
    - Your backend address is at the top: `https://kvit-mk-api.onrender.com`. Copy it to your secrets file.
 5. After it's live, go to **Settings**:
    - **Health Check Path:** `/health`
-   - **Auto-Deploy:** **After CI Checks Pass**, so it only goes online when the tests passed on GitHub.
+   - **Auto-Deploy:** **After CI Checks Pass**, so it only goes online when the tests passed on GitHub. (From the Phase 5 merge on, Kvit's CI deploys by itself and shows the result on GitHub, so Auto-Deploy is set to **Off**; see `phase-05-go-online.md`, Part 4.)
 6. **Check:** open `https://kvit-mk-api.onrender.com/health` in your browser. It should show a short "healthy" message. If it takes about a minute, that's the free server waking up. That's normal.
 
 ### Make the proxy secret (once, before B2 step 3)
@@ -135,7 +136,7 @@ The building session will give you some exact values: folder names and the names
    - `API_ORIGIN` = your Render address from B2 (e.g. `https://kvit-mk-api.onrender.com`, **no slash at the end**).
    - `API_PROXY_SECRET` = the same **proxy secret** as `Proxy__SharedSecret` in Render (B2). Use the **Encrypt** option if Cloudflare offers it for this variable. It is the password that tells Kvit's server "this request came through my own website, not straight from the internet". Nothing works without it: the website answers 500.
    - `NODE_VERSION` = `24` (Cloudflare's build machine defaults to Node 22.16, which is too old for React Router 8.4; the frontend pins Node 24 itself via `src/web/.nvmrc`, but Cloudflare's own build step needs this variable too).
-   - Anything else «from the session».
+   - Nothing else is needed. Cloudflare's new dashboard hides Pages behind the link "Need to use the legacy Pages workflow? **Continue to Pages**" on the "Create an app" page; the big "Continue with GitHub" button there is the Workers flow, which is the wrong one. Set `API_PROXY_SECRET` to the type **Secret**, not Text.
 4. Click **Save and Deploy**.
    - **You should see:** a build log, then **Success**, and your address `https://kvit-mk.pages.dev`.
 5. Go to **Settings → Variables and Secrets**. Make sure `API_ORIGIN` is set for **both Production and Preview**. ⚠️ **After any change here, redeploy:** **Deployments** → the latest one → **⋯** → **Retry deployment**.
@@ -165,7 +166,7 @@ You need the live address from B3 **and** the privacy page (the building session
 6. **Check:** on `https://kvit-mk.pages.dev`, the "Sign in with Google" button opens Google's window and logs you in. The button won't work on test addresses like `abc123.kvit-mk.pages.dev`. That's expected.
 
 ## B5. GitHub secrets (for the automatic tests and, later, backups)
-Only if the session asks. In the repository → **Settings** → **Secrets and variables** → **Actions** → **New repository secret** → **Name** «from the session» and **Secret** = the value → **Add secret**.
+Kvit uses these (Phase 5): the secrets `NEON_DIRECT_CONNECTION_STRING` (the DIRECT Neon string, for the CI migration step) and `RENDER_API_KEY` (a Render API key, for the CI deploy step), and the variable `RENDER_SERVICE_ID` (the `srv-...` id of the Render service; not secret). In the repository → **Settings** → **Secrets and variables** → **Actions** → **New repository secret** → **Name** «from the session» and **Secret** = the value → **Add secret**.
 - ⚠️ On a public repository, anything the automatic jobs *save as a file* can be downloaded by anyone. That's why backups must be encrypted (see `BACKLOG.md`).
 
 ---

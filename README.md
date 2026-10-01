@@ -60,7 +60,7 @@ Every screen is judged by how few taps it needs. The goal for adding an expense 
 | Hosting | Neon (database), Render (API in Docker), Cloudflare Pages (website), GitHub Actions (CI). All free, with no card |
 
 ## Tests and CI
-The project has automated tests on both sides: **508 backend tests** (xUnit, the database tests run against a real PostgreSQL in Docker through Testcontainers) and **467 frontend tests** (Vitest), all passing on 2026-10-01.
+The project has automated tests on both sides: **517 backend tests** (xUnit, the database tests run against a real PostgreSQL in Docker through Testcontainers) and **467 frontend tests** (Vitest), all passing on 2026-10-01.
 
 GitHub Actions builds both parts, runs every test, builds the Docker image, checks that no database change is missing a migration and, on `main`, applies the migrations to the online database.
 
