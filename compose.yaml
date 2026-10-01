@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:17
+    image: postgres:18
     container_name: kvit-postgres
     environment:
       POSTGRES_USER: kvit
@@ -9,7 +9,7 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
-      - kvit-postgres-data:/var/lib/postgresql/data
+      - kvit-postgres-18-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "kvit", "-d", "kvit"]
       interval: 5s
@@ -18,4 +18,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  kvit-postgres-data:
+  kvit-postgres-18-data:

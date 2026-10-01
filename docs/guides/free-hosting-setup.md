@@ -27,7 +27,7 @@ It has two parts:
 2. Click **New Project** and fill in:
    - **Project name:** `kvit`
    - **Region:** **AWS Europe (Frankfurt)** (`aws-eu-central-1`). ⚠️ **This can't be changed later.** Frankfurt is the closest to Macedonia.
-   - **Postgres version:** choose **17** (NOT VERIFIED which one is newest by default; 17 is a safe choice).
+   - **Postgres version:** choose **18**. It is the same version as the local database (`compose.yaml`) and the tests, so a migration behaves the same everywhere (decided 2026-10-01).
    - Leave any extra services (Neon Auth, storage, functions) **off**. Kvit has its own login.
    - Click **Create project**.
    - **You should see:** a project dashboard called "kvit".

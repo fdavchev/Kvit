@@ -7,7 +7,7 @@ _Last updated: 2026-10-01 (Phase 5, Step 1 done on the branch, not yet committed
 - Last thing done: Phase 5 plan approved. Step 1 built: `AppDbContextFactory` and `UseKvitDatabase`, plus CI steps that check for forgotten migrations and, on `main`, apply migrations to Neon with a bundle. 508/508 backend tests, 0 warnings. Report: `docs/reports/2026-10-01-phase-05-step-1-migration-path.md`. The Phase 5 decision log is at the top of `docs/DECISIONS.md`.
 
 ## Next step
-Phase 5, Step 2: Filip commits Step 1, creates the Neon project (Postgres 17, Frankfurt), applies the first migration from his PC and adds the GitHub secret `NEON_DIRECT_CONNECTION_STRING` (before the merge, or CI on `main` goes red on purpose). Claude writes `docs/guides/phase-05-go-online.md` for it. No card anywhere.
+Phase 5, Step 2: Filip commits Step 1, moves the local database to Postgres 18, creates the Neon project (Postgres 18, Frankfurt), applies the first migration from his PC and adds the GitHub secret `NEON_DIRECT_CONNECTION_STRING` (before the merge, or CI on `main` goes red on purpose). Claude writes `docs/guides/phase-05-go-online.md` for it. No card anywhere.
 
 ## Then
 - Test on Filip's real phone: sign up, close the browser, come back still logged in; the phone-only items listed in `docs/ROADMAP.md` Phase 5.

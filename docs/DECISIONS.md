@@ -17,6 +17,13 @@ Facts behind these choices were re-checked against official docs on 2026-10-01 (
 - **Migrations must be backward-compatible** with the code still running, because they run before the new code is live (rule added to `ARCHITECTURE.md` Part 1).
 - **`EnableRetryOnFailure` is not adopted** unless the live run shows Neon's wake-up failing the first request. Neon says it wakes in "a few hundred milliseconds" but not whether a connection waits (NOT VERIFIED). Step 4 measures it. If it fails, `IUnitOfWork` must run the whole unit of work inside `CreateExecutionStrategy().ExecuteAsync`, because EF throws on user-started transactions.
 
+**Postgres 18, not 17 (Filip's call, 2026-10-01)**
+- Local database (`compose.yaml`), the Testcontainers tests (`PostgresFixture`) and Neon all move to Postgres 18 together, so they stay the same major version.
+  - *Why:* Filip: moving now, while there is no real data, is cheaper than moving later. 18 brings speed for big databases that Kvit does not need yet (async I/O, skip scan), plus features Kvit does not use (`uuidv7()`, virtual generated columns). The reason for 17 was only "same version everywhere", and that holds for 18 too.
+  - *Condition set before the move, met:* all 508 backend tests pass on 18 (0 warnings).
+  - *Docker catch (VERIFIED, docker-library README):* the 18 image keeps its data in `/var/lib/postgresql/18/docker`, so the volume is mounted at `/var/lib/postgresql`, not `/var/lib/postgresql/data`. Mounted at the old path the data does not persist. The volume was renamed `kvit-postgres-18-data`, so the old 17 data is not mixed in.
+  - *Rejected:* staying on 17 (cheap now, harder later; Neon's later-upgrade path was never checked).
+
 **The web address**
 - **Stays `kvit-mk.pages.dev`** (Filip asked for a free name like `kvit.something`; researched 2026-10-01).
   - *Rejected:* is-a.dev and js.org (their terms forbid an app like Kvit); eu.org (commercial use strongly discouraged, and Google would very likely refuse it as an authorized domain); DigitalPlat us.kg (spam blocklist, suspended once); pp.ua (allowed, but publishes the owner's name and phone number and needs a manual yearly renewal).

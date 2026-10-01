@@ -9,7 +9,7 @@ namespace Kvit.Api.Tests.Postgres
 {
     public class PostgresFixture : IAsyncLifetime
     {
-        private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:17").Build();
+        private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:18").Build();
 
         public ValueTask InitializeAsync()
         {
