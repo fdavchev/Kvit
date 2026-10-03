@@ -20,6 +20,12 @@ export interface ChangePasswordInput {
   newPassword: string
 }
 
+export interface GoogleSignUpInput {
+  idToken: string
+  displayName: string
+  language: Language
+}
+
 export async function register(input: RegisterInput): Promise<Me> {
   const body = await apiRequest(
     endpoints.register,
@@ -42,6 +48,26 @@ export async function logOut(): Promise<void> {
 
 export async function changePassword(input: ChangePasswordInput): Promise<void> {
   await apiRequest(endpoints.changePassword, jsonRequest('POST', input))
+}
+
+export async function googleLogIn(idToken: string): Promise<Me> {
+  const body = await apiRequest(
+    endpoints.googleLogIn,
+    jsonRequest('POST', { idToken, timeZone: readDeviceTimeZone() }),
+  )
+  return parseMe(body)
+}
+
+export async function googleSignUp(input: GoogleSignUpInput): Promise<Me> {
+  const body = await apiRequest(
+    endpoints.googleSignUp,
+    jsonRequest('POST', { ...input, timeZone: readDeviceTimeZone() }),
+  )
+  return parseMe(body)
+}
+
+export async function setPassword(newPassword: string): Promise<void> {
+  await apiRequest(endpoints.setPassword, jsonRequest('POST', { newPassword }))
 }
 
 function readDeviceTimeZone(): string {

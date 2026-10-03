@@ -9,6 +9,7 @@ export interface Me {
   language: Language
   timeZone: string
   mustChangePassword: boolean
+  hasPassword: boolean
 }
 
 type MeFields = Record<string, unknown>
@@ -27,6 +28,7 @@ export function parseMe(body: unknown): Me {
     language: readLanguage(fields),
     timeZone: readText(fields, 'timeZone'),
     mustChangePassword: readYesNo(fields, 'mustChangePassword'),
+    hasPassword: readYesNo(fields, 'hasPassword'),
   }
 }
 

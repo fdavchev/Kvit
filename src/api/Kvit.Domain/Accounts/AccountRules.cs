@@ -66,6 +66,16 @@ namespace Kvit.Domain.Accounts
             return Result.Ok();
         }
 
+        public static Result ValidateGoogleEmailVerified(bool isEmailVerified)
+        {
+            if (!isEmailVerified)
+            {
+                return Result.Failure("Google has not verified the email address of this Google account.", ResultCodes.AUTH_GOOGLE_EMAIL_NOT_VERIFIED);
+            }
+
+            return Result.Ok();
+        }
+
         public static Result ValidateLanguage(string language)
         {
             if (!SupportedLanguages.Contains(language, StringComparer.Ordinal))

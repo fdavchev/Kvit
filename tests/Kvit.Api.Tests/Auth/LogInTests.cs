@@ -25,6 +25,7 @@ namespace Kvit.Api.Tests.Auth
             Assert.Equal("mk", body.GetProperty("language").GetString());
             Assert.Equal("Europe/Skopje", body.GetProperty("timeZone").GetString());
             Assert.False(body.GetProperty("mustChangePassword").GetBoolean());
+            Assert.True(body.GetProperty("hasPassword").GetBoolean());
         }
 
         [Fact]

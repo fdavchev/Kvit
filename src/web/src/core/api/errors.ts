@@ -15,10 +15,20 @@ const translatedErrorCodes = [
   'AUTH_MUST_CHANGE_PASSWORD',
   'AUTH_CURRENT_PASSWORD_WRONG',
   'AUTH_PASSWORD_UNCHANGED',
+  'AUTH_GOOGLE_TOKEN_INVALID',
+  'AUTH_GOOGLE_EMAIL_NOT_VERIFIED',
+  'AUTH_GOOGLE_NO_ACCOUNT',
+  'AUTH_GOOGLE_EMAIL_TAKEN',
+  'AUTH_USES_GOOGLE',
+  'AUTH_PASSWORD_ALREADY_SET',
 ]
 const errorCodeMessageKeys = new Map<string, string>(
   translatedErrorCodes.map((code) => [code, `errors.${code}`]),
 )
+
+export function hasErrorCode(error: unknown, errorCode: string): boolean {
+  return error instanceof ApiError && error.errorCode === errorCode
+}
 
 export function errorMessageKey(error: unknown): string {
   if (!(error instanceof ApiError)) {

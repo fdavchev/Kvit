@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-03: Phase 6 (Google sign-in + privacy page): done and merged, the rules that stay
+The whole Phase 6 decision log (token check, endpoints, headers, the Google button measurements, product answers, rejected alternatives) moved word for word to the end of `reports/2026-10-03-phase-06-google-sign-in.md`, section "Decisions and rejected alternatives". What stays true:
+- **Google sign-in:** the API checks Google's ID token (audience = Kvit's client id) and identifies people by Google's permanent id (`sub`), never by email. A Google email that already has a password account is never merged automatically (pop-up "This email already has an account."). The first Google sign-in asks the name once, pre-filled. A Google account can add a password in Settings.
+- **The Google client id is public** and lives in the repository (`appsettings.json` `Google:ClientId`, `src/web/.env` `VITE_GOOGLE_CLIENT_ID`). The client secret is never used and never stored.
+- **Screens:** Welcome = Google's own button (always white, drawn once per language), a small "or", Sign up with email, I already have an account, a small Privacy link; no pitch line. Settings: Privacy link, Set a password or Change password, Log out always last at the bottom.
+- **Privacy page** `/privacy` is public, EN + MK, names no email ("ask Filip"). Before Kvit grows beyond family and friends Claude asks Filip for a contact email (BACKLOG).
+- **Headers** come from Cloudflare `public/_headers` (not applied to the `/api/*` function). No inline scripts, because of the CSP.
+
 ## 2026-10-01: Phase 5 (first deploy): done and merged, the rules that stay
 The whole Phase 5 decision log (migration path, Postgres 18, the web address and Google, how secrets are handled, the CI-driven Render deploy, the Welcome light/dark button, the show/hide password button, rejected alternatives) moved word for word to the end of `reports/2026-10-01-phase-05-first-deploy.md`, section "Decisions and rejected alternatives". What stays true for the product and the setup:
 - **Address:** `https://kvit-mk.pages.dev` (API `kvit-mk-api.onrender.com`). A paid name can be attached later with no code change, only if Filip decides to pay.

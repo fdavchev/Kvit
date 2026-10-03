@@ -1,24 +1,25 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { GoogleSignInButton } from '@/core/google/GoogleSignInButton'
 import type { Language } from '@/core/i18n/language'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import { routes } from '@/core/router/routes'
-import { KvitButton } from '@/shared/components/KvitButton'
+import { useGoogleSignIn } from '@/features/auth/google/hooks/useGoogleSignIn'
 import { KvitLanguageSwitch } from '@/shared/components/KvitLanguageSwitch'
 import { KvitLinkButton } from '@/shared/components/KvitLinkButton'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitThemeToggle } from '@/shared/components/KvitThemeToggle'
 import { useApiHealth } from '../hooks/useApiHealth'
+import { GoogleEmailTakenDialog } from './GoogleEmailTakenDialog'
 
 export function WelcomeScreen() {
   const { t } = useTranslation()
   const { language, changeLanguage } = useLanguage()
   useApiHealth()
+  const [takenIdToken, setTakenIdToken] = useState<string | null>(null)
+  const signInWithGoogle = useGoogleSignIn(setTakenIdToken)
   const taglineTranslation = t('welcome.taglineTranslation')
-
-  function showComingSoon(): void {
-    toast(t('common.comingSoon'))
-  }
 
   async function switchLanguage(newLanguage: Language): Promise<void> {
     try {
@@ -54,22 +55,32 @@ export function WelcomeScreen() {
           )}
         </div>
       </header>
-      <div className="flex flex-col gap-8">
-        <p className="mx-auto max-w-[30ch] text-center text-balance text-muted-foreground">
-          {t('welcome.pitch')}
+      <div className="flex flex-col gap-3">
+        <GoogleSignInButton onCredential={signInWithGoogle} />
+        <p className="my-1 text-center text-[0.8125rem] font-semibold tracking-[0.02em] text-muted-foreground">
+          {t('welcome.or')}
         </p>
-        <div className="flex flex-col gap-3">
-          <KvitButton onClick={showComingSoon}>
-            {t('welcome.continueWithGoogle')}
-          </KvitButton>
-          <KvitLinkButton to={routes.signUp} variant="secondary">
-            {t('welcome.signUpWithEmail')}
-          </KvitLinkButton>
-          <KvitLinkButton to={routes.logIn} variant="link">
-            {t('welcome.haveAccount')}
-          </KvitLinkButton>
-        </div>
+        <KvitLinkButton to={routes.signUp} variant="secondary">
+          {t('welcome.signUpWithEmail')}
+        </KvitLinkButton>
+        <KvitLinkButton to={routes.logIn} variant="link">
+          {t('welcome.haveAccount')}
+        </KvitLinkButton>
+        <KvitLinkButton
+          to={routes.privacy}
+          state={{ from: routes.welcome }}
+          variant="smallLink"
+        >
+          {t('common.privacy')}
+        </KvitLinkButton>
       </div>
+      {takenIdToken !== null && (
+        <GoogleEmailTakenDialog
+          idToken={takenIdToken}
+          onCredential={signInWithGoogle}
+          onClose={() => setTakenIdToken(null)}
+        />
+      )}
     </KvitScreen>
   )
 }

@@ -10,7 +10,7 @@ namespace Kvit.Api.Tests.Auth
     public class RegisterTests(AuthApp _app) : IClassFixture<AuthApp>
     {
         [Fact]
-        public async Task Register_ValidData_Answers200WithExactlyTheSixAccountFields()
+        public async Task Register_ValidData_Answers200WithExactlyTheSevenAccountFields()
         {
             RegistrationForm form = RegistrationForm.Valid();
             HttpClient client = _app.CreateClient();
@@ -20,7 +20,7 @@ namespace Kvit.Api.Tests.Auth
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             JsonElement body = await AuthRequests.ReadJsonAsync(response);
             string[] propertyNames = [.. body.EnumerateObject().Select(property => property.Name).Order(StringComparer.Ordinal)];
-            string[] expectedNames = ["displayName", "email", "id", "language", "mustChangePassword", "timeZone"];
+            string[] expectedNames = ["displayName", "email", "hasPassword", "id", "language", "mustChangePassword", "timeZone"];
             Assert.Equal(expectedNames, propertyNames);
         }
 
@@ -40,6 +40,7 @@ namespace Kvit.Api.Tests.Auth
             Assert.Equal("mk", body.GetProperty("language").GetString());
             Assert.Equal("America/New_York", body.GetProperty("timeZone").GetString());
             Assert.False(body.GetProperty("mustChangePassword").GetBoolean());
+            Assert.True(body.GetProperty("hasPassword").GetBoolean());
         }
 
         [Fact]

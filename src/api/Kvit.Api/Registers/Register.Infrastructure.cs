@@ -18,6 +18,8 @@ namespace Kvit.Api.Registers
             services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<PasswordResetService>();
+            services.AddSingleton<IGoogleTokenChecker>(serviceProvider =>
+                new GoogleTokenChecker(GoogleSetting.Read(serviceProvider.GetRequiredService<IConfiguration>())));
 
             return services;
         }

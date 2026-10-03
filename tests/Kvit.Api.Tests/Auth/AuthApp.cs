@@ -1,6 +1,7 @@
 using System.Net;
 using Kvit.Api.Tests.Persistence;
 using Kvit.Api.Tests.Postgres;
+using Kvit.Contracts.Auth;
 using Kvit.Domain.Entities;
 using Kvit.Infrastructure.Auth;
 using Kvit.Infrastructure.Persistence;
@@ -66,6 +67,40 @@ namespace Kvit.Api.Tests.Auth
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             return client;
+        }
+
+        public string AddGoogleToken(GoogleIdentity identity)
+        {
+            string token = $"google-token-{Guid.NewGuid():N}";
+            _factory.GoogleTokens.Add(token, identity);
+
+            return token;
+        }
+
+        public async Task<HttpClient> CreateGoogleSignedUpClientAsync(GoogleIdentity identity)
+        {
+            HttpClient client = CreateClient();
+
+            HttpResponseMessage response = await AuthRequests.GoogleSignUpAsync(client, AddGoogleToken(identity));
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return client;
+        }
+
+        public async Task<List<Guid>> GoogleLoginUserIdsAsync(string subject)
+        {
+            List<string?> userIds = await QueryAsync(
+                "SELECT user_id::text FROM user_logins WHERE login_provider = 'Google' AND provider_key = @subject",
+                new NpgsqlParameter("subject", subject));
+
+            return [.. userIds.Select(userId => Guid.Parse(userId ?? throw new InvalidOperationException($"user_id is null for the Google login '{subject}'.")))];
+        }
+
+        public async Task AssertGoogleRejectedAsync(HttpResponseMessage response, HttpStatusCode expectedStatus, string expectedErrorCode, GoogleIdentity identity)
+        {
+            await ProblemResponse.AssertAsync(response, expectedStatus, expectedErrorCode);
+            Assert.Null(AuthCookie.Find(response));
+            Assert.Empty(await GoogleLoginUserIdsAsync(identity.Subject));
         }
 
         public async Task<string?> ResetPasswordAsync(string email)

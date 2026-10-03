@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit: Google sign-in screens (mockup)</title>
+<link rel="stylesheet" href="../2026-10-01-round-3/source/palette.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/base.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/app.css">
+<style>
+  html, body { background: #e9e6e1; color: #222; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; padding: 16px; font-size: .9rem; }
+  .bar .grp { display: flex; gap: 4px; align-items: center; }
+  .bar b { margin-right: 4px; }
+  .bar button { border: 1px solid #999; background: #fff; border-radius: 8px; padding: 6px 10px; font: inherit; cursor: pointer; }
+  .bar button[aria-pressed='true'] { background: #222; color: #fff; border-color: #222; }
+  .note2 { max-width: 560px; margin: 0 auto 12px; text-align: center; font-size: .9rem; color: #444; padding: 0 16px; }
+  .stage { display: flex; justify-content: center; padding: 0 16px 32px; }
+  .phone { position: relative; width: 360px; height: 740px; overflow: hidden; border-radius: 28px; box-shadow: 0 6px 24px rgba(0,0,0,.25);
+    --bg: var(--orange-200); --ink: var(--orange-950); --ink-soft: var(--orange-900); --wordmark: var(--orange-deep);
+    --primary: var(--orange-deep); --primary-hover: var(--orange-900); --primary-ink: var(--white);
+    --secondary: var(--orange-50); --secondary-hover: var(--white); --secondary-ink: var(--orange-900);
+    --link: var(--orange-900); --link-line: var(--orange-deep); --track: var(--orange-50); --track-active: var(--white);
+    --track-shadow: var(--shadow); --field: var(--white); --field-ink: var(--orange-950); --field-line: var(--orange-line);
+    --field-line-focus: var(--orange-950); --ring: var(--orange-950); --card: var(--orange-50);
+    background: var(--bg); color: var(--ink); }
+  .phone.dark {
+    --bg: var(--dark-bg); --ink: var(--orange-50); --ink-soft: var(--orange-200); --wordmark: var(--dark-button);
+    --primary: var(--dark-button); --primary-hover: var(--orange-50); --primary-ink: var(--dark-bg);
+    --secondary: var(--dark-raised); --secondary-hover: var(--orange-900); --secondary-ink: var(--orange-50);
+    --link: var(--orange); --link-line: var(--orange); --track: var(--dark-field); --track-active: var(--dark-raised);
+    --track-shadow: transparent; --field: var(--dark-field); --field-ink: var(--orange-50); --field-line: var(--dark-line);
+    --field-line-focus: var(--orange); --ring: var(--orange); --card: var(--dark-raised); }
+  .phone .screen { height: 740px; min-height: 0; overflow-y: auto; padding-bottom: 0; scrollbar-width: none; }
+  .phone .screen::-webkit-scrollbar { display: none; }
+  .phone .screen.doc { padding-bottom: 64px; }
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .back { border: 0; background: transparent; color: var(--ink); font: inherit; font-weight: 600; min-height: 44px; cursor: pointer; padding: 0; }
+  .g { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 40px; margin: 8px 0; font: 500 .9375rem/1 system-ui, sans-serif; cursor: pointer; border: 1px solid; }
+  .g svg { width: 18px; height: 18px; }
+  .g.pill { border-radius: 999px; } .g.rect { border-radius: 6px; }
+  .g.white { background: #fff; color: #1f1f1f; border-color: #747775; }
+  .g.black { background: #131314; color: #e3e3e3; border-color: #131314; }
+  .g.blue { background: #0b57d0; color: #fff; border-color: #0b57d0; }
+  .gnote { text-align: center; font-size: .8rem; color: var(--ink-soft); }
+  .actions > .g { margin: 0; }
+  .or { text-align: center; margin: 4px 0; color: var(--ink-soft); font-size: .8125rem; font-weight: 600; letter-spacing: .02em; }
+  .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: grid; place-items: center; padding: 24px; }
+  .dlg { background: var(--card); color: var(--ink); border-radius: 20px; padding: 24px; width: 100%; display: flex; flex-direction: column; gap: 12px; }
+  .dlg h3 { font-size: 1.25rem; line-height: 1.25; }
+  .dlg p { color: var(--ink-soft); }
+  .doc h1 { font-size: 2rem; font-weight: 800; letter-spacing: -.02em; margin: 8px 0 12px; }
+  .doc h2 { font-size: 1.0625rem; font-weight: 700; margin: 18px 0 4px; }
+  .doc p { color: var(--ink-soft); font-size: .9375rem; }
+  .pad { padding-inline: 24px; padding-bottom: 24px; }
+  .list { flex: 1; display: flex; flex-direction: column; gap: 12px; margin-top: 12px; padding-bottom: 24px; }
+  .list .logout { margin-top: auto; }
+  .seg3 { display: flex; padding: 3px; border-radius: 999px; background: var(--track); }
+  .seg3 span { flex: 1; text-align: center; padding: 8px 0; border-radius: 999px; font-weight: 600; font-size: .9rem; color: var(--ink-soft); }
+  .seg3 span.on { background: var(--track-active); color: var(--ink); box-shadow: 0 1px 3px var(--track-shadow); }
+  .toast { position: absolute; left: 24px; right: 24px; bottom: 24px; background: var(--ink); color: var(--bg); border-radius: 14px; padding: 14px 16px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="grp"><b>Screen:</b><span id="tabs"></span></div>
+  <div class="grp"><b>Language:</b><button data-lang="en" aria-pressed="true">EN</button><button data-lang="mk" aria-pressed="false">МК</button></div>
+  <div class="grp"><b>Look:</b><button data-theme="light" aria-pressed="true">Light</button><button data-theme="dark" aria-pressed="false">Dark</button></div>
+</div>
+<p class="note2" id="hint"></p>
+<div class="stage"><div class="phone" id="phone"></div></div>
+<script>
+var T = {
+  en: {
+    or: 'or', tagline: 'Квит сме.', pitch: 'Only you need an account. Friends can be just names.', google: 'Continue with Google',
+    signup: 'Sign up with email', have: 'I already have an account', privacy: 'Privacy', back: '‹ Back', close: 'Close',
+    takenTitle: 'This email already has an account.', takenLogin: 'Log in with password', takenOther: 'Use another Google account',
+    nameTitle: 'Almost there', nameLabel: 'Your name', nameHint: 'This is how your friends will see you in groups.', cont: 'Continue',
+    loginTitle: 'Log in', email: 'Email', password: 'Password', loginBtn: 'Log in', forgot: 'Forgot your password? Ask Filip to reset it.',
+    usesTitle: 'This account signs in with Google.', usesBody: 'You can add a password in Settings after you sign in.',
+    settings: 'Settings', theme: 'Theme', same: 'Same as device', light: 'Light', dark: 'Dark', setPw: 'Set a password', logout: 'Log out',
+    setTitle: 'Set a password', newPw: 'New password', pwHint: 'At least 8 characters, one capital letter and one number.', savePw: 'Save password',
+    saved: 'Password saved. You can now also log in with your email and password.',
+    pTitle: 'Privacy', pUpdated: 'Last updated 3 October 2026.',
+    p1h: 'What Kvit keeps', p1: 'Your name, email, language and time zone. The groups, expenses and payments that you or your friends enter. Simple counts of how the app is used (for example how many people signed up), never amounts or names.',
+    p2h: 'Passwords', p2: 'A password is never stored the way you type it, only as a scrambled code that nobody can turn back into the password.',
+    p3h: 'Sign in with Google', p3: 'If you use Google, Kvit receives only your name, email address and profile picture link. Kvit cannot read your Gmail, your contacts or anything else in your Google account.',
+    p4h: 'Who can see what', p4: 'People in a group see that group\'s expenses and balances. The person who runs Kvit sees only totals (for example how many accounts exist), not your expenses.',
+    p5h: 'Cookies and tracking', p5: 'One login cookie keeps you signed in for 90 days. No ads, no tracking, and your data is never sold or shared.',
+    p6h: 'Where it is stored', p6: 'On Cloudflare (the website), Render and Neon (the data, in Frankfurt, Germany).',
+    p7h: 'Deleting your account', p7: 'Ask Filip to delete your account. Your name stays on old group expenses, so other people\'s balances stay correct.',
+    errNoLoad: 'Couldn\'t load Google sign-in. Check your connection and try again.',
+    loggedIn: '(Mockup only) Logged in. You would land on the home screen.',
+    weak: 'The password needs at least 8 characters, one capital letter and one number.'
+  },
+  mk: {
+    or: 'или', tagline: 'Квит сме.', pitch: 'Само тебе ти треба профил. Пријателите може да бидат само имиња.', google: 'Продолжи со Google',
+    signup: 'Регистрирај се со е-пошта', have: 'Веќе имам профил', privacy: 'Приватност', back: '‹ Назад', close: 'Затвори',
+    takenTitle: 'Оваа е-пошта веќе има профил.', takenLogin: 'Најави се со лозинка', takenOther: 'Користи друг Google профил',
+    nameTitle: 'Уште малку', nameLabel: 'Твоето име', nameHint: 'Вака ќе те гледаат пријателите во групите.', cont: 'Продолжи',
+    loginTitle: 'Најави се', email: 'Е-пошта', password: 'Лозинка', loginBtn: 'Најави се', forgot: 'Ја заборави лозинката? Побарај од Filip да ти ја ресетира.',
+    usesTitle: 'Овој профил се најавува преку Google.', usesBody: 'Лозинка можеш да додадеш во Поставки откако ќе се најавиш.',
+    settings: 'Поставки', theme: 'Позадина', same: 'Како на уредот', light: 'Светла', dark: 'Темна', setPw: 'Постави лозинка', logout: 'Одјави се',
+    setTitle: 'Постави лозинка', newPw: 'Нова лозинка', pwHint: 'Најмалку 8 знаци, една голема буква и една цифра.', savePw: 'Зачувај ја лозинката',
+    saved: 'Лозинката е зачувана. Сега можеш да се најавуваш и со е-пошта и лозинка.',
+    pTitle: 'Приватност', pUpdated: 'Последно ажурирано на 3 октомври 2026.',
+    p1h: 'Што чува Kvit', p1: 'Твоето име, е-пошта, јазик и временска зона. Групите, трошоците и плаќањата што ги внесуваш ти или твоите пријатели. Едноставни бројки за користењето на апликацијата (на пример, колку луѓе се регистрирале), никогаш износи или имиња.',
+    p2h: 'Лозинки', p2: 'Лозинката никогаш не се чува онака како што ја внесуваш, туку само како измешан код што никој не може да го врати во лозинка.',
+    p3h: 'Најава со Google', p3: 'Ако користиш Google, Kvit добива само твоето име, адреса на е-пошта и врска до профилната слика. Kvit не може да ја чита твојата Gmail-пошта, контактите или нешто друго во твојот Google профил.',
+    p4h: 'Кој што може да види', p4: 'Луѓето во една група ги гледаат трошоците и салдата на таа група. Тој што го води Kvit гледа само вкупни бројки (на пример, колку профили има), не и твоите трошоци.',
+    p5h: 'Колачиња и следење', p5: 'Еден колач за најава те одржува најавен 90 дена. Без реклами, без следење, а твоите податоци никогаш не се продаваат ниту се споделуваат.',
+    p6h: 'Каде се чува', p6: 'Кај Cloudflare (веб-страницата), Render и Neon (податоците, во Франкфурт, Германија).',
+    p7h: 'Бришење на профилот', p7: 'Побарај од Filip да го избрише твојот профил. Твоето име останува на старите трошоци во групите, за салдата на другите да останат точни.',
+    errNoLoad: 'Не можевме да ја вчитаме најавата со Google. Провери ја врската и обиди се повторно.',
+    loggedIn: '(Само мокап) Најавен си. Би отишол на почетната страница.',
+    weak: 'Лозинката треба да има најмалку 8 знаци, една голема буква и една цифра.'
+  }
+};
+var HINTS = {
+  welcome: 'The Google button is always white, in light and dark mode. Click it to pretend the email already has an account (pop-up). On the real site Google\'s own window comes first. Small "Privacy" link is new.',
+  name: 'Shown the first time someone signs in with Google. Name is pre-filled from Google.',
+  login: 'Demo: this tab pretends a Google-only account (Elena) types a password, so "Log in" shows the pop-up. Coming from the "already has an account" pop-up it is Ana, who has a password, so "Log in" works.',
+  settings: 'A Google account with no password sees "Set a password"; after setting one it shows "Change password" as today. "Privacy" is a new link.',
+  setpw: 'New screen opened from Settings (Google accounts only). Save with an empty or weak password shows the error; try "Sunce2026" to see the confirmation.',
+  privacy: 'Public page at /privacy. Click "Back".'
+};
+var TABS = [['welcome', 'Welcome'], ['name', 'Name'], ['login', 'Log in'], ['settings', 'Settings'], ['setpw', 'Set password'], ['privacy', 'Privacy']];
+var st = { screen: 'welcome', lang: 'en', dark: false, g: 'A', dlg: null, toast: false, who: 'elena' };
+var G_LOGO = '<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.2C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.1 1.4-4.9 2.3-8.2 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>';
+function gbtn() {
+  var cls = 'g pill white';
+  return '<button class="' + cls + '" data-act="google">' + G_LOGO + '<span>' + T[st.lang].google + '</span></button>';
+}
+function dlg(title, body, buttons) {
+  return '<div class="scrim"><div class="dlg" role="dialog"><h3>' + title + '</h3>' + (body ? '<p>' + body + '</p>' : '') + buttons + '</div></div>';
+}
+var EYE = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+function field(label, type, value) {
+  var input = '<input class="input" type="' + type + '" value="' + (value || '') + '"' + (type === 'password' ? ' style="padding-right:56px"' : '') + '>';
+  if (type === 'password') {
+    input = '<div style="position:relative">' + input + '<button type="button" data-act="eye" aria-label="Show password" style="position:absolute;right:4px;top:6px;width:44px;height:44px;border:0;border-radius:999px;background:transparent;color:var(--ink-soft);display:grid;place-items:center;cursor:pointer">' + EYE + '</button></div>';
+  }
+  return '<div class="field"><label class="label">' + label + '</label>' + input + '</div>';
+}
+function render() {
+  var t = T[st.lang], h = '';
+  var lang = '<div class="lang"><button class="lang-option" aria-pressed="' + (st.lang === 'en') + '" data-lang="en">EN</button><button class="lang-option" aria-pressed="' + (st.lang === 'mk') + '" data-lang="mk">МК</button></div>';
+  if (st.screen === 'welcome') {
+    h = '<main class="screen"><header class="hero"><div class="top"><span></span>' + lang + '</div><div class="brand"><h1 class="wordmark">Kvit</h1><p class="tagline" lang="mk">' + t.tagline + '</p></div></header>' +
+      '<div class="welcome-body"><div class="actions">' + gbtn() + '<div class="or" role="separator"><span>' + t.or + '</span></div>' +
+      '<button class="btn btn-secondary" data-act="goto" data-to="name">' + t.signup + '</button><button class="btn btn-link" data-act="goto" data-to="login">' + t.have + '</button>' +
+      '<button class="btn btn-link" data-act="goto" data-to="privacy" style="min-height:40px;font-size:.9rem">' + t.privacy + '</button></div></div></main>';
+    if (st.dlg === 'taken') { h += dlg(t.takenTitle, '', '<div class="actions" style="gap:8px"><button class="btn btn-primary" data-act="goto" data-to="login" data-who="ana">' + t.takenLogin + '</button>' + gbtn().replace('Continue', 'Continue') .replace(t.google, t.takenOther) + '<button class="btn btn-link" data-act="closedlg">' + t.close + '</button></div>'); }
+  }
+  if (st.screen === 'name') {
+    h = '<main class="screen screen-form"><header class="screen-header"><button class="back" data-act="goto" data-to="welcome">' + t.back + '</button><h1 class="title">' + t.nameTitle + '</h1></header><form class="form" onsubmit="return false"><div class="fields">' +
+      field(t.nameLabel, 'text', 'Marko Petrovski') + '<p class="hint">' + t.nameHint + '</p></div><div class="actions"><button class="btn btn-primary" data-act="goto" data-to="settings">' + t.cont + '</button></div></form></main>';
+  }
+  if (st.screen === 'login') {
+    h = '<main class="screen screen-form screen-login"><header class="screen-header"><button class="back" data-act="goto" data-to="welcome">' + t.back + '</button><h1 class="title">' + t.loginTitle + '</h1></header><form class="form" onsubmit="return false"><div class="fields">' +
+      field(t.email, 'email', st.who === 'ana' ? 'ana@gmail.com' : 'elena@gmail.com') + field(t.password, 'password', 'Sunce2026') + '</div><div class="actions"><button class="btn btn-primary" data-act="' + (st.who === 'ana' ? 'toast' : 'uses') + '">' + t.loginBtn + '</button><p class="note">' + t.forgot + '</p></div></form>' + (st.toast ? '<div class="toast">' + t.loggedIn + '</div>' : '') + '</main>';
+    if (st.dlg === 'uses') { h += dlg(t.usesTitle, t.usesBody, '<div class="actions" style="gap:8px">' + gbtn() + '<button class="btn btn-link" data-act="closedlg">' + t.close + '</button></div>'); }
+  }
+  if (st.screen === 'settings') {
+    h = '<main class="screen pad"><header class="screen-header" style="padding-inline:0"><button class="back" data-act="goto" data-to="welcome">' + t.back + '</button><h1 class="title">' + t.settings + '</h1></header>' +
+      '<div class="seg3"><span>' + t.same + '</span><span class="on">' + t.light + '</span><span>' + t.dark + '</span></div><div class="list">' +
+      '<button class="btn btn-secondary" data-act="goto" data-to="setpw">' + t.setPw + '</button><button class="btn btn-secondary" data-act="goto" data-to="privacy">' + t.privacy + '</button>' +
+      '<button class="btn btn-secondary logout">' + t.logout + '</button></div></main>';
+  }
+  if (st.screen === 'setpw') {
+    h = '<main class="screen screen-form"><header class="screen-header"><button class="back" data-act="goto" data-to="settings">' + t.back + '</button><h1 class="title">' + t.setTitle + '</h1></header><form class="form" onsubmit="return false"><div class="fields">' +
+      field(t.newPw, 'password', st.pw || '') + '<p class="hint">' + t.pwHint + '</p></div>' + (st.err ? '<p role="alert" style="color:' + (st.dark ? '#ff8a80' : '#a51d1d') + ';font-weight:600">' + t.weak + '</p>' : '') + '<div class="actions"><button class="btn btn-primary" data-act="savepw">' + t.savePw + '</button></div></form>' + (st.toast ? '<div class="toast">' + t.saved + '</div>' : '') + '</main>';
+  }
+  if (st.screen === 'privacy') {
+    var sec = ''; for (var i = 1; i <= 7; i++) { sec += '<h2>' + t['p' + i + 'h'] + '</h2><p>' + t['p' + i] + '</p>'; }
+    h = '<main class="screen doc pad"><header class="screen-header" style="padding-inline:0;padding-bottom:0"><button class="back" data-act="goto" data-to="welcome">' + t.back + '</button></header><h1>' + t.pTitle + '</h1><p>' + t.pUpdated + '</p>' + sec + '</main>';
+  }
+  var p = document.getElementById('phone'); p.className = 'phone' + (st.dark ? ' dark' : ''); p.innerHTML = h;
+  document.getElementById('hint').textContent = HINTS[st.screen];
+  document.querySelectorAll('#tabs button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.tab === st.screen)); });
+  document.querySelectorAll('.bar [data-lang]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.lang === st.lang)); });
+  document.querySelectorAll('.bar [data-theme]').forEach(function (b) { b.setAttribute('aria-pressed', String((b.dataset.theme === 'dark') === st.dark)); });
+  document.querySelectorAll('.bar [data-g]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.g === st.g)); });
+  document.documentElement.lang = st.lang;
+}
+document.getElementById('tabs').innerHTML = TABS.map(function (x) { return '<button data-tab="' + x[0] + '" aria-pressed="false">' + x[1] + '</button>'; }).join('');
+document.addEventListener('click', function (e) {
+  var el = e.target.closest('button'); if (!el) { return; }
+  if (el.dataset.act === 'eye') { var box = el.parentNode.querySelector('input'); box.type = box.type === 'password' ? 'text' : 'password'; return; }
+  if (el.dataset.tab) { st.screen = el.dataset.tab; st.dlg = null; st.toast = false; st.who = 'elena'; st.err = false; st.pw = ''; }
+  else if (el.dataset.lang) { st.lang = el.dataset.lang; }
+  else if (el.dataset.theme) { st.dark = el.dataset.theme === 'dark'; }
+  else if (el.dataset.g) { st.g = el.dataset.g; }
+  else if (el.dataset.act === 'google') { if (st.screen === 'welcome' && !st.dlg) { st.dlg = 'taken'; } }
+  else if (el.dataset.act === 'goto') { st.screen = el.dataset.to; st.dlg = null; st.toast = false; st.who = el.dataset.who || 'elena'; st.err = false; st.pw = ''; }
+  else if (el.dataset.act === 'closedlg') { st.dlg = null; }
+  else if (el.dataset.act === 'uses') { st.dlg = 'uses'; }
+  else if (el.dataset.act === 'toast') { st.toast = true; }
+  else if (el.dataset.act === 'savepw') {
+    var pw = document.querySelector('#phone input').value;
+    st.pw = pw;
+    st.err = pw.length < 8 || !/[A-Z]/.test(pw) || !/[0-9]/.test(pw);
+    st.toast = !st.err;
+  }
+  render();
+});
+render();
+</script>
+</body>
+</html>

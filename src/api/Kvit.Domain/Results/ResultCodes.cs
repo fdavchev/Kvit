@@ -21,6 +21,12 @@ namespace Kvit.Domain.Results
         public const string AUTH_MUST_CHANGE_PASSWORD = "AUTH_MUST_CHANGE_PASSWORD";
         public const string AUTH_CURRENT_PASSWORD_WRONG = "AUTH_CURRENT_PASSWORD_WRONG";
         public const string AUTH_PASSWORD_UNCHANGED = "AUTH_PASSWORD_UNCHANGED";
+        public const string AUTH_PASSWORD_ALREADY_SET = "AUTH_PASSWORD_ALREADY_SET";
+        public const string AUTH_USES_GOOGLE = "AUTH_USES_GOOGLE";
+        public const string AUTH_GOOGLE_TOKEN_INVALID = "AUTH_GOOGLE_TOKEN_INVALID";
+        public const string AUTH_GOOGLE_EMAIL_NOT_VERIFIED = "AUTH_GOOGLE_EMAIL_NOT_VERIFIED";
+        public const string AUTH_GOOGLE_NO_ACCOUNT = "AUTH_GOOGLE_NO_ACCOUNT";
+        public const string AUTH_GOOGLE_EMAIL_TAKEN = "AUTH_GOOGLE_EMAIL_TAKEN";
         public const string TIME_ZONE_INVALID = "TIME_ZONE_INVALID";
         public const string LANGUAGE_INVALID = "LANGUAGE_INVALID";
         public const string RATE_LIMITED = "RATE_LIMITED";

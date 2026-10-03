@@ -53,6 +53,12 @@ describe('KvitLanguageSwitch', () => {
     expect(onChange).toHaveBeenCalledExactlyOnceWith(clicked)
   })
 
+  it.each(languages)('lets only the press scale of the %s button animate, not its colours or background', async (language) => {
+    await renderSwitch('en')
+
+    expect(buttonFor(language).classList.contains('transition-[scale]')).toBe(true)
+  })
+
   it('does not change the language of the screen or the pressed button by itself', async () => {
     const { i18n } = await renderSwitch('en')
 
