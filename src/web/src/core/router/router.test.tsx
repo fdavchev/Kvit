@@ -1,15 +1,12 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { I18nextProvider } from 'react-i18next'
-import { createMemoryRouter } from 'react-router'
-import { RouterProvider } from 'react-router/dom'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createI18n } from '@/core/i18n/i18n'
 import en from '@/core/i18n/locales/en.json'
 import mk from '@/core/i18n/locales/mk.json'
 import type { Language } from '@/core/i18n/language'
 import { useApiHealth } from '@/features/auth/welcome/hooks/useApiHealth'
 import { problemResponse, stubFetch } from '@/test/apiTestHelpers'
 import { typeInto } from '@/test/formTestHelpers'
+import { stubGoogleSignIn, testIdToken } from '@/test/googleTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import { testMe } from '@/test/testMe'
 import { stubDeviceColorScheme } from '@/test/themeTestHelpers'
@@ -27,15 +24,7 @@ const mustChangePasswordMe = { ...testMe, mustChangePassword: true }
 const signedOutAnswer = problemResponse(401, 'AUTH_NOT_SIGNED_IN')
 
 async function renderWelcomeRoute(language: Language): Promise<void> {
-  const i18n = await createI18n(language)
-  const router = createMemoryRouter(routeObjects, {
-    initialEntries: ['/welcome'],
-  })
-  render(
-    <I18nextProvider i18n={i18n}>
-      <RouterProvider router={router} />
-    </I18nextProvider>,
-  )
+  await renderRoutesWithProviders(routeObjects, routes.welcome, { language })
 }
 
 describe('router error element', () => {
@@ -82,6 +71,7 @@ describe('router error element', () => {
 describe('routes followed through the real route table', () => {
   beforeEach(() => {
     stubDeviceColorScheme('light')
+    stubGoogleSignIn()
   })
 
   afterEach(() => {
@@ -94,15 +84,16 @@ describe('routes followed through the real route table', () => {
     const { router } = await renderRoutesWithProviders(routeObjects, routes.dashboard)
 
     expect(
-      await screen.findByRole('button', { name: translated('en', 'welcome.continueWithGoogle') }),
+      await screen.findByRole('link', { name: translated('en', 'welcome.haveAccount') }),
     ).toBeTruthy()
     expect(router.state.location.pathname).toBe(routes.welcome)
   })
 
   it.each([
-    [routes.welcome, 'button', 'welcome.continueWithGoogle'],
+    [routes.welcome, 'link', 'welcome.haveAccount'],
     [routes.signUp, 'heading', 'auth.signUp.title'],
     [routes.logIn, 'heading', 'auth.logIn.title'],
+    [routes.privacy, 'heading', 'privacy.title'],
   ])('shows the screen at %s to a visitor without asking who is signed in', async (path, role, key) => {
     const fetchMock = stubFetch(signedOutAnswer)
 
@@ -198,8 +189,78 @@ describe('routes followed through the real route table', () => {
     fireEvent.click(screen.getByRole('button', { name: translated('en', 'settings.logOut') }))
 
     expect(
-      await screen.findByRole('button', { name: translated('en', 'welcome.continueWithGoogle') }),
+      await screen.findByRole('link', { name: translated('en', 'welcome.haveAccount') }),
     ).toBeTruthy()
     expect(router.state.location.pathname).toBe(routes.welcome)
+  })
+
+  it('shows the Google sign-up screen at its address to a visitor who carries a Google token, without asking who is signed in', async () => {
+    const fetchMock = stubFetch(signedOutAnswer)
+
+    const { router } = await renderRoutesWithProviders(routeObjects, routes.googleSignUp, {
+      routerState: { idToken: testIdToken },
+    })
+
+    expect(
+      await screen.findByRole('heading', { name: translated('en', 'auth.googleSignUp.title') }),
+    ).toBeTruthy()
+    expect(router.state.location.pathname).toBe(routes.googleSignUp)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('sends a visitor who opens the Google sign-up address without a Google token to the welcome screen', async () => {
+    const fetchMock = stubFetch(signedOutAnswer)
+
+    const { router } = await renderRoutesWithProviders(routeObjects, routes.googleSignUp)
+
+    expect(
+      await screen.findByRole('link', { name: translated('en', 'welcome.haveAccount') }),
+    ).toBeTruthy()
+    expect(router.state.location.pathname).toBe(routes.welcome)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('sends a signed-out visitor who opens the set-password address to the welcome screen', async () => {
+    stubFetch(signedOutAnswer)
+
+    const { router } = await renderRoutesWithProviders(routeObjects, routes.setPassword)
+
+    expect(
+      await screen.findByRole('link', { name: translated('en', 'welcome.haveAccount') }),
+    ).toBeTruthy()
+    expect(router.state.location.pathname).toBe(routes.welcome)
+  })
+
+  it('shows the set-password screen to a signed-in person who has no password yet', async () => {
+    stubFetch(Response.json({ ...testMe, hasPassword: false }))
+
+    const { router } = await renderRoutesWithProviders(routeObjects, routes.setPassword)
+
+    expect(
+      await screen.findByRole('heading', { name: translated('en', 'auth.setPassword.title') }),
+    ).toBeTruthy()
+    expect(router.state.location.pathname).toBe(routes.setPassword)
+  })
+
+  it('sends a signed-in person who already has a password from the set-password address to the change-password screen', async () => {
+    stubFetch(Response.json(testMe))
+
+    const { router } = await renderRoutesWithProviders(routeObjects, routes.setPassword)
+
+    expect(
+      await screen.findByRole('heading', { name: translated('en', 'auth.changePassword.title') }),
+    ).toBeTruthy()
+    expect(router.state.location.pathname).toBe(routes.changePassword)
+  })
+
+  it('sends a person who must change the password from the set-password address to the change-password screen', async () => {
+    stubFetch(Response.json({ ...mustChangePasswordMe, hasPassword: false }))
+
+    const { router } = await renderRoutesWithProviders(routeObjects, routes.setPassword)
+
+    expect(
+      await screen.findByRole('heading', { name: translated('en', 'auth.changePassword.title') }),
+    ).toBeTruthy()
+    expect(router.state.location.pathname).toBe(routes.changePassword)
   })
 })

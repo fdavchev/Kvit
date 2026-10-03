@@ -3,14 +3,15 @@
     "name": "Kvit"
   },
   "common": {
-    "comingSoon": "Coming soon",
     "loading": "Loading…",
     "retry": "Try again",
     "back": "Back",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "switchToDarkMode": "Switch to dark mode",
-    "switchToLightMode": "Switch to light mode"
+    "switchToLightMode": "Switch to light mode",
+    "privacy": "Privacy",
+    "close": "Close"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -27,7 +28,13 @@
     "RATE_LIMITED": "Too many tries. Wait a few minutes and try again.",
     "AUTH_MUST_CHANGE_PASSWORD": "Choose a new password to continue.",
     "AUTH_CURRENT_PASSWORD_WRONG": "Wrong password.",
-    "AUTH_PASSWORD_UNCHANGED": "The new password must be different from the old one."
+    "AUTH_PASSWORD_UNCHANGED": "The new password must be different from the old one.",
+    "AUTH_GOOGLE_TOKEN_INVALID": "Google sign-in didn't work. Please try again.",
+    "AUTH_GOOGLE_EMAIL_NOT_VERIFIED": "Google says this email isn't verified, so we can't use it. Verify it with Google or use another account.",
+    "AUTH_GOOGLE_NO_ACCOUNT": "There is no Kvit account for this Google account yet.",
+    "AUTH_GOOGLE_EMAIL_TAKEN": "This email already has an account.",
+    "AUTH_USES_GOOGLE": "This account signs in with Google.",
+    "AUTH_PASSWORD_ALREADY_SET": "This account already has a password. Use \"Change password\"."
   },
   "language": {
     "label": "Language",
@@ -37,10 +44,10 @@
   "welcome": {
     "tagline": "Квит сме.",
     "taglineTranslation": "We're even.",
-    "pitch": "Only you need an account. Friends can be just names.",
-    "continueWithGoogle": "Continue with Google",
+    "or": "or",
     "signUpWithEmail": "Sign up with email",
-    "haveAccount": "I already have an account"
+    "haveAccount": "I already have an account",
+    "googleUnavailable": "Couldn't load Google sign-in. Check your connection and try again."
   },
   "auth": {
     "email": "Email",
@@ -62,6 +69,25 @@
       "new": "New password",
       "submit": "Save new password",
       "done": "Password changed."
+    },
+    "googleTaken": {
+      "title": "This email already has an account.",
+      "logIn": "Log in with password",
+      "another": "Use another Google account"
+    },
+    "googleUses": {
+      "title": "This account signs in with Google.",
+      "body": "You can add a password in Settings after you sign in."
+    },
+    "googleSignUp": {
+      "title": "Almost there",
+      "hint": "This is how your friends will see you in groups.",
+      "submit": "Continue"
+    },
+    "setPassword": {
+      "title": "Set a password",
+      "submit": "Save password",
+      "done": "Password saved. You can now also log in with your email and password."
     }
   },
   "home": {
@@ -75,6 +101,40 @@
     "themeSystem": "Same as device",
     "themeLight": "Light",
     "themeDark": "Dark"
+  },
+  "privacy": {
+    "title": "Privacy",
+    "updated": "Last updated 3 October 2026.",
+    "sections": {
+      "1": {
+        "heading": "What Kvit keeps",
+        "body": "Your name, email, language and time zone. The groups, expenses and payments that you or your friends enter. Simple counts of how the app is used (for example how many people signed up), never amounts or names."
+      },
+      "2": {
+        "heading": "Passwords",
+        "body": "A password is never stored the way you type it, only as a scrambled code that nobody can turn back into the password."
+      },
+      "3": {
+        "heading": "Sign in with Google",
+        "body": "If you use Google, Kvit receives only your name, email address and profile picture link. Kvit cannot read your Gmail, your contacts or anything else in your Google account."
+      },
+      "4": {
+        "heading": "Who can see what",
+        "body": "People in a group see that group's expenses and balances. The person who runs Kvit sees only totals (for example how many accounts exist), not your expenses."
+      },
+      "5": {
+        "heading": "Cookies and tracking",
+        "body": "One login cookie keeps you signed in for 90 days. No ads, no tracking, and your data is never sold or shared."
+      },
+      "6": {
+        "heading": "Where it is stored",
+        "body": "On Cloudflare (the website), Render and Neon (the data, in Frankfurt, Germany)."
+      },
+      "7": {
+        "heading": "Deleting your account",
+        "body": "Ask Filip to delete your account. Your name stays on old group expenses, so other people's balances stay correct."
+      }
+    }
   },
   "notFound": {
     "title": "Page not found",

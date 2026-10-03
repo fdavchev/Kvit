@@ -43,6 +43,8 @@
   .g.black { background: #131314; color: #e3e3e3; border-color: #131314; }
   .g.blue { background: #0b57d0; color: #fff; border-color: #0b57d0; }
   .gnote { text-align: center; font-size: .8rem; color: var(--ink-soft); }
+  .actions > .g { margin: 0; }
+  .or { text-align: center; margin: 4px 0; color: var(--ink-soft); font-size: .8125rem; font-weight: 600; letter-spacing: .02em; }
   .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: grid; place-items: center; padding: 24px; }
   .dlg { background: var(--card); color: var(--ink); border-radius: 20px; padding: 24px; width: 100%; display: flex; flex-direction: column; gap: 12px; }
   .dlg h3 { font-size: 1.25rem; line-height: 1.25; }
@@ -70,7 +72,7 @@
 <script>
 var T = {
   en: {
-    tagline: 'Квит сме.', pitch: 'Only you need an account. Friends can be just names.', google: 'Continue with Google',
+    or: 'or', tagline: 'Квит сме.', pitch: 'Only you need an account. Friends can be just names.', google: 'Continue with Google',
     signup: 'Sign up with email', have: 'I already have an account', privacy: 'Privacy', back: '‹ Back', close: 'Close',
     takenTitle: 'This email already has an account.', takenLogin: 'Log in with password', takenOther: 'Use another Google account',
     nameTitle: 'Almost there', nameLabel: 'Your name', nameHint: 'This is how your friends will see you in groups.', cont: 'Continue',
@@ -92,7 +94,7 @@ var T = {
     weak: 'The password needs at least 8 characters, one capital letter and one number.'
   },
   mk: {
-    tagline: 'Квит сме.', pitch: 'Само тебе ти треба профил. Пријателите може да бидат само имиња.', google: 'Продолжи со Google',
+    or: 'или', tagline: 'Квит сме.', pitch: 'Само тебе ти треба профил. Пријателите може да бидат само имиња.', google: 'Продолжи со Google',
     signup: 'Регистрирај се со е-пошта', have: 'Веќе имам профил', privacy: 'Приватност', back: '‹ Назад', close: 'Затвори',
     takenTitle: 'Оваа е-пошта веќе има профил.', takenLogin: 'Најави се со лозинка', takenOther: 'Користи друг Google профил',
     nameTitle: 'Уште малку', nameLabel: 'Твоето име', nameHint: 'Вака ќе те гледаат пријателите во групите.', cont: 'Продолжи',
@@ -115,7 +117,7 @@ var T = {
   }
 };
 var HINTS = {
-  welcome: 'The Google button turns white in light mode and black in dark mode (flip Light/Dark above). Click it to pretend the email already has an account (pop-up). On the real site Google\'s own window comes first. Small "Privacy" link is new.',
+  welcome: 'The Google button is always white, in light and dark mode. Click it to pretend the email already has an account (pop-up). On the real site Google\'s own window comes first. Small "Privacy" link is new.',
   name: 'Shown the first time someone signs in with Google. Name is pre-filled from Google.',
   login: 'Demo: this tab pretends a Google-only account (Elena) types a password, so "Log in" shows the pop-up. Coming from the "already has an account" pop-up it is Ana, who has a password, so "Log in" works.',
   settings: 'A Google account with no password sees "Set a password"; after setting one it shows "Change password" as today. "Privacy" is a new link.',
@@ -126,7 +128,7 @@ var TABS = [['welcome', 'Welcome'], ['name', 'Name'], ['login', 'Log in'], ['set
 var st = { screen: 'welcome', lang: 'en', dark: false, g: 'A', dlg: null, toast: false, who: 'elena' };
 var G_LOGO = '<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.2C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.1 1.4-4.9 2.3-8.2 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>';
 function gbtn() {
-  var cls = st.dark ? 'g pill black' : 'g pill white';
+  var cls = 'g pill white';
   return '<button class="' + cls + '" data-act="google">' + G_LOGO + '<span>' + T[st.lang].google + '</span></button>';
 }
 function dlg(title, body, buttons) {
@@ -145,7 +147,7 @@ function render() {
   var lang = '<div class="lang"><button class="lang-option" aria-pressed="' + (st.lang === 'en') + '" data-lang="en">EN</button><button class="lang-option" aria-pressed="' + (st.lang === 'mk') + '" data-lang="mk">МК</button></div>';
   if (st.screen === 'welcome') {
     h = '<main class="screen"><header class="hero"><div class="top"><span></span>' + lang + '</div><div class="brand"><h1 class="wordmark">Kvit</h1><p class="tagline" lang="mk">' + t.tagline + '</p></div></header>' +
-      '<div class="welcome-body"><div class="actions">' + gbtn() +
+      '<div class="welcome-body"><div class="actions">' + gbtn() + '<div class="or" role="separator"><span>' + t.or + '</span></div>' +
       '<button class="btn btn-secondary" data-act="goto" data-to="name">' + t.signup + '</button><button class="btn btn-link" data-act="goto" data-to="login">' + t.have + '</button>' +
       '<button class="btn btn-link" data-act="goto" data-to="privacy" style="min-height:40px;font-size:.9rem">' + t.privacy + '</button></div></div></main>';
     if (st.dlg === 'taken') { h += dlg(t.takenTitle, '', '<div class="actions" style="gap:8px"><button class="btn btn-primary" data-act="goto" data-to="login" data-who="ana">' + t.takenLogin + '</button>' + gbtn().replace('Continue', 'Continue') .replace(t.google, t.takenOther) + '<button class="btn btn-link" data-act="closedlg">' + t.close + '</button></div>'); }

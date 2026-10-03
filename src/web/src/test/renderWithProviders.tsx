@@ -13,6 +13,7 @@ interface RenderOptions {
   language?: Language
   seedCache?: (queryClient: QueryClient) => void
   prepareI18n?: (i18n: I18nInstance) => void
+  routerState?: unknown
 }
 
 interface Providers {
@@ -69,7 +70,11 @@ export async function renderRoutesWithProviders(
   options: RenderOptions = {},
 ): Promise<RoutesRender> {
   const { queryClient, i18n, withProviders } = await createProviders(options)
-  const router = createMemoryRouter(routeObjects, { initialEntries: [initialPath] })
+  const initialEntry =
+    options.routerState === undefined
+      ? initialPath
+      : { pathname: initialPath, state: options.routerState }
+  const router = createMemoryRouter(routeObjects, { initialEntries: [initialEntry] })
   render(<RouterProvider router={router} />, { wrapper: withProviders })
   return { router, queryClient, i18n }
 }

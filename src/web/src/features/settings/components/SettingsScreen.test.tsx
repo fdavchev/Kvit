@@ -15,10 +15,10 @@ import { SettingsScreen } from './SettingsScreen'
 
 vi.mock('sonner', async () => (await import('@/test/sonnerMock')).sonnerMock)
 
-async function renderSettings(language: Language = 'en') {
+async function renderSettings(language: Language = 'en', hasPassword: boolean = true) {
   return renderElementWithProviders(<SettingsScreen />, routes.settings, {
     language,
-    seedCache: seedMe({ ...testMe, language }),
+    seedCache: seedMe({ ...testMe, language, hasPassword }),
   })
 }
 
@@ -71,6 +71,55 @@ describe('SettingsScreen', () => {
     const link = screen.getByRole('link', { name: translated('en', 'auth.changePassword.title') })
 
     expect(link.getAttribute('href')).toBe(routes.changePassword)
+  })
+
+  it('has no link to the set-password screen for a person who has a password', async () => {
+    await renderSettings('en', true)
+
+    expect(
+      screen.queryByRole('link', { name: translated('en', 'auth.setPassword.title') }),
+    ).toBeNull()
+  })
+
+  it.each(languages)('has a link to the set-password screen instead of the change-password link for a person without a password (%s)', async (language) => {
+    await renderSettings(language, false)
+
+    const link = screen.getByRole('link', { name: translated(language, 'auth.setPassword.title') })
+
+    expect(link.getAttribute('href')).toBe(routes.setPassword)
+    expect(
+      screen.queryByRole('link', { name: translated(language, 'auth.changePassword.title') }),
+    ).toBeNull()
+  })
+
+  it.each([true, false])('has a Privacy link to the privacy screen when hasPassword is %s', async (hasPassword) => {
+    await renderSettings('en', hasPassword)
+
+    const link = screen.getByRole('link', { name: translated('en', 'common.privacy') })
+
+    expect(link.getAttribute('href')).toBe(routes.privacy)
+  })
+
+  it('opens the privacy screen and tells it to come back to the settings when the Privacy link is pressed', async () => {
+    const { router } = await renderSettings()
+
+    fireEvent.click(screen.getByRole('link', { name: translated('en', 'common.privacy') }))
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(routes.privacy)
+    })
+    expect(router.state.location.state).toEqual({ from: routes.settings })
+  })
+
+  it.each([true, false])('puts Log out after every link on the screen when hasPassword is %s', async (hasPassword) => {
+    await renderSettings('en', hasPassword)
+    const logOut = screen.getByRole('button', { name: translated('en', 'settings.logOut') })
+
+    const linksAfterLogOut = screen
+      .getAllByRole('link')
+      .filter((link) => !(link.compareDocumentPosition(logOut) & Node.DOCUMENT_POSITION_FOLLOWING))
+
+    expect(linksAfterLogOut).toEqual([])
   })
 
   it.each(languages)('shows the language of the screen as the pressed one (%s)', async (language) => {

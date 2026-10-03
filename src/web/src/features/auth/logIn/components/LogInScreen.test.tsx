@@ -1,17 +1,27 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { endpoints } from '@/core/api/endpoints'
+import { meQueryKey } from '@/core/auth/useMe'
 import { languages, type Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
+import type { Me } from '@/core/services/me/meService'
 import {
   problemResponse,
   sentRequest,
   stubFetch,
+  stubFetchByPath,
   stubFetchThatNeverAnswers,
 } from '@/test/apiTestHelpers'
 import { expectDisabledWhilePending, fieldLabelled, typeInto } from '@/test/formTestHelpers'
+import {
+  findDrawnGoogleButton,
+  sendGoogleCredential,
+  stubGoogleSignIn,
+  testIdToken,
+} from '@/test/googleTestHelpers'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { testMe } from '@/test/testMe'
+import { stubDeviceColorScheme } from '@/test/themeTestHelpers'
 import { translated } from '@/test/translated'
 import { LogInScreen } from './LogInScreen'
 
@@ -27,8 +37,27 @@ const rejectedAnswersInEachLanguage = languages.flatMap((language) =>
   rejectedAnswers.map(([code, status]) => [language, code, status] as const),
 )
 
-async function renderLogIn(language: Language = 'en') {
-  return renderElementWithProviders(<LogInScreen />, routes.logIn, { language })
+async function renderLogIn(language: Language = 'en', routerState?: unknown) {
+  return renderElementWithProviders(<LogInScreen />, routes.logIn, { language, routerState })
+}
+
+async function renderLogInRefusedBecauseTheAccountUsesGoogle(
+  language: Language = 'en',
+  googleAccount: Me = testMe,
+) {
+  const identity = stubGoogleSignIn()
+  stubDeviceColorScheme('light')
+  const fetchMock = stubFetchByPath({
+    [endpoints.logIn]: problemResponse(400, 'AUTH_USES_GOOGLE'),
+    [endpoints.googleLogIn]: Response.json(googleAccount),
+  })
+  const rendered = await renderLogIn(language)
+  fillForm(language)
+  pressSubmit(language)
+  const dialog = await screen.findByRole('dialog', {
+    name: translated(language, 'auth.googleUses.title'),
+  })
+  return { ...rendered, identity, fetchMock, dialog }
 }
 
 function fillForm(language: Language): void {
@@ -178,5 +207,85 @@ describe('LogInScreen', () => {
     expect(fieldLabelled(translated('en', 'auth.email')).value).toBe(credentials.email)
     expect(fieldLabelled(translated('en', 'auth.password')).value).toBe(credentials.password)
     expect(router.state.location.pathname).toBe(routes.logIn)
+  })
+
+  it('fills the email field from the email passed by the previous screen and leaves the password empty', async () => {
+    await renderLogIn('en', { email: 'ana@gmail.com' })
+
+    expect(fieldLabelled(translated('en', 'auth.email')).value).toBe('ana@gmail.com')
+    expect(fieldLabelled(translated('en', 'auth.password')).value).toBe('')
+  })
+
+  it('does not open the Google dialog when the password is wrong', async () => {
+    stubFetch(problemResponse(401, 'AUTH_INVALID_CREDENTIALS'))
+    await renderLogIn()
+    fillForm('en')
+
+    pressSubmit('en')
+    await screen.findByRole('alert')
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  describe('when the account signs in with Google', () => {
+    it.each(languages)('opens a dialog with the title and the explanation instead of the inline error (%s)', async (language) => {
+      const { dialog } = await renderLogInRefusedBecauseTheAccountUsesGoogle(language)
+
+      expect(
+        within(dialog).getByText(translated(language, 'auth.googleUses.body')),
+      ).toBeTruthy()
+      expect(screen.queryByRole('alert')).toBeNull()
+    })
+
+    it('shows a Google button and a Close button inside the dialog', async () => {
+      const { identity, dialog } = await renderLogInRefusedBecauseTheAccountUsesGoogle()
+
+      expect(await findDrawnGoogleButton(identity, dialog)).toBeTruthy()
+      expect(
+        within(dialog).getByRole('button', { name: translated('en', 'common.close') }),
+      ).toBeTruthy()
+    })
+
+    it('closes the dialog and stays on the log-in screen when Close is pressed', async () => {
+      const { router, dialog } = await renderLogInRefusedBecauseTheAccountUsesGoogle()
+
+      fireEvent.click(within(dialog).getByRole('button', { name: translated('en', 'common.close') }))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      expect(router.state.location.pathname).toBe(routes.logIn)
+    })
+
+    it('runs the Google log-in flow for a credential from the Google button inside the dialog', async () => {
+      const { identity, dialog, router, queryClient } =
+        await renderLogInRefusedBecauseTheAccountUsesGoogle()
+      const button = await findDrawnGoogleButton(identity, dialog)
+
+      sendGoogleCredential(identity, button, testIdToken)
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.dashboard)
+      })
+      expect(router.state.historyAction).toBe('REPLACE')
+      expect(queryClient.getQueryData(meQueryKey)).toEqual(testMe)
+    })
+
+    it.each([
+      ['en', 'mk'],
+      ['mk', 'en'],
+    ] as const)('switches the screen from %s to the saved language %s of the account that signed in through the dialog', async (screenLanguage, accountLanguage) => {
+      const { identity, dialog, i18n } = await renderLogInRefusedBecauseTheAccountUsesGoogle(
+        screenLanguage,
+        { ...testMe, language: accountLanguage },
+      )
+      const button = await findDrawnGoogleButton(identity, dialog)
+
+      sendGoogleCredential(identity, button, testIdToken)
+
+      await waitFor(() => {
+        expect(i18n.language).toBe(accountLanguage)
+      })
+    })
   })
 })

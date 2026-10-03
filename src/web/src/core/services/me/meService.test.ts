@@ -78,6 +78,9 @@ describe('getMe', () => {
     ['language', 5],
     ['timeZone', false],
     ['mustChangePassword', 'false'],
+    ['hasPassword', 'true'],
+    ['hasPassword', 1],
+    ['hasPassword', null],
   ])('throws an error naming "%s" when its value is %j', async (field, value) => {
     stubFetch(Response.json({ ...testMe, [field]: value }))
 

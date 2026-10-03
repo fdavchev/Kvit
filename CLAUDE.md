@@ -25,6 +25,8 @@ Filip is a beginner at .NET and React: explain each new concept in one or two pl
 - Filip runs every git commit himself. No `Co-Authored-By` trailer, no "Generated with Claude Code" line.
 
 ## Commands
+All in one (Windows PowerShell, from the repository root; VERIFIED 2026-10-03, Phase 6): `.\scripts\start-local.ps1` starts the database, API (`http://localhost:5018`) and website (`http://localhost:5173`) in their own windows and opens the browser (`-NoBrowser` skips that); `.\scripts\start-local.ps1 -Check` runs build + all tests + lint (stops at the first failure); `.\scripts\start-local.ps1 -Stop` closes both windows and stops the database container (data kept). Needs Docker Desktop open.
+
 Backend, from the repository root (VERIFIED 2026-09-25, Phase 1):
 - `dotnet build Kvit.slnx` (must show 0 warnings; warnings and style rules fail the build)
 - `dotnet test Kvit.slnx` (xUnit v3 on Microsoft Testing Platform; Docker Desktop is needed from Phase 4, when Testcontainers arrive)

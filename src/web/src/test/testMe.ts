@@ -9,6 +9,7 @@ export const testMe: Me = {
   language: 'en',
   timeZone: 'Europe/Skopje',
   mustChangePassword: false,
+  hasPassword: true,
 }
 
 export function seedMe(me: Me | null): (queryClient: QueryClient) => void {

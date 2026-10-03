@@ -7,7 +7,15 @@ import {
   stubFetch,
 } from '@/test/apiTestHelpers'
 import { testMe } from '@/test/testMe'
-import { changePassword, logIn, logOut, register } from './authService'
+import {
+  changePassword,
+  googleLogIn,
+  googleSignUp,
+  logIn,
+  logOut,
+  register,
+  setPassword,
+} from './authService'
 
 const registration = {
   displayName: 'Filip',
@@ -17,6 +25,12 @@ const registration = {
 } as const
 
 const credentials = { email: 'filip@example.com', password: 'Passw0rdOk' }
+
+const googleSignUpInput = {
+  idToken: 'header.payload.signature',
+  displayName: 'Марко',
+  language: 'mk',
+} as const
 
 const passwords = { currentPassword: 'Temp0rary1', newPassword: 'Passw0rdOk' }
 
@@ -76,6 +90,8 @@ describe('authService', () => {
   it.each([
     ['register', () => register(registration)],
     ['logIn', () => logIn(credentials)],
+    ['googleLogIn', () => googleLogIn(googleSignUpInput.idToken)],
+    ['googleSignUp', () => googleSignUp(googleSignUpInput)],
   ])('%s reads the device time zone when it is called, not when the module loads', async (_name, send) => {
     const fetchMock = stubFetch(Response.json(testMe))
     stubDeviceTimeZone('Pacific/Kiritimati')
@@ -88,6 +104,8 @@ describe('authService', () => {
   it.each([
     ['register', () => register(registration)],
     ['logIn', () => logIn(credentials)],
+    ['googleLogIn', () => googleLogIn(googleSignUpInput.idToken)],
+    ['googleSignUp', () => googleSignUp(googleSignUpInput)],
   ])('%s still sends the request with an empty time zone when the device gives none', async (_name, send) => {
     const fetchMock = stubFetch(Response.json(testMe))
     stubDeviceTimeZone(undefined)
@@ -95,6 +113,41 @@ describe('authService', () => {
     await send()
 
     expect(sentRequest(fetchMock).body).toMatchObject({ timeZone: '' })
+  })
+
+  it('googleLogIn posts the Google ID token and the device time zone as JSON and returns the person', async () => {
+    const fetchMock = stubFetch(Response.json(testMe))
+    stubDeviceTimeZone('Europe/Skopje')
+
+    const me = await googleLogIn(googleSignUpInput.idToken)
+
+    expect(me).toEqual(testMe)
+    expect(sentRequest(fetchMock)).toEqual({
+      url: '/api/auth/google',
+      method: 'POST',
+      contentType: 'application/json',
+      body: { idToken: googleSignUpInput.idToken, timeZone: 'Europe/Skopje' },
+    })
+  })
+
+  it('googleSignUp posts the ID token, name, device time zone and language as JSON and returns the new person', async () => {
+    const fetchMock = stubFetch(Response.json(testMe))
+    stubDeviceTimeZone('Europe/Skopje')
+
+    const me = await googleSignUp(googleSignUpInput)
+
+    expect(me).toEqual(testMe)
+    expect(sentRequest(fetchMock)).toEqual({
+      url: '/api/auth/google/sign-up',
+      method: 'POST',
+      contentType: 'application/json',
+      body: {
+        idToken: googleSignUpInput.idToken,
+        displayName: 'Марко',
+        timeZone: 'Europe/Skopje',
+        language: 'mk',
+      },
+    })
   })
 
   it('logOut posts to /api/auth/logout and resolves on 204', async () => {
@@ -123,11 +176,28 @@ describe('authService', () => {
     })
   })
 
+  it('setPassword posts the new password as JSON and resolves on 204', async () => {
+    const fetchMock = stubFetch(new Response(null, { status: 204 }))
+
+    const result = await setPassword(passwords.newPassword)
+
+    expect(result).toBeUndefined()
+    expect(sentRequest(fetchMock)).toEqual({
+      url: '/api/auth/set-password',
+      method: 'POST',
+      contentType: 'application/json',
+      body: { newPassword: passwords.newPassword },
+    })
+  })
+
   it.each([
     ['register', () => register(registration)],
     ['logIn', () => logIn(credentials)],
     ['logOut', () => logOut()],
     ['changePassword', () => changePassword(passwords)],
+    ['googleLogIn', () => googleLogIn(googleSignUpInput.idToken)],
+    ['googleSignUp', () => googleSignUp(googleSignUpInput)],
+    ['setPassword', () => setPassword(passwords.newPassword)],
   ])('%s rethrows the ApiError unchanged', async (_name, send) => {
     stubFetch(problemResponse(400, 'AUTH_PASSWORD_TOO_WEAK'))
 
@@ -140,6 +210,8 @@ describe('authService', () => {
   it.each([
     ['register', () => register(registration)],
     ['logIn', () => logIn(credentials)],
+    ['googleLogIn', () => googleLogIn(googleSignUpInput.idToken)],
+    ['googleSignUp', () => googleSignUp(googleSignUpInput)],
   ])('%s checks the answer with the same shape check as getMe', async (_name, send) => {
     stubFetch(Response.json({ ...testMe, language: 'fr' }))
 

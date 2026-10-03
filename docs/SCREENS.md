@@ -20,10 +20,14 @@
 ## Getting in
 
 ### 1. Welcome, `/welcome` (public)
-- Logo, the tagline **"Квит сме."**, and one line: *"Only you need an account. Friends can be just names."* (from the business review).
-- **Continue with Google** (the main, biggest button; DECISIONS).
-- **Sign up with email** · **I already have an account**.
-- **Main action:** Google = **1 tap** + Google's own account picker → dashboard.
+- Logo and the tagline **"Квит сме."**. (The line "Only you need an account. Friends can be just names." was removed 2026-10-03: too long in Macedonian.)
+- **Continue with Google** (Google's own button: always white, in light and dark mode, 40 px high, DECISIONS Phase 6).
+- A small **"or"** (no lines), then **Sign up with email** · **I already have an account** · a small **Privacy** link.
+- **Main action:** Google = **1 tap** + Google's own account picker → dashboard. **First time only:** a name screen (pre-filled from Google) + **Continue** → dashboard (2 taps).
+- **Email already has a password account:** a pop-up "This email already has an account." with **Log in with password** (opens Log in with the email typed), Google's button under the label "Use another Google account", **Close**.
+
+### 2b. Name screen after Google, `/signup/google` (public; needs the token from Welcome)
+- Title "Almost there", the name field pre-filled with the Google name, hint, **Continue**, back button.
 
 ### 2. Sign up, `/signup` (public)
 - Name, email, password. **Create account**.
@@ -32,8 +36,8 @@
 
 ### 3. Log in, `/login` (public)
 - Email, password. **Log in**. **2 fields, 1 tap.**
-- "Forgot your password?" shows a short note: use Google, or ask Filip to reset it (DECISIONS: Filip resets by hand until email exists).
-- Google sign-in with an email that already has a password account shows *"This email already has a password account. Log in with your password."* (DECISIONS: never merge automatically).
+- "Forgot your password?" shows a short note: ask Filip to reset it (DECISIONS: Filip resets by hand until email exists). It does not mention Google, because Google can't help a password account.
+- A Google-only account that types a password gets a pop-up "This account signs in with Google." with Google's button and **Close**; those tries never count toward the lock.
 
 ### 4. Waking up (full screen, only on a device with no saved data)
 - *"Waking up the server… This takes about a minute the first time."*
@@ -143,9 +147,10 @@ The speed screen (DECISIONS "Speed details"):
 - Name.
 - Language: **English / Македонски**.
 - Time zone: detected automatically, shown as text, with **Choose manually**.
-- **Log out.**
+- **Set a password** (only for Google accounts with no password yet; replaces **Change password** until one is set) → `/settings/set-password`.
 - **Theme:** Same as device (default) · Light · Dark (decided 2026-10-01).
 - Link to the privacy page.
+- **Log out** (last, at the bottom).
 
 ### 19. Privacy, `/privacy` (public)
 - A plain page in EN and MK: what Kvit stores (account, groups, expenses, usage counts), what it never shows (the admin sees totals only), and who to ask.

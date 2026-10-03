@@ -1,6 +1,5 @@
+import type { ColorScheme } from './colorScheme'
 import type { ThemeChoice } from './theme'
-
-type ColorScheme = 'light' | 'dark'
 
 const colorSchemes: readonly ColorScheme[] = ['light', 'dark']
 

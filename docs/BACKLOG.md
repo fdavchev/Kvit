@@ -44,6 +44,8 @@
 - [ ] The sign-up and log-in counters are in memory and restart with the free Render instance; a window can let a burst through at its end (accepted for the first version)
 - [ ] Privacy page contact: today it says "ask Filip" with no email (Filip, 2026-10-03: friends and family only). Before Kvit grows beyond family and friends, Claude asks Filip for a contact email (a Gmail made just for Kvit) and puts it on `/privacy` and in Google's Branding "support email" if needed
 - [ ] Link a Google sign-in to an existing password account (a safe way, e.g. the person logs in with the password first, then adds Google in Settings). Phase 6 never merges automatically (DECISIONS), so today the pop-up only offers "Log in"
+- [ ] Google sign-in loose ends (Step 2b review): (a) a 401 `AUTH_GOOGLE_TOKEN_INVALID` is treated like "session ended" by `queryClient.ts` (only matters if a signed-in person taps Google on Welcome; fix: also exempt that code, with a test); (b) Google keeps one callback for the whole page, so two Google buttons that ever need different handlers would clash (today every button runs the same flow); (c) with "Same as device", the Google button follows Kvit's own theme choice but not a phone switch while the app is open (same gap as the Welcome moon/sun icon)
+- [ ] The main JavaScript file is 559 kB (limit warning at 500 kB; 497 kB before Phase 6). Split the code by screen (`React.lazy` per route) when the build warning matters or the app feels slow on a phone
 - [ ] Settings: change the display name (Phase 6 asks the name once, pre-filled from Google; changing it later has no screen yet)
 
 ## Skipped on purpose

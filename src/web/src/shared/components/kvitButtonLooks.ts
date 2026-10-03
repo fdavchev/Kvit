@@ -14,6 +14,10 @@ export const kvitButtonLooks = {
     shadcnVariant: 'link',
     className: `${sharedLook} min-h-12 text-[1.0625rem] font-semibold text-link`,
   },
+  smallLink: {
+    shadcnVariant: 'link',
+    className: `${sharedLook} min-h-10 text-[0.9375rem] font-semibold text-link`,
+  },
   underlinedLink: {
     shadcnVariant: 'link',
     className: `${sharedLook} min-h-12 text-[1.0625rem] font-bold text-foreground underline decoration-link-underline decoration-3 underline-offset-6 hover:decoration-current`,

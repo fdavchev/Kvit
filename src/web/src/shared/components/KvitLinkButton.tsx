@@ -6,12 +6,14 @@ import { kvitButtonLooks, type KvitButtonVariant } from './kvitButtonLooks'
 
 interface KvitLinkButtonProps {
   to: string
+  state?: object
   variant?: KvitButtonVariant
   children: ReactNode
 }
 
 export function KvitLinkButton({
   to,
+  state,
   variant = 'primary',
   children,
 }: KvitLinkButtonProps) {
@@ -19,6 +21,7 @@ export function KvitLinkButton({
   return (
     <Link
       to={to}
+      state={state}
       className={cn(
         buttonVariants({ variant: look.shadcnVariant }),
         look.className,

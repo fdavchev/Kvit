@@ -21,6 +21,32 @@ export function stubFetch(...results: (Response | Error)[]): Mock<typeof fetch> 
   return fetchMock
 }
 
+type PathAnswer = Response | Error
+
+export function stubFetchByPath(
+  answers: Record<string, PathAnswer | PathAnswer[]>,
+): Mock<typeof fetch> {
+  const callCounts = new Map<string, number>()
+  const fetchMock = vi.fn<typeof fetch>(async (input) => {
+    const path = String(input)
+    const listed: PathAnswer | PathAnswer[] | undefined = answers[path]
+    if (listed === undefined) {
+      throw new Error(`The test did not expect a request to ${path}`)
+    }
+    const callCount = callCounts.get(path) ?? 0
+    callCounts.set(path, callCount + 1)
+    const answer = Array.isArray(listed)
+      ? listed[Math.min(callCount, listed.length - 1)]
+      : listed
+    if (answer instanceof Error) {
+      throw answer
+    }
+    return answer
+  })
+  vi.stubGlobal('fetch', fetchMock)
+  return fetchMock
+}
+
 export function stubFetchThatNeverAnswers(): void {
   vi.stubGlobal(
     'fetch',
@@ -36,7 +62,22 @@ export function problemResponse(status: number, errorCode: string): Response {
 }
 
 export function sentRequest(fetchMock: Mock<typeof fetch>): SentRequest {
-  const [input, init] = fetchMock.mock.calls[0]
+  return describeRequest(fetchMock.mock.calls[0])
+}
+
+export function sentRequestTo(fetchMock: Mock<typeof fetch>, url: string): SentRequest {
+  const call = fetchMock.mock.calls.find(([input]) => String(input) === url)
+  if (call === undefined) {
+    throw new Error(`No request was sent to ${url}`)
+  }
+  return describeRequest(call)
+}
+
+export function requestCountTo(fetchMock: Mock<typeof fetch>, url: string): number {
+  return fetchMock.mock.calls.filter(([input]) => String(input) === url).length
+}
+
+function describeRequest([input, init]: Parameters<typeof fetch>): SentRequest {
   const body = init?.body
   return {
     url: String(input),
