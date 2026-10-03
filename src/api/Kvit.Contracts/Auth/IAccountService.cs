@@ -8,9 +8,15 @@ namespace Kvit.Contracts.Auth
     {
         Task<Result<MeResponse>> CreateAccountAsync(NewAccount account, CancellationToken cancellationToken);
 
+        Task<Result<MeResponse>> CreateGoogleAccountAsync(NewGoogleAccount account, string googleSubject, string? googlePictureUrl, CancellationToken cancellationToken);
+
         Task<Result<MeResponse>> CheckLogInAsync(string email, string password, string timeZone, CancellationToken cancellationToken);
 
+        Task<Result<MeResponse>> CheckGoogleLogInAsync(GoogleIdentity identity, string timeZone, CancellationToken cancellationToken);
+
         Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken);
+
+        Task<Result> SetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken);
 
         Task SignInAsync(Guid userId);
 

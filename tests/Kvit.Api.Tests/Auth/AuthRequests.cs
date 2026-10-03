@@ -11,6 +11,8 @@ namespace Kvit.Api.Tests.Auth
         public const string WrongPassword = "Wrong-password-1";
 
         public const string RegisterPath = "/api/auth/register";
+        public const string GoogleLogInPath = "/api/auth/google";
+        public const string GoogleSignUpPath = "/api/auth/google/sign-up";
 
         public static string RegistrationJson(RegistrationForm form)
         {
@@ -58,6 +60,32 @@ namespace Kvit.Api.Tests.Auth
             string json = JsonSerializer.Serialize(new { currentPassword, newPassword });
 
             return PostJsonAsync(client, "/api/auth/change-password", json);
+        }
+
+        public static Task<HttpResponseMessage> GoogleLogInAsync(HttpClient client, string idToken, string timeZone = DefaultTimeZone)
+        {
+            string json = JsonSerializer.Serialize(new { idToken, timeZone });
+
+            return PostJsonAsync(client, GoogleLogInPath, json);
+        }
+
+        public static Task<HttpResponseMessage> GoogleSignUpAsync(
+            HttpClient client,
+            string idToken,
+            string displayName = "Ana",
+            string timeZone = DefaultTimeZone,
+            string language = "en")
+        {
+            string json = JsonSerializer.Serialize(new { idToken, displayName, timeZone, language });
+
+            return PostJsonAsync(client, GoogleSignUpPath, json);
+        }
+
+        public static Task<HttpResponseMessage> SetPasswordAsync(HttpClient client, string newPassword)
+        {
+            string json = JsonSerializer.Serialize(new { newPassword });
+
+            return PostJsonAsync(client, "/api/auth/set-password", json);
         }
 
         public static Task<HttpResponseMessage> GetMeAsync(HttpClient client)

@@ -18,6 +18,7 @@ builder.Services.AddRateLimits();
 WebApplication app = builder.Build();
 
 KvitDatabaseSetting.Read(app.Configuration);
+GoogleSetting.Read(app.Configuration);
 string? proxySecret = ProxySetting.Read(app.Configuration, app.Environment);
 
 if (proxySecret is not null)

@@ -34,6 +34,26 @@ namespace Kvit.Api.Controllers
             return Result(result);
         }
 
+        [HttpPost("google")]
+        [AllowAnonymous]
+        [EnableRateLimiting("log-in")]
+        public async Task<ActionResult<MeResponse>> GoogleLogIn(GoogleLogInRequest request, CancellationToken cancellationToken)
+        {
+            GoogleLogInCommand command = new(request.IdToken, request.TimeZone);
+            Result<MeResponse> result = await _dispatcher.Send<GoogleLogInCommand, MeResponse>(command, cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("google/sign-up")]
+        [AllowAnonymous]
+        [EnableRateLimiting("log-in")]
+        public async Task<ActionResult<MeResponse>> GoogleSignUp(GoogleSignUpRequest request, CancellationToken cancellationToken)
+        {
+            GoogleSignUpCommand command = new(request.IdToken, request.DisplayName, request.TimeZone, request.Language);
+            Result<MeResponse> result = await _dispatcher.Send<GoogleSignUpCommand, MeResponse>(command, cancellationToken);
+            return Result(result);
+        }
+
         [HttpPost("logout")]
         [AllowAnonymous]
         public async Task<ActionResult> LogOut(CancellationToken cancellationToken)
@@ -50,6 +70,15 @@ namespace Kvit.Api.Controllers
         {
             ChangePasswordCommand command = new(request.CurrentPassword, request.NewPassword);
             Result result = await _dispatcher.Send(command, cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("set-password")]
+        [Authorize]
+        [EnableRateLimiting("log-in")]
+        public async Task<ActionResult> SetPassword(SetPasswordRequest request, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new SetPasswordCommand(request.NewPassword), cancellationToken);
             return Result(result);
         }
     }
