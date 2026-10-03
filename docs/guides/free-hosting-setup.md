@@ -103,7 +103,7 @@ The exact values (folder names and the names of the settings) were filled in dur
    | `DataProtection__CertificateBase64` | the online certificate (made with `scripts/NewDataProtectionCertificate.cs`; keep a copy in your notes file, losing it logs everybody out) |
    | `DataProtection__CertificatePassword` | the certificate's password |
    | `Proxy__SharedSecret` | the **proxy secret** (see «Make the proxy secret» below; the **same** value goes into Cloudflare in B3). Without it the app refuses to start, on purpose |
-   | the Google client id setting | added in Phase 6 (B4); its name is given then |
+   | the Google client id | **no setting needed** (Phase 6: the public id is in `appsettings.json`) |
 4. Click **Deploy Web Service**.
    - **You should see:** a log scrolling by, then **"Live"** in green (the first build can take 5–10 minutes).
    - Your backend address is at the top: `https://kvit-mk-api.onrender.com`. Copy it to your secrets file.
@@ -162,7 +162,7 @@ You need the live address from B3 **and** the privacy page (the building session
    - Click **Create**.
    - It shows a **Client ID** (ends with `.apps.googleusercontent.com`). Copy it to your secrets file. It also shows a **client secret**: Kvit doesn't use it, so you can ignore it.
 4. **Audience** → **Publish app** → confirm. **You should see:** status **In production**.
-5. Put the Client ID where the session tells you: in Render (B2 step 3), and in Cloudflare if the session says so. Then redeploy both.
+5. **The Client ID needs no Render or Cloudflare setting:** it is public and lives in the code (`appsettings.json` and `src/web/.env`, Phase 6). Add `http://localhost:8788` too if you want to test with `wrangler pages dev`. The exact steps with what to see are in `phase-06-google.md`.
 6. **Check:** on `https://kvit-mk.pages.dev`, the "Sign in with Google" button opens Google's window and logs you in. The button won't work on test addresses like `abc123.kvit-mk.pages.dev`. That's expected.
 
 ## B5. GitHub secrets (for the automatic tests and, later, backups)

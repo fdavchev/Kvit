@@ -104,12 +104,14 @@ Put the skeleton online early, so the hosting traps show up before there are fea
 - **Done when:** `https://kvit-mk.pages.dev` loads; sign-up works through the proxy; after a manual Render redeploy the user is **still logged in** (proves the database key storage); `/health` never wakes Neon. **Reached 2026-10-01** (site loads, sign-up through the proxy and still logged in after a Render deploy are REPORTED by Filip and seen in the Render log; `/health` never wakes Neon is VERIFIED by timing). Report: `reports/2026-10-01-phase-05-first-deploy.md`.
 
 ## Phase 6: Google sign-in + privacy page · `feat/06-google-sign-in`
-- [ ] Google Identity Services button; the API checks the ID token (`aud`, `iss`, `exp`), `sub` stored in `user_logins`
-- [ ] No automatic merge with a password account (error code + message)
-- [ ] Security headers that allow Google's script and popup (CSP, COOP)
-- [ ] Privacy page (screen 19), EN + MK
-- [ ] Tests with a fake token checker (Google itself can't be called from tests)
-- **Filip:** hosting guide Part B4 (Google), then try it on the phone.
+- [x] **Done 2026-10-03 (VERIFIED by automated test: backend 593/593, frontend 778/778; the real Google sign-in is NOT VERIFIED until Filip tries it).** Google Identity Services button; the API checks the ID token (`aud`, `iss`, `exp`, verified email), `sub` stored in `user_logins`
+- [x] **Done (VERIFIED by automated test).** No automatic merge with a password account (error code + pop-up); first Google sign-in asks the name once; Google accounts can add a password in Settings
+- [x] **Done (headers VERIFIED by live run on the Cloudflare preview; CSP in a real browser see the report).** Security headers that allow Google's script and popup (CSP, COOP)
+- [x] **Done (VERIFIED by automated test).** Privacy page (screen 19), EN + MK, plus Privacy links on Welcome and Settings
+- [x] **Done (VERIFIED by automated test).** Tests with a fake token checker (Google itself can't be called from tests)
+- [x] **Added scope, approved by Filip:** `scripts/start-local.ps1` (start, `-Check`, `-Stop`), the "or" divider, no Welcome pitch line, Log out always at the bottom, Google button drawn once per language and always white. Report: `reports/2026-10-03-phase-06-google-sign-in.md`
+- [x] **Filip:** commit, push, open the pull request, see CI go green, merge into `main` (PR #8 merged 2026-10-03)
+- **Filip, after the merge:** hosting guide Part B4 / `guides/phase-06-google.md` Part 2 (Branding links, Publish app → In production), then the phone test. NOT VERIFIED until he reports.
 
 ## Phase 7: Groups, members, invite links · `feat/07-groups`
 - [ ] Create a group, list groups, group screen shell, rename / emoji / currency, soft delete + Undo
