@@ -12,6 +12,12 @@ namespace Kvit.Infrastructure.Persistence
     {
         public DbSet<UsageEvent> UsageEvents => Set<UsageEvent>();
 
+        public DbSet<Group> Groups => Set<Group>();
+
+        public DbSet<GroupMember> GroupMembers => Set<GroupMember>();
+
+        public DbSet<ActivityEvent> ActivityEvents => Set<ActivityEvent>();
+
         public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
         protected override void OnModelCreating(ModelBuilder builder)

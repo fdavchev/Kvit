@@ -58,5 +58,57 @@ namespace Kvit.Domain.Tests.Entities
 
             Assert.Equal(expectedDay, usageEvent.OccurredOn);
         }
+
+        [Fact]
+        public void GroupCreated_SetsTypeGroupCreatedNoDetailAndTheUserId()
+        {
+            UsageEvent usageEvent = UsageEvent.GroupCreated(UserId, SomeMoment);
+
+            Assert.Equal(UsageEventType.GroupCreated, usageEvent.Type);
+            Assert.Null(usageEvent.Detail);
+            Assert.Equal(UserId, usageEvent.UserId);
+        }
+
+        [Fact]
+        public void JoinedViaInvite_SetsTypeJoinedViaInviteNoDetailAndTheUserId()
+        {
+            UsageEvent usageEvent = UsageEvent.JoinedViaInvite(UserId, SomeMoment);
+
+            Assert.Equal(UsageEventType.JoinedViaInvite, usageEvent.Type);
+            Assert.Null(usageEvent.Detail);
+            Assert.Equal(UserId, usageEvent.UserId);
+        }
+
+        [Theory]
+        [InlineData("2026-09-29T23:30:00-05:00", "2026-09-30")]
+        [InlineData("2026-09-30T01:30:00+02:00", "2026-09-29")]
+        [InlineData("2026-09-30T00:00:00+00:00", "2026-09-30")]
+        public void JoinedViaInvite_SetsOccurredOnToTheUtcCalendarDayAndOccurredAtToOffsetZero(string occurredAtText, string expectedDayText)
+        {
+            DateTimeOffset occurredAt = DateTimeOffset.Parse(occurredAtText, CultureInfo.InvariantCulture);
+            DateOnly expectedDay = DateOnly.Parse(expectedDayText, CultureInfo.InvariantCulture);
+
+            UsageEvent usageEvent = UsageEvent.JoinedViaInvite(UserId, occurredAt);
+
+            Assert.Equal(expectedDay, usageEvent.OccurredOn);
+            Assert.Equal(TimeSpan.Zero, usageEvent.OccurredAt.Offset);
+            Assert.Equal(occurredAt, usageEvent.OccurredAt);
+        }
+
+        [Theory]
+        [InlineData("2026-09-29T23:30:00-05:00", "2026-09-30")]
+        [InlineData("2026-09-30T01:30:00+02:00", "2026-09-29")]
+        [InlineData("2026-09-30T00:00:00+00:00", "2026-09-30")]
+        public void GroupCreated_SetsOccurredOnToTheUtcCalendarDayAndOccurredAtToOffsetZero(string occurredAtText, string expectedDayText)
+        {
+            DateTimeOffset occurredAt = DateTimeOffset.Parse(occurredAtText, CultureInfo.InvariantCulture);
+            DateOnly expectedDay = DateOnly.Parse(expectedDayText, CultureInfo.InvariantCulture);
+
+            UsageEvent usageEvent = UsageEvent.GroupCreated(UserId, occurredAt);
+
+            Assert.Equal(expectedDay, usageEvent.OccurredOn);
+            Assert.Equal(TimeSpan.Zero, usageEvent.OccurredAt.Offset);
+            Assert.Equal(occurredAt, usageEvent.OccurredAt);
+        }
     }
 }

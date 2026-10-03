@@ -1,0 +1,36 @@
+namespace Kvit.Domain.Entities
+{
+    public enum ActivityEventType
+    {
+        GroupCreated,
+        GroupRenamed,
+        GroupSettingsChanged,
+        InviteLinkReset,
+        MemberAdded,
+        MemberJoined,
+        MemberClaimed,
+        ClaimUndone,
+        MemberRemoved,
+        MemberLeft,
+        OwnershipTransferred,
+        MemberLetBackIn,
+        InviteLinkRestored,
+        ExpenseAdded,
+        ExpenseEdited,
+        ExpenseDeleted,
+        ExpenseRestored,
+        SettlementRecorded,
+        SettlementConfirmed,
+        SettlementRejected,
+        SettlementCancelled,
+        SettlementDeleted,
+        ClosingStarted,
+        ClosingConfirmed,
+        ClosingObjected,
+        ClosingCancelled,
+        GroupFinished,
+        GroupReopened,
+        GroupDeleted,
+        GroupRestored,
+    }
+}

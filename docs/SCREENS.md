@@ -8,7 +8,7 @@
 - **Phone first:** designed for 360 px width, then grows.
 - **Dark mode** follows the phone's or PC's setting by default; Settings can force Light or Dark (2026-10-01).
 - **Every text** comes from `en.json` / `mk.json`. `<html lang>` switches to `mk` for Macedonian.
-- **Bottom bar (proposal):** Home · Groups · Settings. Release 2 adds **Budget** between Groups and Settings.
+- **Bottom bar (decided 2026-10-03, Phase 7):** Home · Groups · Settings, in the pill look (the active tab is a white pill with icon and name), switched by tapping only. Release 2 adds **Budget** between Groups and Settings.
 - **Undo toast** instead of "Are you sure?": every delete shows "Deleted · Undo" for a few seconds.
 - **"Updating…"** small note while the server wakes (saved data is already on screen).
 - **Errors** show the translated message for the API's error code (`ResultCodes`), never a raw error.
@@ -59,11 +59,12 @@ Contents from DECISIONS:
 ### 6. Groups list, `/groups`
 - Open groups first, then a collapsed **Finished** section.
 - **New group** button.
+- **Recently deleted:** a quiet link under the Finished row opens its own screen (only groups you own, deleted in the last 30 days): **Restore** on each (Filip, 2026-10-03).
 
 ### 7. New group, `/groups/new`
 First choice: **One bill** or **Group** (1 tap).
 - **Group** (trip, household): name, emoji (suggested, tap to change), currency chip (MKD) → **Create**.
-  **2 taps, 1 field.** It opens the new group with an **"Add people"** card: *Share invite link* (1 tap → the phone's share menu) and *Add a name*.
+  **2 taps, 1 field.** It opens the new group with an **"Add people"** card: *Share invite link* (1 tap → the phone's share menu) and *Add a name*, as two short lines, each next to its own button: *"No Kvit? Add them as a name."* → **Add a name**, and *"Have Kvit? Share the link and they join with their own account."* → **Share invite link** (Filip, 2026-10-03: this is where newcomers learn it; the link needs an account, a name does not).
 - **One bill** (a dinner, a taxi): amount (number keypad), then people's names (type a name, press Enter, it becomes a chip; "me" is already in), optional title, currency chip → **Save**.
   **2 taps; 1 field + one per name.** Afterwards it shows the split and a *Share invite link* button.
 
@@ -118,9 +119,11 @@ The speed screen (DECISIONS "Speed details"):
 
 ### 14. Members, `/groups/:groupId/members`
 - The member list: owner badge, "not claimed yet" on plain names.
-- **Add a name** (any member; Filip agreed 2026-09-25): 1 field, 1 tap.
+- **Add a name** (any member; Filip agreed 2026-09-25): a quiet **+ Add a name** link under the names (like "Recently deleted ›") opens a small sheet: 1 field, 1 tap (2 taps with the link). A name that is already in the group (any letter case) is refused: *"There's already a Marko in this group."*
 - **Invite link:** **Share** (1 tap, phone share menu; on desktop, Copy), and **Reset link** for the owner (with Undo).
-- **Owner, per member:** Remove (only at zero balance) · Make owner · Undo claim.
+- **Owner, per member:** Remove (only at zero balance; then a "removed · Undo" toast) · Make owner (only a person with an account) · Undo claim (the person stays in the group; the name becomes unclaimed again).
+- **Removed** (small list, owner only): each removed person with **Let back in**.
+- **That's me** next to an unclaimed name, for a member who has nothing recorded under their own name yet (fixes a wrong "No, I'm new"; Filip said yes, 2026-10-03).
 - **Leave group** (not the owner; only at zero balance). The owner has to hand over ownership first.
 
 ### 15. Group settings, `/groups/:groupId/settings`
@@ -128,12 +131,13 @@ The speed screen (DECISIONS "Speed details"):
 - **Everyone:** Leave group.
 
 ### 16. Join through an invite link, `/join/:token`
-- **Logged in:** *"Filip invited you to Greece trip"*, the group's emoji, the member names, and one **Join** button (1 tap). No name field; the name comes from the account.
+- **Logged in:** *"You're invited to Greece trip"* (no inviter name, Filip 2026-10-03), the group's emoji, the member names, and one **Join** button (1 tap). No name field; the name comes from the account.
   - **Only if the group has unclaimed plain names:** *"Are you one of these? Marko · Grandma · No, I'm new"* (1 tap).
   - **Total: 1 or 2 taps.**
 - **Not logged in:** the same invite card, then Google (1 tap) or the email sign-up, then **back to this screen**.
 - **Already a member:** the link opens the group.
 - **Old or reset link:** *"This invite link no longer works. Ask for a new one."*
+- **Removed by the owner:** *"You were removed from Greece trip. Ask the owner to let you back in."* (a person who **left** can rejoin with the link).
 
 ### 17. Finishing a group (banners on screen 8)
 - **Owner, when everyone's kvit:** *"Everyone's kvit – close the group?"* with the checklist of settlements → **Confirm** (1 tap).

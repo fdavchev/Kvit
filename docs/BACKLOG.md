@@ -1,6 +1,7 @@
 # Backlog
 
 ## To be done (after the first version)
+- [ ] **Animations (Filip, 2026-10-03: "we are going to be doing these animations, remember that we need them on certain things").** Seen so far in the Phase 7 mockup: the Undo toast slides up and away (a few lines in Phase 7 through Sonner; the mockup has it), bottom sheets slide up (Add a name, the row menu), the selected tab moves between tabs, a row appearing or leaving a list (a name added, a person removed), the Finished row opening. Each one respects "reduce motion". Claude proposes the full list and the exact timings in the Phase 11 polish pass at the latest, and does the cheap ones (toast, sheets) while building the screens that have them. Filip decides what stays.
 - [ ] Scanning receipt QR codes (Macedonian fiscal receipts). The QR format still needs research; it's NOT VERIFIED.
 - [ ] Recurring expenses (rent, subscriptions)
 - [ ] CSV export
@@ -12,7 +13,7 @@
 - [ ] Several payers for one expense
 - [ ] Charts
 - [ ] "Share balances" button: turns a group's balances into a text message and opens the phone's share menu (Viber, WhatsApp…). A free reminder, with no bot needed. Checked 2026-09-24: the phone's share menu (Web Share API), `wa.me` links and `viber://forward` links are all free. Desktop Chrome has no share menu, so show WhatsApp/Viber buttons there.
-- [ ] Joining a group without an account: open the invite link, tap your name, and the device remembers you.
+- [ ] **MUST DO (Filip, 2026-10-03, "we will add no account join later"):** Joining a group without an account: open the invite link, tap your name, and the device remembers you. Needs a guest identity on the phone, rules for who may claim which name, fixing wrong claims, and a plan for a lost phone. Phase 7 only offers Google (1 tap) or email at the link. Schedule it right after Release 1 unless Filip decides otherwise.
 - [ ] Keeping the server awake: ask Render support whether pings are allowed, or move to a cheap paid plan if there are real daily users.
 - [ ] Time zone: a picker on Sign up and Log in only when the phone reports no usable zone, plus Settings → "Choose manually" (needs an endpoint that saves the zone and sets `is_time_zone_manual`). When it exists, the `TIME_ZONE_INVALID` text gets "Choose manually" back (Filip, 2026-09-30)
 - [ ] Forgot password / password reset by email (needs Gmail SMTP) When it exists, the Log in note "Forgot your password? Ask Filip to reset it." becomes a "Reset password" link (Filip's joke idea: keep "Ask Filip to reset it" beside it). Until then Filip resets by hand with `scripts/ResetPassword.cs` (Phase 4, Step 3b)

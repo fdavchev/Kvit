@@ -10,6 +10,8 @@ namespace Kvit.Api.Registers
         private const int LogInWindowMinutes = 1;
         private const int SignUpAttemptsPerWindow = 5;
         private const int SignUpWindowMinutes = 10;
+        private const int InviteRequestsPerWindow = 20;
+        private const int InviteWindowMinutes = 10;
 
         public static IServiceCollection AddRateLimits(this IServiceCollection services)
         {
@@ -19,6 +21,8 @@ namespace Kvit.Api.Registers
                 options.OnRejected = (context, _) => new ValueTask(RateLimitedAnswer.WriteAsync(context.HttpContext, context.Lease));
                 options.AddPolicy("log-in", httpContext =>
                     FixedWindowPerVisitor(httpContext, LogInAttemptsPerWindow, TimeSpan.FromMinutes(LogInWindowMinutes)));
+                options.AddPolicy("invite", httpContext =>
+                    FixedWindowPerVisitor(httpContext, InviteRequestsPerWindow, TimeSpan.FromMinutes(InviteWindowMinutes)));
             });
 
             services.AddSingleton(_ => new SignUpLimitFilter(PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>

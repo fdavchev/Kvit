@@ -39,5 +39,15 @@ namespace Kvit.Domain.Results
         public static Result NotFound(string error, string errorCode) => new(false, HttpStatusCode.NotFound, error, errorCode);
 
         public static Result<T> NotFound<T>(string error, string errorCode) => new(HttpStatusCode.NotFound, error, errorCode);
+
+        public Result<T> ToFailure<T>()
+        {
+            if (IsSuccess)
+            {
+                throw new InvalidOperationException($"A successful Result cannot be turned into a failed Result<{typeof(T).Name}>. Check IsSuccess first.");
+            }
+
+            return new Result<T>(StatusCode, Error, ErrorCode);
+        }
     }
 }

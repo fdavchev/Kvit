@@ -93,8 +93,9 @@ One table for both "One bill" and "Group" (DECISIONS: same group underneath).
 | `finished_at` | timestamptz null | |
 | `invite_token` | text, unique | 32 random bytes, written in URL-safe letters (43 characters). The owner can reset it |
 | `invite_token_created_at` | timestamptz | |
+| `previous_invite_token` | text null | The token before the last reset, kept so the owner's Undo can restore it. Replaced at the next reset (Phase 7) |
 | `created_by_user_id`, `created_at` | | |
-| `deleted_at`, `deleted_by_user_id` | | Owner only, only when every balance is zero |
+| `deleted_at`, `deleted_by_user_id` | | Owner only, only when every balance is zero (checked from Phase 9). The owner can restore it for 30 days ("Recently deleted", Phase 7) |
 | `xmin` | Postgres system column, used as a concurrency token (check docs) | If two people change the group's status at the same moment, the second save fails instead of silently overwriting the first |
 
 ## `group_members`
@@ -108,10 +109,11 @@ A member is either a person with an account (`user_id` set) or a plain name like
 | `name` | text, 1–60 chars | The plain name ("Marko"), or the account's name at the moment they joined. Screens show the account's current name while `user_id` is set |
 | `joined_at` | timestamptz | "The member who joined earliest" gets ownership if the owner's account is deleted |
 | `added_by_user_id` | uuid | |
-| `claimed_at` | timestamptz null | When someone said "that's me". **Undo claim** (owner) empties `user_id` and `claimed_at`; `name` still holds "Marko" |
-| `removed_at`, `removed_by_user_id` | null | Left or removed. Kept as a row because old expenses point at it. Rejoining through the link brings the same row back |
+| `claimed_at` | timestamptz null | When someone said "that's me". **Undo claim** (owner) empties `user_id` and `claimed_at`; `name` still holds "Marko", and the person gets their own row back (created, or restored if it was set aside) so they stay in the group |
+| `removed_at`, `removed_by_user_id` | null | Left, removed or set aside. Kept as a row because old expenses point at it |
+| `end_kind` | text null | Why `removed_at` is set: `Left` (the person can rejoin with the link; the same row comes back), `Removed` (blocked: the link shows "Ask the owner to let you back in" until the owner taps **Let back in**), `SetAside` (the person's own empty row, left behind by "That's me"; Undo claim restores it). Check: `removed_at` and `end_kind` are both set or both empty (Phase 7) |
 
-Unique: one active membership per user per group (`group_id, user_id` where `user_id` is set and `removed_at` is empty).
+Unique: one active membership per user per group (`group_id, user_id` where `user_id` is set and `removed_at` is empty). Plain names are unique per group among active members, letter case ignored (checked in the domain, Phase 7).
 
 ## `categories`
 Built-in categories are seeded in Release 1 because group expenses use them. Custom categories arrive in Release 2 (personal spending only).
@@ -204,7 +206,7 @@ The group's activity feed **and** its change history (DECISIONS: "Change history
 
 `jsonb` is a Postgres column that holds a small JSON document. It suits "a list of changed fields" whose shape differs per event.
 
-**Event types:** `GroupCreated`, `GroupRenamed`, `GroupSettingsChanged`, `InviteLinkReset`, `MemberAdded` (plain name), `MemberJoined`, `MemberClaimed`, `ClaimUndone`, `MemberRemoved`, `MemberLeft`, `OwnershipTransferred`, `ExpenseAdded`, `ExpenseEdited`, `ExpenseDeleted`, `ExpenseRestored`, `SettlementRecorded`, `SettlementConfirmed`, `SettlementRejected`, `SettlementCancelled`, `SettlementDeleted`, `ClosingStarted`, `ClosingConfirmed`, `ClosingObjected`, `ClosingCancelled`, `GroupFinished`, `GroupReopened`, `GroupDeleted`, `GroupRestored`.
+**Event types:** `GroupCreated`, `GroupRenamed`, `GroupSettingsChanged`, `InviteLinkReset`, `MemberAdded` (plain name), `MemberJoined`, `MemberClaimed`, `ClaimUndone`, `MemberRemoved`, `MemberLeft`, `OwnershipTransferred`, `MemberLetBackIn`, `InviteLinkRestored` (Undo of a reset), `ExpenseAdded`, `ExpenseEdited`, `ExpenseDeleted`, `ExpenseRestored`, `SettlementRecorded`, `SettlementConfirmed`, `SettlementRejected`, `SettlementCancelled`, `SettlementDeleted`, `ClosingStarted`, `ClosingConfirmed`, `ClosingObjected`, `ClosingCancelled`, `GroupFinished`, `GroupReopened`, `GroupDeleted`, `GroupRestored`.
 
 ## `usage_events`
 For the admin statistics page (Release 3), but **recorded from Release 1** so no data is lost. Kept apart from `activity_events` because these are platform counts, never shown inside a group, and never hold amounts or names (DECISIONS privacy rule).

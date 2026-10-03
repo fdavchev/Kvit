@@ -22,6 +22,228 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Kvit.Domain.Entities.ActivityEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("Changes")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("changes");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Data")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("data");
+
+                    b.Property<Guid?>("ExpenseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("expense_id");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<Guid?>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<Guid?>("SettlementId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("settlement_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_activity_events");
+
+                    b.HasIndex("GroupId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_activity_events_group_id_created_at");
+
+                    b.ToTable("activity_events", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_activity_events_type", "type IN ('GroupCreated', 'GroupRenamed', 'GroupSettingsChanged', 'InviteLinkReset', 'MemberAdded', 'MemberJoined', 'MemberClaimed', 'ClaimUndone', 'MemberRemoved', 'MemberLeft', 'OwnershipTransferred', 'MemberLetBackIn', 'InviteLinkRestored', 'ExpenseAdded', 'ExpenseEdited', 'ExpenseDeleted', 'ExpenseRestored', 'SettlementRecorded', 'SettlementConfirmed', 'SettlementRejected', 'SettlementCancelled', 'SettlementDeleted', 'ClosingStarted', 'ClosingConfirmed', 'ClosingObjected', 'ClosingCancelled', 'GroupFinished', 'GroupReopened', 'GroupDeleted', 'GroupRestored')");
+                        });
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.Group", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ClosingStartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("closing_started_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<string>("DefaultCurrency")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("default_currency");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by_user_id");
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("emoji");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at");
+
+                    b.Property<string>("InviteToken")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("invite_token");
+
+                    b.Property<DateTimeOffset>("InviteTokenCreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("invite_token_created_at");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_user_id");
+
+                    b.Property<string>("PreviousInviteToken")
+                        .HasColumnType("text")
+                        .HasColumnName("previous_invite_token");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_groups");
+
+                    b.HasIndex("InviteToken")
+                        .IsUnique()
+                        .HasDatabaseName("ix_groups_invite_token");
+
+                    b.HasIndex("OwnerUserId")
+                        .HasDatabaseName("ix_groups_owner_user_id");
+
+                    b.ToTable("groups", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_groups_default_currency", "default_currency IN ('MKD', 'EUR')");
+
+                            t.HasCheckConstraint("ck_groups_kind", "kind IN ('OneBill', 'Group')");
+
+                            t.HasCheckConstraint("ck_groups_name_not_empty", "char_length(name) >= 1");
+
+                            t.HasCheckConstraint("ck_groups_status", "status IN ('Open', 'Closing', 'Finished')");
+                        });
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.GroupMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AddedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("added_by_user_id");
+
+                    b.Property<DateTimeOffset?>("ClaimedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("claimed_at");
+
+                    b.Property<string>("EndKind")
+                        .HasColumnType("text")
+                        .HasColumnName("end_kind");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset?>("RemovedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("removed_at");
+
+                    b.Property<Guid?>("RemovedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("removed_by_user_id");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_group_members");
+
+                    b.HasIndex("GroupId")
+                        .HasDatabaseName("ix_group_members_group_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_group_members_user_id");
+
+                    b.HasIndex("GroupId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_group_members_group_id_user_id")
+                        .HasFilter("user_id IS NOT NULL AND removed_at IS NULL");
+
+                    b.ToTable("group_members", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_group_members_end_kind", "end_kind IN ('Left', 'Removed', 'SetAside')");
+
+                            t.HasCheckConstraint("ck_group_members_name_not_empty", "char_length(name) >= 1");
+
+                            t.HasCheckConstraint("ck_group_members_removed_at_with_end_kind", "(removed_at IS NULL) = (end_kind IS NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Kvit.Domain.Entities.UsageEvent", b =>
                 {
                     b.Property<long>("Id")
@@ -385,6 +607,42 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasName("pk_user_tokens");
 
                     b.ToTable("user_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.ActivityEvent", b =>
+                {
+                    b.HasOne("Kvit.Domain.Entities.Group", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_activity_events_groups_group_id");
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.Group", b =>
+                {
+                    b.HasOne("Kvit.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_groups_users_owner_user_id");
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.GroupMember", b =>
+                {
+                    b.HasOne("Kvit.Domain.Entities.Group", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_group_members_groups_group_id");
+
+                    b.HasOne("Kvit.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_group_members_users_user_id");
                 });
 
             modelBuilder.Entity("Kvit.Domain.Entities.UsageEvent", b =>

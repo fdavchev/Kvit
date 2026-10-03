@@ -29,9 +29,9 @@ Branch `feat/06-google-sign-in`, PR #8.
 | The final build (hidden language slot with `opacity-0` + `inert`, always-white button, drawn once) in a browser | REPORTED by Filip ("everything is alright"); the debugger's last script failed before launching a browser, so no measurement exists |
 | Hidden slot with `visibility:hidden` never finishes drawing; with `opacity: 0` it finished 3 of 3 | VERIFIED by live run (about 10 runs, headless Chrome 154); the mechanism is inferred |
 | EN/МК pill: colour and background change within 4-8 ms of the click after the fix (was 51-79 ms) | VERIFIED by live run (headless Chrome 154, normal speed) |
-| Real Google sign-in on localhost: first sign-in with the name screen, the "already has an account" pop-up, the "signs in with Google" pop-up, Set a password, log in both ways (`guides/phase-06-google.md` Part 1b) | NOT VERIFIED (Filip has not reported it) |
-| Google accepts `kvit-mk.pages.dev` and the real ID token passes the audience check | NOT VERIFIED until the real sign-in above |
-| Google app published ("In production") with the privacy link `https://kvit-mk.pages.dev/privacy`, and the phone test | NOT VERIFIED (after the merge, Filip) |
+| Real Google sign-in (the steps in `guides/phase-06-google.md`: name screen, pop-ups, Set a password, log in both ways) and the phone test | REPORTED by Filip (2026-10-03: "I did Google and the phone test"; no per-item notes, and which addresses he used is not recorded) |
+| Google accepts `kvit-mk.pages.dev` and the real ID token passes the audience check | REPORTED by Filip (follows from the real sign-in above; not seen by Claude) |
+| Google app published ("In production") with the home page `https://kvit-mk.pages.dev` and the privacy link `https://kvit-mk.pages.dev/privacy` (terms of service link left empty: optional) | REPORTED by Filip (2026-10-03, he saw "In production"; the page itself was not seen by Claude). `/privacy` is live on the real site (200, VERIFIED by live run) and CI on `main` is green (run 37120042395, VERIFIED by live run) |
 
 ## Known risks and leftovers
 - **Deploy order at the merge:** Cloudflare publishes the new site a few minutes before CI finishes the Render deploy. Until the API answers with `hasPassword`, the strict `parseMe` rejects the old answer and the site shows an error. Merge, then wait for the green CI.
@@ -39,10 +39,10 @@ Branch `feat/06-google-sign-in`, PR #8.
 - **The Google button's hidden-slot and overlap fixes lean on Google's undocumented markup;** if Google changes it, the button may jump again (a clipped, fixed-height box limits the damage).
 - BACKLOG holds: the Google 401 treated as "session ended", one Google callback per page, "Same as device" not followed live by the button (no longer relevant: the button ignores the theme), the 559 kB main bundle, a privacy contact email before Kvit grows, safe Google-to-password linking, changing the display name.
 
-## Filip's checklist after the merge
-1. CI green on `main` (migrations step finds nothing new, Render deploy live).
-2. Google Auth Platform → Branding: home page `https://kvit-mk.pages.dev`, privacy link `https://kvit-mk.pages.dev/privacy`. Audience → Publish app → **In production**.
-3. Phone test on the real site (`guides/phase-06-google.md` Part 2).
+## Filip's checklist after the merge (all done 2026-10-03)
+1. CI green on `main`: VERIFIED by live run (run 37120042395, push of the merge).
+2. Google Auth Platform → Branding: home page `https://kvit-mk.pages.dev`, privacy link `https://kvit-mk.pages.dev/privacy`. Audience → Publish app → **In production**: REPORTED by Filip.
+3. Phone test on the real site (`guides/phase-06-google.md` Part 2): REPORTED by Filip.
 
 ## Decisions and rejected alternatives (moved word for word from DECISIONS.md on 2026-10-03)
 ## 2026-10-03: Phase 6 (Google sign-in + privacy page): decision log, in progress
