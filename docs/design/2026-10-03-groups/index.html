@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit: groups, members and invite links (mockup)</title>
+<link rel="stylesheet" href="../2026-10-01-round-3/source/palette.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/base.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/app.css">
+<style>
+  html, body { background: #e9e6e1; color: #222; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; padding: 12px 16px 4px; font-size: .9rem; }
+  .bar .grp { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .bar b { margin-right: 4px; }
+  .bar button, .states button { color: #222; }
+  .bar button { border: 1px solid #999; background: #fff; border-radius: 8px; padding: 6px 10px; font: inherit; cursor: pointer; }
+  .bar button[aria-pressed='true'], .states button[aria-pressed='true'] { background: #222; color: #fff; border-color: #222; }
+  .note2 { max-width: 640px; margin: 4px auto 12px; text-align: center; font-size: .9rem; color: #444; padding: 0 16px; min-height: 2.6em; }
+  .stage { display: flex; justify-content: center; padding: 0 16px 32px; }
+  .phone { position: relative; width: 360px; height: 740px; overflow: hidden; border-radius: 28px; box-shadow: 0 6px 24px rgba(0,0,0,.25);
+    --bg: var(--orange-200); --ink: var(--orange-950); --ink-soft: var(--orange-900); --wordmark: var(--orange-deep);
+    --primary: var(--orange-deep); --primary-hover: var(--orange-900); --primary-ink: var(--white);
+    --secondary: var(--orange-50); --secondary-hover: var(--white); --secondary-ink: var(--orange-900);
+    --link: var(--orange-900); --link-line: var(--orange-deep); --track: var(--orange-50); --track-active: var(--white);
+    --track-shadow: var(--shadow); --field: var(--white); --field-ink: var(--orange-950); --field-line: var(--orange-line);
+    --field-line-focus: var(--orange-950); --ring: var(--orange-950); --card: var(--orange-50); --err: #a51d1d; --wine: #b71f1f; --wine-bg: #b71f1f; --wine-ink: #ffffff; --avatar-bg: var(--orange-950); --avatar-fg: var(--orange-50);
+    background: var(--bg); color: var(--ink); }
+  .phone.dark {
+    --bg: var(--dark-bg); --ink: var(--orange-50); --ink-soft: var(--orange-200); --wordmark: var(--dark-button);
+    --primary: var(--dark-button); --primary-hover: var(--orange-50); --primary-ink: var(--dark-bg);
+    --secondary: var(--dark-raised); --secondary-hover: var(--orange-900); --secondary-ink: var(--orange-50);
+    --link: var(--orange); --link-line: var(--orange); --track: var(--dark-field); --track-active: var(--dark-raised);
+    --track-shadow: transparent; --field: var(--dark-field); --field-ink: var(--orange-50); --field-line: var(--dark-line);
+    --field-line-focus: var(--orange); --ring: var(--orange); --card: var(--dark-raised); --err: #ff8a80; --wine: #ff6b64; --wine-bg: #d12828; --wine-ink: #ffffff; --avatar-bg: var(--dark-button); --avatar-fg: var(--dark-bg); }
+  .phone .screen { height: 740px; min-height: 0; overflow-y: auto; padding-bottom: 24px; scrollbar-width: none; }
+  .phone .screen::-webkit-scrollbar { display: none; }
+  .phone .screen.withbar { padding-bottom: 96px; }
+  .pad { padding-inline: 24px; }
+  .phone .form { padding-inline: 0; }
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .back { border: 0; background: transparent; color: var(--ink); font: inherit; font-weight: 600; min-height: 44px; cursor: pointer; padding: 0; }
+  .h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+  .h2 { font-size: 1.0625rem; font-weight: 700; margin: 20px 0 8px; }
+  .soft { color: var(--ink-soft); font-size: .9375rem; }
+  .small { font-size: .8125rem; color: var(--ink-soft); }
+  .emoji { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: var(--orange-deep); font-size: 1.4rem; flex: none; }
+  .emoji.big { width: 72px; height: 72px; border-radius: 22px; font-size: 2.2rem; }
+  .emoji.c2 { background: #5b7a3a; } .emoji.c3 { background: #7a4a8a; }
+  .row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border-radius: 16px; background: var(--card); color: var(--ink); border: 0; font: inherit; text-align: left; cursor: pointer; min-height: 64px; }
+  .row.static { cursor: default; min-height: 56px; }
+  .row .grow { flex: 1; min-width: 0; }
+  .row .t { font-weight: 600; }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .badge { display: inline-block; font-size: .75rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--track-active); color: var(--ink); margin-left: 6px; vertical-align: 1px; }
+  .badge.soft2 { background: transparent; border: 1px solid var(--field-line); font-weight: 600; color: var(--ink-soft); }
+  .mini { border: 0; border-radius: 999px; padding: 8px 14px; min-height: 40px; font: inherit; font-weight: 600; font-size: .9rem; background: var(--primary); color: var(--primary-ink); cursor: pointer; }
+  .mini.sec { background: var(--track-active); color: var(--ink); }
+  .dots { border: 0; background: transparent; color: var(--ink); width: 44px; height: 44px; border-radius: 999px; font-size: 1.4rem; cursor: pointer; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border: 1px solid var(--field-line); background: var(--field); color: var(--field-ink); border-radius: 999px; padding: 8px 14px; min-height: 44px; font: inherit; font-weight: 600; cursor: pointer; }
+  .chip[aria-pressed='true'] { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+  .chip.emo { font-size: 1.3rem; padding: 6px 10px; min-width: 48px; }
+  .card { background: var(--card); border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .card h3 { font-size: 1.125rem; font-weight: 700; }
+  .err { color: var(--err); font-weight: 600; margin-top: 8px; }
+  .link-box { background: var(--field); color: var(--field-ink); border: 1px solid var(--field-line); border-radius: 12px; padding: 10px 12px; font-size: .8125rem; word-break: break-all; }
+  .toast { position: absolute; left: 16px; right: 16px; bottom: 20px; background: var(--ink); color: var(--bg); border-radius: 14px; padding: 12px 14px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 12px; z-index: 5; }
+  .toast.dt { background: var(--wine-bg); color: var(--wine-ink); }
+  .toast.dt button { color: var(--wine-ink); }
+  .toast.up { bottom: 84px; }
+  .toast { animation: toastin 220ms cubic-bezier(.2, .8, .2, 1) both; }
+  .toast.out { animation: toastout 180ms ease-in both; }
+  @keyframes toastin { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+  @keyframes toastout { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(18px); } }
+  @media (prefers-reduced-motion: reduce) { .toast, .toast.out { animation-duration: 1ms; } }
+  .toast button { border: 0; background: transparent; color: var(--bg); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; min-height: 40px; padding: 0 6px; }
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; display: flex; }
+  .tabbar button { border: 0; background: transparent; font: inherit; cursor: pointer; color: var(--ink-soft); display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; font-size: .75rem; }
+  .tabbar svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .tb1, .tb3 { padding: 0 16px 14px; }
+  .tb1 .in, .tb3 .in { display: flex; width: 100%; padding: 4px; border-radius: 999px; background: var(--card); box-shadow: 0 2px 10px var(--track-shadow); }
+  .tb1 button { flex: 1; min-height: 52px; border-radius: 999px; flex-direction: column; gap: 0; }
+  .tb1 button { position: relative; }
+  .phone.dark .tb1 button[aria-current='page'] { background: #b54a00; color: #fff; box-shadow: none; }
+  .phone .danger { color: var(--wine); }
+  .tb1 button[aria-current='page'] { background: var(--track-active); color: var(--ink); box-shadow: 0 1px 3px var(--track-shadow); }
+  .tb2 { background: var(--card); padding: 0 8px 12px; border-top: 1px solid var(--field-line); }
+  .tb2 button { flex: 1; min-height: 60px; flex-direction: column; gap: 2px; position: relative; }
+  .tb2 button[aria-current='page'] { color: var(--ink); }
+  .tb2 button[aria-current='page']::before { content: ''; position: absolute; top: -1px; left: 30%; right: 30%; height: 3px; border-radius: 0 0 3px 3px; background: var(--primary); }
+  .tb3 .in { gap: 4px; }
+  .tb3 button { flex: 1; min-height: 52px; border-radius: 999px; }
+  .tb3 button .lb { display: none; font-size: .875rem; }
+  .tb3 button[aria-current='page'] { flex: 2.2; background: var(--primary); color: var(--primary-ink); }
+  .tb3 button[aria-current='page'] .lb { display: inline; }
+  .tb4, .tb5 { padding: 8px 16px 14px; gap: 8px; background: var(--bg); }
+  .tb4 button { flex: 1; min-height: 52px; border-radius: 16px; flex-direction: column; gap: 0; background: var(--secondary); color: var(--secondary-ink); }
+  .tb4 button[aria-current='page'] { background: var(--primary); color: var(--primary-ink); }
+  .tb5 button { flex: 1; height: 44px; border-radius: 999px; background: #fff; color: #1f1f1f; border: 1px solid #747775; font-size: .8125rem; }
+  .tb5 button svg { width: 18px; height: 18px; }
+  .tb5 button[aria-current='page'] { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+  .addlink { width: auto; justify-content: flex-start; padding-inline: 14px; min-height: 44px; font-size: .9375rem; }
+  .addrow { border: 2px dashed var(--field-line); background: transparent; color: var(--ink); font-weight: 600; justify-content: center; }
+  .addin { display: flex; align-items: center; gap: 8px; width: 100%; }
+  .addin .input { flex: 1; }
+  .round { border: 0; width: 52px; height: 52px; border-radius: 999px; background: var(--primary); color: var(--primary-ink); font-size: 1.3rem; cursor: pointer; flex: none; }
+  .fold .chev { transition: transform .15s; }
+  .fold[aria-expanded='true'] .chev { transform: rotate(90deg); }
+  .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: flex-end; z-index: 4; }
+  .sheet2 { background: var(--card); color: var(--ink); width: 100%; border-radius: 24px 24px 0 0; padding: 20px 20px 24px; display: flex; flex-direction: column; gap: 8px; }
+  .sheet2 h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: 4px; }
+  .center { text-align: center; align-items: center; }
+  .g { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 40px; margin: 4px 0; font: 500 .9375rem/1 system-ui, sans-serif; cursor: pointer; border: 1px solid #747775; background: #fff; color: #1f1f1f; border-radius: 999px; }
+  .g svg { width: 18px; height: 18px; }
+  .or { text-align: center; margin: 2px 0; color: var(--ink-soft); font-size: .8125rem; font-weight: 600; }
+  .states { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 auto 12px; max-width: 640px; }
+  .states button { border: 1px solid #999; background: #fff; border-radius: 8px; padding: 4px 8px; font: inherit; font-size: .8rem; cursor: pointer; }
+  .states button[aria-pressed='true'] { background: #222; color: #fff; border-color: #222; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="grp"><b>Screen:</b><span id="tabs"></span></div>
+</div>
+<div class="bar">
+  <div class="grp"><b>Language:</b><button data-lang="en" aria-pressed="true">EN</button><button data-lang="mk" aria-pressed="false">МК</button></div>
+  <div class="grp"><b>Look:</b><button data-theme="light" aria-pressed="true">Light</button><button data-theme="dark" aria-pressed="false">Dark</button></div>
+  <div class="grp"><b>Navigation:</b><button data-nav="A" aria-pressed="true">A: bottom bar</button><button data-nav="B" aria-pressed="false">B: Home shows groups</button></div>
+  <div class="grp"><b>View as:</b><button data-who="Filip" aria-pressed="true">Filip (owner)</button><button data-who="Ana" aria-pressed="false">Ana (member)</button></div>
+  <div class="grp"><button data-act="reset">Reset demo</button></div>
+</div>
+<p class="note2" id="hint"></p>
+<div class="states" id="states"></div>
+<div class="stage"><div class="phone" id="phone"><div id="view" style="display:contents"></div></div></div>
+<script>
+var T = {
+  en: {
+    home: 'Home', groups: 'Groups', settings: 'Settings', greeting: 'Hello, Filip', homeEmpty: 'Your groups and balances will show up here.',
+    newGroup: 'New group', groupsEmpty: 'You have no groups yet. Create one, or open a link a friend sent you.',
+    recentlyDeleted: 'Recently deleted', restore: 'Restore', restoreUntil: 'Can be restored until 2 Nov 2026', restored: 'Group restored',
+    groupName: 'Group name', namePh: 'Greece trip', emoji: 'Emoji', currency: 'Currency', currencyHint: 'New expenses use this currency.',
+    createGroup: 'Create group', nameBad: 'Enter a name (up to 60 characters).', back: '‹ Back', close: 'Close',
+    addPeople: 'Add people', addPeopleNo: 'No Kvit? Add them as a name.', addPeopleHas: 'Have Kvit? Share the link and they join with their own account.',
+    shareLink: 'Share invite link', addName: 'Add a name', copied: 'Link copied', members: 'Members', groupSettings: 'Group settings',
+    soon: 'Expenses will show up here soon.',
+    owner: 'Owner', you: 'You', nameOnly: 'Just a name', tookName: 'Took the name “{n}”',
+    nameLabel: 'Name', nameHint: 'For someone without Kvit, like Grandma.', add: 'Add', nameTaken: 'There\'s already a {n} in this group.',
+    invite: 'Invite link', share: 'Share', copy: 'Copy link', resetLink: 'Reset link', resetDone: 'Link reset. The old link no longer works.', undo: 'Undo',
+    makeOwner: 'Make owner', removeFrom: 'Remove from group', undoClaim: 'Undo claim', thatsMe: 'That\'s me',
+    removedTitle: 'Removed', letBack: 'Let back in', removedToast: 'Removed: {n}', backToast: '{n} is back in the group', ownerToast: '{n} is now the owner',
+    claimUndone: '{n} stays in the group. “{c}” is just a name again.', meToast: 'You are now “{n}” in this group.',
+    leave: 'Leave group', leaveOwner: 'You are the owner. Make someone else the owner before you leave.', leftToast: 'You left {g}',
+    save: 'Save', saved: 'Saved', deleteGroup: 'Delete group', deletedToast: 'Group deleted',
+    invitedTo: 'You\'re invited to {g}', inGroup: 'In the group', join: 'Join', areYou: 'Are you one of these?', imNew: 'No, I\'m new',
+    joinedToast: 'You joined {g}', outHint: 'Create an account or log in to join.', google: 'Continue with Google', signup: 'Sign up with email', have: 'I already have an account',
+    oldLink: 'This invite link no longer works. Ask for a new one.', removedMsg: 'You were removed from {g}. Ask the owner to let you back in.',
+    limit: 'Too many tries. Wait a few minutes and try again.', alreadyIn: 'You are already in {g}.', openGroup: 'Open group',
+    signupTitle: 'Sign up', email: 'Email', password: 'Password', pwHint: 'At least 8 characters, one capital letter and one number.', createAccount: 'Create account',
+    nameErr: 'Enter your name (up to 60 characters).', showPw: 'Show password',
+    demoGroup: 'Greece trip', demoGroup2: 'Flat 4B', demoGroup3: 'Birthday dinner', grandma: 'Grandma',
+    people1: '1 person', peopleN: '{n} people',
+    finished: 'Finished', finishedRow: 'Finished · read-only', fin1: 'Summer 2025', fin2: 'Ski trip', trashIntro: 'Groups you delete stay here for 30 days. Only the group\'s owner can restore one.', trashEmpty: 'Nothing was deleted in the last 30 days.', addNameRow: '+ Add a name', nameInputPh: 'Name'
+  },
+  mk: {
+    home: 'Почетна', groups: 'Групи', settings: 'Поставки', greeting: 'Здраво, Filip', homeEmpty: 'Твоите групи и салда ќе се појават овде.',
+    newGroup: 'Нова група', groupsEmpty: 'Сè уште немаш групи. Направи една или отвори врска што ти ја испратил пријател.',
+    recentlyDeleted: 'Неодамна избришани', restore: 'Врати', restoreUntil: 'Може да се врати до 2 ноември 2026', restored: 'Групата е вратена',
+    groupName: 'Име на групата', namePh: 'Патување во Грција', emoji: 'Емоџи', currency: 'Валута', currencyHint: 'Новите трошоци ја користат оваа валута.',
+    createGroup: 'Направи група', nameBad: 'Внеси име (најмногу 60 знаци).', back: '‹ Назад', close: 'Затвори',
+    addPeople: 'Додај луѓе', addPeopleNo: 'Немаат Kvit? Додај ги како име.', addPeopleHas: 'Имаат Kvit? Сподели ја врската и ќе се придружат со свој профил.',
+    shareLink: 'Сподели ја врската за покана', addName: 'Додај име', copied: 'Врската е копирана', members: 'Членови', groupSettings: 'Поставки на групата',
+    soon: 'Овде наскоро ќе се појавуваат трошоците.',
+    owner: 'Сопственик', you: 'Ти', nameOnly: 'Само име', tookName: 'Го зеде името „{n}“',
+    nameLabel: 'Име', nameHint: 'За некој без Kvit, на пример баба.', add: 'Додај', nameTaken: 'Во оваа група веќе има {n}.',
+    invite: 'Врска за покана', share: 'Сподели', copy: 'Копирај ја врската', resetLink: 'Ресетирај ја врската', resetDone: 'Врската е ресетирана. Старата повеќе не работи.', undo: 'Врати',
+    makeOwner: 'Направи сопственик', removeFrom: 'Отстрани од групата', undoClaim: 'Врати го името', thatsMe: 'Тоа сум јас',
+    removedTitle: 'Отстранети', letBack: 'Врати во групата', removedToast: 'Отстрането: {n}', backToast: 'Назад во групата: {n}', ownerToast: '{n} сега е сопственик',
+    claimUndone: '{n} останува во групата. „{c}“ повторно е само име.', meToast: 'Сега си „{n}“ во оваа група.',
+    leave: 'Напушти ја групата', leaveOwner: 'Ти си сопственик. Направи некој друг сопственик пред да ја напуштиш.', leftToast: 'Ја напушти групата „{g}“',
+    save: 'Зачувај', saved: 'Зачувано', deleteGroup: 'Избриши ја групата', deletedToast: 'Групата е избришана',
+    invitedTo: 'Те поканија во групата „{g}“', inGroup: 'Во групата', join: 'Придружи се', areYou: 'Дали си некој од овие?', imNew: 'Не, прв пат сум тука',
+    joinedToast: 'Се придружи на групата „{g}“', outHint: 'Направи профил или најави се за да се придружиш.', google: 'Продолжи со Google', signup: 'Регистрирај се со е-пошта', have: 'Веќе имам профил',
+    oldLink: 'Оваа врска за покана повеќе не работи. Побарај нова.', removedMsg: 'Те отстранија од групата „{g}“. Побарај од сопственикот да те врати.',
+    limit: 'Премногу обиди. Почекај неколку минути и обиди се повторно.', alreadyIn: 'Веќе си во групата „{g}“.', openGroup: 'Отвори ја групата',
+    signupTitle: 'Регистрација', email: 'Е-пошта', password: 'Лозинка', pwHint: 'Најмалку 8 знаци, една голема буква и една цифра.', createAccount: 'Направи профил',
+    nameErr: 'Внеси го твоето име (најмногу 60 знаци).', showPw: 'Покажи ја лозинката',
+    demoGroup: 'Патување во Грција', demoGroup2: 'Стан 4Б', demoGroup3: 'Роденденска вечера', grandma: 'Баба',
+    people1: '1 лице', peopleN: '{n} лица',
+    finished: 'Завршени', finishedRow: 'Завршена · само за читање', fin1: 'Лето 2025', fin2: 'Скијање', trashIntro: 'Групите што ќе ги избришеш остануваат тука 30 дена. Само сопственикот на групата може да ја врати.', trashEmpty: 'Во последните 30 дена ништо не е избришано.', addNameRow: '+ Додај име', nameInputPh: 'Име'
+  }
+};
+var HINTS = {
+  home: 'Chosen: bottom bar, the pill look; tabs are switched by tapping only (no swiping). Navigation A: a bottom bar (Home · Groups · Settings) on the main screens. Navigation B: no bar, Home itself lists your groups with a New group button, and the avatar opens Settings (like today). Pick one with the "Navigation" buttons above.',
+  groups: 'Screen 6, changed after Filip\'s feedback: open groups first, then a collapsed "Finished" row (tap to open; groups can only be finished from Phase 10, so in Phase 7 this row only appears when one exists), then a quiet "Recently deleted" link that opens its own screen (see the tab "Recently deleted"). Delete the group in Group settings to see it arrive there.',
+  newgroup: 'Screen 7 (the "Group" part; "One bill" arrives with Phase 8). Name, emoji (a suggestion is already picked), currency chip, Create. Try Create with an empty name.',
+  group: 'Screen 8 shell. After "Create group" the "Add people" card shows (it shows while you are the only person). The expense tabs come with Phase 8.',
+  members: 'Screen 14. "+ Add a name" is a quiet link under the names; it opens a sheet. Switch "View as" to Ana to see what a normal member can do. Try adding "marko" (a name already there) and an empty name. Reset link, Remove and Delete show an Undo toast for 4 seconds; it slides up from the bottom and slides away.',
+  settings: 'Screen 15. Owner: name, emoji, currency, Delete group. Everyone else: only Leave group. (Switch "View as".)',
+  join: 'Screen 16. Pick a situation with the buttons under this text. "Logged out" leads to the (unchanged) sign-up and then returns to this card.',
+  trash: 'New screen, opened from the quiet link at the bottom of the Groups list (or Home in navigation B). Only groups you own, kept 30 days, Restore.',
+  signup: 'The existing Sign up screen, unchanged (eye button on the password box). After "Create account" it returns to the invite card.'
+};
+var TABS = [['home', 'Home'], ['groups', 'Groups list'], ['trash', 'Recently deleted'], ['newgroup', 'New group'], ['group', 'Group'], ['members', 'Members'], ['settings', 'Group settings'], ['join', 'Join link']];
+var JOIN_STATES = [['new', 'Logged in'], ['claim', 'Claim step'], ['out', 'Logged out'], ['member', 'Already a member'], ['old', 'Old link'], ['removed', 'Removed'], ['limit', 'Too many tries']];
+var EMOJIS = ['🏖️', '✈️', '🏠', '🍕', '🎉', '🚗'];
+var G_LOGO = '<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.2C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.1 1.4-4.9 2.3-8.2 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>';
+var EYE = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+var st, uid = 100, toastTimer = null;
+function freshState() {
+  return {
+    screen: 'home', lang: st ? st.lang : 'en', dark: st ? st.dark : false, nav: st ? st.nav : 'A', vname: st ? st.vname : 'Filip',
+    join: 'new', joinFrom: 'new', sheet: null, toast: null, err: null, hasExpenses: false, left: false, tb: 1, addSheet: false, addDraft: '', finOpen: false, bdBack: false,
+    g: { name: null, emoji: '🏖️', cur: 'MKD', deleted: false, link: 'q3Fz8mXk2Lw9', prevLink: null,
+      members: [{ id: 'f', name: 'Filip', acct: 1, owner: 1 }, { id: 'a', name: 'Ana', acct: 1 }, { id: 'm', name: 'Marko' }, { id: 'g', name: '@grandma' }, { id: 'd', name: 'Darko', display: 'Dana', acct: 1 }],
+      removed: [{ id: 'b', name: 'Bojan', acct: 1 }], fresh: false },
+    draft: { name: '', emoji: '🏖️', cur: 'MKD' }
+  };
+}
+function tr(k, v) { var s = T[st.lang][k]; if (v) { for (var x in v) { s = s.split('{' + x + '}').join(v[x]); } } return s; }
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+function dn(m) { var n = m.display || m.name; return n === '@grandma' ? tr('grandma') : n; }
+function gname() { return st.g.name || tr('demoGroup'); }
+function people(n) { return n === 1 ? tr('people1') : tr('peopleN', { n: n }); }
+function me() { return st.g.members.filter(function (m) { return dn(m) === st.vname || m.display === st.vname; })[0]; }
+function isOwner() { var m = me(); return !!(m && m.owner); }
+function find(id) { return st.g.members.filter(function (m) { return m.id === id; })[0]; }
+function nameOnly() { return st.g.members.filter(function (m) { return !m.acct; }); }
+function emo(e, cls) { return '<span class="emoji ' + (cls || '') + '">' + e + '</span>'; }
+function head(backTo, title) { return '<header class="screen-header" style="padding-inline:0"><button class="back" data-act="goto" data-to="' + backTo + '">' + tr('back') + '</button><h1 class="title">' + esc(title) + '</h1></header>'; }
+var lastScreen = null;
+var TOAST_MS = 4000, TOAST_OUT_MS = 180, toastSeq = 0;
+function toast(text, undo, up, danger) {
+  st.toast = { id: ++toastSeq, text: text, undo: undo || null, danger: !!danger };
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () {
+    var el = document.querySelector('#phone .toast');
+    if (el) { el.classList.add('out'); }
+    setTimeout(function () { st.toast = null; if (el && el.parentNode) { el.remove(); } render(); }, TOAST_OUT_MS);
+  }, TOAST_MS - TOAST_OUT_MS);
+}
+function toastLifted() { return st.nav === 'A' && (st.screen === 'home' || st.screen === 'groups' || st.screen === 'trash'); }
+function toastElement() {
+  var t = st.toast, el = document.createElement('div');
+  el.className = 'toast' + (t.danger ? ' dt' : '');
+  el.dataset.id = t.id;
+  el.innerHTML = '<span>' + esc(t.text) + '</span>' + (t.undo ? '<button data-act="undo" data-u="' + t.undo + '">' + tr('undo') + '</button>' : '');
+  return el;
+}
+var ICONS = {
+  home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  groups: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2c2.7 0 5 2.2 5 5.1"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>'
+};
+function bar() {
+  if (st.nav !== 'A') { return ''; }
+  var on = st.screen;
+  function tab(key, act) { return '<button ' + act + ' ' + ((on === key || (key === 'groups' && on === 'trash')) ? 'aria-current="page"' : '') + '>' + ICONS[key] + '<span class="lb">' + tr(key) + '</span></button>'; }
+  var btns = tab('home', 'data-act="goto" data-to="home"') + tab('groups', 'data-act="goto" data-to="groups"') + tab('settings', 'data-act="toast" data-text="' + esc(tr('settings')) + '"');
+  if (st.tb === 2 || st.tb >= 4) { return '<nav class="tabbar tb' + st.tb + '">' + btns + '</nav>'; }
+  return '<nav class="tabbar tb' + st.tb + '"><div class="in">' + btns + '</div></nav>';
+}
+function groupRows() {
+  var g = st.g, h = '';
+  if (!g.deleted && !st.left) { h += '<button class="row" data-act="goto" data-to="group">' + emo(g.emoji) + '<span class="grow"><span class="t">' + esc(gname()) + '</span><br><span class="small">' + people(g.members.length) + ' · ' + g.cur + '</span></span><span aria-hidden="true">›</span></button>'; }
+  h += '<button class="row" data-act="toast" data-text="(another group)">' + emo('🏠', 'c2') + '<span class="grow"><span class="t">' + tr('demoGroup2') + '</span><br><span class="small">' + people(3) + ' · MKD</span></span><span aria-hidden="true">›</span></button>';
+  if (st.bdBack) { h += '<button class="row" data-act="toast" data-text="(another group)">' + emo('🍕', 'c3') + '<span class="grow"><span class="t">' + tr('demoGroup3') + '</span><br><span class="small">' + people(4) + ' · MKD</span></span><span aria-hidden="true">›</span></button>'; }
+  return '<div class="stack">' + h + '</div>';
+}
+function sections() {
+  var h = '<div class="stack" style="margin-top:20px"><button class="row fold" data-act="finopen" aria-expanded="' + st.finOpen + '" style="min-height:52px"><span class="grow t">' + tr('finished') + ' <span class="badge soft2">2</span></span><span class="chev" aria-hidden="true">›</span></button>';
+  if (st.finOpen) {
+    h += '<button class="row" data-act="toast" data-text="(a finished group opens read-only)">' + emo('☀️', 'c2') + '<span class="grow"><span class="t">' + tr('fin1') + '</span><br><span class="small">' + tr('finishedRow') + '</span></span><span aria-hidden="true">›</span></button>' +
+      '<button class="row" data-act="toast" data-text="(a finished group opens read-only)">' + emo('⛷️', 'c3') + '<span class="grow"><span class="t">' + tr('fin2') + '</span><br><span class="small">' + tr('finishedRow') + '</span></span><span aria-hidden="true">›</span></button>';
+  }
+  return h + '</div><div style="margin-top:12px;text-align:center"><button class="btn btn-link" data-act="goto" data-to="trash" style="min-height:44px;width:auto;display:inline-flex;font-size:.9375rem">' + tr('recentlyDeleted') + ' ›</button></div>';
+}
+function trashRows() {
+  var g = st.g, h = '';
+  if (g.deleted) { h += '<div class="row static">' + emo(g.emoji) + '<span class="grow"><span class="t">' + esc(gname()) + '</span><br><span class="small">' + tr('restoreUntil') + '</span></span><button class="mini" data-act="restoregroup">' + tr('restore') + '</button></div>'; }
+  if (!st.bdBack) { h += '<div class="row static">' + emo('🍕', 'c3') + '<span class="grow"><span class="t">' + tr('demoGroup3') + '</span><br><span class="small">' + tr('restoreUntil') + '</span></span><button class="mini" data-act="restorebd">' + tr('restore') + '</button></div>'; }
+  return h ? '<div class="stack">' + h + '</div>' : '<p class="soft" style="text-align:center;margin-top:32px">' + tr('trashEmpty') + '</p>';
+}
+function sTrash() {
+  return '<main class="screen pad ' + (st.nav === 'A' ? 'withbar' : '') + '">' + head('groups', tr('recentlyDeleted')) + '<p class="soft" style="margin-bottom:16px">' + tr('trashIntro') + '</p>' + trashRows() + '</main>' + bar();
+}
+function field(id, label, type, value, hint) {
+  var input = '<input class="input" id="' + id + '" type="' + type + '" value="' + esc(value || '') + '"' + (type === 'password' ? ' style="padding-right:56px"' : '') + '>';
+  if (type === 'password') { input = '<div style="position:relative">' + input + '<button type="button" data-act="eye" aria-label="' + esc(tr('showPw')) + '" style="position:absolute;right:4px;top:6px;width:44px;height:44px;border:0;border-radius:999px;background:transparent;color:var(--ink-soft);display:grid;place-items:center;cursor:pointer">' + EYE + '</button></div>'; }
+  return '<div class="field"><label class="label" for="' + id + '">' + label + '</label>' + input + (hint ? '<p class="hint">' + hint + '</p>' : '') + '</div>';
+}
+function emojiChips(cur, act) { return '<div class="chips">' + EMOJIS.map(function (e) { return '<button class="chip emo" aria-pressed="' + (cur === e) + '" data-act="' + act + '" data-v="' + e + '">' + e + '</button>'; }).join('') + '</div>'; }
+function curChips(cur, act) { return '<div class="chips">' + ['MKD', 'EUR'].map(function (c) { return '<button class="chip" aria-pressed="' + (cur === c) + '" data-act="' + act + '" data-v="' + c + '">' + c + '</button>'; }).join('') + '</div>'; }
+function errLine() { return st.err ? '<p class="err" role="alert">' + st.err + '</p>' : ''; }
+
+function sHome() {
+  var h = '<main class="screen pad ' + (st.nav === 'A' ? 'withbar' : '') + '"><div class="top" style="min-height:56px"><h1 class="h1" style="font-size:1.5rem">' + tr('greeting') + '</h1><button class="avatar" data-act="toast" data-text="' + esc(tr('settings')) + '" style="width:44px;height:44px;border-radius:999px;border:0;background:var(--avatar-bg);color:var(--avatar-fg);font-weight:700">F</button></div>';
+  if (st.nav === 'A') { h += '<p class="soft" style="margin-top:48px;text-align:center">' + tr('homeEmpty') + '</p>'; }
+  else { h += '<div style="margin-top:12px">' + groupRows() + '</div><div style="margin-top:16px"><button class="btn btn-primary" data-act="goto" data-to="newgroup">' + tr('newGroup') + '</button></div>' + sections(); }
+  return h + '</main>' + bar();
+}
+function sGroups() {
+  return '<main class="screen pad ' + (st.nav === 'A' ? 'withbar' : '') + '"><div class="top" style="min-height:56px"><h1 class="h1">' + tr('groups') + '</h1></div>' + groupRows() +
+    '<div style="margin-top:16px"><button class="btn btn-primary" data-act="goto" data-to="newgroup">' + tr('newGroup') + '</button></div>' + sections() + '</main>' + bar();
+}
+function sNewGroup() {
+  var d = st.draft;
+  return '<main class="screen pad">' + head('groups', tr('newGroup')) + '<form class="form" onsubmit="return false"><div class="fields">' +
+    field('gname', tr('groupName'), 'text', d.name) +
+    '<div class="field"><span class="label">' + tr('emoji') + '</span>' + emojiChips(d.emoji, 'draftemoji') + '</div>' +
+    '<div class="field"><span class="label">' + tr('currency') + '</span>' + curChips(d.cur, 'draftcur') + '<p class="hint">' + tr('currencyHint') + '</p></div></div>' + errLine() +
+    '<div class="actions" style="margin-top:16px"><button class="btn btn-primary" data-act="create">' + tr('createGroup') + '</button></div></form></main>';
+}
+function sGroup() {
+  var g = st.g, owner = isOwner(), only = g.members.length <= 1;
+  var h = '<main class="screen pad"><header class="screen-header" style="padding-inline:0"><button class="back" data-act="goto" data-to="groups">' + tr('back') + '</button></header>' +
+    '<div class="stack" style="align-items:center;text-align:center;margin-bottom:12px">' + emo(g.emoji, 'big') + '<h1 class="h1">' + esc(gname()) + '</h1><span class="small">' + people(g.members.length) + ' · ' + g.cur + '</span></div>' +
+    '<div class="chips" style="justify-content:center;margin-bottom:16px"><button class="chip" data-act="goto" data-to="members">' + tr('members') + '</button><button class="chip" data-act="goto" data-to="settings">' + tr('groupSettings') + '</button></div>';
+  if (only) { h += '<div class="card"><h3>' + tr('addPeople') + '</h3><p class="soft">' + tr('addPeopleNo') + '</p><button class="btn btn-secondary" data-act="goto" data-to="members" style="background:var(--track-active)">' + tr('addName') + '</button><p class="soft" style="margin-top:6px">' + tr('addPeopleHas') + '</p><button class="btn btn-primary" data-act="share">' + tr('shareLink') + '</button></div>'; }
+  h += '<p class="soft" style="text-align:center;margin-top:40px">' + tr('soon') + '</p></main>';
+  return h;
+}
+function rowSub(m) {
+  if (!m.acct) { return '<span class="small">' + tr('nameOnly') + '</span>'; }
+  if (m.display && m.name !== m.display && isOwner()) { return '<span class="small">' + tr('tookName', { n: m.name }) + '</span>'; }
+  return '';
+}
+function sMembers() {
+  var g = st.g, owner = isOwner(), meRow = me(), h = '<main class="screen pad">' + head('group', tr('members')) + '<div class="stack">';
+  g.members.forEach(function (m) {
+    var badges = (m.owner ? '<span class="badge">' + tr('owner') + '</span>' : '') + (meRow && m.id === meRow.id ? '<span class="badge soft2">' + tr('you') + '</span>' : '');
+    var act = '';
+    if (!m.acct && meRow && !st.hasExpenses) { act += '<button class="mini sec" data-act="thatsme" data-id="' + m.id + '">' + tr('thatsMe') + '</button>'; }
+    if (owner && !m.owner) { act += '<button class="dots" aria-label="⋯" data-act="sheet" data-id="' + m.id + '">⋯</button>'; }
+    h += '<div class="row static"><span class="grow"><span class="t">' + esc(dn(m)) + '</span>' + badges + '<br>' + rowSub(m) + '</span>' + act + '</div>';
+  });
+  h += '</div><button class="btn btn-link addlink" data-act="addsheet">' + tr('addNameRow') + '</button>';
+  h += '<h2 class="h2">' + tr('invite') + '</h2><div class="card"><div class="link-box">kvit-mk.pages.dev/join/' + g.link + '</div><div style="display:flex;gap:8px"><button class="btn btn-primary" data-act="share" style="min-height:48px">' + tr('share') + '</button><button class="btn btn-secondary" data-act="copy" style="min-height:48px">' + tr('copy') + '</button></div>' +
+    (owner ? '<button class="btn btn-link danger" data-act="resetlink" style="min-height:44px">' + tr('resetLink') + '</button>' : '') + '</div>';
+  if (owner && g.removed.length) {
+    h += '<h2 class="h2">' + tr('removedTitle') + '</h2><div class="stack">' + g.removed.map(function (m) { return '<div class="row static"><span class="grow"><span class="t">' + esc(dn(m)) + '</span></span><button class="mini" data-act="letback" data-id="' + m.id + '">' + tr('letBack') + '</button></div>'; }).join('') + '</div>';
+  }
+  if (!owner) { h += '<div style="margin-top:24px"><button class="btn btn-secondary danger" data-act="leave">' + tr('leave') + '</button></div>'; }
+  return h + '<div style="height:24px"></div></main>';
+}
+function sSettings() {
+  var g = st.g, owner = isOwner(), h = '<main class="screen pad">' + head('group', tr('groupSettings')) + '<form class="form" onsubmit="return false">';
+  if (owner) {
+    h += '<div class="fields">' + field('sname', tr('groupName'), 'text', gname()) + '<div class="field"><span class="label">' + tr('emoji') + '</span>' + emojiChips(g.emoji, 'gemoji') + '</div>' +
+      '<div class="field"><span class="label">' + tr('currency') + '</span>' + curChips(g.cur, 'gcur') + '<p class="hint">' + tr('currencyHint') + '</p></div></div>' + errLine() +
+      '<div class="actions" style="margin-top:16px"><button class="btn btn-primary" data-act="savesettings">' + tr('save') + '</button><button class="btn btn-secondary danger" data-act="deletegroup" style="margin-top:8px">' + tr('deleteGroup') + '</button></div>';
+  }
+  h += '<div style="margin-top:' + (owner ? '24' : '8') + 'px">' + (owner ? '<p class="soft" style="margin-bottom:8px">' + tr('leaveOwner') + '</p><button class="btn btn-secondary danger" disabled style="opacity:.5;cursor:not-allowed">' + tr('leave') + '</button>' : '<button class="btn btn-secondary danger" data-act="leave">' + tr('leave') + '</button>') + '</div></form></main>';
+  return h;
+}
+function sJoin() {
+  var s = st.join, g = gname(), names = st.g.members.map(dn).join(', '), h = '<main class="screen pad" style="display:flex;flex-direction:column"><div class="top" style="min-height:56px"><span></span><span></span></div><div class="stack center" style="margin-top:24px">';
+  if (s === 'new' || s === 'out' || s === 'claim') {
+    h += emo(st.g.emoji, 'big') + '<h1 class="h1">' + tr('invitedTo', { g: esc(g) }) + '</h1>' + '<p class="soft"><b>' + tr('inGroup') + ':</b> ' + esc(names) + '</p></div>';
+    if (s === 'new') { h += '<div class="actions" style="margin-top:auto"><button class="btn btn-primary btn-main" data-act="join">' + tr('join') + '</button></div>'; }
+    if (s === 'claim') {
+      h += '<div class="card" style="margin-top:20px"><h3>' + tr('areYou') + '</h3><div class="chips">' + nameOnly().map(function (m) { return '<button class="chip" data-act="claimjoin">' + esc(dn(m)) + '</button>'; }).join('') + '<button class="chip" data-act="claimjoin">' + tr('imNew') + '</button></div></div>';
+    }
+    if (s === 'out') {
+      h += '<p class="soft center" style="margin-top:20px;text-align:center">' + tr('outHint') + '</p><div class="actions" style="margin-top:auto"><button class="g" data-act="toast" data-text="(Google opens here, then you come back to this card)">' + G_LOGO + '<span>' + tr('google') + '</span></button><div class="or">' + (st.lang === 'en' ? 'or' : 'или') + '</div><button class="btn btn-secondary" data-act="goto" data-to="signup">' + tr('signup') + '</button><button class="btn btn-link" data-act="toast" data-text="(the existing Log in screen, then back here)">' + tr('have') + '</button></div>';
+    }
+    return h + '</main>';
+  }
+  if (s === 'member') { return h + emo(st.g.emoji, 'big') + '<p class="soft">' + tr('alreadyIn', { g: esc(g) }) + '</p></div><div class="actions" style="margin-top:auto"><button class="btn btn-primary" data-act="goto" data-to="group">' + tr('openGroup') + '</button></div></main>'; }
+  var msg = s === 'old' ? tr('oldLink') : s === 'removed' ? tr('removedMsg', { g: esc(g) }) : tr('limit');
+  return h + '<p class="err" role="alert" style="font-size:1.0625rem">' + msg + '</p></div><div class="actions" style="margin-top:auto"><button class="btn btn-secondary" data-act="goto" data-to="home">' + tr('home') + '</button></div></main>';
+}
+function sSignup() {
+  return '<main class="screen pad">' + head('join', tr('signupTitle')) + '<form class="form" onsubmit="return false"><div class="fields">' + field('su-name', tr('nameLabel'), 'text', '') + field('su-email', tr('email'), 'email', '') + field('su-pw', tr('password'), 'password', '', tr('pwHint')) + '</div>' + errLine() +
+    '<div class="actions" style="margin-top:16px"><button class="btn btn-primary" data-act="signup">' + tr('createAccount') + '</button></div></form></main>';
+}
+function sheetHtml() {
+  if (st.addSheet) {
+    return '<div class="scrim"><div class="sheet2"><h3>' + tr('addName') + '</h3><form onsubmit="return false">' + field('newname', tr('nameLabel'), 'text', st.addDraft, tr('nameHint')) + errLine() + '<button class="btn btn-primary" data-act="addname" style="margin-top:12px">' + tr('add') + '</button></form><button class="btn btn-link" data-act="closesheet">' + tr('close') + '</button></div></div>';
+  }
+  var m = st.sheet && find(st.sheet); if (!m) { return ''; }
+  var b = '';
+  if (m.acct) { b += '<button class="btn btn-secondary" data-act="makeowner" data-id="' + m.id + '">' + tr('makeOwner') + '</button>'; }
+  if (m.acct && m.display && m.name !== m.display) { b += '<button class="btn btn-secondary" data-act="undoclaim" data-id="' + m.id + '">' + tr('undoClaim') + '</button>'; }
+  b += '<button class="btn btn-secondary danger" data-act="remove" data-id="' + m.id + '">' + tr('removeFrom') + '</button>';
+  return '<div class="scrim" data-act="closesheet"><div class="sheet2"><h3>' + esc(dn(m)) + '</h3>' + b + '<button class="btn btn-link" data-act="closesheet">' + tr('close') + '</button></div></div>';
+}
+function render() {
+  var h = '', s = st.screen;
+  if (s === 'home') { h = sHome(); } if (s === 'groups') { h = sGroups(); } if (s === 'newgroup') { h = sNewGroup(); } if (s === 'group') { h = sGroup(); }
+  if (s === 'members') { h = sMembers(); } if (s === 'settings') { h = sSettings(); } if (s === 'trash') { h = sTrash(); } if (s === 'join') { h = sJoin(); } if (s === 'signup') { h = sSignup(); }
+  h += sheetHtml();
+  var p = document.getElementById('phone'), v = document.getElementById('view'), shown = p.querySelector('.toast');
+  var oldScreen = v.querySelector('.screen'), keptTop = oldScreen ? oldScreen.scrollTop : 0;
+  p.className = 'phone' + (st.dark ? ' dark' : ''); v.innerHTML = h;
+  var newScreen = v.querySelector('.screen');
+  if (newScreen && lastScreen === s) { newScreen.scrollTop = keptTop; }
+  lastScreen = s;
+  if (st.toast) {
+    if (!shown || shown.dataset.id !== String(st.toast.id)) { if (shown) { shown.remove(); } shown = toastElement(); p.appendChild(shown); }
+    shown.classList.toggle('up', toastLifted());
+  } else if (shown && !shown.classList.contains('out')) {
+    shown.classList.add('out');
+    setTimeout(function () { if (shown.parentNode) { shown.remove(); } }, TOAST_OUT_MS);
+  }
+  document.getElementById('hint').textContent = HINTS[s === 'signup' ? 'signup' : s === 'settings' ? 'settings' : s] || '';
+  document.getElementById('states').innerHTML = s === 'join' ? JOIN_STATES.map(function (x) { return '<button data-js="' + x[0] + '" aria-pressed="' + (st.join === x[0]) + '">' + x[1] + '</button>'; }).join('') : (s === 'members' ? '<button data-act="hasexp" aria-pressed="' + st.hasExpenses + '">Phase 8 preview: I already have expenses (hides “That\'s me”)</button>' : '');
+  document.querySelectorAll('#tabs button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.tab === s)); });
+  document.querySelectorAll('.bar [data-lang]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.lang === st.lang)); });
+  document.querySelectorAll('.bar [data-theme]').forEach(function (b) { b.setAttribute('aria-pressed', String((b.dataset.theme === 'dark') === st.dark)); });
+  document.querySelectorAll('.bar [data-nav]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.nav === st.nav)); });
+  var nn = document.getElementById('newname'); if (nn && (st.addSheet || st.err)) { nn.focus(); }
+  document.querySelectorAll('.bar [data-who]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.who === st.vname)); });
+  document.documentElement.lang = st.lang;
+}
+function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function doAddName() {
+  var g = st.g, nm = val('newname');
+  st.addDraft = nm;
+  if (!nm || nm.length > 60) { st.err = tr('nameBad'); }
+  else if (g.members.filter(function (x) { return dn(x).toLowerCase() === nm.toLowerCase(); }).length) { st.err = tr('nameTaken', { n: nm }); }
+  else { g.members.push({ id: 'n' + (uid++), name: nm }); st.err = null; st.addDraft = ''; st.addSheet = false; }
+}
+function go(to) { st.screen = to; st.sheet = null; st.addSheet = false; st.addDraft = ''; st.err = null; if (to === 'newgroup') { st.draft = { name: '', emoji: '🏖️', cur: 'MKD' }; } }
+function undo(u) {
+  var g = st.g;
+  if (u === 'reset') { var t = g.link; g.link = g.prevLink; g.prevLink = t; }
+  if (u === 'delete') { g.deleted = false; }
+  if (u.indexOf('remove:') === 0) { var id = u.slice(7), m = g.removed.filter(function (x) { return x.id === id; })[0]; g.removed = g.removed.filter(function (x) { return x.id !== id; }); g.members.push(m); }
+  st.toast = null;
+}
+document.getElementById('tabs').innerHTML = TABS.map(function (x) { return '<button data-tab="' + x[0] + '" aria-pressed="false">' + x[1] + '</button>'; }).join('');
+document.addEventListener('click', function (e) {
+  if (e.target.classList && e.target.classList.contains('scrim')) { st.sheet = null; st.addSheet = false; st.err = null; render(); return; }
+  var el = e.target.closest('button'); if (!el) { return; }
+  var a = el.dataset.act, g = st.g, id = el.dataset.id, m;
+  if (a === 'eye') { var box = el.parentNode.querySelector('input'); box.type = box.type === 'password' ? 'text' : 'password'; return; }
+  if (el.dataset.tab) { go(el.dataset.tab); if (el.dataset.tab === 'join') { st.join = 'new'; } }
+  else if (el.dataset.js) { st.join = el.dataset.js; }
+  else if (el.dataset.lang) { st.lang = el.dataset.lang; }
+  else if (el.dataset.theme) { st.dark = el.dataset.theme === 'dark'; }
+  else if (el.dataset.nav) { st.nav = el.dataset.nav; }
+  else if (el.dataset.who) { st.vname = el.dataset.who; st.sheet = null; }
+  else if (a === 'reset') { st = freshState(); }
+  else if (a === 'goto') { go(el.dataset.to); }
+  else if (a === 'toast') { toast(el.dataset.text); }
+  else if (a === 'share') { toast('(The phone\'s share menu opens here)'); }
+  else if (a === 'copy') { toast(tr('copied')); }
+  else if (a === 'draftemoji') { st.draft.emoji = el.dataset.v; st.draft.name = val('gname'); }
+  else if (a === 'draftcur') { st.draft.cur = el.dataset.v; st.draft.name = val('gname'); }
+  else if (a === 'create') {
+    var n = val('gname'); st.draft.name = n;
+    if (!n || n.length > 60) { st.err = tr('nameBad'); }
+    else { st.g = { name: n, emoji: st.draft.emoji, cur: st.draft.cur, deleted: false, link: 'Zt7' + (uid++) + 'pQe', prevLink: null, members: [{ id: 'f', name: 'Filip', acct: 1, owner: 1 }], removed: [], fresh: true }; st.vname = 'Filip'; st.left = false; go('group'); }
+  }
+  else if (a === 'addname') { doAddName(); }
+  else if (a === 'addsheet') { st.addSheet = true; st.err = null; }
+  else if (a === 'finopen') { st.finOpen = !st.finOpen; }
+  else if (a === 'restorebd') { st.bdBack = true; toast(tr('restored'), null, true); }
+  else if (a === 'resetlink') { g.prevLink = g.link; g.link = 'Rk' + (uid++) + 'x9Vb2Wq'; toast(tr('resetDone'), 'reset', true, true); }
+  else if (a === 'sheet') { st.sheet = id; }
+  else if (a === 'closesheet') { st.sheet = null; st.addSheet = false; st.err = null; }
+  else if (a === 'makeowner') { m = find(id); g.members.forEach(function (x) { delete x.owner; }); m.owner = 1; st.sheet = null; toast(tr('ownerToast', { n: dn(m) })); }
+  else if (a === 'remove') { m = find(id); g.members = g.members.filter(function (x) { return x.id !== id; }); g.removed.push(m); st.sheet = null; toast(tr('removedToast', { n: dn(m) }), 'remove:' + id, true, true); }
+  else if (a === 'letback') { m = g.removed.filter(function (x) { return x.id === id; })[0]; g.removed = g.removed.filter(function (x) { return x.id !== id; }); g.members.push(m); toast(tr('backToast', { n: dn(m) })); }
+  else if (a === 'undoclaim') { m = find(id); var shown = m.display, plain = m.name; delete m.display; delete m.acct; m.name = plain; g.members.push({ id: 'n' + (uid++), name: shown, acct: 1 }); st.sheet = null; toast(tr('claimUndone', { n: shown, c: plain })); }
+  else if (a === 'thatsme') { m = find(id); var self = me(); var myName = st.vname; g.members = g.members.filter(function (x) { return x !== self; }); m.display = myName; m.acct = 1; toast(tr('meToast', { n: dn({ name: m.name }) })); }
+  else if (a === 'hasexp') { st.hasExpenses = !st.hasExpenses; }
+  else if (a === 'leave') { st.left = true; go('groups'); toast(tr('leftToast', { g: gname() }), null, true, true); }
+  else if (a === 'gemoji') { g.emoji = el.dataset.v; }
+  else if (a === 'gcur') { g.cur = el.dataset.v; }
+  else if (a === 'savesettings') { var sn = val('sname'); if (!sn || sn.length > 60) { st.err = tr('nameBad'); } else { g.name = sn; st.err = null; toast(tr('saved'), null, true); } }
+  else if (a === 'deletegroup') { g.deleted = true; go('groups'); toast(tr('deletedToast'), 'delete', true, true); }
+  else if (a === 'restoregroup') { g.deleted = false; st.left = false; toast(tr('restored')); }
+  else if (a === 'undo') { undo(el.dataset.u); }
+  else if (a === 'join') { st.join = 'claim'; }
+  else if (a === 'claimjoin') { go('group'); st.vname = 'Ana'; toast(tr('joinedToast', { g: gname() }), null, true); }
+  else if (a === 'signup') {
+    if (!val('su-name')) { st.err = tr('nameErr'); } else { st.err = null; st.join = 'new'; go('join'); }
+  }
+  render();
+});
+document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.id === 'newname') { e.preventDefault(); doAddName(); render(); } });
+st = freshState();
+(function () {
+  var q = new URLSearchParams(location.search);
+  if (q.get('lang')) { st.lang = q.get('lang'); }
+  if (q.get('dark')) { st.dark = q.get('dark') === '1'; }
+  if (q.get('nav')) { st.nav = q.get('nav'); }
+  if (q.get('who')) { st.vname = q.get('who'); }
+  if (q.get('join')) { st.join = q.get('join'); }
+  if (q.get('sheet')) { st.sheet = q.get('sheet'); }
+  if (q.get('addsheet')) { st.addSheet = true; }
+  if (q.get('fin')) { st.finOpen = true; }
+  if (q.get('toast')) { toast(tr('resetDone'), 'reset', true, true); }
+  if (q.get('fresh')) { st.g.members = [st.g.members[0]]; st.g.removed = []; }
+  if (q.get('deleted')) { st.g.deleted = true; }
+  if (q.get('err')) { st.err = tr('nameBad'); }
+  if (q.get('screen')) { st.screen = q.get('screen'); }
+})();
+render();
+</script>
+</body>
+</html>

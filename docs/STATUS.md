@@ -1,16 +1,17 @@
 # Status: Kvit
 
-_Last updated: 2026-10-03 (Phase 6 complete and merged; Phase 7 is next, after Filip's Google steps)_
+_Last updated: 2026-10-03 (Phase 7 in progress: Steps 0 to 2 done; Step 3 is next)_
 
 ## Where we stopped
-- Branch: `feat/06-google-sign-in` merged into `main` as PR #8; next branch `feat/07-groups`.
-- Uncommitted changes: none (the wrap-up docs are the last commit before the merge).
-- Last thing done: Phase 6, Google sign-in and the privacy page. Welcome has Google's own button (always white), a small "or", then the email options and a Privacy link. The API checks Google's ID token; a Google email that already has a password account is never merged (pop-up). First Google sign-in asks the name; Google accounts can add a password in Settings. Public `/privacy` page (EN + MK), security headers from Cloudflare `_headers`, and `scripts/start-local.ps1` (start, `-Check`, `-Stop`). Report: `docs/reports/2026-10-03-phase-06-google-sign-in.md` (its last section holds the Phase 6 decision log).
+- Branch: `feat/07-groups` (PR not opened yet; the first commit `af2a556` is in).
+- Uncommitted: the mockup `docs/design/2026-10-03-groups/`, doc edits (DECISIONS Phase 7 log, SCREENS, BACKLOG), and all Step 2 code and tests (Filip commits between steps).
+- Done: Step 0 (branch, baseline, decision log). Step 1 (clickable mockup, approved by Filip: pill tab bar, "+ Add a name" link opening a sheet, wine-red for removing things, "That's me" yes; his Macedonian approval is partly given: the "групата" wording yes, the rest of the lines still to be confirmed before Step 4). Step 2 (backend groups): entities, migration `Groups`, repositories, domain services, `GroupsController` (create, list, get, change, delete, restore), events, tests.
+- Verification (VERIFIED by automated test, 2026-10-03): `dotnet build` 0 warnings; `dotnet test` 950/950 (593 before Phase 7, 357 new); `dotnet ef migrations has-pending-model-changes` exits 0. NOT VERIFIED: the migration on Neon (CI runs it at the merge), a live API run.
 
 ## Next step
-1. Phase 6 is fully done: PR #8 merged, CI green on `main` (VERIFIED by live run, 2026-10-03), `https://kvit-mk.pages.dev/privacy` live, Google Branding saved and the app "In production" (REPORTED by Filip).
-2. Filip reported (2026-10-03) that he did the Google sign-in and the phone test, and that the Google app now says "In production" (anyone with a Google account can sign in).
-3. Phase 7, groups, members and invite links (`docs/ROADMAP.md`). Where "friends can be just names" is explained to newcomers (the Welcome line was removed) is decided there.
+1. Filip: commit Step 1 (docs and mockup) and Step 2 (code and tests), each with its own one-line subject.
+2. Step 3: backend members and invites (plain names, invite link make/reset/undo, preview, join + claim, "That's me", leave, remove, let back in, make owner, undo claim, the `invite` rate limit). Tester first, then coder.
+3. Before Step 4 (frontend): Filip confirms the remaining Macedonian lines.
 
 ## Then
 - Phase 8 onward: expenses, balances, then the dashboard (Phase 11, Filip decides its layout, phone and web).

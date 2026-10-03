@@ -30,5 +30,12 @@ namespace Kvit.Domain.Results
         public const string TIME_ZONE_INVALID = "TIME_ZONE_INVALID";
         public const string LANGUAGE_INVALID = "LANGUAGE_INVALID";
         public const string RATE_LIMITED = "RATE_LIMITED";
+        public const string GROUP_NOT_FOUND = "GROUP_NOT_FOUND";
+        public const string GROUP_NOT_OWNER = "GROUP_NOT_OWNER";
+        public const string GROUP_NAME_INVALID = "GROUP_NAME_INVALID";
+        public const string GROUP_EMOJI_INVALID = "GROUP_EMOJI_INVALID";
+        public const string GROUP_CURRENCY_INVALID = "GROUP_CURRENCY_INVALID";
+        public const string GROUP_NOT_DELETED = "GROUP_NOT_DELETED";
+        public const string GROUP_RESTORE_EXPIRED = "GROUP_RESTORE_EXPIRED";
     }
 }

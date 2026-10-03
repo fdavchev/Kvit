@@ -9,9 +9,10 @@ namespace Kvit.Infrastructure.Persistence
             await _context.Database.BeginTransactionAsync(cancellationToken);
         }
 
-        public Task CommitAsync(CancellationToken cancellationToken)
+        public async Task CommitAsync(CancellationToken cancellationToken)
         {
-            return _context.Database.CommitTransactionAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+            await _context.Database.CommitTransactionAsync(cancellationToken);
         }
 
         public Task RollbackAsync(CancellationToken cancellationToken)
