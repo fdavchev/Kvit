@@ -56,6 +56,65 @@ namespace Kvit.Domain.Entities
             return New(groupId, actorUserId, ActivityEventType.GroupRestored, createdAt);
         }
 
+        public static ActivityEvent InviteLinkReset(Guid groupId, Guid actorUserId, DateTimeOffset createdAt)
+        {
+            return New(groupId, actorUserId, ActivityEventType.InviteLinkReset, createdAt);
+        }
+
+        public static ActivityEvent InviteLinkRestored(Guid groupId, Guid actorUserId, DateTimeOffset createdAt)
+        {
+            return New(groupId, actorUserId, ActivityEventType.InviteLinkRestored, createdAt);
+        }
+
+        public static ActivityEvent MemberAdded(Guid groupId, Guid actorUserId, Guid memberId, string memberName, DateTimeOffset createdAt)
+        {
+            return AboutMember(groupId, actorUserId, ActivityEventType.MemberAdded, memberId, new { name = memberName }, createdAt);
+        }
+
+        public static ActivityEvent MemberJoined(Guid groupId, Guid actorUserId, Guid memberId, string memberName, DateTimeOffset createdAt)
+        {
+            return AboutMember(groupId, actorUserId, ActivityEventType.MemberJoined, memberId, new { name = memberName }, createdAt);
+        }
+
+        public static ActivityEvent MemberRemoved(Guid groupId, Guid actorUserId, Guid memberId, string memberName, DateTimeOffset createdAt)
+        {
+            return AboutMember(groupId, actorUserId, ActivityEventType.MemberRemoved, memberId, new { name = memberName }, createdAt);
+        }
+
+        public static ActivityEvent MemberLeft(Guid groupId, Guid actorUserId, Guid memberId, string memberName, DateTimeOffset createdAt)
+        {
+            return AboutMember(groupId, actorUserId, ActivityEventType.MemberLeft, memberId, new { name = memberName }, createdAt);
+        }
+
+        public static ActivityEvent MemberLetBackIn(Guid groupId, Guid actorUserId, Guid memberId, string memberName, DateTimeOffset createdAt)
+        {
+            return AboutMember(groupId, actorUserId, ActivityEventType.MemberLetBackIn, memberId, new { name = memberName }, createdAt);
+        }
+
+        public static ActivityEvent OwnershipTransferred(Guid groupId, Guid actorUserId, Guid newOwnerMemberId, string newOwnerName, DateTimeOffset createdAt)
+        {
+            return AboutMember(groupId, actorUserId, ActivityEventType.OwnershipTransferred, newOwnerMemberId, new { name = newOwnerName }, createdAt);
+        }
+
+        public static ActivityEvent MemberClaimed(Guid groupId, Guid actorUserId, Guid memberId, string memberName, string claimedName, DateTimeOffset createdAt)
+        {
+            return AboutMember(groupId, actorUserId, ActivityEventType.MemberClaimed, memberId, new { name = memberName, claimedName }, createdAt);
+        }
+
+        public static ActivityEvent ClaimUndone(Guid groupId, Guid actorUserId, Guid memberId, string memberName, string claimedName, DateTimeOffset createdAt)
+        {
+            return AboutMember(groupId, actorUserId, ActivityEventType.ClaimUndone, memberId, new { name = memberName, claimedName }, createdAt);
+        }
+
+        private static ActivityEvent AboutMember(Guid groupId, Guid actorUserId, ActivityEventType type, Guid memberId, object data, DateTimeOffset createdAt)
+        {
+            ActivityEvent activityEvent = New(groupId, actorUserId, type, createdAt);
+            activityEvent.MemberId = memberId;
+            activityEvent.Data = JsonSerializer.Serialize(data);
+
+            return activityEvent;
+        }
+
         private static ActivityEvent WithChanges(Guid groupId, Guid actorUserId, ActivityEventType type, IReadOnlyList<FieldChange> changes, DateTimeOffset createdAt)
         {
             ActivityEvent activityEvent = New(groupId, actorUserId, type, createdAt);

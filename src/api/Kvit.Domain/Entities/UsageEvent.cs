@@ -28,6 +28,11 @@ namespace Kvit.Domain.Entities
             return New(userId, UsageEventType.GroupCreated, null, occurredAt);
         }
 
+        public static UsageEvent JoinedViaInvite(Guid userId, DateTimeOffset occurredAt)
+        {
+            return New(userId, UsageEventType.JoinedViaInvite, null, occurredAt);
+        }
+
         private static UsageEvent New(Guid userId, UsageEventType type, string? detail, DateTimeOffset occurredAt)
         {
             DateTimeOffset occurredAtUtc = occurredAt.ToUniversalTime();

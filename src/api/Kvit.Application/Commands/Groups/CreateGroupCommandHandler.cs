@@ -1,4 +1,5 @@
 using Kvit.Application.Dispatching;
+using Kvit.Application.Persistence;
 using Kvit.Application.Queries.Groups;
 using Kvit.Application.Queries.Me;
 using Kvit.Contracts.Groups;
@@ -22,15 +23,11 @@ namespace Kvit.Application.Commands.Groups
                 return Result.Unauthorized<GroupResponse>(me.Error, me.ErrorCode);
             }
 
-            await _unitOfWork.OpenTransactionAsync(cancellationToken);
-            Result<Guid> created = _createGroup.Execute(me.Value.Id, me.Value.DisplayName, command.Name, command.Emoji, command.Currency);
+            Result<Guid> created = await _unitOfWork.RunInTransactionAsync(() => Task.FromResult(_createGroup.Execute(me.Value.Id, me.Value.DisplayName, command.Name, command.Emoji, command.Currency)), cancellationToken);
             if (!created.IsSuccess)
             {
-                await _unitOfWork.RollbackAsync(cancellationToken);
                 return Result.Failure<GroupResponse>(created.Error, created.ErrorCode);
             }
-
-            await _unitOfWork.CommitAsync(cancellationToken);
 
             return await _dispatcher.Query<GetGroupQuery, GroupResponse>(new GetGroupQuery(created.Value), cancellationToken);
         }

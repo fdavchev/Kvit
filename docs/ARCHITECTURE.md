@@ -57,14 +57,11 @@ public class CreateExpenseCommandHandler(
     {
         Result<ICurrentUser> user = await _currentUserProvider.GetCurrentUserAsync();
         if (!user.IsSuccess) return Result.Unauthorized(user.Error, ResultCodes.USER_NOT_FOUND);
-        await _unitOfWork.OpenTransactionAsync(ct);
-        Result result = await _createExpense.Execute(user.Value, request, ct);
-        if (!result.IsSuccess) await _unitOfWork.RollbackAsync(ct);
-        else await _unitOfWork.CommitAsync(ct);
-        return result;
+        return await _unitOfWork.RunInTransactionAsync(() => _createExpense.Execute(user.Value, request, ct), ct);
     }
 }
 ```
+- **The transaction block lives once**, in `UnitOfWorkExtensions.RunInTransactionAsync` (`Kvit.Application/Persistence`, Phase 7 Step 3): it opens the transaction, runs the work, rolls back when the returned `Result` failed, otherwise commits (the unit of work saves the changes first). It has no try/catch, so an exception propagates and the scoped `DbContext` is disposed with its open transaction at the end of the request, which makes Postgres roll back. Every new command handler uses it. The exceptions are handlers that must save even when the `Result` fails, such as log-in, which stores the failed-attempt count (they keep their own block on purpose).
 - **Naming:** `<GetX>QueryHandler` and `<CreateX>CommandHandler`. Class names carry the entity: `CreateExpense`, `ConfirmSettlement`.
 - Shapes a handler needs go in their own `<X>Dto.cs` in the same folder. Handlers don't declare nested or private classes.
 

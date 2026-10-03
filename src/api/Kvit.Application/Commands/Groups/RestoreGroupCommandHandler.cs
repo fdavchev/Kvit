@@ -1,4 +1,5 @@
 using Kvit.Application.Dispatching;
+using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Persistence;
 using Kvit.Domain.Results;
@@ -19,17 +20,7 @@ namespace Kvit.Application.Commands.Groups
                 return userId;
             }
 
-            await _unitOfWork.OpenTransactionAsync(cancellationToken);
-            Result result = await _restoreGroup.Execute(command.GroupId, userId.Value, cancellationToken);
-            if (!result.IsSuccess)
-            {
-                await _unitOfWork.RollbackAsync(cancellationToken);
-                return result;
-            }
-
-            await _unitOfWork.CommitAsync(cancellationToken);
-
-            return result;
+            return await _unitOfWork.RunInTransactionAsync(() => _restoreGroup.Execute(command.GroupId, userId.Value, cancellationToken), cancellationToken);
         }
     }
 }

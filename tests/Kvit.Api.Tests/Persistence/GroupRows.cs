@@ -64,19 +64,23 @@ namespace Kvit.Api.Tests.Persistence
             string name,
             Guid addedByUserId,
             DateTimeOffset? removedAt = null,
-            string? endKind = null)
+            string? endKind = null,
+            DateTimeOffset? joinedAt = null,
+            DateTimeOffset? claimedAt = null)
         {
             Guid memberId = Guid.CreateVersion7();
             object? removedBy = removedAt is null ? null : addedByUserId;
 
             await database.ExecuteAsync(
-                "INSERT INTO group_members (id, group_id, user_id, name, joined_at, added_by_user_id, removed_at, removed_by_user_id, end_kind) "
-                + "VALUES (@id, @group_id, @user_id, @name, now(), @added_by, @removed_at, @removed_by, @end_kind)",
+                "INSERT INTO group_members (id, group_id, user_id, name, joined_at, added_by_user_id, claimed_at, removed_at, removed_by_user_id, end_kind) "
+                + "VALUES (@id, @group_id, @user_id, @name, COALESCE(@joined_at, now()), @added_by, @claimed_at, @removed_at, @removed_by, @end_kind)",
                 new NpgsqlParameter("id", memberId),
                 new NpgsqlParameter("group_id", groupId),
                 Nullable("user_id", NpgsqlDbType.Uuid, userId),
                 new NpgsqlParameter("name", name),
+                Nullable("joined_at", NpgsqlDbType.TimestampTz, joinedAt),
                 new NpgsqlParameter("added_by", addedByUserId),
+                Nullable("claimed_at", NpgsqlDbType.TimestampTz, claimedAt),
                 Nullable("removed_at", NpgsqlDbType.TimestampTz, removedAt),
                 Nullable("removed_by", NpgsqlDbType.Uuid, removedBy),
                 Nullable("end_kind", NpgsqlDbType.Text, endKind));
@@ -137,7 +141,7 @@ namespace Kvit.Api.Tests.Persistence
         public static async Task<string?> GroupValueAsync(MigratedDatabase database, Guid groupId, string expression)
         {
             List<string?> values = await database.QueryAsync(
-                $"SELECT {expression}::text FROM groups WHERE id = @id",
+                $"SELECT ({expression})::text FROM groups WHERE id = @id",
                 new NpgsqlParameter("id", groupId));
 
             return Assert.Single(values);
@@ -146,17 +150,73 @@ namespace Kvit.Api.Tests.Persistence
         public static async Task<string?> MemberValueAsync(MigratedDatabase database, Guid groupId, Guid userId, string expression)
         {
             List<string?> values = await database.QueryAsync(
-                $"SELECT {expression}::text FROM group_members WHERE group_id = @group_id AND user_id = @user_id",
+                $"SELECT ({expression})::text FROM group_members WHERE group_id = @group_id AND user_id = @user_id",
                 new NpgsqlParameter("group_id", groupId),
                 new NpgsqlParameter("user_id", userId));
 
             return Assert.Single(values);
         }
 
+        public static async Task<string?> MemberRowValueAsync(MigratedDatabase database, Guid memberId, string expression)
+        {
+            List<string?> values = await database.QueryAsync(
+                $"SELECT ({expression})::text FROM group_members WHERE id = @id",
+                new NpgsqlParameter("id", memberId));
+
+            return Assert.Single(values);
+        }
+
+        public static async Task<Guid> CurrentMemberIdAsync(MigratedDatabase database, Guid groupId, Guid userId)
+        {
+            List<string?> ids = await database.QueryAsync(
+                "SELECT id::text FROM group_members WHERE group_id = @group_id AND user_id = @user_id AND removed_at IS NULL",
+                new NpgsqlParameter("group_id", groupId),
+                new NpgsqlParameter("user_id", userId));
+
+            return Guid.Parse(Assert.Single(ids)!);
+        }
+
+        public static Task<int> CountMemberRowsOfUserAsync(MigratedDatabase database, Guid groupId, Guid userId)
+        {
+            return CountAsync(
+                database,
+                "SELECT count(*)::text FROM group_members WHERE group_id = @group_id AND user_id = @user_id",
+                new NpgsqlParameter("group_id", groupId),
+                new NpgsqlParameter("user_id", userId));
+        }
+
+        public static async Task<string> SnapshotAsync(MigratedDatabase database, Guid groupId)
+        {
+            List<string?> parts = await database.QueryAsync(
+                "SELECT part FROM ("
+                + "SELECT 1 AS position, g::text AS part FROM groups g WHERE g.id = @group_id "
+                + "UNION ALL SELECT 2, COALESCE(string_agg(m::text, '|' ORDER BY m.id), '') FROM group_members m WHERE m.group_id = @group_id "
+                + "UNION ALL SELECT 3, count(*)::text FROM activity_events WHERE group_id = @group_id"
+                + ") parts ORDER BY position",
+                new NpgsqlParameter("group_id", groupId));
+
+            return string.Join('#', parts);
+        }
+
+        public static Task SetPreviousInviteTokenAsync(MigratedDatabase database, Guid groupId, string previousToken)
+        {
+            return database.ExecuteAsync(
+                "UPDATE groups SET previous_invite_token = @previous WHERE id = @id",
+                new NpgsqlParameter("id", groupId),
+                new NpgsqlParameter("previous", previousToken));
+        }
+
+        public static Task AgeInviteTokenAsync(MigratedDatabase database, Guid groupId)
+        {
+            return database.ExecuteAsync(
+                "UPDATE groups SET invite_token_created_at = now() - interval '1 day' WHERE id = @id",
+                new NpgsqlParameter("id", groupId));
+        }
+
         public static async Task<string?> EventValueAsync(MigratedDatabase database, Guid groupId, string type, string expression)
         {
             List<string?> values = await database.QueryAsync(
-                $"SELECT {expression}::text FROM activity_events WHERE group_id = @group_id AND type = @type",
+                $"SELECT ({expression})::text FROM activity_events WHERE group_id = @group_id AND type = @type",
                 new NpgsqlParameter("group_id", groupId),
                 new NpgsqlParameter("type", type));
 

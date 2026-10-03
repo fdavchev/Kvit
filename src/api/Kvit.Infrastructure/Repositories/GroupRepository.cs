@@ -23,6 +23,17 @@ namespace Kvit.Infrastructure.Repositories
             return SingleOrNotFoundAsync(_context.GroupsWithCurrentMember(userId), groupId, cancellationToken);
         }
 
+        public async Task<Result<Group>> FindByInviteTokenAsync(string inviteToken, CancellationToken cancellationToken)
+        {
+            Group? group = await _context.Groups.SingleOrDefaultAsync(candidate => candidate.InviteToken == inviteToken && candidate.DeletedAt == null, cancellationToken);
+            if (group is null)
+            {
+                return Group.InviteNotFound<Group>();
+            }
+
+            return Result.Ok(group);
+        }
+
         private static async Task<Result<Group>> SingleOrNotFoundAsync(IQueryable<Group> groups, Guid groupId, CancellationToken cancellationToken)
         {
             Group? group = await groups.SingleOrDefaultAsync(candidate => candidate.Id == groupId, cancellationToken);

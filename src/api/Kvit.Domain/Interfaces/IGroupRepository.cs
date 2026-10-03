@@ -10,5 +10,7 @@ namespace Kvit.Domain.Interfaces
         Task<Result<Group>> FindForMemberAsync(Guid groupId, Guid userId, CancellationToken cancellationToken);
 
         Task<Result<Group>> FindIncludingDeletedForMemberAsync(Guid groupId, Guid userId, CancellationToken cancellationToken);
+
+        Task<Result<Group>> FindByInviteTokenAsync(string inviteToken, CancellationToken cancellationToken);
     }
 }

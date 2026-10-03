@@ -55,5 +55,76 @@ namespace Kvit.Api.Controllers
             Result result = await _dispatcher.Send(new RestoreGroupCommand(groupId), cancellationToken);
             return Result(result);
         }
+
+        [HttpGet("{groupId:guid}/members")]
+        public async Task<ActionResult<GroupMembersResponse>> ListMembers(Guid groupId, CancellationToken cancellationToken)
+        {
+            Result<GroupMembersResponse> result = await _dispatcher.Query<GetGroupMembersQuery, GroupMembersResponse>(new GetGroupMembersQuery(groupId), cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("{groupId:guid}/members")]
+        public async Task<ActionResult<GroupMemberRow>> AddMember(Guid groupId, AddMemberRequest request, CancellationToken cancellationToken)
+        {
+            AddMemberCommand command = new(groupId, request.Name);
+            Result<GroupMemberRow> result = await _dispatcher.Send<AddMemberCommand, GroupMemberRow>(command, cancellationToken);
+            return Result(result);
+        }
+
+        [HttpDelete("{groupId:guid}/members/{memberId:guid}")]
+        public async Task<ActionResult> RemoveMember(Guid groupId, Guid memberId, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new RemoveMemberCommand(groupId, memberId), cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("{groupId:guid}/members/{memberId:guid}/let-back-in")]
+        public async Task<ActionResult> LetBackIn(Guid groupId, Guid memberId, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new LetBackInCommand(groupId, memberId), cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("{groupId:guid}/leave")]
+        public async Task<ActionResult> Leave(Guid groupId, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new LeaveGroupCommand(groupId), cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("{groupId:guid}/owner")]
+        public async Task<ActionResult> MakeOwner(Guid groupId, MakeOwnerRequest request, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new MakeOwnerCommand(groupId, request.MemberId), cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("{groupId:guid}/members/{memberId:guid}/claim")]
+        public async Task<ActionResult> ClaimName(Guid groupId, Guid memberId, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new ClaimNameCommand(groupId, memberId), cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("{groupId:guid}/members/{memberId:guid}/undo-claim")]
+        public async Task<ActionResult> UndoClaim(Guid groupId, Guid memberId, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new UndoClaimCommand(groupId, memberId), cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("{groupId:guid}/invite/reset")]
+        public async Task<ActionResult<InviteTokenResponse>> ResetInviteLink(Guid groupId, CancellationToken cancellationToken)
+        {
+            Result<InviteTokenResponse> result = await _dispatcher.Send<ResetInviteLinkCommand, InviteTokenResponse>(new ResetInviteLinkCommand(groupId), cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("{groupId:guid}/invite/undo-reset")]
+        public async Task<ActionResult<InviteTokenResponse>> UndoInviteReset(Guid groupId, CancellationToken cancellationToken)
+        {
+            Result<InviteTokenResponse> result = await _dispatcher.Send<UndoInviteResetCommand, InviteTokenResponse>(new UndoInviteResetCommand(groupId), cancellationToken);
+            return Result(result);
+        }
     }
 }

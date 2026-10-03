@@ -72,6 +72,11 @@ namespace Kvit.Domain.Entities
             return Result.NotFound<T>($"Group {groupId} does not exist, or you are not in it.", ResultCodes.GROUP_NOT_FOUND);
         }
 
+        public static Result<T> InviteNotFound<T>()
+        {
+            return Result.NotFound<T>("This invite link does not lead to any group. It may have been reset, or the group was deleted.", ResultCodes.INVITE_NOT_FOUND);
+        }
+
         public static DateTimeOffset RestorableUntil(DateTimeOffset deletedAt)
         {
             return deletedAt.AddDays(DeletedGroupRestoreDays);
@@ -113,6 +118,44 @@ namespace Kvit.Domain.Entities
             DefaultCurrency = newSettings.DefaultCurrency;
 
             return Result.Ok(new GroupChanges(nameChange, settingsChanges));
+        }
+
+        public void ResetInvite(string newToken, DateTimeOffset resetAt)
+        {
+            PreviousInviteToken = InviteToken;
+            InviteToken = newToken;
+            InviteTokenCreatedAt = resetAt;
+        }
+
+        public Result UndoInviteReset(DateTimeOffset undoneAt)
+        {
+            if (PreviousInviteToken is not string previousToken)
+            {
+                return Result.Failure($"The invite link of group {Id} was not reset, so there is nothing to undo.", ResultCodes.INVITE_NOTHING_TO_UNDO);
+            }
+
+            InviteToken = previousToken;
+            PreviousInviteToken = null;
+            InviteTokenCreatedAt = undoneAt;
+
+            return Result.Ok();
+        }
+
+        public Result TransferOwnership(GroupMember newOwner)
+        {
+            if (newOwner.UserId is not Guid newOwnerUserId)
+            {
+                return Result.Failure($"Member {newOwner.Id} is a plain name without an account and cannot become the owner.", ResultCodes.MEMBER_NOT_ACCOUNT);
+            }
+
+            if (newOwnerUserId == OwnerUserId)
+            {
+                return Result.Failure($"Member {newOwner.Id} is already the owner of group {Id}.", ResultCodes.MEMBER_ALREADY_OWNER);
+            }
+
+            OwnerUserId = newOwnerUserId;
+
+            return Result.Ok();
         }
 
         public void Delete(Guid byUserId, DateTimeOffset deletedAt)

@@ -41,6 +41,17 @@ namespace Kvit.Domain.Tests.Fakes
             return Task.FromResult(FindIncludingDeleted(groupId, userId));
         }
 
+        public Task<Result<Group>> FindByInviteTokenAsync(string inviteToken, CancellationToken cancellationToken)
+        {
+            Group? group = _groups.Values.SingleOrDefault(candidate => candidate.InviteToken == inviteToken && candidate.DeletedAt is null);
+            if (group is null)
+            {
+                return Task.FromResult(Group.InviteNotFound<Group>());
+            }
+
+            return Task.FromResult(Result.Ok(group));
+        }
+
         private Result<Group> FindIncludingDeleted(Guid groupId, Guid userId)
         {
             if (!_groups.TryGetValue(groupId, out Group? group) || !_currentMembers.Contains((groupId, userId)))

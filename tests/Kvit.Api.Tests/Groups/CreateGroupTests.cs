@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Kvit.Api.Tests.Auth;
 using Kvit.Api.Tests.Persistence;
 using Xunit;
@@ -10,8 +9,6 @@ namespace Kvit.Api.Tests.Groups
 {
     public class CreateGroupTests(GroupsApp _app) : IClassFixture<GroupsApp>
     {
-        private static readonly Regex Base64UrlOf43Characters = new("^[A-Za-z0-9_-]{43}$");
-
         [Fact]
         public async Task Create_ValidRequest_AnswersExactlyTheTenGroupFields()
         {
@@ -53,7 +50,7 @@ namespace Kvit.Api.Tests.Groups
             HttpResponseMessage response = await GroupRequests.CreateAsync(user.Client);
 
             JsonElement body = await AuthRequests.ReadJsonAsync(response);
-            Assert.Matches(Base64UrlOf43Characters, body.GetProperty("inviteToken").GetString());
+            Assert.Matches(GroupRequests.TokenFormat, body.GetProperty("inviteToken").GetString());
         }
 
         [Fact]

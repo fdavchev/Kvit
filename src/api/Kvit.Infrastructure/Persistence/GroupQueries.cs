@@ -15,5 +15,27 @@ namespace Kvit.Infrastructure.Persistence
 
             return context.Groups.Where(group => currentMembers.Any(member => member.GroupId == group.Id && member.UserId == userId));
         }
+
+        public static IQueryable<NamedMember> NamedGroupMembers(this AppDbContext context, Guid groupId)
+        {
+            return context.GroupMembers
+                .Where(member => member.GroupId == groupId)
+                .LeftJoin(
+                    context.Users,
+                    member => member.UserId,
+                    user => (Guid?)user.Id,
+                    (member, user) => new NamedMember
+                    {
+                        Member = member,
+                        DisplayName = user == null ? member.Name : user.DisplayName,
+                    });
+        }
+
+        public static IQueryable<NamedMember> InJoiningOrder(this IQueryable<NamedMember> members)
+        {
+            return members
+                .OrderBy(named => named.Member.JoinedAt)
+                .ThenBy(named => named.Member.Id);
+        }
     }
 }
