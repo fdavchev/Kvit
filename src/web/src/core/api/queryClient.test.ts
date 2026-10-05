@@ -93,6 +93,12 @@ describe('createQueryClient', () => {
       expect(retry(0, apiError(404, 'GROUP_NOT_FOUND'))).toBe(false)
     })
 
+    it('does not retry a 429 answer', () => {
+      const retry = defaultQueryRetry()
+
+      expect(retry(0, apiError(429, 'RATE_LIMITED'))).toBe(false)
+    })
+
     it.each([
       ['a 500 answer', apiError(500, null)],
       ['a network failure', apiError(null, null)],

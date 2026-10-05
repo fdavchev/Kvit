@@ -1,7 +1,13 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
 import { meQueryKey } from '@/core/auth/useMe'
 import type { Me } from '@/core/services/me/meService'
-import { ApiError, forbiddenStatus, notFoundStatus, unauthorizedStatus } from './apiClient'
+import {
+  ApiError,
+  forbiddenStatus,
+  notFoundStatus,
+  tooManyRequestsStatus,
+  unauthorizedStatus,
+} from './apiClient'
 
 const wrongPasswordAtLogInCode = 'AUTH_INVALID_CREDENTIALS'
 const mustChangePasswordCode = 'AUTH_MUST_CHANGE_PASSWORD'
@@ -28,7 +34,11 @@ export function createQueryClient(): QueryClient {
 }
 
 function shouldRetryQuery(failureCount: number, error: Error): boolean {
-  if (error instanceof ApiError && error.httpStatus === notFoundStatus) {
+  if (
+    error instanceof ApiError &&
+    (error.httpStatus === notFoundStatus ||
+      error.httpStatus === tooManyRequestsStatus)
+  ) {
     return false
   }
   return failureCount < maxQueryRetries

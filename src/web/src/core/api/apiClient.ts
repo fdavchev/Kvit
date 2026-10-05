@@ -22,6 +22,7 @@ export class ApiError extends Error {
 export const unauthorizedStatus = 401
 export const forbiddenStatus = 403
 export const notFoundStatus = 404
+export const tooManyRequestsStatus = 429
 
 const jsonMediaTypes = ['application/json', 'application/problem+json']
 const noContentStatus = 204
