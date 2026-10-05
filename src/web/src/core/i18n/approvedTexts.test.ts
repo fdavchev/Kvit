@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { collectTexts } from '@/test/localeTexts'
 import { translated } from '@/test/translated'
 import { createI18n } from './i18n'
+import mk from './locales/mk.json'
 
 const approvedTexts: [string, string, string][] = [
   ['common.privacy', 'Privacy', 'Приватност'],
@@ -25,7 +27,7 @@ const approvedTexts: [string, string, string][] = [
   ['privacy.sections.2.heading', 'Passwords', 'Лозинки'],
   ['privacy.sections.2.body', 'A password is never stored the way you type it, only as a scrambled code that nobody can turn back into the password.', 'Лозинката никогаш не се чува онака како што ја внесуваш, туку само како измешан код што никој не може да го врати во лозинка.'],
   ['privacy.sections.3.heading', 'Sign in with Google', 'Најава со Google'],
-  ['privacy.sections.3.body', 'If you use Google, Kvit receives only your name, email address and profile picture link. Kvit cannot read your Gmail, your contacts or anything else in your Google account.', 'Ако користиш Google, Kvit добива само твоето име, адреса на е-пошта и врска до профилната слика. Kvit не може да ја чита твојата Gmail-пошта, контактите или нешто друго во твојот Google профил.'],
+  ['privacy.sections.3.body', 'If you use Google, Kvit receives only your name, email address and profile picture link. Kvit cannot read your Gmail, your contacts or anything else in your Google account.', 'Ако користиш Google, Kvit добива само твоето име, адреса на е-пошта и линк до профилната слика. Kvit не може да ја чита твојата Gmail-пошта, контактите или нешто друго во твојот Google профил.'],
   ['privacy.sections.4.heading', 'Who can see what', 'Кој што може да види'],
   ['privacy.sections.4.body', "People in a group see that group's expenses and balances. The person who runs Kvit sees only totals (for example how many accounts exist), not your expenses.", 'Луѓето во една група ги гледаат трошоците и салдата на таа група. Тој што го води Kvit гледа само вкупни бројки (на пример, колку профили има), не и твоите трошоци.'],
   ['privacy.sections.5.heading', 'Cookies and tracking', 'Колачиња и следење'],
@@ -43,7 +45,7 @@ const approvedPhase7Texts: [string, string, string][] = [
   ['common.undo', 'Undo', 'Врати'],
   ['groups.title', 'Groups', 'Групи'],
   ['groups.newButton', 'New group', 'Нова група'],
-  ['groups.empty', 'You have no groups yet. Create one, or open a link a friend sent you.', 'Сè уште немаш групи. Направи една или отвори врска што ти ја испратил пријател.'],
+  ['groups.empty', 'You have no groups yet. Create one, or open a link a friend sent you.', 'Сè уште немаш групи. Направи една или отвори линк што ти го испратил пријател.'],
   ['groups.people_one', '{{count}} person', '{{count}} лице'],
   ['groups.people_other', '{{count}} people', '{{count}} лица'],
   ['groups.finished', 'Finished', 'Завршени'],
@@ -65,10 +67,10 @@ const approvedPhase7Texts: [string, string, string][] = [
   ['newGroup.create', 'Create group', 'Направи група'],
   ['group.addPeople', 'Add people', 'Додај луѓе'],
   ['group.addPeopleNoKvit', 'No Kvit? Add them as a name.', 'Немаат Kvit? Додај ги како име.'],
-  ['group.addPeopleHasKvit', 'Have Kvit? Share the link and they join with their own account.', 'Имаат Kvit? Сподели ја врската и ќе се придружат со свој профил.'],
+  ['group.addPeopleHasKvit', 'Have Kvit? Share the link and they join with their own account.', 'Имаат Kvit? Сподели го линкот и ќе се придружат со свој профил.'],
   ['group.addName', 'Add a name', 'Додај име'],
-  ['group.shareLink', 'Share invite link', 'Сподели ја врската за покана'],
-  ['group.linkCopied', 'Link copied', 'Врската е копирана'],
+  ['group.shareLink', 'Share invite link', 'Сподели линк за покана'],
+  ['group.linkCopied', 'Link copied', 'Линкот е копиран'],
   ['group.settings', 'Group settings', 'Поставки на групата'],
   ['group.expensesSoon', 'Expenses will show up here soon.', 'Овде наскоро ќе се појавуваат трошоците.'],
   ['addName.title', 'Add a name', 'Додај име'],
@@ -94,6 +96,53 @@ const approvedPhase7Texts: [string, string, string][] = [
   ['errors.MEMBER_NAME_TAKEN', "There's already a {{name}} in this group.", 'Во оваа група веќе има {{name}}.'],
   ['errors.MEMBER_OWNER_CANNOT_LEAVE', 'You are the owner. Make someone else the owner before you leave.', 'Ти си сопственик. Направи некој друг сопственик пред да ја напуштиш.'],
 ]
+
+const approvedPhase7Step5Texts: [string, string, string][] = [
+  ['members.title', 'Members', 'Членови'],
+  ['members.owner', 'Owner', 'Сопственик'],
+  ['members.you', 'You', 'Ти'],
+  ['members.nameOnly', 'Just a name', 'Само име'],
+  ['members.tookName', 'Took the name “{{name}}”', 'Го зеде името „{{name}}“'],
+  ['members.addNameLink', '+ Add a name', '+ Додај име'],
+  ['members.invite.title', 'Invite link', 'Линк за покана'],
+  ['members.invite.share', 'Share', 'Сподели'],
+  ['members.invite.copy', 'Copy link', 'Копирај линк'],
+  ['members.invite.reset', 'Reset link', 'Ресетирај линк'],
+  ['members.invite.resetDone', 'Link reset. The old link no longer works.', 'Линкот е ресетиран. Стариот повеќе не работи.'],
+  ['members.makeOwner', 'Make owner', 'Направи сопственик'],
+  ['members.ownerNow', '{{name}} is now the owner', '{{name}} сега е сопственик'],
+  ['members.remove', 'Remove from group', 'Отстрани од групата'],
+  ['members.removed', 'Removed: {{name}}', 'Отстрането: {{name}}'],
+  ['members.undoClaim', 'Undo claim', 'Врати го името'],
+  ['members.claimUndone', '{{name}} stays in the group. “{{claimed}}” is just a name again.', '{{name}} останува во групата. „{{claimed}}“ повторно е само име.'],
+  ['members.thatsMe', "That's me", 'Тоа сум јас'],
+  ['members.claimed', 'You are now “{{name}}” in this group.', 'Сега си „{{name}}“ во оваа група.'],
+  ['members.removedTitle', 'Removed', 'Отстранети'],
+  ['members.letBackIn', 'Let back in', 'Врати во групата'],
+  ['members.backInGroup', '{{name}} is back in the group', '{{name}} е назад во групата'],
+  ['members.optionsFor', 'Options for {{name}}', 'Опции за {{name}}'],
+  ['join.invitedTo', "You're invited to {{name}}", 'Те поканија во групата „{{name}}“'],
+  ['join.inGroup', 'In the group', 'Во групата'],
+  ['join.join', 'Join', 'Придружи се'],
+  ['join.areYou', 'Are you one of these?', 'Дали си некој од овие?'],
+  ['join.imNew', "No, I'm new", 'Не, прв пат сум тука'],
+  ['join.joined', 'You joined {{name}}', 'Се придружи на групата „{{name}}“'],
+  ['join.signInHint', 'Create an account or log in to join.', 'Направи профил или најави се за да се придружиш.'],
+  ['join.removed', 'You were removed from {{name}}. Ask the owner to let you back in.', 'Те отстранија од групата „{{name}}“. Побарај од сопственикот да те врати.'],
+  ['errors.MEMBER_NOT_FOUND', 'This person is no longer in the group.', 'Оваа личност веќе не е во групата.'],
+  ['errors.MEMBER_IS_OWNER', "The owner can't be removed.", 'Сопственикот не може да се отстрани.'],
+  ['errors.MEMBER_NOT_ACCOUNT', 'Only a person with a Kvit account can become the owner.', 'Само личност со Kvit профил може да стане сопственик.'],
+  ['errors.MEMBER_ALREADY_OWNER', 'This person is already the owner.', 'Оваа личност веќе е сопственик.'],
+  ['errors.MEMBER_CANNOT_CLAIM', "You can't take this name.", 'Не можеш да го земеш ова име.'],
+  ['errors.MEMBER_NOT_CLAIMED', 'This name was not taken by anyone.', 'Ова име не го зел никој.'],
+  ['errors.INVITE_NOT_FOUND', 'This invite link no longer works. Ask for a new one.', 'Овој линк за покана повеќе не работи. Побарај нов.'],
+  ['errors.INVITE_REMOVED', 'You were removed from this group. Ask the owner to let you back in.', 'Те отстранија од оваа група. Побарај од сопственикот да те врати.'],
+  ['errors.INVITE_NOTHING_TO_UNDO', 'There is no earlier link to go back to.', 'Нема претходен линк за враќање.'],
+]
+
+const textsWhereMacedonianMeansConnection = ['errors.network', 'welcome.googleUnavailable']
+
+const macedonianWordForConnection = 'врск'
 
 const pluralCounts: [number, string, string][] = [
   [1, '1 person', '1 лице'],
@@ -128,5 +177,26 @@ describe('the approved Phase 7 texts', () => {
 
     expect(englishI18n.t('groups.people', { count })).toBe(english)
     expect(macedonianI18n.t('groups.people', { count })).toBe(macedonian)
+  })
+})
+
+describe('the approved Phase 7 Step 5 texts', () => {
+  it.each(approvedPhase7Step5Texts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
+    expect(translated('en', key)).toBe(english)
+    expect(translated('mk', key)).toBe(macedonian)
+  })
+})
+
+describe('the Macedonian word for a link', () => {
+  it.each(textsWhereMacedonianMeansConnection)('still says "врската" in %s, where it means an internet connection', (key) => {
+    expect(translated('mk', key)).toContain('врската')
+  })
+
+  it('is never "врска" in any Macedonian text except the two that mean an internet connection', () => {
+    const textsWithTheWord = collectTexts(mk)
+      .filter(([, text]) => typeof text === 'string' && text.toLowerCase().includes(macedonianWordForConnection))
+      .map(([path]) => path)
+
+    expect(textsWithTheWord.sort()).toEqual([...textsWhereMacedonianMeansConnection].sort())
   })
 })

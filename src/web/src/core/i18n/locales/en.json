@@ -50,7 +50,16 @@
     "GROUP_RESTORE_EXPIRED": "This group was deleted more than 30 days ago and can't be restored.",
     "MEMBER_NAME_INVALID": "Enter a name (up to 60 characters).",
     "MEMBER_NAME_TAKEN": "There's already a {{name}} in this group.",
-    "MEMBER_OWNER_CANNOT_LEAVE": "You are the owner. Make someone else the owner before you leave."
+    "MEMBER_OWNER_CANNOT_LEAVE": "You are the owner. Make someone else the owner before you leave.",
+    "MEMBER_NOT_FOUND": "This person is no longer in the group.",
+    "MEMBER_IS_OWNER": "The owner can't be removed.",
+    "MEMBER_NOT_ACCOUNT": "Only a person with a Kvit account can become the owner.",
+    "MEMBER_ALREADY_OWNER": "This person is already the owner.",
+    "MEMBER_CANNOT_CLAIM": "You can't take this name.",
+    "MEMBER_NOT_CLAIMED": "This name was not taken by anyone.",
+    "INVITE_NOT_FOUND": "This invite link no longer works. Ask for a new one.",
+    "INVITE_REMOVED": "You were removed from this group. Ask the owner to let you back in.",
+    "INVITE_NOTHING_TO_UNDO": "There is no earlier link to go back to."
   },
   "language": {
     "label": "Language",
@@ -207,6 +216,43 @@
     "leave": "Leave group",
     "left": "You left {{name}}",
     "ownerCannotLeave": "You are the owner. Make someone else the owner before you leave."
+  },
+  "members": {
+    "title": "Members",
+    "owner": "Owner",
+    "you": "You",
+    "nameOnly": "Just a name",
+    "tookName": "Took the name “{{name}}”",
+    "addNameLink": "+ Add a name",
+    "invite": {
+      "title": "Invite link",
+      "share": "Share",
+      "copy": "Copy link",
+      "reset": "Reset link",
+      "resetDone": "Link reset. The old link no longer works."
+    },
+    "makeOwner": "Make owner",
+    "ownerNow": "{{name}} is now the owner",
+    "remove": "Remove from group",
+    "removed": "Removed: {{name}}",
+    "undoClaim": "Undo claim",
+    "claimUndone": "{{name}} stays in the group. “{{claimed}}” is just a name again.",
+    "thatsMe": "That's me",
+    "claimed": "You are now “{{name}}” in this group.",
+    "removedTitle": "Removed",
+    "letBackIn": "Let back in",
+    "backInGroup": "{{name}} is back in the group",
+    "optionsFor": "Options for {{name}}"
+  },
+  "join": {
+    "invitedTo": "You're invited to {{name}}",
+    "inGroup": "In the group",
+    "join": "Join",
+    "areYou": "Are you one of these?",
+    "imNew": "No, I'm new",
+    "joined": "You joined {{name}}",
+    "signInHint": "Create an account or log in to join.",
+    "removed": "You were removed from {{name}}. Ask the owner to let you back in."
   },
   "notFound": {
     "title": "Page not found",

@@ -19,6 +19,8 @@ import {
   stubGoogleSignIn,
   testIdToken,
 } from '@/test/googleTestHelpers'
+import { testInviteToken } from '@/test/groupTestData'
+import { joinPathOf, unsafeJoinTokens } from '@/test/inviteTestData'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { testMe } from '@/test/testMe'
 import { stubDeviceColorScheme } from '@/test/themeTestHelpers'
@@ -44,6 +46,7 @@ async function renderLogIn(language: Language = 'en', routerState?: unknown) {
 async function renderLogInRefusedBecauseTheAccountUsesGoogle(
   language: Language = 'en',
   googleAccount: Me = testMe,
+  routerState?: unknown,
 ) {
   const identity = stubGoogleSignIn()
   stubDeviceColorScheme('light')
@@ -51,7 +54,7 @@ async function renderLogInRefusedBecauseTheAccountUsesGoogle(
     [endpoints.logIn]: problemResponse(400, 'AUTH_USES_GOOGLE'),
     [endpoints.googleLogIn]: Response.json(googleAccount),
   })
-  const rendered = await renderLogIn(language)
+  const rendered = await renderLogIn(language, routerState)
   fillForm(language)
   pressSubmit(language)
   const dialog = await screen.findByRole('dialog', {
@@ -286,6 +289,149 @@ describe('LogInScreen', () => {
       await waitFor(() => {
         expect(i18n.language).toBe(accountLanguage)
       })
+    })
+  })
+
+  describe('when it is opened from an invite card', () => {
+    const inviteState = { joinToken: testInviteToken }
+
+    it('has a back button to the join screen of the invite', async () => {
+      await renderLogIn('en', inviteState)
+
+      const back = screen.getByRole('link', { name: translated('en', 'common.back') })
+
+      expect(back.getAttribute('href')).toBe(routes.join(testInviteToken))
+    })
+
+    it('still has the link to the sign-up screen and carries the invite token to it', async () => {
+      const { router } = await renderLogIn('en', inviteState)
+      const link = screen.getByRole('link', { name: translated('en', 'auth.logIn.noAccount') })
+
+      fireEvent.click(link)
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.signUp)
+      })
+      expect(link.getAttribute('href')).toBe(routes.signUp)
+      expect(router.state.location.state).toEqual(inviteState)
+    })
+
+    it('goes back to the join screen, replacing the log-in entry in the history, after a successful log-in', async () => {
+      stubFetch(Response.json(testMe))
+      const { router } = await renderLogIn('en', inviteState)
+      fillForm('en')
+
+      pressSubmit('en')
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.join(testInviteToken))
+      })
+      expect(router.state.historyAction).toBe('REPLACE')
+    })
+
+    it('does not send the invite token to the log-in endpoint', async () => {
+      const fetchMock = stubFetch(Response.json(testMe))
+      await renderLogIn('en', inviteState)
+      fillForm('en')
+
+      pressSubmit('en')
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledOnce()
+      })
+      expect(JSON.stringify(sentRequest(fetchMock))).not.toContain(testInviteToken)
+    })
+
+    it('fills the email field from the state and still goes back to the join screen after logging in', async () => {
+      stubFetch(Response.json(testMe))
+      const { router } = await renderLogIn('en', { ...inviteState, email: 'ana@gmail.com' })
+      expect(fieldLabelled(translated('en', 'auth.email')).value).toBe('ana@gmail.com')
+      typeInto(translated('en', 'auth.password'), credentials.password)
+
+      pressSubmit('en')
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.join(testInviteToken))
+      })
+    })
+
+    it('stays on the log-in screen and keeps the back button to the join screen after the server refuses', async () => {
+      stubFetch(problemResponse(401, 'AUTH_INVALID_CREDENTIALS'))
+      const { router } = await renderLogIn('en', inviteState)
+      fillForm('en')
+
+      pressSubmit('en')
+      await screen.findByRole('alert')
+
+      expect(router.state.location.pathname).toBe(routes.logIn)
+      expect(
+        screen.getByRole('link', { name: translated('en', 'common.back') }).getAttribute('href'),
+      ).toBe(routes.join(testInviteToken))
+    })
+
+    it.each(unsafeJoinTokens)('goes only to the join path with the token %j encoded, never to an address of its own', async (token) => {
+      stubFetch(Response.json(testMe))
+      const { router } = await renderLogIn('en', { joinToken: token })
+      fillForm('en')
+
+      pressSubmit('en')
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(joinPathOf(token))
+      })
+      expect(router.state.location.search).toBe('')
+      expect(router.state.location.hash).toBe('')
+    })
+
+    it.each([
+      ['a number', { joinToken: 42 }],
+      ['a list', { joinToken: [testInviteToken] }],
+      ['missing', { somethingElse: testInviteToken }],
+    ])('goes to the home screen and keeps the back button to the welcome screen when the token in the state is %s', async (_name, state) => {
+      stubFetch(Response.json(testMe))
+      const { router } = await renderLogIn('en', state)
+      expect(
+        screen.getByRole('link', { name: translated('en', 'common.back') }).getAttribute('href'),
+      ).toBe(routes.welcome)
+      fillForm('en')
+
+      pressSubmit('en')
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.dashboard)
+      })
+    })
+
+    it('goes back to the join screen, replacing the entry in the history, after Google signs the person in through the dialog', async () => {
+      const { identity, dialog, router } = await renderLogInRefusedBecauseTheAccountUsesGoogle(
+        'en',
+        testMe,
+        inviteState,
+      )
+      const button = await findDrawnGoogleButton(identity, dialog)
+
+      sendGoogleCredential(identity, button, testIdToken)
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.join(testInviteToken))
+      })
+      expect(router.state.historyAction).toBe('REPLACE')
+    })
+
+    it.each(unsafeJoinTokens)('goes only to the join path with the token %j encoded after Google signs the person in through the dialog', async (token) => {
+      const { identity, dialog, router } = await renderLogInRefusedBecauseTheAccountUsesGoogle(
+        'en',
+        testMe,
+        { joinToken: token },
+      )
+      const button = await findDrawnGoogleButton(identity, dialog)
+
+      sendGoogleCredential(identity, button, testIdToken)
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(joinPathOf(token))
+      })
+      expect(router.state.location.search).toBe('')
     })
   })
 })

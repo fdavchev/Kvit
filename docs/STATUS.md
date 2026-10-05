@@ -1,16 +1,15 @@
 # Status: Kvit
 
-_Last updated: 2026-10-05 (Phase 7 in progress: Step 4 frontend done; Step 5 is next)_
+_Last updated: 2026-10-05 (Phase 7 in progress: Step 5 frontend members and join done; Step 6 is next)_
 
 ## Where we stopped
-- Branch: `feat/07-groups`, last commit `96c10fc` (Step 3: members and invite backend).
-- Uncommitted: Step 4 frontend groups (bottom bar, Groups list, Recently deleted, New group, group screen with the Add people card and Add a name sheet, Group settings with Delete + Undo and Leave, groups service and hooks, error codes, Undo toast helper, colour tokens) with its tests and the Step 4 contract in DECISIONS. Filip commits.
-- Done: Step 0 to 4. Left in Phase 7: Step 5 (Members screen, Join screen incl. the logged-out round trip; its Macedonian lines need Filip's OK first), Step 6 (real-browser check, /code-review), Step 7 (report, wrap-up).
-- Verification (VERIFIED by automated test, 2026-10-05): `dotnet build` 0 warnings; `dotnet test` 1454/1454; `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 1332/1332. NOT VERIFIED: any real-browser look at the new screens (Step 6), the `Groups` migration on Neon.
+- Branch: `feat/07-groups`. Step 4 and the follow-ups are committed or ready; uncommitted now: Step 5 (Members screen, Join screen, invite round trip through Sign up, Log in and the Google name screen, 9 more error codes, the "линк" wording) with its tests and the Step 5 contract in DECISIONS. Filip commits.
+- Done: Step 0 to 5. Left in Phase 7: Step 6 (real-browser check at 360 px and wide, light/dark, EN/MK; /code-review), Step 7 (phase report, decision log moved, ROADMAP/STATUS).
+- Verification (VERIFIED by automated test, 2026-10-05): `npm run lint` exit 0, `npm run build` exit 0, `npm test` 1862/1862. Backend unchanged since the baseline (1454/1454). NOT VERIFIED: any real-browser look at the group, Members and Join screens (Step 6); Google sign-in on the join card refreshing the preview (checked once by a throw-away test, no permanent test).
 
 ## Next step
-1. Filip commits Step 4.
-2. Step 5: propose, confirm the Members and Join Macedonian lines, then tester, then coder.
+1. Filip commits Step 5.
+2. Step 6: real-browser check (debugger, headless Chrome, scratch profile), then /code-review.
 
 ## Then
 - Phase 8 onward: expenses, balances, then the dashboard (Phase 11, Filip decides its layout, phone and web).

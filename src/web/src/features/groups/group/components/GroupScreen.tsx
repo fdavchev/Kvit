@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
-import { toast } from 'sonner'
 import { errorMessageKey } from '@/core/api/errors'
 import { routes } from '@/core/router/routes'
-import type { Group } from '@/core/services/groups/groupsService'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
 import { KvitError } from '@/shared/components/KvitError'
@@ -14,7 +12,7 @@ import { kvitChipLook } from '@/shared/components/kvitChipLook'
 import { GroupSizeLine } from '../../shared/components/GroupSizeLine'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
 import { useGroup } from '../hooks/useGroup'
-import { shareInviteLink } from '../shareInviteLink'
+import { useInviteLinkActions } from '../useInviteLinkActions'
 import { AddNameSheet } from './AddNameSheet'
 import { AddPeopleCard } from './AddPeopleCard'
 
@@ -22,19 +20,8 @@ export function GroupScreen() {
   const { t } = useTranslation()
   const groupId = useGroupIdParam()
   const groupQuery = useGroup(groupId)
+  const inviteLinkActions = useInviteLinkActions()
   const [isAddingName, setIsAddingName] = useState<boolean>(false)
-
-  async function shareLink(group: Group): Promise<void> {
-    try {
-      const outcome = await shareInviteLink(group.inviteToken)
-      if (outcome === 'copied') {
-        toast.success(t('group.linkCopied'))
-      }
-    } catch (error) {
-      console.error('Sharing the invite link failed', error)
-      toast.error(t('errors.generic'))
-    }
-  }
 
   function renderContent() {
     if (groupQuery.isPending) {
@@ -58,7 +45,10 @@ export function GroupScreen() {
           </h1>
           <GroupSizeLine memberCount={group.memberCount} currency={group.defaultCurrency} />
         </div>
-        <div className="flex justify-center pb-4">
+        <div className="flex flex-wrap justify-center gap-2 pb-4">
+          <Link to={routes.groupMembers(group.id)} className={kvitChipLook}>
+            {t('members.title')}
+          </Link>
           <Link to={routes.groupSettings(group.id)} className={kvitChipLook}>
             {t('group.settings')}
           </Link>
@@ -66,7 +56,7 @@ export function GroupScreen() {
         {group.memberCount === 1 && (
           <AddPeopleCard
             onAddName={() => setIsAddingName(true)}
-            onShareLink={() => void shareLink(group)}
+            onShareLink={() => void inviteLinkActions.share(group.inviteToken)}
           />
         )}
         <p className="pt-10 text-center text-[0.9375rem] text-muted-foreground">

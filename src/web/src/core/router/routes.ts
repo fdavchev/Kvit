@@ -13,4 +13,6 @@ export const routes = {
   recentlyDeletedGroups: '/groups/recently-deleted',
   group: (groupId: string) => `/groups/${groupId}`,
   groupSettings: (groupId: string) => `/groups/${groupId}/settings`,
+  groupMembers: (groupId: string) => `/groups/${groupId}/members`,
+  join: (token: string) => `/join/${token}`,
 } as const

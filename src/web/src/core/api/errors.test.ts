@@ -34,6 +34,15 @@ const mappedErrorCodes = [
   'MEMBER_NAME_INVALID',
   'MEMBER_NAME_TAKEN',
   'MEMBER_OWNER_CANNOT_LEAVE',
+  'MEMBER_NOT_FOUND',
+  'MEMBER_IS_OWNER',
+  'MEMBER_NOT_ACCOUNT',
+  'MEMBER_ALREADY_OWNER',
+  'MEMBER_CANNOT_CLAIM',
+  'MEMBER_NOT_CLAIMED',
+  'INVITE_NOT_FOUND',
+  'INVITE_REMOVED',
+  'INVITE_NOTHING_TO_UNDO',
 ]
 
 const errorTexts: Record<'en' | 'mk', Record<string, unknown>> = {
@@ -66,7 +75,7 @@ describe('errorMessageKey', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     const error = new ApiError('GET /api/groups/1/members failed with status 404', {
       httpStatus: 404,
-      errorCode: 'MEMBER_NOT_FOUND',
+      errorCode: 'SOMETHING_UNKNOWN',
     })
 
     expect(errorMessageKey(error)).toBe('errors.generic')
@@ -76,13 +85,13 @@ describe('errorMessageKey', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     const error = new ApiError('POST /api/groups/1/owner failed with status 400', {
       httpStatus: 400,
-      errorCode: 'MEMBER_ALREADY_OWNER',
+      errorCode: 'ANOTHER_UNKNOWN_CODE',
     })
 
     errorMessageKey(error)
 
     expect(consoleError).toHaveBeenCalledWith(
-      'No translation key is mapped for API error code "MEMBER_ALREADY_OWNER"',
+      'No translation key is mapped for API error code "ANOTHER_UNKNOWN_CODE"',
       error,
     )
   })

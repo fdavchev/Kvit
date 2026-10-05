@@ -18,7 +18,7 @@ export function WelcomeScreen() {
   const { language, changeLanguage } = useLanguage()
   useApiHealth()
   const [takenIdToken, setTakenIdToken] = useState<string | null>(null)
-  const signInWithGoogle = useGoogleSignIn(setTakenIdToken)
+  const signInWithGoogle = useGoogleSignIn(null, setTakenIdToken)
   const taglineTranslation = t('welcome.taglineTranslation')
 
   async function switchLanguage(newLanguage: Language): Promise<void> {

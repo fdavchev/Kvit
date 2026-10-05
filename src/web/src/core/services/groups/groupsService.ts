@@ -1,5 +1,14 @@
 import { apiRequest, jsonRequest } from '@/core/api/apiClient'
 import { endpoints } from '@/core/api/endpoints'
+import {
+  readCount,
+  readDate,
+  readList,
+  readObject,
+  readOneOf,
+  readText,
+  readYesNo,
+} from '@/core/services/readFields'
 import type { Currency } from '@/shared/utils/formatMoney'
 
 export const groupCurrencies: readonly Currency[] = ['MKD', 'EUR']
@@ -46,8 +55,6 @@ export interface GroupInput {
   emoji: string
   currency: Currency
 }
-
-type Fields = Record<string, unknown>
 
 export async function getGroups(): Promise<GroupList> {
   return parseGroupList(await apiRequest(endpoints.groups))
@@ -133,77 +140,4 @@ function parseGroup(body: unknown): Group {
     memberCount: readCount(fields, 'memberCount', what),
     inviteToken: readText(fields, 'inviteToken', what),
   }
-}
-
-function readObject(value: unknown, what: string): Fields {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    throw new Error(`Expected ${what} as a JSON object, got ${describeValue(value)}`)
-  }
-  return value as Fields
-}
-
-function readList(fields: Fields, name: string, what: string): unknown[] {
-  const value = fields[name]
-  if (!Array.isArray(value)) {
-    throw new Error(`Expected "${name}" in ${what} to be a list, got ${describeValue(value)}`)
-  }
-  return value
-}
-
-function readText(fields: Fields, name: string, what: string): string {
-  const value = fields[name]
-  if (typeof value !== 'string') {
-    throw new Error(`Expected "${name}" of ${what} to be a text, got ${describeValue(value)}`)
-  }
-  return value
-}
-
-function readYesNo(fields: Fields, name: string, what: string): boolean {
-  const value = fields[name]
-  if (typeof value !== 'boolean') {
-    throw new Error(
-      `Expected "${name}" of ${what} to be true or false, got ${describeValue(value)}`,
-    )
-  }
-  return value
-}
-
-function readCount(fields: Fields, name: string, what: string): number {
-  const value = fields[name]
-  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
-    throw new Error(
-      `Expected "${name}" of ${what} to be a whole number of 0 or more, got ${describeValue(value)}`,
-    )
-  }
-  return value
-}
-
-function readOneOf<Option extends string>(
-  fields: Fields,
-  name: string,
-  options: readonly Option[],
-  what: string,
-): Option {
-  const value = fields[name]
-  const option = options.find((allowed) => allowed === value)
-  if (option === undefined) {
-    throw new Error(
-      `Expected "${name}" of ${what} to be one of ${options.join(', ')}, got ${describeValue(value)}`,
-    )
-  }
-  return option
-}
-
-function readDate(fields: Fields, name: string, what: string): string {
-  const value = fields[name]
-  if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) {
-    throw new Error(
-      `Expected "${name}" of ${what} to be a date and time, got ${describeValue(value)}`,
-    )
-  }
-  return value
-}
-
-function describeValue(value: unknown): string {
-  return value === undefined ? 'nothing' : JSON.stringify(value)
 }

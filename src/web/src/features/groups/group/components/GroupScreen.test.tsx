@@ -53,6 +53,7 @@ async function renderGroup(options: RenderOptions = {}) {
     [
       { path: '/groups/:groupId', element: <GroupScreen /> },
       { path: '/groups/:groupId/settings', element: <p>group settings page</p> },
+      { path: '/groups/:groupId/members', element: <p>members page</p> },
       { path: routes.groups, element: <p>groups page</p> },
     ],
     routes.group(group.id),
@@ -206,6 +207,40 @@ describe('GroupScreen', () => {
       const link = screen.getByRole('link', { name: translated(language, 'group.settings') })
 
       expect(link.getAttribute('href')).toBe(routes.groupSettings(testGroup.id))
+    })
+
+    it.each(languages)('has a Members link to the members of this group (%s)', async (language) => {
+      await renderGroup({ language })
+      await showsGroupScreen()
+
+      const link = screen.getByRole('link', { name: translated(language, 'members.title') })
+
+      expect(link.getAttribute('href')).toBe(routes.groupMembers(testGroup.id))
+    })
+
+    it('has the Members link for a member who is not the owner too', async () => {
+      await renderGroup({ group: groupOf({ isOwner: false, memberCount: 3 }) })
+      await showsGroupScreen()
+
+      expect(screen.getByRole('link', { name: translated('en', 'members.title') })).toBeTruthy()
+    })
+
+    it('has the Members link when the group has several people and the Add people card is gone', async () => {
+      await renderGroup({ group: groupOf({ memberCount: 4 }) })
+      await showsGroupScreen()
+
+      expect(screen.getByRole('link', { name: translated('en', 'members.title') })).toBeTruthy()
+    })
+
+    it('opens the members of the group when the Members link is pressed', async () => {
+      const { router } = await renderGroup()
+      await showsGroupScreen()
+
+      fireEvent.click(screen.getByRole('link', { name: translated('en', 'members.title') }))
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.groupMembers(testGroup.id))
+      })
     })
 
     it('has the Group settings link for a member who is not the owner too', async () => {

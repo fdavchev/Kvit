@@ -31,6 +31,15 @@ const translatedErrorCodes = [
   'MEMBER_NAME_INVALID',
   'MEMBER_NAME_TAKEN',
   'MEMBER_OWNER_CANNOT_LEAVE',
+  'MEMBER_NOT_FOUND',
+  'MEMBER_IS_OWNER',
+  'MEMBER_NOT_ACCOUNT',
+  'MEMBER_ALREADY_OWNER',
+  'MEMBER_CANNOT_CLAIM',
+  'MEMBER_NOT_CLAIMED',
+  'INVITE_NOT_FOUND',
+  'INVITE_REMOVED',
+  'INVITE_NOTHING_TO_UNDO',
 ]
 const errorCodeMessageKeys = new Map<string, string>(
   translatedErrorCodes.map((code) => [code, `errors.${code}`]),

@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
+import {
+  joinTokenState,
+  pathAfterSignIn,
+  pathBeforeSignIn,
+  readJoinToken,
+} from '@/core/invites/joinRoundTrip'
 import { routes } from '@/core/router/routes'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitEmailField } from '@/shared/components/KvitEmailField'
@@ -16,6 +22,8 @@ import { useSignUp } from '../hooks/useSignUp'
 export function SignUpScreen() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
+  const joinToken = readJoinToken(location.state)
   const signUp = useSignUp()
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
@@ -24,13 +32,13 @@ export function SignUpScreen() {
   function submit(): void {
     signUp.mutate(
       { displayName, email, password },
-      { onSuccess: () => navigate(routes.dashboard, { replace: true }) },
+      { onSuccess: () => navigate(pathAfterSignIn(joinToken), { replace: true }) },
     )
   }
 
   return (
     <KvitScreen>
-      <KvitBackButton to={routes.welcome} />
+      <KvitBackButton to={pathBeforeSignIn(joinToken)} />
       <KvitScreenTitle>{t('auth.signUp.title')}</KvitScreenTitle>
       <KvitForm
         submitLabel={t('auth.signUp.title')}
@@ -38,7 +46,11 @@ export function SignUpScreen() {
         errorMessage={signUp.isError ? t(errorMessageKey(signUp.error)) : null}
         onSubmit={submit}
         footer={
-          <KvitLinkButton to={routes.logIn} variant="underlinedLink">
+          <KvitLinkButton
+            to={routes.logIn}
+            state={joinTokenState(joinToken)}
+            variant="underlinedLink"
+          >
             {t('welcome.haveAccount')}
           </KvitLinkButton>
         }

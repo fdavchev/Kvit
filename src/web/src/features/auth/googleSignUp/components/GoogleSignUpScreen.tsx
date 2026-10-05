@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from 'react-router'
+import { readJoinToken } from '@/core/invites/joinRoundTrip'
 import { readRouterStateText } from '@/core/router/readRouterStateText'
 import { routes } from '@/core/router/routes'
 import { GoogleSignUpForm } from './GoogleSignUpForm'
@@ -10,5 +11,5 @@ export function GoogleSignUpScreen() {
   if (idToken === null) {
     return <Navigate to={routes.welcome} replace />
   }
-  return <GoogleSignUpForm idToken={idToken} />
+  return <GoogleSignUpForm idToken={idToken} joinToken={readJoinToken(location.state)} />
 }

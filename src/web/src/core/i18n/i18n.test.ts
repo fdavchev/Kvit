@@ -1,16 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { collectTexts } from '@/test/localeTexts'
 import { createI18n } from './i18n'
 import en from './locales/en.json'
 import mk from './locales/mk.json'
-
-function collectTexts(node: object, prefix = ''): [string, unknown][] {
-  return Object.entries(node).flatMap(([key, value]): [string, unknown][] => {
-    const path = prefix === '' ? key : `${prefix}.${key}`
-    return typeof value === 'object' && value !== null
-      ? collectTexts(value, path)
-      : [[path, value]]
-  })
-}
 
 function collectKeys(node: object): string[] {
   return collectTexts(node).map(([path]) => path)

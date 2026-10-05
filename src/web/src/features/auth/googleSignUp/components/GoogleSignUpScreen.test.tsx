@@ -17,6 +17,8 @@ import {
   typeInto,
 } from '@/test/formTestHelpers'
 import { testGoogleProfile, testIdToken } from '@/test/googleTestHelpers'
+import { testInviteToken } from '@/test/groupTestData'
+import { joinPathOf, unsafeJoinTokens } from '@/test/inviteTestData'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
@@ -32,10 +34,13 @@ const rejectedAnswersInEachLanguage = languages.flatMap((language) =>
   rejectedAnswers.map(([code, status]) => [language, code, status] as const),
 )
 
-async function renderGoogleSignUp(language: Language = 'en') {
+async function renderGoogleSignUp(
+  language: Language = 'en',
+  routerState: unknown = { idToken: testIdToken },
+) {
   return renderElementWithProviders(<GoogleSignUpScreen />, routes.googleSignUp, {
     language,
-    routerState: { idToken: testIdToken },
+    routerState,
   })
 }
 
@@ -217,5 +222,98 @@ describe('GoogleSignUpScreen', () => {
     expect(nameField().value).toBe('Марко П.')
     expect(router.state.location.pathname).toBe(routes.googleSignUp)
     expect(queryClient.getQueryData(meQueryKey)).toBeUndefined()
+  })
+
+  describe('when it is reached from an invite card', () => {
+    const inviteState = { idToken: testIdToken, joinToken: testInviteToken }
+
+    it('shows the name form as usual', async () => {
+      await renderGoogleSignUp('en', inviteState)
+
+      expect(nameField().value).toBe(testGoogleProfile.name)
+    })
+
+    it('goes to the join screen, replacing the sign-up entry in the history, after a successful sign-up', async () => {
+      stubFetch(Response.json(testMe))
+      const { router } = await renderGoogleSignUp('en', inviteState)
+
+      pressSubmit()
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.join(testInviteToken))
+      })
+      expect(router.state.historyAction).toBe('REPLACE')
+    })
+
+    it('sends the same request to the Google sign-up endpoint and does not send the invite token', async () => {
+      const fetchMock = stubFetch(Response.json(testMe))
+      await renderGoogleSignUp('en', inviteState)
+
+      pressSubmit()
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledOnce()
+      })
+      const request = sentRequest(fetchMock)
+      expect(request).toMatchObject({
+        url: endpoints.googleSignUp,
+        body: { idToken: testIdToken, displayName: testGoogleProfile.name },
+      })
+      expect(JSON.stringify(request)).not.toContain(testInviteToken)
+    })
+
+    it('puts the new person into the me cache before going to the join screen', async () => {
+      stubFetch(Response.json(testMe))
+      const { router, queryClient } = await renderGoogleSignUp('en', inviteState)
+
+      pressSubmit()
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.join(testInviteToken))
+      })
+      expect(queryClient.getQueryData(meQueryKey)).toEqual(testMe)
+    })
+
+    it('stays on the screen after the server refuses', async () => {
+      stubFetch(problemResponse(400, 'AUTH_DISPLAY_NAME_INVALID'))
+      const { router } = await renderGoogleSignUp('en', inviteState)
+
+      pressSubmit()
+      await screen.findByRole('alert')
+
+      expect(router.state.location.pathname).toBe(routes.googleSignUp)
+    })
+
+    it.each(unsafeJoinTokens)('goes only to the join path with the token %j encoded, never to an address of its own', async (token) => {
+      stubFetch(Response.json(testMe))
+      const { router } = await renderGoogleSignUp('en', { idToken: testIdToken, joinToken: token })
+
+      pressSubmit()
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(joinPathOf(token))
+      })
+      expect(router.state.location.search).toBe('')
+      expect(router.state.location.hash).toBe('')
+    })
+
+    it('goes to the home screen when the token in the state is not a text', async () => {
+      stubFetch(Response.json(testMe))
+      const { router } = await renderGoogleSignUp('en', { idToken: testIdToken, joinToken: 42 })
+
+      pressSubmit()
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.dashboard)
+      })
+    })
+
+    it('still sends a visitor who has an invite token but no Google token to the welcome screen', async () => {
+      const { router } = await renderGoogleSignUp('en', { joinToken: testInviteToken })
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.welcome)
+      })
+    })
   })
 })
