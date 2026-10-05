@@ -1,4 +1,5 @@
 using Kvit.Application.Dispatching;
+using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Me;
 using Kvit.Contracts.Persistence;
@@ -19,15 +20,12 @@ namespace Kvit.Application.Commands.Auth
                 return Result.Failure<MeResponse>(newAccount.Error, newAccount.ErrorCode);
             }
 
-            await _unitOfWork.OpenTransactionAsync(cancellationToken);
-            Result<MeResponse> created = await _accountService.CreateAccountAsync(newAccount.Value, cancellationToken);
+            Result<MeResponse> created = await _unitOfWork.RunInTransactionAsync(() => _accountService.CreateAccountAsync(newAccount.Value, cancellationToken), cancellationToken);
             if (!created.IsSuccess)
             {
-                await _unitOfWork.RollbackAsync(cancellationToken);
                 return created;
             }
 
-            await _unitOfWork.CommitAsync(cancellationToken);
             await _accountService.SignInAsync(created.Value.Id);
 
             return created;

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
 import { readGoogleProfile } from '@/core/google/readGoogleProfile'
-import { routes } from '@/core/router/routes'
+import { pathAfterSignIn, pathBeforeSignIn } from '@/core/invites/joinRoundTrip'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitForm } from '@/shared/components/KvitForm'
 import { KvitScreen } from '@/shared/components/KvitScreen'
@@ -13,9 +13,10 @@ import { useGoogleSignUp } from '../hooks/useGoogleSignUp'
 
 interface GoogleSignUpFormProps {
   idToken: string
+  joinToken: string | null
 }
 
-export function GoogleSignUpForm({ idToken }: GoogleSignUpFormProps) {
+export function GoogleSignUpForm({ idToken, joinToken }: GoogleSignUpFormProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const signUp = useGoogleSignUp()
@@ -26,13 +27,13 @@ export function GoogleSignUpForm({ idToken }: GoogleSignUpFormProps) {
   function submit(): void {
     signUp.mutate(
       { idToken, displayName },
-      { onSuccess: () => navigate(routes.dashboard, { replace: true }) },
+      { onSuccess: () => navigate(pathAfterSignIn(joinToken), { replace: true }) },
     )
   }
 
   return (
     <KvitScreen>
-      <KvitBackButton to={routes.welcome} />
+      <KvitBackButton to={pathBeforeSignIn(joinToken)} />
       <KvitScreenTitle>{t('auth.googleSignUp.title')}</KvitScreenTitle>
       <KvitForm
         submitLabel={t('auth.googleSignUp.submit')}

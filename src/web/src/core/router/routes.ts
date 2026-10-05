@@ -8,4 +8,11 @@ export const routes = {
   googleSignUp: '/signup/google',
   setPassword: '/settings/set-password',
   privacy: '/privacy',
+  groups: '/groups',
+  newGroup: '/groups/new',
+  recentlyDeletedGroups: '/groups/recently-deleted',
+  group: (groupId: string) => `/groups/${groupId}`,
+  groupSettings: (groupId: string) => `/groups/${groupId}/settings`,
+  groupMembers: (groupId: string) => `/groups/${groupId}/members`,
+  join: (token: string) => `/join/${token}`,
 } as const

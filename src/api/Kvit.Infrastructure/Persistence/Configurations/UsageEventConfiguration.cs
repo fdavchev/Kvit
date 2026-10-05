@@ -9,8 +9,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<UsageEvent> builder)
         {
-            string knownTypes = string.Join(", ", Enum.GetNames<UsageEventType>().Select(name => $"'{name}'"));
-            builder.ToTable("usage_events", table => table.HasCheckConstraint("ck_usage_events_type", $"type IN ({knownTypes})"));
+            builder.ToTable("usage_events", table => table.HasCheckConstraint("ck_usage_events_type", EnumCheck.OneOf<UsageEventType>("type")));
 
             builder.Property(usageEvent => usageEvent.Type).HasConversion<string>();
 

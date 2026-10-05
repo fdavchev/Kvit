@@ -2,6 +2,12 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router'
 import { errorMessageKey, hasErrorCode } from '@/core/api/errors'
+import {
+  joinTokenState,
+  pathAfterSignIn,
+  pathBeforeSignIn,
+  readJoinToken,
+} from '@/core/invites/joinRoundTrip'
 import { readRouterStateText } from '@/core/router/readRouterStateText'
 import { routes } from '@/core/router/routes'
 import { useGoogleSignIn } from '@/features/auth/google/hooks/useGoogleSignIn'
@@ -19,8 +25,9 @@ export function LogInScreen() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
+  const joinToken = readJoinToken(location.state)
   const logIn = useLogIn()
-  const signInWithGoogle = useGoogleSignIn()
+  const signInWithGoogle = useGoogleSignIn(joinToken)
   const [email, setEmail] = useState<string>(
     () => readRouterStateText(location.state, 'email') ?? '',
   )
@@ -30,13 +37,13 @@ export function LogInScreen() {
   function submit(): void {
     logIn.mutate(
       { email, password },
-      { onSuccess: () => navigate(routes.dashboard, { replace: true }) },
+      { onSuccess: () => navigate(pathAfterSignIn(joinToken), { replace: true }) },
     )
   }
 
   return (
     <KvitScreen>
-      <KvitBackButton to={routes.welcome} />
+      <KvitBackButton to={pathBeforeSignIn(joinToken)} />
       <div className="flex flex-1 flex-col justify-center pb-12">
         <KvitScreenTitle>{t('auth.logIn.title')}</KvitScreenTitle>
         <KvitForm
@@ -51,7 +58,11 @@ export function LogInScreen() {
               <p className="text-center text-[0.9375rem] text-pretty text-muted-foreground">
                 {t('auth.logIn.forgot')}
               </p>
-              <KvitLinkButton to={routes.signUp} variant="underlinedLink">
+              <KvitLinkButton
+                to={routes.signUp}
+                state={joinTokenState(joinToken)}
+                variant="underlinedLink"
+              >
                 {t('auth.logIn.noAccount')}
               </KvitLinkButton>
             </>

@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Kvit.Api.Proxy;
 using Kvit.Api.Registers;
 using Kvit.Api.Settings;
@@ -6,10 +7,12 @@ using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddApplication();
+builder.Services.AddDomainServices();
 builder.Services.AddInfrastructure();
 builder.Services.AddAuth();
 builder.Services.AddDataProtectionKeys(DataProtectionSetting.LoadCertificate(builder.Configuration));

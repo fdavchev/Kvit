@@ -1,4 +1,4 @@
-import { ApiError } from './apiClient'
+import { ApiError, notFoundStatus } from './apiClient'
 
 const proxyCannotReachApiStatus = 502
 const translatedErrorCodes = [
@@ -21,6 +21,25 @@ const translatedErrorCodes = [
   'AUTH_GOOGLE_EMAIL_TAKEN',
   'AUTH_USES_GOOGLE',
   'AUTH_PASSWORD_ALREADY_SET',
+  'GROUP_NOT_FOUND',
+  'GROUP_NOT_OWNER',
+  'GROUP_NAME_INVALID',
+  'GROUP_EMOJI_INVALID',
+  'GROUP_CURRENCY_INVALID',
+  'GROUP_NOT_DELETED',
+  'GROUP_RESTORE_EXPIRED',
+  'MEMBER_NAME_INVALID',
+  'MEMBER_NAME_TAKEN',
+  'MEMBER_OWNER_CANNOT_LEAVE',
+  'MEMBER_NOT_FOUND',
+  'MEMBER_IS_OWNER',
+  'MEMBER_NOT_ACCOUNT',
+  'MEMBER_ALREADY_OWNER',
+  'MEMBER_CANNOT_CLAIM',
+  'MEMBER_NOT_CLAIMED',
+  'INVITE_NOT_FOUND',
+  'INVITE_REMOVED',
+  'INVITE_NOTHING_TO_UNDO',
 ]
 const errorCodeMessageKeys = new Map<string, string>(
   translatedErrorCodes.map((code) => [code, `errors.${code}`]),
@@ -28,6 +47,10 @@ const errorCodeMessageKeys = new Map<string, string>(
 
 export function hasErrorCode(error: unknown, errorCode: string): boolean {
   return error instanceof ApiError && error.errorCode === errorCode
+}
+
+export function isNotFoundError(error: unknown): boolean {
+  return error instanceof ApiError && error.httpStatus === notFoundStatus
 }
 
 export function errorMessageKey(error: unknown): string {
@@ -41,7 +64,9 @@ export function errorMessageKey(error: unknown): string {
     return 'errors.network'
   }
   if (error.errorCode === null) {
-    return 'errors.generic'
+    return error.httpStatus === notFoundStatus
+      ? 'errors.GROUP_NOT_FOUND'
+      : 'errors.generic'
   }
   const knownKey = errorCodeMessageKeys.get(error.errorCode)
   if (knownKey === undefined) {

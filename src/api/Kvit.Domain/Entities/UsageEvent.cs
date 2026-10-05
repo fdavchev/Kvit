@@ -20,13 +20,28 @@ namespace Kvit.Domain.Entities
 
         public static UsageEvent SignedUp(Guid userId, SignUpMethod method, DateTimeOffset occurredAt)
         {
+            return New(userId, UsageEventType.SignedUp, method.ToString(), occurredAt);
+        }
+
+        public static UsageEvent GroupCreated(Guid userId, DateTimeOffset occurredAt)
+        {
+            return New(userId, UsageEventType.GroupCreated, null, occurredAt);
+        }
+
+        public static UsageEvent JoinedViaInvite(Guid userId, DateTimeOffset occurredAt)
+        {
+            return New(userId, UsageEventType.JoinedViaInvite, null, occurredAt);
+        }
+
+        private static UsageEvent New(Guid userId, UsageEventType type, string? detail, DateTimeOffset occurredAt)
+        {
             DateTimeOffset occurredAtUtc = occurredAt.ToUniversalTime();
 
             return new UsageEvent
             {
                 UserId = userId,
-                Type = UsageEventType.SignedUp,
-                Detail = method.ToString(),
+                Type = type,
+                Detail = detail,
                 OccurredAt = occurredAtUtc,
                 OccurredOn = DateOnly.FromDateTime(occurredAtUtc.UtcDateTime),
             };

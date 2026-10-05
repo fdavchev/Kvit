@@ -11,7 +11,13 @@
     "switchToDarkMode": "Switch to dark mode",
     "switchToLightMode": "Switch to light mode",
     "privacy": "Privacy",
-    "close": "Close"
+    "close": "Close",
+    "undo": "Undo"
+  },
+  "nav": {
+    "home": "Home",
+    "groups": "Groups",
+    "settings": "Settings"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -34,7 +40,26 @@
     "AUTH_GOOGLE_NO_ACCOUNT": "There is no Kvit account for this Google account yet.",
     "AUTH_GOOGLE_EMAIL_TAKEN": "This email already has an account.",
     "AUTH_USES_GOOGLE": "This account signs in with Google.",
-    "AUTH_PASSWORD_ALREADY_SET": "This account already has a password. Use \"Change password\"."
+    "AUTH_PASSWORD_ALREADY_SET": "This account already has a password. Use \"Change password\".",
+    "GROUP_NOT_FOUND": "This group doesn't exist or you're no longer in it.",
+    "GROUP_NOT_OWNER": "Only the group's owner can do this.",
+    "GROUP_NAME_INVALID": "Enter a name (up to 60 characters).",
+    "GROUP_EMOJI_INVALID": "Pick an emoji.",
+    "GROUP_CURRENCY_INVALID": "Pick MKD or EUR.",
+    "GROUP_NOT_DELETED": "This group is not deleted.",
+    "GROUP_RESTORE_EXPIRED": "This group was deleted more than 30 days ago and can't be restored.",
+    "MEMBER_NAME_INVALID": "Enter a name (up to 60 characters).",
+    "MEMBER_NAME_TAKEN": "Someone called “{{name}}” is already in this group.",
+    "MEMBER_OWNER_CANNOT_LEAVE": "You are the owner. Make someone else the owner before you leave.",
+    "MEMBER_NOT_FOUND": "This person is no longer in the group.",
+    "MEMBER_IS_OWNER": "The owner can't be removed.",
+    "MEMBER_NOT_ACCOUNT": "Only a person with a Kvit account can become the owner.",
+    "MEMBER_ALREADY_OWNER": "This person is already the owner.",
+    "MEMBER_CANNOT_CLAIM": "You can't take this name.",
+    "MEMBER_NOT_CLAIMED": "This name was not taken by anyone.",
+    "INVITE_NOT_FOUND": "This invite link no longer works. Ask for a new one.",
+    "INVITE_REMOVED": "You were removed from this group. Ask the owner to let you back in.",
+    "INVITE_NOTHING_TO_UNDO": "There is no earlier link to go back to."
   },
   "language": {
     "label": "Language",
@@ -135,6 +160,100 @@
         "body": "Ask Filip to delete your account. Your name stays on old group expenses, so other people's balances stay correct."
       }
     }
+  },
+  "groups": {
+    "title": "Groups",
+    "newButton": "New group",
+    "empty": "You have no groups yet. Create one, or open a link a friend sent you.",
+    "people_one": "{{count}} person",
+    "people_other": "{{count}} people",
+    "finished": "Finished",
+    "finishedReadOnly": "Finished · read-only",
+    "recentlyDeletedLink": "Recently deleted",
+    "goToGroups": "Go to Groups"
+  },
+  "recentlyDeleted": {
+    "title": "Recently deleted",
+    "intro": "Groups you delete stay here for 30 days. Only the group's owner can restore one.",
+    "empty": "Nothing was deleted in the last 30 days.",
+    "restore": "Restore",
+    "restorableUntil": "Can be restored until {{date}}",
+    "restored": "Group restored"
+  },
+  "groupFields": {
+    "name": "Group name",
+    "namePlaceholder": "Greece trip",
+    "emoji": "Emoji",
+    "currency": "Currency",
+    "currencyHint": "New expenses use this currency.",
+    "nameInvalid": "Enter a name (up to 60 characters)."
+  },
+  "newGroup": {
+    "title": "New group",
+    "create": "Create group"
+  },
+  "group": {
+    "addPeople": "Add people",
+    "addPeopleNoKvit": "No Kvit? Add them as a name.",
+    "addPeopleHasKvit": "Have Kvit? Share the link and they join with their own account.",
+    "addName": "Add a name",
+    "shareLink": "Share invite link",
+    "linkCopied": "Link copied",
+    "settings": "Group settings",
+    "expensesSoon": "Expenses will show up here soon."
+  },
+  "addName": {
+    "title": "Add a name",
+    "label": "Name",
+    "hint": "For someone without Kvit, like Grandma.",
+    "submit": "Add"
+  },
+  "groupSettings": {
+    "title": "Group settings",
+    "save": "Save",
+    "saved": "Saved",
+    "delete": "Delete group",
+    "deleted": "Group deleted",
+    "leave": "Leave group",
+    "left": "You left {{name}}",
+    "ownerCannotLeave": "You are the owner. Make someone else the owner before you leave."
+  },
+  "members": {
+    "title": "Members",
+    "owner": "Owner",
+    "you": "You",
+    "nameOnly": "Just a name",
+    "tookName": "Took the name “{{name}}”",
+    "addNameLink": "+ Add a name",
+    "invite": {
+      "title": "Invite link",
+      "share": "Share",
+      "copy": "Copy link",
+      "reset": "Reset link",
+      "resetDone": "Link reset. The old link no longer works."
+    },
+    "makeOwner": "Make owner",
+    "ownerNow": "{{name}} is now the owner",
+    "remove": "Remove from group",
+    "removed": "Removed: {{name}}",
+    "undoClaim": "Undo claim",
+    "claimUndone": "{{name}} stays in the group. “{{claimed}}” is just a name again.",
+    "thatsMe": "That's me",
+    "claimed": "You are now “{{name}}” in this group.",
+    "removedTitle": "Removed",
+    "letBackIn": "Let back in",
+    "backInGroup": "{{name}} is back in the group",
+    "optionsFor": "Options for {{name}}"
+  },
+  "join": {
+    "invitedTo": "You're invited to {{name}}",
+    "inGroup": "In the group",
+    "join": "Join",
+    "areYou": "Are you one of these?",
+    "imNew": "No, I'm new",
+    "joined": "You joined {{name}}",
+    "signInHint": "Create an account or log in to join.",
+    "removed": "You were removed from {{name}}. Ask the owner to let you back in."
   },
   "notFound": {
     "title": "Page not found",

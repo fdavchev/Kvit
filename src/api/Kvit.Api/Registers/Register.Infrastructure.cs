@@ -1,8 +1,11 @@
 using Kvit.Api.Settings;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Persistence;
+using Kvit.Domain.Interfaces;
 using Kvit.Infrastructure.Auth;
+using Kvit.Infrastructure.Groups;
 using Kvit.Infrastructure.Persistence;
+using Kvit.Infrastructure.Repositories;
 
 namespace Kvit.Api.Registers
 {
@@ -18,6 +21,14 @@ namespace Kvit.Api.Registers
             services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<PasswordResetService>();
+            services.AddSingleton<IInviteTokenGenerator, InviteTokenGenerator>();
+
+            services.Scan(scan => scan
+                .FromAssemblyOf<GroupRepository>()
+                .AddClasses(classes => classes.InNamespaceOf<GroupRepository>())
+                .AsMatchingInterface()
+                .WithScopedLifetime());
+
             services.AddSingleton<IGoogleTokenChecker>(serviceProvider =>
                 new GoogleTokenChecker(GoogleSetting.Read(serviceProvider.GetRequiredService<IConfiguration>())));
 

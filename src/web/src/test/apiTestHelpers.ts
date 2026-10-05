@@ -77,7 +77,7 @@ export function requestCountTo(fetchMock: Mock<typeof fetch>, url: string): numb
   return fetchMock.mock.calls.filter(([input]) => String(input) === url).length
 }
 
-function describeRequest([input, init]: Parameters<typeof fetch>): SentRequest {
+export function describeRequest([input, init]: Parameters<typeof fetch>): SentRequest {
   const body = init?.body
   return {
     url: String(input),

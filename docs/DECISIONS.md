@@ -1,5 +1,21 @@
 # Decisions
 
+## 2026-10-05: Phase 7 (groups, members, invite links): done and merged, the rules that stay
+The whole Phase 7 decision log (Filip's product answers, the technical choices, the Step 2 to Step 5 contracts, the Step 6 fixes, rejected alternatives) moved word for word to the end of `reports/2026-10-05-phase-07-groups.md`, section "Decisions and rejected alternatives". What stays true:
+- **Roles:** any member adds plain names and shares the link; only the owner renames, changes the emoji or currency, resets the link (with Undo), removes, makes someone owner, undoes a claim, deletes and restores. The owner can't leave until someone else is owner; only a person with an account can become owner. Zero-balance checks for leave, remove and delete come in Phase 9.
+- **Removed vs left:** a removed person is blocked from the old link ("You were removed from <group>. Ask the owner to let you back in."); the owner's **Removed** list has **Let back in** (same member, old history). A person who left can rejoin with the link. Undo claim keeps the person in the group and turns the name back into a plain name.
+- **Deleted group:** "Group deleted · Undo" toast and **Recently deleted** for 30 days (owner only, Restore). The rows stay until the BACKLOG cleanup exists.
+- **Same name in a group is refused** (letter case ignored): "Someone called “{name}” is already in this group." The invite card has no inviter name.
+- **"That's me"** lets a member with nothing recorded under their own name take a plain name; the owner's Undo claim brings the old entry back. Merging two people's expenses is in BACKLOG.
+- **Joining without an account** is not in Phase 7 and is the top BACKLOG "must do".
+- **Invite token:** 32 random bytes, base64url, plain text in the database, only ever in a POST body (never in a URL); one `invite` rate limit of 20 requests per 10 minutes shared by preview and join. A 429 is never retried by the website.
+- **A non-member gets 404 `GROUP_NOT_FOUND`**, a non-owner 403 `GROUP_NOT_OWNER`; a group id that is not a Guid is a 404 too and the website shows "group not found" (with **Go to Groups**, never Try again).
+- **Round trip after sign-in:** router state `{ joinToken }` only (a token, never a free address); a reload in the middle of sign-up lands on the dashboard.
+- **Macedonian:** "link" is "линк", never "врска" (except the internet-connection lines); a group's name always follows "групата" and is in quotes.
+- **Looks:** bottom bar Home · Groups · Settings in the pill look, tabs by tap only; the selected tab in dark mode is the deep orange `#b54a00` with white text; anything that removes or ends something is wine red (`--danger`, `--danger-fill`) including its toasts; Owner badge and "That's me" use `--pill` (white in light mode, the page background `#351f1b` in dark mode). Toasts stay 4 seconds; sheets slide up and away (about 0.2 s, none under reduce motion) through Tailwind's `starting:` classes and `useKvitSheet().close()`.
+- **Group name:** 1 to 60 characters after trimming, checked on the phone and on the server.
+- **Code:** soft delete by explicit `deleted_at IS NULL` filters (no global query filter); enums stored as text with check constraints; domain services and repository interfaces in the Domain, repositories in Infrastructure; the money rules still wait for Phase 8.
+
 ## 2026-10-03: Phase 6 (Google sign-in + privacy page): done and merged, the rules that stay
 The whole Phase 6 decision log (token check, endpoints, headers, the Google button measurements, product answers, rejected alternatives) moved word for word to the end of `reports/2026-10-03-phase-06-google-sign-in.md`, section "Decisions and rejected alternatives". What stays true:
 - **Google sign-in:** the API checks Google's ID token (audience = Kvit's client id) and identifies people by Google's permanent id (`sub`), never by email. A Google email that already has a password account is never merged automatically (pop-up "This email already has an account."). The first Google sign-in asks the name once, pre-filled. A Google account can add a password in Settings.

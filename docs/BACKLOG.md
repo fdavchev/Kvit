@@ -1,6 +1,8 @@
 # Backlog
 
 ## To be done (after the first version)
+- [ ] **Animations (Filip, 2026-10-03: "we are going to be doing these animations, remember that we need them on certain things").** Seen so far in the Phase 7 mockup: the Undo toast slides up and away (built in Phase 7 Step 4 through Sonner, 4 s; the bottom sheet slide is built there too), bottom sheets slide up (Add a name, the row menu), the selected tab moves between tabs, a row appearing or leaving a list (a name added, a person removed), the Finished row opening. Left for this pass (Filip, 2026-10-05): Sonner's toasts slide in at its own 0.4 s, DECISIONS wants about 0.2 s. Each one respects "reduce motion". Claude proposes the full list and the exact timings in the Phase 11 polish pass at the latest, and does the cheap ones (toast, sheets) while building the screens that have them. Filip decides what stays.
+- [ ] **API error handler (Filip, 2026-10-05, found when the Groups list showed the generic message because a local migration was missing):** the API has no global exception handler, so any unexpected crash is a bare 500 with no error code and the website shows "Something went wrong" for it. Add one that logs the exception with its details and answers a problem-details body with a clear code (for example `SERVER_ERROR`), plus the matching `errors.SERVER_ERROR` text in en.json and mk.json, so a crash can be told apart from other errors. Never put exception text or secrets in the answer.
 - [ ] Scanning receipt QR codes (Macedonian fiscal receipts). The QR format still needs research; it's NOT VERIFIED.
 - [ ] Recurring expenses (rent, subscriptions)
 - [ ] CSV export
@@ -12,7 +14,7 @@
 - [ ] Several payers for one expense
 - [ ] Charts
 - [ ] "Share balances" button: turns a group's balances into a text message and opens the phone's share menu (Viber, WhatsApp…). A free reminder, with no bot needed. Checked 2026-09-24: the phone's share menu (Web Share API), `wa.me` links and `viber://forward` links are all free. Desktop Chrome has no share menu, so show WhatsApp/Viber buttons there.
-- [ ] Joining a group without an account: open the invite link, tap your name, and the device remembers you.
+- [ ] **MUST DO (Filip, 2026-10-03, "we will add no account join later"):** Joining a group without an account: open the invite link, tap your name, and the device remembers you. Needs a guest identity on the phone, rules for who may claim which name, fixing wrong claims, and a plan for a lost phone. Phase 7 only offers Google (1 tap) or email at the link. Schedule it right after Release 1 unless Filip decides otherwise.
 - [ ] Keeping the server awake: ask Render support whether pings are allowed, or move to a cheap paid plan if there are real daily users.
 - [ ] Time zone: a picker on Sign up and Log in only when the phone reports no usable zone, plus Settings → "Choose manually" (needs an endpoint that saves the zone and sets `is_time_zone_manual`). When it exists, the `TIME_ZONE_INVALID` text gets "Choose manually" back (Filip, 2026-09-30)
 - [ ] Forgot password / password reset by email (needs Gmail SMTP) When it exists, the Log in note "Forgot your password? Ask Filip to reset it." becomes a "Reset password" link (Filip's joke idea: keep "Ask Filip to reset it" beside it). Until then Filip resets by hand with `scripts/ResetPassword.cs` (Phase 4, Step 3b)
@@ -46,6 +48,18 @@
 - [ ] Link a Google sign-in to an existing password account (a safe way, e.g. the person logs in with the password first, then adds Google in Settings). Phase 6 never merges automatically (DECISIONS), so today the pop-up only offers "Log in"
 - [ ] Google sign-in loose ends (Step 2b review): (a) a 401 `AUTH_GOOGLE_TOKEN_INVALID` is treated like "session ended" by `queryClient.ts` (only matters if a signed-in person taps Google on Welcome; fix: also exempt that code, with a test); (b) Google keeps one callback for the whole page, so two Google buttons that ever need different handlers would clash (today every button runs the same flow)- [ ] The main JavaScript file is 559 kB (limit warning at 500 kB; 497 kB before Phase 6). Split the code by screen (`React.lazy` per route) when the build warning matters or the app feels slow on a phone
 - [ ] Settings: change the display name (Phase 6 asks the name once, pre-filled from Google; changing it later has no screen yet)
+- [ ] **Found in the Phase 7 real-browser check (2026-10-05; Filip agreed to skip them for Phase 7):**
+  - The undo toast covers a sheet's Close button (about 3.4 s) when the sheet opens while the toast is still up. Fix: put the sheet and its backdrop above the toaster, so the toast keeps ticking underneath. Escape and a backdrop tap close the sheet meanwhile.
+  - The 61-character name error text is not linked to its field (`aria-describedby`) for a screen reader.
+  - A long hyphenated name breaks at its hyphen ("Petrovska-" / "Kostadinovska") in the claim button and on the Members row.
+  - Every group's emoji tile is the same orange; the mockup gives each group its own tile colour (needs a rule for which colour a group gets).
+  - On Members, a new toast stacks over the old "Removed: x · Undo" one and covers "Let back in" for about 4 s.
+  - Share sends only the link (no title or text).
+  - Join stays pressable on a dead link; each press repeats the 404 and counts toward the invite limit.
+  - The Google button measures its width once, so a resized window leaves it too wide or too narrow (Phase 6 component; a fresh load is fine).
+  - The console warning "google.accounts.id.initialize() is called multiple times" when Welcome or the join card is shown again in the same tab (since Phase 6).
+  - The browser's Back button after joining can open "Create account" while signed in: `/signup`, `/login` and `/welcome` should send a signed-in person away, and the in-app Back button and the Sign up / Log in links should replace history instead of adding to it.
+  - The backend's `Retry-After` is always 600 seconds (same item as the one above about the whole window).
 
 ## Skipped on purpose
 - CI runs twice on a pull-request branch (one run for `push`, one for `pull_request`; review finding 01-5, 2026-09-29). Left as it is: the second run tests the merge result with `main`, the cost is only free GitHub minutes, and limiting `push` to `main` would drop the check on a branch that has no pull request yet. Revisit only if the free minutes ever run short.

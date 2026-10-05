@@ -15,6 +15,8 @@ import {
   fieldLabelled,
   typeInto,
 } from '@/test/formTestHelpers'
+import { testInviteToken } from '@/test/groupTestData'
+import { joinPathOf, unsafeJoinTokens } from '@/test/inviteTestData'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
@@ -32,8 +34,8 @@ const rejectedAnswersInEachLanguage = languages.flatMap((language) =>
   rejectedAnswers.map(([code, status]) => [language, code, status] as const),
 )
 
-async function renderSignUp(language: Language = 'en') {
-  return renderElementWithProviders(<SignUpScreen />, routes.signUp, { language })
+async function renderSignUp(language: Language = 'en', routerState?: unknown) {
+  return renderElementWithProviders(<SignUpScreen />, routes.signUp, { language, routerState })
 }
 
 function fillForm(language: Language): void {
@@ -199,5 +201,103 @@ describe('SignUpScreen', () => {
     expect(fieldLabelled(translated('en', 'auth.email')).value).toBe(newAccount.email)
     expect(fieldLabelled(translated('en', 'auth.password')).value).toBe(newAccount.password)
     expect(router.state.location.pathname).toBe(routes.signUp)
+  })
+
+  describe('when it is opened from an invite card', () => {
+    const inviteState = { joinToken: testInviteToken }
+
+    it('has a back button to the join screen of the invite', async () => {
+      await renderSignUp('en', inviteState)
+
+      const back = screen.getByRole('link', { name: translated('en', 'common.back') })
+
+      expect(back.getAttribute('href')).toBe(routes.join(testInviteToken))
+    })
+
+    it('still has the link to the log-in screen and carries the invite token to it', async () => {
+      const { router } = await renderSignUp('en', inviteState)
+      const link = screen.getByRole('link', { name: translated('en', 'welcome.haveAccount') })
+
+      fireEvent.click(link)
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.logIn)
+      })
+      expect(link.getAttribute('href')).toBe(routes.logIn)
+      expect(router.state.location.state).toEqual(inviteState)
+    })
+
+    it('goes back to the join screen, replacing the sign-up entry in the history, after a successful sign-up', async () => {
+      stubFetch(Response.json(testMe))
+      const { router } = await renderSignUp('en', inviteState)
+      fillForm('en')
+
+      pressSubmit('en')
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.join(testInviteToken))
+      })
+      expect(router.state.historyAction).toBe('REPLACE')
+    })
+
+    it('does not send the invite token to the register endpoint', async () => {
+      const fetchMock = stubFetch(Response.json(testMe))
+      await renderSignUp('en', inviteState)
+      fillForm('en')
+
+      pressSubmit('en')
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledOnce()
+      })
+      expect(JSON.stringify(sentRequest(fetchMock))).not.toContain(testInviteToken)
+    })
+
+    it('stays on the sign-up screen and keeps the back button to the join screen after the server refuses', async () => {
+      stubFetch(problemResponse(409, 'AUTH_EMAIL_TAKEN'))
+      const { router } = await renderSignUp('en', inviteState)
+      fillForm('en')
+
+      pressSubmit('en')
+      await screen.findByRole('alert')
+
+      expect(router.state.location.pathname).toBe(routes.signUp)
+      expect(
+        screen.getByRole('link', { name: translated('en', 'common.back') }).getAttribute('href'),
+      ).toBe(routes.join(testInviteToken))
+    })
+
+    it.each(unsafeJoinTokens)('goes only to the join path with the token %j encoded, never to an address of its own', async (token) => {
+      stubFetch(Response.json(testMe))
+      const { router } = await renderSignUp('en', { joinToken: token })
+      fillForm('en')
+
+      pressSubmit('en')
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(joinPathOf(token))
+      })
+      expect(router.state.location.search).toBe('')
+      expect(router.state.location.hash).toBe('')
+    })
+
+    it.each([
+      ['a number', { joinToken: 42 }],
+      ['a list', { joinToken: [testInviteToken] }],
+      ['missing', { somethingElse: testInviteToken }],
+    ])('goes to the home screen and keeps the back button to the welcome screen when the token in the state is %s', async (_name, state) => {
+      stubFetch(Response.json(testMe))
+      const { router } = await renderSignUp('en', state)
+      expect(
+        screen.getByRole('link', { name: translated('en', 'common.back') }).getAttribute('href'),
+      ).toBe(routes.welcome)
+      fillForm('en')
+
+      pressSubmit('en')
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.dashboard)
+      })
+    })
   })
 })

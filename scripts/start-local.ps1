@@ -15,7 +15,11 @@ $ApiPort = 5018
 $WebPort = 5173
 $ApiHealthUrl = "http://localhost:$ApiPort/health"
 $WebUrl = "http://localhost:$WebPort"
+$ApiFolder = Join-Path $RepositoryRoot 'src\api'
 $DatabaseContainer = 'kvit-postgres'
+$DatabaseUser = 'kvit'
+$DatabaseName = 'kvit'
+$MigrationUpdateCommand = 'dotnet ef database update --project src/api/Kvit.Infrastructure --startup-project src/api/Kvit.Api --no-build'
 $DatabaseTimeoutSeconds = 60
 $ApiTimeoutSeconds = 120
 $WebTimeoutSeconds = 60
@@ -164,6 +168,68 @@ function Wait-DatabaseHealthy {
     Exit-WithError "The database container $DatabaseContainer was not healthy after $DatabaseTimeoutSeconds seconds; its health status is '$status'. See why with: docker logs $DatabaseContainer"
 }
 
+function Get-CodeMigrationIds {
+    @(Get-ChildItem -LiteralPath $ApiFolder -Recurse -File -Filter '*.cs' |
+        Where-Object { $_.Name -match '^\d{14}_\w+\.cs$' } |
+        ForEach-Object { $_.BaseName } |
+        Sort-Object)
+}
+
+function Invoke-AppliedMigrationsQuery {
+    $sql = @(
+        "select to_regclass('public.""__EFMigrationsHistory""') is not null as history_exists \gset"
+        '\if :history_exists'
+        'select migration_id from "__EFMigrationsHistory" order by 1;'
+        '\endif'
+    ) -join "`n"
+    $ErrorActionPreference = 'Continue'
+    $lines = @($sql | & docker exec -i $DatabaseContainer psql -X -q -t -A -v ON_ERROR_STOP=1 -U $DatabaseUser -d $DatabaseName 2>&1 | ForEach-Object { "$_" })
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = 'Stop'
+    [pscustomobject]@{ ExitCode = $exitCode; Lines = $lines }
+}
+
+function Get-PendingMigrationIds {
+    param([string[]]$CodeIds, [string[]]$AppliedIds)
+    @($CodeIds | Where-Object { $AppliedIds -notcontains $_ })
+}
+
+function Write-MigrationCheckNote {
+    param([string]$Reason)
+    Write-Host ''
+    Write-Host "Note: could not check whether the local database has every database update (migration) the code has. $Reason`nStarting anyway." -ForegroundColor Yellow
+    Write-Host ''
+}
+
+function Write-PendingMigrationsWarning {
+    Write-Host 'Checking that the local database has every database update (migration) the code has...'
+    $codeIds = @(Get-CodeMigrationIds)
+    if ($codeIds.Count -eq 0) {
+        Write-MigrationCheckNote "No migration files (named like 20261003135015_Groups.cs) were found under $ApiFolder."
+        return
+    }
+    $applied = Invoke-AppliedMigrationsQuery
+    if ($applied.ExitCode -ne 0) {
+        Write-MigrationCheckNote ("Reading the list of applied updates with 'docker exec $DatabaseContainer psql' failed with exit code $($applied.ExitCode):`n" + ($applied.Lines -join "`n"))
+        return
+    }
+    $appliedIds = @($applied.Lines | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+    $pendingIds = @(Get-PendingMigrationIds -CodeIds $codeIds -AppliedIds $appliedIds)
+    if ($pendingIds.Count -eq 0) {
+        return
+    }
+    $lines = @("WARNING: the local database is missing $($pendingIds.Count) database update(s) (migrations) that the code has:")
+    $lines += @($pendingIds | ForEach-Object { "  $_" })
+    $lines += 'Screens that need them will show an error. The app never applies updates by itself.'
+    $lines += 'Once Kvit is running, apply them with this command in a terminal in the repository root (the folder with Kvit.slnx):'
+    $lines += "  $MigrationUpdateCommand"
+    $lines += "Keep --no-build: the open '$ApiWindowTitle' window locks the API's files, so the command must not try to build them."
+    $lines += 'Starting anyway.'
+    Write-Host ''
+    Write-Host ($lines -join "`n") -ForegroundColor Yellow
+    Write-Host ''
+}
+
 function Install-WebPackagesIfMissing {
     if (Test-Path -LiteralPath (Join-Path $WebFolder 'node_modules')) {
         return
@@ -283,6 +349,7 @@ function Start-LocalApp {
     Assert-PortsFree @($ApiPort, $WebPort)
     Start-Database
     Wait-DatabaseHealthy
+    Write-PendingMigrationsWarning
     Install-WebPackagesIfMissing
     Start-Api
     Start-Website
