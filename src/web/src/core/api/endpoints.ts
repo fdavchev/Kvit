@@ -9,4 +9,9 @@ export const endpoints = {
   setPassword: '/api/auth/set-password',
   me: '/api/me',
   meLanguage: '/api/me/language',
+  groups: '/api/groups',
+  group: (groupId: string) => `/api/groups/${groupId}`,
+  groupRestore: (groupId: string) => `/api/groups/${groupId}/restore`,
+  groupLeave: (groupId: string) => `/api/groups/${groupId}/leave`,
+  groupMembers: (groupId: string) => `/api/groups/${groupId}/members`,
 } as const

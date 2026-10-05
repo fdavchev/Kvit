@@ -6,7 +6,6 @@ import type { Language } from '@/core/i18n/language'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import { routes } from '@/core/router/routes'
 import { useTheme } from '@/core/theme/useTheme'
-import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitLanguageSwitch } from '@/shared/components/KvitLanguageSwitch'
 import { KvitLinkButton } from '@/shared/components/KvitLinkButton'
@@ -39,8 +38,7 @@ export function SettingsScreen() {
 
   return (
     <KvitScreen>
-      <div className="flex items-center justify-between gap-4">
-        <KvitBackButton to={routes.dashboard} />
+      <div className="flex items-center justify-end gap-4">
         <KvitLanguageSwitch language={language} onChange={switchLanguage} />
       </div>
       <KvitScreenTitle>{t('settings.title')}</KvitScreenTitle>

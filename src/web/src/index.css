@@ -79,6 +79,11 @@
   --color-avatar: var(--avatar);
   --color-avatar-foreground: var(--avatar-foreground);
   --color-avatar-hover: var(--avatar-hover);
+  --color-danger: var(--danger);
+  --color-danger-fill: var(--danger-fill);
+  --color-danger-fill-foreground: var(--danger-fill-foreground);
+  --color-tab-active: var(--tab-active);
+  --color-tab-active-foreground: var(--tab-active-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -126,6 +131,13 @@
   --caret: var(--color-brand-700);
   --selection: var(--color-brand-950);
   --selection-foreground: var(--color-brand-50);
+  --danger: #b71f1f;
+  --danger-fill: #b71f1f;
+  --danger-fill-foreground: #ffffff;
+  --tab-active: var(--track-active);
+  --tab-active-foreground: var(--foreground);
+  --bottom-bar-height: 0px;
+  --toast-offset-bottom: calc(16px + env(safe-area-inset-bottom));
   --radius: 0.625rem;
 
   @variant dark {
@@ -166,7 +178,16 @@
     --caret: var(--color-brand-400);
     --selection: var(--color-brand-400);
     --selection-foreground: var(--color-night);
+    --danger: #ff6b64;
+    --danger-fill: #d12828;
+    --tab-active: var(--color-brand-700);
+    --tab-active-foreground: #ffffff;
   }
+}
+
+:root:has([data-bottom-bar]) {
+  --bottom-bar-height: calc(82px + env(safe-area-inset-bottom));
+  --toast-offset-bottom: calc(var(--bottom-bar-height) + 4px);
 }
 
 @utility pressable {

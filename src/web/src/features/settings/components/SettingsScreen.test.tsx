@@ -57,12 +57,13 @@ describe('SettingsScreen', () => {
     ).toBeTruthy()
   })
 
-  it('has a back button to the home screen', async () => {
+  it('has no back button because the bottom bar leads back to the other screens', async () => {
     await renderSettings()
 
-    const back = screen.getByRole('link', { name: translated('en', 'common.back') })
+    const backName = translated('en', 'common.back')
 
-    expect(back.getAttribute('href')).toBe(routes.dashboard)
+    expect(screen.queryByRole('link', { name: backName })).toBeNull()
+    expect(screen.queryByRole('button', { name: backName })).toBeNull()
   })
 
   it('has a link to the change-password screen', async () => {

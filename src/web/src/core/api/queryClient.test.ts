@@ -25,10 +25,18 @@ async function failWith(
 ): Promise<void> {
   const fail = (): Promise<never> => Promise.reject(error)
   if (call === 'query') {
-    await captureError(queryClient.fetchQuery({ queryKey: ['groups'], queryFn: fail }))
+    await captureError(queryClient.fetchQuery({ queryKey: ['groups'], queryFn: fail, retry: false }))
     return
   }
   await captureError(new MutationObserver(queryClient, { mutationFn: fail }).mutate())
+}
+
+function defaultQueryRetry(): (failureCount: number, error: Error) => boolean {
+  const retry = createQueryClient().getDefaultOptions().queries?.retry
+  if (typeof retry !== 'function') {
+    throw new Error(`The default query retry option is not a function: ${String(retry)}`)
+  }
+  return retry
 }
 
 function createClientWithSignedInPerson(): QueryClient {
@@ -75,6 +83,29 @@ describe('createQueryClient', () => {
 
       expect(queryClient.getQueryData(meQueryKey)).toEqual(testMe)
       expect(queryClient.getQueryState(meQueryKey)?.isInvalidated).toBe(false)
+    })
+  })
+
+  describe('the default query retry', () => {
+    it('does not retry a 404 answer', () => {
+      const retry = defaultQueryRetry()
+
+      expect(retry(0, apiError(404, 'GROUP_NOT_FOUND'))).toBe(false)
+    })
+
+    it.each([
+      ['a 500 answer', apiError(500, null)],
+      ['a network failure', apiError(null, null)],
+      ['an error that is not an ApiError', new Error('boom')],
+    ])('retries %s up to three times and then gives up', (_name, error) => {
+      const retry = defaultQueryRetry()
+
+      expect([0, 1, 2, 3].map((failureCount) => retry(failureCount, error))).toEqual([
+        true,
+        true,
+        true,
+        false,
+      ])
     })
   })
 

@@ -9,6 +9,7 @@ interface KvitTextFieldProps {
   value: string
   onChange: (value: string) => void
   type?: 'text' | 'email' | 'password'
+  placeholder?: string
   autoComplete?: string
   inputMode?: InputProps['inputMode']
   enterKeyHint?: InputProps['enterKeyHint']

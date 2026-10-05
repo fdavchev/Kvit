@@ -1,17 +1,16 @@
 # Status: Kvit
 
-_Last updated: 2026-10-03 (Phase 7 in progress: backend done through Step 3; Step 4 frontend is next)_
+_Last updated: 2026-10-05 (Phase 7 in progress: Step 4 frontend done; Step 5 is next)_
 
 ## Where we stopped
-- Branch: `feat/07-groups`, last commit `4ad5370` (Step 2: groups backend).
-- Uncommitted (Step 3, all green): `RunInTransactionAsync` helper (7 handlers switched), members and invites backend (add name, remove, let back in, leave, make owner, claim "That's me", undo claim, reset and undo link, preview, join, `invite` rate limit 20 per 10 min), and its tests. Docs edited: DECISIONS (Step 3 contract), ARCHITECTURE (helper). Not committed: Filip commits.
-- Done: Step 0 to 3. The mockup `docs/design/2026-10-03-groups/` is approved except some Macedonian lines.
-- Verification (VERIFIED by automated test, 2026-10-03): `dotnet build` 0 warnings; `dotnet test` 1454/1454 (593 before Phase 7); migration guard exits 0 and Step 3 needs no migration. NOT VERIFIED: the `Groups` migration on Neon (CI runs it at the merge), any live run of the API.
+- Branch: `feat/07-groups`, last commit `96c10fc` (Step 3: members and invite backend).
+- Uncommitted: Step 4 frontend groups (bottom bar, Groups list, Recently deleted, New group, group screen with the Add people card and Add a name sheet, Group settings with Delete + Undo and Leave, groups service and hooks, error codes, Undo toast helper, colour tokens) with its tests and the Step 4 contract in DECISIONS. Filip commits.
+- Done: Step 0 to 4. Left in Phase 7: Step 5 (Members screen, Join screen incl. the logged-out round trip; its Macedonian lines need Filip's OK first), Step 6 (real-browser check, /code-review), Step 7 (report, wrap-up).
+- Verification (VERIFIED by automated test, 2026-10-05): `dotnet build` 0 warnings; `dotnet test` 1454/1454; `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 1332/1332. NOT VERIFIED: any real-browser look at the new screens (Step 6), the `Groups` migration on Neon.
 
 ## Next step
-1. Filip commits Step 3, subject: `Add the members and invite backend, the transaction helper and their tests.`
-2. Step 4 frontend groups (tester first, then coder): bottom bar (pill, tap only), Groups list with Finished row and Recently deleted screen, New group, group shell with the two-line Add people card, Group settings; Undo toast 4 s through Sonner; wine-red `--danger` token; `jsonRequest` gains DELETE.
-3. Before Step 4 starts: Filip confirms the remaining Macedonian lines (mockup, МК button).
+1. Filip commits Step 4.
+2. Step 5: propose, confirm the Members and Join Macedonian lines, then tester, then coder.
 
 ## Then
 - Phase 8 onward: expenses, balances, then the dashboard (Phase 11, Filip decides its layout, phone and web).

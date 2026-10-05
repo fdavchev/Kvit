@@ -11,7 +11,13 @@
     "switchToDarkMode": "Switch to dark mode",
     "switchToLightMode": "Switch to light mode",
     "privacy": "Privacy",
-    "close": "Close"
+    "close": "Close",
+    "undo": "Undo"
+  },
+  "nav": {
+    "home": "Home",
+    "groups": "Groups",
+    "settings": "Settings"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -34,7 +40,17 @@
     "AUTH_GOOGLE_NO_ACCOUNT": "There is no Kvit account for this Google account yet.",
     "AUTH_GOOGLE_EMAIL_TAKEN": "This email already has an account.",
     "AUTH_USES_GOOGLE": "This account signs in with Google.",
-    "AUTH_PASSWORD_ALREADY_SET": "This account already has a password. Use \"Change password\"."
+    "AUTH_PASSWORD_ALREADY_SET": "This account already has a password. Use \"Change password\".",
+    "GROUP_NOT_FOUND": "This group doesn't exist or you're no longer in it.",
+    "GROUP_NOT_OWNER": "Only the group's owner can do this.",
+    "GROUP_NAME_INVALID": "Enter a name (up to 60 characters).",
+    "GROUP_EMOJI_INVALID": "Pick an emoji.",
+    "GROUP_CURRENCY_INVALID": "Pick MKD or EUR.",
+    "GROUP_NOT_DELETED": "This group is not deleted.",
+    "GROUP_RESTORE_EXPIRED": "This group was deleted more than 30 days ago and can't be restored.",
+    "MEMBER_NAME_INVALID": "Enter a name (up to 60 characters).",
+    "MEMBER_NAME_TAKEN": "There's already a {{name}} in this group.",
+    "MEMBER_OWNER_CANNOT_LEAVE": "You are the owner. Make someone else the owner before you leave."
   },
   "language": {
     "label": "Language",
@@ -135,6 +151,62 @@
         "body": "Ask Filip to delete your account. Your name stays on old group expenses, so other people's balances stay correct."
       }
     }
+  },
+  "groups": {
+    "title": "Groups",
+    "newButton": "New group",
+    "empty": "You have no groups yet. Create one, or open a link a friend sent you.",
+    "people_one": "{{count}} person",
+    "people_other": "{{count}} people",
+    "finished": "Finished",
+    "finishedReadOnly": "Finished · read-only",
+    "recentlyDeletedLink": "Recently deleted"
+  },
+  "recentlyDeleted": {
+    "title": "Recently deleted",
+    "intro": "Groups you delete stay here for 30 days. Only the group's owner can restore one.",
+    "empty": "Nothing was deleted in the last 30 days.",
+    "restore": "Restore",
+    "restorableUntil": "Can be restored until {{date}}",
+    "restored": "Group restored"
+  },
+  "groupFields": {
+    "name": "Group name",
+    "namePlaceholder": "Greece trip",
+    "emoji": "Emoji",
+    "currency": "Currency",
+    "currencyHint": "New expenses use this currency.",
+    "nameInvalid": "Enter a name (up to 60 characters)."
+  },
+  "newGroup": {
+    "title": "New group",
+    "create": "Create group"
+  },
+  "group": {
+    "addPeople": "Add people",
+    "addPeopleNoKvit": "No Kvit? Add them as a name.",
+    "addPeopleHasKvit": "Have Kvit? Share the link and they join with their own account.",
+    "addName": "Add a name",
+    "shareLink": "Share invite link",
+    "linkCopied": "Link copied",
+    "settings": "Group settings",
+    "expensesSoon": "Expenses will show up here soon."
+  },
+  "addName": {
+    "title": "Add a name",
+    "label": "Name",
+    "hint": "For someone without Kvit, like Grandma.",
+    "submit": "Add"
+  },
+  "groupSettings": {
+    "title": "Group settings",
+    "save": "Save",
+    "saved": "Saved",
+    "delete": "Delete group",
+    "deleted": "Group deleted",
+    "leave": "Leave group",
+    "left": "You left {{name}}",
+    "ownerCannotLeave": "You are the owner. Make someone else the owner before you leave."
   },
   "notFound": {
     "title": "Page not found",

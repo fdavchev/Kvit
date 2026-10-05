@@ -10,7 +10,7 @@ export function KvitScreen({ children, className }: KvitScreenProps) {
   return (
     <main
       className={cn(
-        'screen-padding mx-auto flex min-h-dvh w-full max-w-md flex-col',
+        'screen-padding mx-auto flex min-h-[calc(100dvh_-_var(--bottom-bar-height))] w-full max-w-md flex-col',
         className,
       )}
     >

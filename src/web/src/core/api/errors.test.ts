@@ -24,6 +24,16 @@ const mappedErrorCodes = [
   'AUTH_GOOGLE_EMAIL_TAKEN',
   'AUTH_USES_GOOGLE',
   'AUTH_PASSWORD_ALREADY_SET',
+  'GROUP_NOT_FOUND',
+  'GROUP_NOT_OWNER',
+  'GROUP_NAME_INVALID',
+  'GROUP_EMOJI_INVALID',
+  'GROUP_CURRENCY_INVALID',
+  'GROUP_NOT_DELETED',
+  'GROUP_RESTORE_EXPIRED',
+  'MEMBER_NAME_INVALID',
+  'MEMBER_NAME_TAKEN',
+  'MEMBER_OWNER_CANNOT_LEAVE',
 ]
 
 const errorTexts: Record<'en' | 'mk', Record<string, unknown>> = {
@@ -54,9 +64,9 @@ describe('errorMessageKey', () => {
 
   it('uses the generic message for an error code with no translation', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    const error = new ApiError('GET /api/groups/1 failed with status 404', {
+    const error = new ApiError('GET /api/groups/1/members failed with status 404', {
       httpStatus: 404,
-      errorCode: 'GROUP_NOT_FOUND',
+      errorCode: 'MEMBER_NOT_FOUND',
     })
 
     expect(errorMessageKey(error)).toBe('errors.generic')
@@ -64,15 +74,15 @@ describe('errorMessageKey', () => {
 
   it('logs an error code that has no translation key, naming the code', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const error = new ApiError('GET /api/groups/1 failed with status 403', {
-      httpStatus: 403,
-      errorCode: 'GROUP_NOT_OWNER',
+    const error = new ApiError('POST /api/groups/1/owner failed with status 400', {
+      httpStatus: 400,
+      errorCode: 'MEMBER_ALREADY_OWNER',
     })
 
     errorMessageKey(error)
 
     expect(consoleError).toHaveBeenCalledWith(
-      'No translation key is mapped for API error code "GROUP_NOT_OWNER"',
+      'No translation key is mapped for API error code "MEMBER_ALREADY_OWNER"',
       error,
     )
   })

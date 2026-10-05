@@ -10,6 +10,10 @@ export const kvitButtonLooks = {
     shadcnVariant: 'secondary',
     className: `${sharedLook} min-h-13 text-[1.0625rem] font-semibold hover:bg-secondary-hover`,
   },
+  danger: {
+    shadcnVariant: 'secondary',
+    className: `${sharedLook} min-h-13 text-[1.0625rem] font-semibold text-danger hover:bg-secondary-hover`,
+  },
   link: {
     shadcnVariant: 'link',
     className: `${sharedLook} min-h-12 text-[1.0625rem] font-semibold text-link`,
