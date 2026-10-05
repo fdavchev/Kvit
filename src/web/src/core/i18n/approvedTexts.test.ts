@@ -144,7 +144,19 @@ const approvedPhase7Step6Texts: [string, string, string][] = [
   ['groups.goToGroups', 'Go to Groups', 'Кон групите'],
 ]
 
-const textsWhereMacedonianMeansConnection = ['errors.network', 'welcome.googleUnavailable']
+const approvedPhase8Step1Texts: [string, string, string][] = [
+  ['errors.MONEY_CURRENCY_MISMATCH', 'These amounts are in different currencies.', 'Износите се во различни валути.'],
+  ['errors.MONEY_NOT_ON_CURRENCY_STEP', 'Denars have no decimals. Use a whole number.', 'Денарите немаат децимали. Внеси цел број.'],
+  ['errors.EXPENSE_AMOUNT_NOT_POSITIVE', 'The amount must be more than 0.', 'Износот мора да е поголем од 0.'],
+  ['errors.EXPENSE_SPLIT_NO_PARTICIPANTS', 'Pick at least one person to split with.', 'Избери барем една личност за делење.'],
+  ['errors.EXPENSE_SPLIT_DUPLICATE_MEMBER', 'The same person is in the split twice.', 'Истата личност е два пати во поделбата.'],
+  ['errors.EXPENSE_SPLIT_NEGATIVE_INPUT', "Amounts, percentages and shares can't be negative.", 'Износите, процентите и деловите не можат да бидат негативни.'],
+  ['errors.EXPENSE_SPLIT_EXTRAS_EXCEED_TOTAL', 'The extras are more than the total.', 'Додатоците се повеќе од вкупниот износ.'],
+  ['errors.EXPENSE_SPLIT_DOES_NOT_ADD_UP', "The split doesn't add up to the total.", 'Поделбата не е иста како вкупниот износ.'],
+  ['errors.EXPENSE_SPLIT_NO_SHARES', 'Give at least one person a share.', 'Дади барем на една личност дел.'],
+]
+
+const textsWhereMacedonianMeansConnection =['errors.network', 'welcome.googleUnavailable']
 
 const macedonianWordForConnection = 'врск'
 
@@ -195,6 +207,18 @@ describe('the approved Phase 7 Step 6 texts', () => {
   it.each(approvedPhase7Step6Texts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
     expect(translated('en', key)).toBe(english)
     expect(translated('mk', key)).toBe(macedonian)
+  })
+})
+
+describe('the approved Phase 8 Step 1 texts', () => {
+  it.each(approvedPhase8Step1Texts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
+    expect(translated('en', key)).toBe(english)
+    expect(translated('mk', key)).toBe(macedonian)
+  })
+
+  it.each(approvedPhase8Step1Texts)('writes the Macedonian text of %s with Cyrillic letters only, no Latin look-alikes', (key, _english, macedonian) => {
+    expect(macedonian).not.toMatch(/[A-Za-z]/)
+    expect(translated('mk', key)).not.toMatch(/[A-Za-z]/)
   })
 })
 

@@ -18,6 +18,10 @@ namespace Kvit.Infrastructure.Persistence
 
         public DbSet<ActivityEvent> ActivityEvents => Set<ActivityEvent>();
 
+        public DbSet<Category> Categories => Set<Category>();
+
+        public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
+
         public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
         protected override void OnModelCreating(ModelBuilder builder)

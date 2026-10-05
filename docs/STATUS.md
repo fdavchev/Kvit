@@ -7,7 +7,7 @@ _Last updated: 2026-10-05 (Phase 7 done and merged; Phase 8 is next)_
 - Next: **Phase 8, expenses** (`feat/08-expenses`): categories, exchange rates, add / edit / delete with Undo, the four split types, One bill, the Expenses tab. Start with a plan for Filip.
 
 ## Next step
-1. Filip merges the Phase 7 pull request, sees CI go green (it applies the `Groups` migration on Neon), then tries an invite link on the real site with a second account.
+1. Phase 7 is merged, CI is green and Filip tried it on the live site (REPORTED: works).
 2. Phase 8: read `ROADMAP.md` Phase 8 and `DECISIONS.md`, propose the plan, wait for Filip.
 
 ## Then
@@ -23,4 +23,5 @@ _Last updated: 2026-10-05 (Phase 7 done and merged; Phase 8 is next)_
 - VERIFIED by automated test (2026-10-05, after the last code change): backend build 0 warnings, `dotnet test` 1454/1454; `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 1940/1940.
 - VERIFIED by live run (2026-10-05, headless Chrome, local stack, throwaway local accounts): every Phase 7 screen at 360 px and 1280 px in English, light and dark; Members and Join in Macedonian at 360 px, light; the sheet slide, the dark pills, not-found, the Join states and the signed-out round trip. Details in the Phase 7 report.
 - NOT VERIFIED: Google sign-in from the join card (only a throw-away test), a real phone share menu and touch, a screen reader, Macedonian in dark mode and at 1280 px, the `Groups` migration on Neon (runs in CI at the merge).
+- REPORTED by Filip (2026-10-05): the Phase 7 live-site test (create a group, invite a second account, join, Google button on the invite page) "everything works fine"; CI on `main` green.
 - REPORTED by Filip (earlier phases): the real Google sign-in and the phone test (Phase 6); "In production" for the Google app.

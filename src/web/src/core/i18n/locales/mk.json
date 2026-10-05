@@ -59,7 +59,16 @@
     "MEMBER_NOT_CLAIMED": "Ова име не го зел никој.",
     "INVITE_NOT_FOUND": "Овој линк за покана повеќе не работи. Побарај нов.",
     "INVITE_REMOVED": "Те отстранија од оваа група. Побарај од сопственикот да те врати.",
-    "INVITE_NOTHING_TO_UNDO": "Нема претходен линк за враќање."
+    "INVITE_NOTHING_TO_UNDO": "Нема претходен линк за враќање.",
+    "MONEY_CURRENCY_MISMATCH": "Износите се во различни валути.",
+    "MONEY_NOT_ON_CURRENCY_STEP": "Денарите немаат децимали. Внеси цел број.",
+    "EXPENSE_AMOUNT_NOT_POSITIVE": "Износот мора да е поголем од 0.",
+    "EXPENSE_SPLIT_NO_PARTICIPANTS": "Избери барем една личност за делење.",
+    "EXPENSE_SPLIT_DUPLICATE_MEMBER": "Истата личност е два пати во поделбата.",
+    "EXPENSE_SPLIT_NEGATIVE_INPUT": "Износите, процентите и деловите не можат да бидат негативни.",
+    "EXPENSE_SPLIT_EXTRAS_EXCEED_TOTAL": "Додатоците се повеќе од вкупниот износ.",
+    "EXPENSE_SPLIT_DOES_NOT_ADD_UP": "Поделбата не е иста како вкупниот износ.",
+    "EXPENSE_SPLIT_NO_SHARES": "Дади барем на една личност дел."
   },
   "language": {
     "label": "Јазик",
