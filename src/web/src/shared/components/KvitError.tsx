@@ -1,12 +1,14 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { KvitButton } from './KvitButton'
 
 interface KvitErrorProps {
   message: string
   onRetry?: () => void
+  action?: ReactNode
 }
 
-export function KvitError({ message, onRetry }: KvitErrorProps) {
+export function KvitError({ message, onRetry, action }: KvitErrorProps) {
   const { t } = useTranslation()
   return (
     <div role="alert" className="flex flex-col items-center gap-4 p-6 text-center">
@@ -16,6 +18,7 @@ export function KvitError({ message, onRetry }: KvitErrorProps) {
           {t('common.retry')}
         </KvitButton>
       )}
+      {action}
     </div>
   )
 }

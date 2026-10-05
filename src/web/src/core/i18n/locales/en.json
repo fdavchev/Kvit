@@ -49,7 +49,7 @@
     "GROUP_NOT_DELETED": "This group is not deleted.",
     "GROUP_RESTORE_EXPIRED": "This group was deleted more than 30 days ago and can't be restored.",
     "MEMBER_NAME_INVALID": "Enter a name (up to 60 characters).",
-    "MEMBER_NAME_TAKEN": "There's already a {{name}} in this group.",
+    "MEMBER_NAME_TAKEN": "Someone called “{{name}}” is already in this group.",
     "MEMBER_OWNER_CANNOT_LEAVE": "You are the owner. Make someone else the owner before you leave.",
     "MEMBER_NOT_FOUND": "This person is no longer in the group.",
     "MEMBER_IS_OWNER": "The owner can't be removed.",
@@ -169,7 +169,8 @@
     "people_other": "{{count}} people",
     "finished": "Finished",
     "finishedReadOnly": "Finished · read-only",
-    "recentlyDeletedLink": "Recently deleted"
+    "recentlyDeletedLink": "Recently deleted",
+    "goToGroups": "Go to Groups"
   },
   "recentlyDeleted": {
     "title": "Recently deleted",

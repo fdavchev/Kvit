@@ -11,6 +11,7 @@ import { showUndoToast } from '@/shared/toasts/showUndoToast'
 import type { Currency } from '@/shared/utils/formatMoney'
 import { useRestoreGroup } from '../../list/hooks/useRestoreGroup'
 import { GroupFields } from '../../shared/components/GroupFields'
+import { isValidGroupName } from '../../shared/groupName'
 import { useDeleteGroup } from '../hooks/useDeleteGroup'
 import { useUpdateGroup } from '../hooks/useUpdateGroup'
 
@@ -27,6 +28,7 @@ export function OwnerGroupSettings({ group }: OwnerGroupSettingsProps) {
   const [name, setName] = useState(group.name)
   const [emoji, setEmoji] = useState(group.emoji)
   const [currency, setCurrency] = useState<Currency>(group.defaultCurrency)
+  const [isNameInvalid, setIsNameInvalid] = useState<boolean>(false)
 
   function showFailure(error: Error): void {
     console.error('A group settings action failed', error)
@@ -34,6 +36,12 @@ export function OwnerGroupSettings({ group }: OwnerGroupSettingsProps) {
   }
 
   function save(): void {
+    if (!isValidGroupName(name)) {
+      setIsNameInvalid(true)
+      updateGroup.reset()
+      return
+    }
+    setIsNameInvalid(false)
     updateGroup.mutate(
       { name, emoji, currency },
       {
@@ -83,6 +91,7 @@ export function OwnerGroupSettings({ group }: OwnerGroupSettingsProps) {
         name={name}
         emoji={emoji}
         currency={currency}
+        nameInvalid={isNameInvalid ? t('groupFields.nameInvalid') : null}
         onNameChange={setName}
         onEmojiChange={setEmoji}
         onCurrencyChange={setCurrency}

@@ -10,13 +10,13 @@ import type {
   RemovedMember,
 } from '@/core/services/groups/membersService'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
-import { KvitError } from '@/shared/components/KvitError'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 import { AddNameSheet } from '../../group/components/AddNameSheet'
 import { useGroup } from '../../group/hooks/useGroup'
 import { LeaveGroupSection } from '../../settings/components/LeaveGroupSection'
+import { GroupLoadError } from '../../shared/components/GroupLoadError'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
 import { useClaimName } from '../hooks/useClaimName'
 import { useLetBackIn } from '../hooks/useLetBackIn'
@@ -114,9 +114,11 @@ export function MembersScreen() {
   }
 
   function renderContent() {
-    if (groupQuery.isError || membersQuery.isError) {
-      const error = groupQuery.isError ? groupQuery.error : membersQuery.error
-      return <KvitError message={t(errorMessageKey(error))} onRetry={retry} />
+    if (groupQuery.isError) {
+      return <GroupLoadError error={groupQuery.error} onRetry={retry} />
+    }
+    if (membersQuery.isError) {
+      return <GroupLoadError error={membersQuery.error} onRetry={retry} />
     }
     if (groupQuery.isPending || membersQuery.isPending) {
       return <KvitLoading />

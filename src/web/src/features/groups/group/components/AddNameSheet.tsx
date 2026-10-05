@@ -5,6 +5,7 @@ import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitForm } from '@/shared/components/KvitForm'
 import { KvitSheet } from '@/shared/components/KvitSheet'
 import { KvitTextField } from '@/shared/components/KvitTextField'
+import { useKvitSheet } from '@/shared/components/useKvitSheet'
 import { useAddMember } from '../hooks/useAddMember'
 
 interface AddNameSheetProps {
@@ -16,13 +17,14 @@ export function AddNameSheet({ groupId, onClose }: AddNameSheetProps) {
   const { t } = useTranslation()
   const addMember = useAddMember(groupId)
   const [name, setName] = useState('')
+  const sheet = useKvitSheet()
 
   function submit(): void {
-    addMember.mutate(name, { onSuccess: onClose })
+    addMember.mutate(name, { onSuccess: sheet.close })
   }
 
   return (
-    <KvitSheet title={t('addName.title')} onClose={onClose}>
+    <KvitSheet title={t('addName.title')} onClose={onClose} actionsRef={sheet.actionsRef}>
       <KvitForm
         submitLabel={t('addName.submit')}
         isPending={addMember.isPending}
@@ -33,7 +35,7 @@ export function AddNameSheet({ groupId, onClose }: AddNameSheetProps) {
         }
         onSubmit={submit}
         footer={
-          <KvitButton type="button" variant="link" onClick={onClose}>
+          <KvitButton type="button" variant="link" onClick={sheet.close}>
             {t('common.close')}
           </KvitButton>
         }

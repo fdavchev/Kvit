@@ -76,6 +76,7 @@
   --color-track: var(--track);
   --color-track-active: var(--track-active);
   --color-track-shadow: var(--track-shadow);
+  --color-pill: var(--pill);
   --color-avatar: var(--avatar);
   --color-avatar-foreground: var(--avatar-foreground);
   --color-avatar-hover: var(--avatar-hover);
@@ -125,6 +126,7 @@
   --track: var(--color-brand-50);
   --track-active: #ffffff;
   --track-shadow: rgb(61 38 16 / 18%);
+  --pill: #ffffff;
   --avatar: var(--color-brand-950);
   --avatar-foreground: var(--color-brand-50);
   --avatar-hover: var(--color-brand-900);
@@ -172,6 +174,7 @@
     --track: var(--color-night-field);
     --track-active: var(--color-night-raised);
     --track-shadow: transparent;
+    --pill: var(--color-night);
     --avatar: var(--color-brand-200);
     --avatar-foreground: var(--color-night);
     --avatar-hover: var(--color-brand-50);

@@ -4,7 +4,7 @@ import { languages, type Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import { problemResponse, stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
 import { expectDisabledWhilePending, fieldLabelled, typeInto } from '@/test/formTestHelpers'
-import { defaultGroupEmoji, groupEmojis, testGroup } from '@/test/groupTestData'
+import { defaultGroupEmoji, groupEmojis, groupNameMaxLength, testGroup } from '@/test/groupTestData'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import {
   jsonAnswer,
@@ -249,6 +249,96 @@ describe('NewGroupScreen', () => {
 
     expect(await screen.findByText(translated(language, 'groupFields.nameInvalid'))).toBeTruthy()
     expect(nameField(language).getAttribute('aria-invalid')).toBe('true')
+  })
+
+  it.each(languages)('shows the name error inline in %s and sends nothing when the name is longer than the limit', async (language) => {
+    const fetchMock = stubFetchByRequest({ 'POST /api/groups': jsonAnswer(testGroup) })
+    const { router } = await renderNewGroup(language)
+    typeInto(translated(language, 'groupFields.name'), 'a'.repeat(groupNameMaxLength + 1))
+
+    pressCreate(language)
+
+    expect(await screen.findByText(translated(language, 'groupFields.nameInvalid'))).toBeTruthy()
+    expect(nameField(language).getAttribute('aria-invalid')).toBe('true')
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(router.state.location.pathname).toBe(routes.newGroup)
+  })
+
+  it('shows the name error the same way for a too long name as for an empty one', async () => {
+    stubFetchByRequest({ 'POST /api/groups': jsonAnswer(testGroup) })
+    await renderNewGroup()
+    typeInto(translated('en', 'groupFields.name'), 'a'.repeat(groupNameMaxLength + 1))
+
+    pressCreate()
+
+    const message = await screen.findByText(translated('en', 'groupFields.nameInvalid'))
+    expect(message.getAttribute('role')).toBe('alert')
+    expect(screen.getAllByRole('alert')).toHaveLength(1)
+  })
+
+  it('keeps the typed long name in the field after the name error', async () => {
+    stubFetchByRequest({ 'POST /api/groups': jsonAnswer(testGroup) })
+    await renderNewGroup()
+    const longName = 'a'.repeat(groupNameMaxLength + 1)
+    typeInto(translated('en', 'groupFields.name'), longName)
+
+    pressCreate()
+    await screen.findByText(translated('en', 'groupFields.nameInvalid'))
+
+    expect(nameField().value).toBe(longName)
+  })
+
+  it('creates the group when the name has exactly the limit of characters', async () => {
+    const fetchMock = stubFetchByRequest({ 'POST /api/groups': jsonAnswer(testGroup) })
+    await renderNewGroup()
+    const limitName = 'a'.repeat(groupNameMaxLength)
+    typeInto(translated('en', 'groupFields.name'), limitName)
+
+    pressCreate()
+
+    await waitFor(() => {
+      expect(requestCount(fetchMock, 'POST', '/api/groups')).toBe(1)
+    })
+    expect(screen.queryByText(translated('en', 'groupFields.nameInvalid'))).toBeNull()
+  })
+
+  it('creates the group when only the spaces around a name of the limit length push it over, because the server trims them', async () => {
+    const fetchMock = stubFetchByRequest({ 'POST /api/groups': jsonAnswer(testGroup) })
+    await renderNewGroup()
+    typeInto(translated('en', 'groupFields.name'), `  ${'a'.repeat(groupNameMaxLength)}  `)
+
+    pressCreate()
+
+    await waitFor(() => {
+      expect(requestCount(fetchMock, 'POST', '/api/groups')).toBe(1)
+    })
+  })
+
+  it('shows the name error and sends nothing when the trimmed name is longer than the limit', async () => {
+    const fetchMock = stubFetchByRequest({ 'POST /api/groups': jsonAnswer(testGroup) })
+    await renderNewGroup()
+    typeInto(translated('en', 'groupFields.name'), ` ${'a'.repeat(groupNameMaxLength + 1)} `)
+
+    pressCreate()
+
+    expect(await screen.findByText(translated('en', 'groupFields.nameInvalid'))).toBeTruthy()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('creates the group once a too long name is shortened after the name error', async () => {
+    const fetchMock = stubFetchByRequest({ 'POST /api/groups': jsonAnswer(testGroup) })
+    await renderNewGroup()
+    typeInto(translated('en', 'groupFields.name'), 'a'.repeat(groupNameMaxLength + 1))
+    pressCreate()
+    await screen.findByText(translated('en', 'groupFields.nameInvalid'))
+    typeInto(translated('en', 'groupFields.name'), 'a'.repeat(groupNameMaxLength))
+
+    pressCreate()
+
+    await waitFor(() => {
+      expect(requestCount(fetchMock, 'POST', '/api/groups')).toBe(1)
+    })
+    expect(screen.queryByText(translated('en', 'groupFields.nameInvalid'))).toBeNull()
   })
 
   it('keeps the chosen emoji and currency after the name error', async () => {

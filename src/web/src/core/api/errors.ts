@@ -1,4 +1,4 @@
-import { ApiError } from './apiClient'
+import { ApiError, notFoundStatus } from './apiClient'
 
 const proxyCannotReachApiStatus = 502
 const translatedErrorCodes = [
@@ -49,6 +49,10 @@ export function hasErrorCode(error: unknown, errorCode: string): boolean {
   return error instanceof ApiError && error.errorCode === errorCode
 }
 
+export function isNotFoundError(error: unknown): boolean {
+  return error instanceof ApiError && error.httpStatus === notFoundStatus
+}
+
 export function errorMessageKey(error: unknown): string {
   if (!(error instanceof ApiError)) {
     return 'errors.generic'
@@ -60,7 +64,9 @@ export function errorMessageKey(error: unknown): string {
     return 'errors.network'
   }
   if (error.errorCode === null) {
-    return 'errors.generic'
+    return error.httpStatus === notFoundStatus
+      ? 'errors.GROUP_NOT_FOUND'
+      : 'errors.generic'
   }
   const knownKey = errorCodeMessageKeys.get(error.errorCode)
   if (knownKey === undefined) {

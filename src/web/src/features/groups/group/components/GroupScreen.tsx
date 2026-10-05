@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
-import { errorMessageKey } from '@/core/api/errors'
 import { routes } from '@/core/router/routes'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
-import { KvitError } from '@/shared/components/KvitError'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { kvitChipLook } from '@/shared/components/kvitChipLook'
+import { GroupLoadError } from '../../shared/components/GroupLoadError'
 import { GroupSizeLine } from '../../shared/components/GroupSizeLine'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
 import { useGroup } from '../hooks/useGroup'
@@ -29,8 +28,8 @@ export function GroupScreen() {
     }
     if (groupQuery.isError) {
       return (
-        <KvitError
-          message={t(errorMessageKey(groupQuery.error))}
+        <GroupLoadError
+          error={groupQuery.error}
           onRetry={() => void groupQuery.refetch()}
         />
       )

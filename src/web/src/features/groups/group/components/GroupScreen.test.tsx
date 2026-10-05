@@ -128,6 +128,66 @@ describe('GroupScreen', () => {
       )
     })
 
+    it.each(languages)('shows the group-not-found message for a 404 without an error code (%s)', async (language) => {
+      await renderGroup({
+        language,
+        answers: { [`GET ${groupPath}`]: () => new Response(null, { status: 404 }) },
+      })
+
+      expect((await screen.findByRole('alert')).textContent).toContain(
+        translated(language, 'errors.GROUP_NOT_FOUND'),
+      )
+    })
+
+    it.each(languages)('shows a Go to Groups link to the groups list and no retry button when the group is not found (%s)', async (language) => {
+      await renderGroup({
+        language,
+        answers: { [`GET ${groupPath}`]: problemAnswer(404, 'GROUP_NOT_FOUND') },
+      })
+      await screen.findByRole('alert')
+
+      const link = screen.getByRole('link', { name: translated(language, 'groups.goToGroups') })
+
+      expect(link.getAttribute('href')).toBe(routes.groups)
+      expect(
+        screen.queryByRole('button', { name: translated(language, 'common.retry') }),
+      ).toBeNull()
+    })
+
+    it('shows the Go to Groups link and no retry button for a 404 without an error code', async () => {
+      await renderGroup({
+        answers: { [`GET ${groupPath}`]: () => new Response(null, { status: 404 }) },
+      })
+      await screen.findByRole('alert')
+
+      expect(
+        screen.getByRole('link', { name: translated('en', 'groups.goToGroups') }).getAttribute('href'),
+      ).toBe(routes.groups)
+      expect(screen.queryByRole('button', { name: translated('en', 'common.retry') })).toBeNull()
+    })
+
+    it('opens the groups list when the Go to Groups link is pressed', async () => {
+      const { router } = await renderGroup({
+        answers: { [`GET ${groupPath}`]: problemAnswer(404, 'GROUP_NOT_FOUND') },
+      })
+
+      fireEvent.click(await screen.findByRole('link', { name: translated('en', 'groups.goToGroups') }))
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.groups)
+      })
+    })
+
+    it.each([
+      ['a server error', () => new Response(null, { status: 500 })],
+      ['a network failure', networkFailureAnswer()],
+    ])('shows no Go to Groups link after %s', async (_label, answer) => {
+      await renderGroup({ answers: { [`GET ${groupPath}`]: answer } })
+      await screen.findByRole('alert')
+
+      expect(screen.queryByRole('link', { name: translated('en', 'groups.goToGroups') })).toBeNull()
+    })
+
     it('shows the generic message with a retry button after a server error', async () => {
       await renderGroup({
         answers: { [`GET ${groupPath}`]: () => new Response(null, { status: 500 }) },
@@ -444,6 +504,38 @@ describe('GroupScreen', () => {
       expect(
         within(sheet(language)).getByLabelText<HTMLInputElement>(translated(language, 'addName.label')).value,
       ).toBe('Marko')
+    })
+
+    it.each([
+      ['en', 'Someone called “Marko” is already in this group.'],
+      ['mk', 'Некој по име „Marko“ е веќе во групата.'],
+    ] as const)('words the name-taken message exactly with the typed name between the quotes (%s)', async (language, text) => {
+      await renderGroup({
+        language,
+        answers: { [`POST ${membersPath}`]: problemAnswer(400, 'MEMBER_NAME_TAKEN') },
+      })
+      await showsGroupScreen()
+      await openSheet(language)
+      typeName('Marko', language)
+
+      fireEvent.click(sheetAddButton(language))
+
+      expect((await within(sheet(language)).findByRole('alert')).textContent).toBe(text)
+    })
+
+    it('shows the name in the name-taken message as it was typed, with its capitals and punctuation', async () => {
+      await renderGroup({
+        answers: { [`POST ${membersPath}`]: problemAnswer(400, 'MEMBER_NAME_TAKEN') },
+      })
+      await showsGroupScreen()
+      await openSheet()
+      typeName("mARKO o'Brien & Co.")
+
+      fireEvent.click(sheetAddButton())
+
+      expect((await within(sheet()).findByRole('alert')).textContent).toBe(
+        'Someone called “mARKO o\'Brien & Co.” is already in this group.',
+      )
     })
 
     it('shows the network message inside the sheet when the server cannot be reached', async () => {

@@ -6,7 +6,7 @@ import { languages, type Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import { stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
 import { expectDisabledWhilePending, fieldLabelled, typeInto } from '@/test/formTestHelpers'
-import { groupEmojis, groupOf, testGroup } from '@/test/groupTestData'
+import { groupEmojis, groupNameMaxLength, groupOf, testGroup } from '@/test/groupTestData'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import {
   jsonAnswer,
@@ -137,6 +137,66 @@ describe('GroupSettingsScreen', () => {
       expect((await screen.findByRole('alert')).textContent).toContain(
         translated(language, 'errors.GROUP_NOT_FOUND'),
       )
+    })
+
+    it.each(languages)('shows the group-not-found message for a 404 without an error code (%s)', async (language) => {
+      await renderSettings({
+        language,
+        answers: { [`GET ${groupPath}`]: () => new Response(null, { status: 404 }) },
+      })
+
+      expect((await screen.findByRole('alert')).textContent).toContain(
+        translated(language, 'errors.GROUP_NOT_FOUND'),
+      )
+    })
+
+    it.each(languages)('shows a Go to Groups link to the groups list and no retry button when the group is not found (%s)', async (language) => {
+      await renderSettings({
+        language,
+        answers: { [`GET ${groupPath}`]: problemAnswer(404, 'GROUP_NOT_FOUND') },
+      })
+      await screen.findByRole('alert')
+
+      const link = screen.getByRole('link', { name: translated(language, 'groups.goToGroups') })
+
+      expect(link.getAttribute('href')).toBe(routes.groups)
+      expect(
+        screen.queryByRole('button', { name: translated(language, 'common.retry') }),
+      ).toBeNull()
+    })
+
+    it('shows the Go to Groups link and no retry button for a 404 without an error code', async () => {
+      await renderSettings({
+        answers: { [`GET ${groupPath}`]: () => new Response(null, { status: 404 }) },
+      })
+      await screen.findByRole('alert')
+
+      expect(
+        screen.getByRole('link', { name: translated('en', 'groups.goToGroups') }).getAttribute('href'),
+      ).toBe(routes.groups)
+      expect(screen.queryByRole('button', { name: translated('en', 'common.retry') })).toBeNull()
+    })
+
+    it('opens the groups list when the Go to Groups link is pressed', async () => {
+      const { router } = await renderSettings({
+        answers: { [`GET ${groupPath}`]: problemAnswer(404, 'GROUP_NOT_FOUND') },
+      })
+
+      fireEvent.click(await screen.findByRole('link', { name: translated('en', 'groups.goToGroups') }))
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.groups)
+      })
+    })
+
+    it.each([
+      ['a server error', () => new Response(null, { status: 500 })],
+      ['a network failure', networkFailureAnswer()],
+    ])('shows no Go to Groups link after %s', async (_label, answer) => {
+      await renderSettings({ answers: { [`GET ${groupPath}`]: answer } })
+      await screen.findByRole('alert')
+
+      expect(screen.queryByRole('link', { name: translated('en', 'groups.goToGroups') })).toBeNull()
     })
 
     it('shows the generic message with a retry button after a server error', async () => {
@@ -382,6 +442,141 @@ describe('GroupSettingsScreen', () => {
         expect((await screen.findByRole('alert')).textContent).toContain(
           translated('en', 'errors.GROUP_NAME_INVALID'),
         )
+      })
+
+      it.each(languages)('shows the name error inline under the field in %s and sends nothing when the name is emptied', async (language) => {
+        const { fetchMock } = await renderSettings({
+          language,
+          answers: { [`PUT ${groupPath}`]: noContentAnswer() },
+        })
+        await showsSettings(language)
+        typeInto(translated(language, 'groupFields.name'), '')
+
+        fireEvent.click(saveButton(language))
+
+        expect(await screen.findByText(translated(language, 'groupFields.nameInvalid'))).toBeTruthy()
+        expect(nameField(language).getAttribute('aria-invalid')).toBe('true')
+        expect(requestCount(fetchMock, 'PUT', groupPath)).toBe(0)
+        expect(shownToastTexts()).toEqual([])
+      })
+
+      it('shows the name error and sends nothing when the name is only spaces', async () => {
+        const { fetchMock } = await renderSettings({
+          answers: { [`PUT ${groupPath}`]: noContentAnswer() },
+        })
+        await showsSettings()
+        typeInto(translated('en', 'groupFields.name'), '   ')
+
+        fireEvent.click(saveButton())
+
+        expect(await screen.findByText(translated('en', 'groupFields.nameInvalid'))).toBeTruthy()
+        expect(requestCount(fetchMock, 'PUT', groupPath)).toBe(0)
+      })
+
+      it.each(languages)('shows the name error inline under the field in %s and sends nothing when the name is longer than the limit', async (language) => {
+        const { fetchMock } = await renderSettings({
+          language,
+          answers: { [`PUT ${groupPath}`]: noContentAnswer() },
+        })
+        await showsSettings(language)
+        typeInto(translated(language, 'groupFields.name'), 'a'.repeat(groupNameMaxLength + 1))
+
+        fireEvent.click(saveButton(language))
+
+        expect(await screen.findByText(translated(language, 'groupFields.nameInvalid'))).toBeTruthy()
+        expect(nameField(language).getAttribute('aria-invalid')).toBe('true')
+        expect(requestCount(fetchMock, 'PUT', groupPath)).toBe(0)
+        expect(shownToastTexts()).toEqual([])
+      })
+
+      it('shows the too long name error as one alert, the same way as the empty name error', async () => {
+        await renderSettings({ answers: { [`PUT ${groupPath}`]: noContentAnswer() } })
+        await showsSettings()
+        typeInto(translated('en', 'groupFields.name'), 'a'.repeat(groupNameMaxLength + 1))
+
+        fireEvent.click(saveButton())
+
+        const message = await screen.findByText(translated('en', 'groupFields.nameInvalid'))
+        expect(message.getAttribute('role')).toBe('alert')
+        expect(screen.getAllByRole('alert')).toHaveLength(1)
+      })
+
+      it('keeps the typed long name in the field and the screen after the name error', async () => {
+        const { router } = await renderSettings({
+          answers: { [`PUT ${groupPath}`]: noContentAnswer() },
+        })
+        await showsSettings()
+        const longName = 'a'.repeat(groupNameMaxLength + 1)
+        typeInto(translated('en', 'groupFields.name'), longName)
+
+        fireEvent.click(saveButton())
+        await screen.findByText(translated('en', 'groupFields.nameInvalid'))
+
+        expect(nameField().value).toBe(longName)
+        expect(router.state.location.pathname).toBe(routes.groupSettings(testGroup.id))
+      })
+
+      it('saves when the name has exactly the limit of characters', async () => {
+        const { fetchMock } = await renderSettings({
+          answers: { [`PUT ${groupPath}`]: noContentAnswer() },
+        })
+        await showsSettings()
+        typeInto(translated('en', 'groupFields.name'), 'a'.repeat(groupNameMaxLength))
+
+        fireEvent.click(saveButton())
+
+        await waitFor(() => {
+          expect(requestCount(fetchMock, 'PUT', groupPath)).toBe(1)
+        })
+        expect(screen.queryByText(translated('en', 'groupFields.nameInvalid'))).toBeNull()
+      })
+
+      it('saves when only the spaces around a name of the limit length push it over, because the server trims them', async () => {
+        const { fetchMock } = await renderSettings({
+          answers: { [`PUT ${groupPath}`]: noContentAnswer() },
+        })
+        await showsSettings()
+        typeInto(translated('en', 'groupFields.name'), `  ${'a'.repeat(groupNameMaxLength)}  `)
+
+        fireEvent.click(saveButton())
+
+        await waitFor(() => {
+          expect(requestCount(fetchMock, 'PUT', groupPath)).toBe(1)
+        })
+      })
+
+      it('shows the name error and sends nothing when the trimmed name is longer than the limit', async () => {
+        const { fetchMock } = await renderSettings({
+          answers: { [`PUT ${groupPath}`]: noContentAnswer() },
+        })
+        await showsSettings()
+        typeInto(translated('en', 'groupFields.name'), ` ${'a'.repeat(groupNameMaxLength + 1)} `)
+
+        fireEvent.click(saveButton())
+
+        expect(await screen.findByText(translated('en', 'groupFields.nameInvalid'))).toBeTruthy()
+        expect(requestCount(fetchMock, 'PUT', groupPath)).toBe(0)
+      })
+
+      it('saves once the name is corrected after the name error and then shows the Saved toast', async () => {
+        const { fetchMock } = await renderSettings({
+          answers: { [`PUT ${groupPath}`]: noContentAnswer() },
+        })
+        await showsSettings()
+        typeInto(translated('en', 'groupFields.name'), '')
+        fireEvent.click(saveButton())
+        await screen.findByText(translated('en', 'groupFields.nameInvalid'))
+        typeInto(translated('en', 'groupFields.name'), 'Flat 4B')
+
+        fireEvent.click(saveButton())
+
+        await waitFor(() => {
+          expect(requestCount(fetchMock, 'PUT', groupPath)).toBe(1)
+        })
+        await waitFor(() => {
+          expect(shownToastTexts()).toContain(translated('en', 'groupSettings.saved'))
+        })
+        expect(screen.queryByText(translated('en', 'groupFields.nameInvalid'))).toBeNull()
       })
 
       it('keeps the typed values, shows no Saved toast and stays on the screen after the server refuses', async () => {

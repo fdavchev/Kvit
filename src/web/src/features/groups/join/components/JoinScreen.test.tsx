@@ -5,7 +5,7 @@ import { endpoints } from '@/core/api/endpoints'
 import { languages, type Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import type { Me } from '@/core/services/me/meService'
-import { stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
+import { problemResponse, stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
 import { expectDisabledWhilePending } from '@/test/formTestHelpers'
 import {
   findDrawnGoogleButton,
@@ -94,6 +94,18 @@ function imNewButton(language: Language = 'en'): HTMLElement {
 
 function nameButton(name: string): HTMLElement {
   return screen.getByRole('button', { name })
+}
+
+function claimCard(language: Language = 'en'): HTMLElement {
+  const noNameButton = imNewButton(language)
+  let card: HTMLElement | null = screen.getByText(translated(language, 'join.areYou'))
+  while (card !== null && !card.contains(noNameButton)) {
+    card = card.parentElement
+  }
+  if (card === null) {
+    throw new Error('The Are you one of these? heading and the No, I\'m new button have no common parent')
+  }
+  return card
 }
 
 async function showsInviteCard(language: Language = 'en'): Promise<void> {
@@ -239,10 +251,57 @@ describe('JoinScreen', () => {
       expect(await screen.findByText(translated(language, 'errors.RATE_LIMITED'))).toBeTruthy()
     })
 
+    it.each(languages)('shows no Try again button and a Home button to the home address after too many tries (%s)', async (language) => {
+      const { router } = await renderJoin({ language, preview: problemAnswer(429, 'RATE_LIMITED') })
+      await screen.findByText(translated(language, 'errors.RATE_LIMITED'))
+
+      expect(
+        screen.queryByRole('button', { name: translated(language, 'common.retry') }),
+      ).toBeNull()
+      const home = screen.getByRole('link', { name: translated(language, 'nav.home') })
+      expect(home.getAttribute('href')).toBe(routes.dashboard)
+      fireEvent.click(home)
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.dashboard)
+      })
+    })
+
+    it('shows the too-many-tries message as a semibold alert text like the old-link message', async () => {
+      await renderJoin({ preview: problemAnswer(429, 'RATE_LIMITED') })
+
+      const message = await screen.findByText(translated('en', 'errors.RATE_LIMITED'))
+
+      expect(message.getAttribute('role')).toBe('alert')
+      expect(message.classList.contains('font-semibold')).toBe(true)
+    })
+
     it('shows the generic message after a server error', async () => {
       await renderJoin({ preview: () => new Response(null, { status: 500 }) })
 
       expect(await screen.findByText(translated('en', 'errors.generic'))).toBeTruthy()
+    })
+
+    it('shows a Try again button and no Home button after a server error', async () => {
+      await renderJoin({ preview: () => new Response(null, { status: 500 }) })
+      await screen.findByText(translated('en', 'errors.generic'))
+
+      expect(screen.getByRole('button', { name: translated('en', 'common.retry') })).toBeTruthy()
+      expect(screen.queryByRole('link', { name: translated('en', 'nav.home') })).toBeNull()
+    })
+
+    it('shows a Try again button and no Home button when the server cannot be reached', async () => {
+      await renderJoin({ preview: networkFailureAnswer() })
+      await screen.findByText(translated('en', 'errors.network'))
+
+      expect(screen.getByRole('button', { name: translated('en', 'common.retry') })).toBeTruthy()
+      expect(screen.queryByRole('link', { name: translated('en', 'nav.home') })).toBeNull()
+    })
+
+    it('sends the preview request only once and does not ask again after too many tries', async () => {
+      const { fetchMock } = await renderJoin({ preview: problemAnswer(429, 'RATE_LIMITED') })
+      await screen.findByText(translated('en', 'errors.RATE_LIMITED'))
+
+      expect(requestCount(fetchMock, 'POST', endpoints.invitePreview)).toBe(1)
     })
 
     it('shows the network message when the server cannot be reached', async () => {
@@ -415,6 +474,112 @@ describe('JoinScreen', () => {
 
       expect(screen.getByText(translated('en', 'join.invitedTo', { name: testInviteGroupName }))).toBeTruthy()
     })
+
+    it('keeps the invite card and the Join button, with no Home button, when the join is refused with too many tries', async () => {
+      await renderJoin({ answers: { [joinRequest]: problemAnswer(429, 'RATE_LIMITED') } })
+      await showsInviteCard()
+
+      fireEvent.click(joinButton())
+      await screen.findByRole('alert')
+
+      expect(screen.getByText(translated('en', 'join.invitedTo', { name: testInviteGroupName }))).toBeTruthy()
+      expect(joinButton()).toBeTruthy()
+      expect(screen.queryByRole('link', { name: translated('en', 'nav.home') })).toBeNull()
+      expect(screen.queryByRole('button', { name: translated('en', 'common.retry') })).toBeNull()
+    })
+
+    it('lets the person press Join again after the join was refused with too many tries', async () => {
+      let tries = 0
+      const { router } = await renderJoin({
+        answers: {
+          [joinRequest]: () => {
+            tries += 1
+            return tries === 1 ? problemResponse(429, 'RATE_LIMITED') : Response.json({ groupId: testGroupId })
+          },
+        },
+      })
+      await showsInviteCard()
+      fireEvent.click(joinButton())
+      await screen.findByRole('alert')
+
+      fireEvent.click(joinButton())
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.group(testGroupId))
+      })
+    })
+  })
+
+  describe('the people in the group on the invite card', () => {
+    const multiWordNames: string[] = ['Filip Davchev', 'Ana Maria Petrovska', 'Marko']
+    const noBreakLook: RegExp = /(^|\s)(whitespace-nowrap|text-nowrap)(\s|$)/
+
+    function previewWithMembers(memberNames: string[]): AnswerFactory {
+      return jsonAnswer({ ...openInvitePreview, memberNames })
+    }
+
+    it('shows each name of a member in its own element', async () => {
+      await renderJoin({ preview: previewWithMembers(multiWordNames) })
+      await showsInviteCard()
+
+      for (const name of multiWordNames) {
+        expect(screen.getByText(name).textContent).toBe(name)
+      }
+    })
+
+    it('gives each name a no-break style so a name never wraps inside itself', async () => {
+      await renderJoin({ preview: previewWithMembers(multiWordNames) })
+      await showsInviteCard()
+
+      for (const name of multiWordNames) {
+        expect(screen.getByText(name).className).toMatch(noBreakLook)
+      }
+    })
+
+    it('shows the names in the order the server sent them', async () => {
+      await renderJoin({ preview: previewWithMembers(multiWordNames) })
+      await showsInviteCard()
+
+      const elements = multiWordNames.map((name) => screen.getByText(name))
+
+      for (let index = 1; index < elements.length; index += 1) {
+        const position = elements[index - 1].compareDocumentPosition(elements[index])
+        expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      }
+    })
+
+    it('shows two members with the same name as two separate elements', async () => {
+      await renderJoin({ preview: previewWithMembers(['Marko', 'Marko', 'Ana']) })
+      await showsInviteCard()
+
+      expect(screen.getAllByText('Marko')).toHaveLength(2)
+    })
+
+    it('shows a single member name in its own element with the no-break style', async () => {
+      await renderJoin({ preview: previewWithMembers(['Filip Davchev']) })
+      await showsInviteCard()
+
+      expect(screen.getByText('Filip Davchev').className).toMatch(noBreakLook)
+    })
+
+    it('shows the names in their own elements to a signed-out visitor too', async () => {
+      await renderJoin({ visitor: null, preview: previewWithMembers(multiWordNames) })
+      await showsInviteCard()
+
+      for (const name of multiWordNames) {
+        expect(screen.getByText(name).className).toMatch(noBreakLook)
+      }
+    })
+
+    it('still shows the In the group label before the names', async () => {
+      await renderJoin({ preview: previewWithMembers(multiWordNames) })
+      await showsInviteCard()
+
+      const label = screen.getByText(`${translated('en', 'join.inGroup')}:`)
+      const firstName = screen.getByText(multiWordNames[0])
+
+      expect(label.compareDocumentPosition(firstName) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
   })
 
   describe('a signed-in person with an open invite and names to take', () => {
@@ -454,6 +619,30 @@ describe('JoinScreen', () => {
         expect(nameButton(name)).toBeTruthy()
       }
       expect(imNewButton(language)).toBeTruthy()
+    })
+
+    it.each(languages)('moves the focus into the Are you one of these? card after Join is pressed (%s)', async (language) => {
+      await renderJoinWithNames({ language })
+
+      await pressJoin(language)
+
+      await waitFor(() => {
+        expect(claimCard(language).contains(document.activeElement)).toBe(true)
+      })
+    })
+
+    it('moves the focus into the card when the Join button had the focus before it was pressed', async () => {
+      await renderJoinWithNames()
+      await showsInviteCard()
+      joinButton().focus()
+
+      fireEvent.click(joinButton())
+      await screen.findByText(translated('en', 'join.areYou'))
+
+      await waitFor(() => {
+        expect(claimCard().contains(document.activeElement)).toBe(true)
+      })
+      expect(screen.queryByRole('button', { name: translated('en', 'join.join') })).toBeNull()
     })
 
     it('sends the id of the name together with the token when a name is pressed', async () => {

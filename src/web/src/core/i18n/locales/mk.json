@@ -49,7 +49,7 @@
     "GROUP_NOT_DELETED": "Оваа група не е избришана.",
     "GROUP_RESTORE_EXPIRED": "Оваа група е избришана пред повеќе од 30 дена и не може да се врати.",
     "MEMBER_NAME_INVALID": "Внеси име (најмногу 60 знаци).",
-    "MEMBER_NAME_TAKEN": "Во оваа група веќе има {{name}}.",
+    "MEMBER_NAME_TAKEN": "Некој по име „{{name}}“ е веќе во групата.",
     "MEMBER_OWNER_CANNOT_LEAVE": "Ти си сопственик. Направи некој друг сопственик пред да ја напуштиш.",
     "MEMBER_NOT_FOUND": "Оваа личност веќе не е во групата.",
     "MEMBER_IS_OWNER": "Сопственикот не може да се отстрани.",
@@ -169,7 +169,8 @@
     "people_other": "{{count}} лица",
     "finished": "Завршени",
     "finishedReadOnly": "Завршена · само за читање",
-    "recentlyDeletedLink": "Неодамна избришани"
+    "recentlyDeletedLink": "Неодамна избришани",
+    "goToGroups": "Кон групите"
   },
   "recentlyDeleted": {
     "title": "Неодамна избришани",

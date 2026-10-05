@@ -22,8 +22,11 @@ export function JoinScreen() {
 
   function renderContent() {
     if (previewQuery.isError) {
-      if (hasErrorCode(previewQuery.error, 'INVITE_NOT_FOUND')) {
-        return <JoinMessage message={t('errors.INVITE_NOT_FOUND')} />
+      if (
+        hasErrorCode(previewQuery.error, 'INVITE_NOT_FOUND') ||
+        hasErrorCode(previewQuery.error, 'RATE_LIMITED')
+      ) {
+        return <JoinMessage message={t(errorMessageKey(previewQuery.error))} />
       }
       return (
         <KvitError

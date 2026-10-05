@@ -43,7 +43,7 @@ export function MemberListItem({
         <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
           <span className="font-semibold break-words">{member.displayName}</span>
           {member.isOwner && (
-            <span className={`${badgeLook} bg-track-active text-foreground`}>
+            <span className={`${badgeLook} bg-pill text-foreground`}>
               {t('members.owner')}
             </span>
           )}
@@ -60,7 +60,7 @@ export function MemberListItem({
       {canClaim && (
         <KvitButton
           variant="secondary"
-          className="min-h-11 w-auto flex-none rounded-full bg-track-active px-4 text-[0.9375rem]"
+          className="min-h-11 w-auto flex-none rounded-full bg-pill px-4 text-[0.9375rem]"
           disabled={isClaimPending}
           onClick={onClaim}
         >

@@ -93,7 +93,7 @@ const approvedPhase7Texts: [string, string, string][] = [
   ['errors.GROUP_NOT_DELETED', 'This group is not deleted.', 'Оваа група не е избришана.'],
   ['errors.GROUP_RESTORE_EXPIRED', "This group was deleted more than 30 days ago and can't be restored.", 'Оваа група е избришана пред повеќе од 30 дена и не може да се врати.'],
   ['errors.MEMBER_NAME_INVALID', 'Enter a name (up to 60 characters).', 'Внеси име (најмногу 60 знаци).'],
-  ['errors.MEMBER_NAME_TAKEN', "There's already a {{name}} in this group.", 'Во оваа група веќе има {{name}}.'],
+  ['errors.MEMBER_NAME_TAKEN', 'Someone called “{{name}}” is already in this group.', 'Некој по име „{{name}}“ е веќе во групата.'],
   ['errors.MEMBER_OWNER_CANNOT_LEAVE', 'You are the owner. Make someone else the owner before you leave.', 'Ти си сопственик. Направи некој друг сопственик пред да ја напуштиш.'],
 ]
 
@@ -140,6 +140,10 @@ const approvedPhase7Step5Texts: [string, string, string][] = [
   ['errors.INVITE_NOTHING_TO_UNDO', 'There is no earlier link to go back to.', 'Нема претходен линк за враќање.'],
 ]
 
+const approvedPhase7Step6Texts: [string, string, string][] = [
+  ['groups.goToGroups', 'Go to Groups', 'Кон групите'],
+]
+
 const textsWhereMacedonianMeansConnection = ['errors.network', 'welcome.googleUnavailable']
 
 const macedonianWordForConnection = 'врск'
@@ -182,6 +186,13 @@ describe('the approved Phase 7 texts', () => {
 
 describe('the approved Phase 7 Step 5 texts', () => {
   it.each(approvedPhase7Step5Texts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
+    expect(translated('en', key)).toBe(english)
+    expect(translated('mk', key)).toBe(macedonian)
+  })
+})
+
+describe('the approved Phase 7 Step 6 texts', () => {
+  it.each(approvedPhase7Step6Texts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
     expect(translated('en', key)).toBe(english)
     expect(translated('mk', key)).toBe(macedonian)
   })

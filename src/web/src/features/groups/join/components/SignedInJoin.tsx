@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -20,6 +20,13 @@ export function SignedInJoin({ token, preview }: SignedInJoinProps) {
   const navigate = useNavigate()
   const joinGroup = useJoinGroup()
   const [isAskingName, setIsAskingName] = useState<boolean>(false)
+  const claimCardRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (isAskingName) {
+      claimCardRef.current?.focus()
+    }
+  }, [isAskingName])
 
   function joinNow(claimMemberId?: string): void {
     joinGroup.mutate(
@@ -42,10 +49,14 @@ export function SignedInJoin({ token, preview }: SignedInJoinProps) {
   }
 
   return (
-    <div className="mt-auto flex flex-col gap-3 pt-8">
+    <div className={isAskingName ? 'flex flex-col gap-3 pt-5' : 'mt-auto flex flex-col gap-3 pt-8'}>
       {joinGroup.isError && <KvitInlineError message={t(errorMessageKey(joinGroup.error))} />}
       {isAskingName ? (
-        <section className="flex flex-col gap-3 rounded-[20px] bg-card p-[18px] text-card-foreground">
+        <section
+          ref={claimCardRef}
+          tabIndex={-1}
+          className="flex flex-col gap-3 rounded-[20px] bg-card p-[18px] text-card-foreground outline-none"
+        >
           <h2 className="text-lg font-bold">{t('join.areYou')}</h2>
           <div className="flex flex-wrap gap-2">
             {preview.unclaimedNames.map((unclaimed) => (

@@ -114,12 +114,13 @@ Put the skeleton online early, so the hosting traps show up before there are fea
 - **Filip, after the merge:** hosting guide Part B4 / `guides/phase-06-google.md` Part 2 (Branding links, Publish app → In production), then the phone test. The phone test and "In production" are REPORTED done by Filip (2026-10-03).
 
 ## Phase 7: Groups, members, invite links · `feat/07-groups`
-- [ ] Create a group, list groups, group screen shell, rename / emoji / currency, soft delete + Undo
-- [ ] Plain-name members; invite link (make, share, reset)
-- [ ] Join screen incl. the "Are you one of these?" claim; undo claim; rate limit on joining
-- [ ] Leave, remove, make owner (the zero-balance checks are wired in Phase 9, once balances exist)
-- [ ] Activity events and usage events for all of the above
-- [ ] Screens 6, 7 (Group part), 8 (shell), 14, 15, 16
+- [x] **Done 2026-10-05 (VERIFIED by automated test, backend 1454, frontend 1940; every new screen VERIFIED by live run in headless Chrome, see the report).** Create a group, list groups, group screen shell, rename / emoji / currency, soft delete + Undo
+- [x] **Done (VERIFIED by automated test).** Plain-name members; invite link (make, share, reset)
+- [x] **Done (VERIFIED by automated test).** Join screen incl. the "Are you one of these?" claim; undo claim; rate limit on joining
+- [x] **Done (VERIFIED by automated test).** Leave, remove, make owner (the zero-balance checks are wired in Phase 9, once balances exist)
+- [x] **Done (VERIFIED by automated test).** Activity events and usage events for all of the above
+- [x] **Done (VERIFIED by automated test).** Screens 6, 7 (Group part), 8 (shell), 14, 15, 16
+- [x] **Filip:** commit, push, open the pull request, see CI go green, merge into `main` (CI applies the `Groups` migration on Neon). Report: `reports/2026-10-05-phase-07-groups.md`; guide: `guides/phase-07-groups.md`
 
 ## Phase 8: Expenses · `feat/08-expenses`
 - [ ] A way to check that every API error code the frontend can receive has a translation key (review 02-5). `ResultCodes` is C# and the frontend is TypeScript, so decide how the two meet (for example a generated list of codes read by a Vitest test, or a backend test that reads `en.json` and `mk.json`) and record the choice in `DECISIONS.md`

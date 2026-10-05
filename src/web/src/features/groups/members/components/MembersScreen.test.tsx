@@ -231,6 +231,77 @@ describe('MembersScreen', () => {
       )
     })
 
+    it.each([
+      ['the group', groupPath],
+      ['the members', membersPath],
+    ])('shows the group-not-found message for a 404 without an error code when asking for %s', async (_label, path) => {
+      await renderMembers({
+        answers: { [`GET ${path}`]: () => new Response(null, { status: 404 }) },
+      })
+
+      expect((await screen.findByRole('alert')).textContent).toContain(
+        translated('en', 'errors.GROUP_NOT_FOUND'),
+      )
+    })
+
+    it.each(
+      languages.flatMap((language) =>
+        (
+          [
+            ['the group', groupPath],
+            ['the members', membersPath],
+          ] as const
+        ).map(([label, path]) => [label, language, path] as const),
+      ),
+    )('shows a Go to Groups link to the groups list and no retry button when %s is not found (%s)', async (_label, language, path) => {
+      await renderMembers({
+        language,
+        answers: { [`GET ${path}`]: problemAnswer(404, 'GROUP_NOT_FOUND') },
+      })
+      await screen.findByRole('alert')
+
+      const link = screen.getByRole('link', { name: translated(language, 'groups.goToGroups') })
+
+      expect(link.getAttribute('href')).toBe(routes.groups)
+      expect(
+        screen.queryByRole('button', { name: translated(language, 'common.retry') }),
+      ).toBeNull()
+    })
+
+    it('shows the Go to Groups link and no retry button for a 404 without an error code', async () => {
+      await renderMembers({
+        answers: { [`GET ${groupPath}`]: () => new Response(null, { status: 404 }) },
+      })
+      await screen.findByRole('alert')
+
+      expect(
+        screen.getByRole('link', { name: translated('en', 'groups.goToGroups') }).getAttribute('href'),
+      ).toBe(routes.groups)
+      expect(screen.queryByRole('button', { name: translated('en', 'common.retry') })).toBeNull()
+    })
+
+    it('opens the groups list when the Go to Groups link is pressed', async () => {
+      const { router } = await renderMembers({
+        answers: { [`GET ${membersPath}`]: problemAnswer(404, 'GROUP_NOT_FOUND') },
+      })
+
+      fireEvent.click(await screen.findByRole('link', { name: translated('en', 'groups.goToGroups') }))
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.groups)
+      })
+    })
+
+    it.each([
+      ['a server error', () => new Response(null, { status: 500 })],
+      ['a network failure', networkFailureAnswer()],
+    ])('shows no Go to Groups link after %s', async (_label, answer) => {
+      await renderMembers({ answers: { [`GET ${membersPath}`]: answer } })
+      await screen.findByRole('alert')
+
+      expect(screen.queryByRole('link', { name: translated('en', 'groups.goToGroups') })).toBeNull()
+    })
+
     it('shows the generic message with a retry button after a server error', async () => {
       await renderMembers({
         answers: { [`GET ${membersPath}`]: () => new Response(null, { status: 500 }) },
@@ -456,6 +527,27 @@ describe('MembersScreen', () => {
       expect((await within(addNameSheet(language)).findByRole('alert')).textContent).toContain(
         translated(language, 'errors.MEMBER_NAME_TAKEN', { name: 'Marko' }),
       )
+    })
+
+    it.each([
+      ['en', 'Someone called “Marko” is already in this group.'],
+      ['mk', 'Некој по име „Marko“ е веќе во групата.'],
+    ] as const)('words the name-taken message exactly with the typed name between the quotes (%s)', async (language, text) => {
+      await renderMembers({
+        language,
+        answers: { [`POST ${membersPath}`]: problemAnswer(400, 'MEMBER_NAME_TAKEN') },
+      })
+      await showsMembers(language)
+      await openAddNameSheet(language)
+      typeInto(translated(language, 'addName.label'), 'Marko')
+
+      fireEvent.click(
+        within(addNameSheet(language)).getByRole('button', {
+          name: translated(language, 'addName.submit'),
+        }),
+      )
+
+      expect((await within(addNameSheet(language)).findByRole('alert')).textContent).toBe(text)
     })
 
     it('shows the empty-name message inside the sheet and keeps the sheet open', async () => {

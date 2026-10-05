@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { InvitePreview } from '@/core/services/invites/invitesService'
 import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
@@ -16,7 +17,13 @@ export function InviteCard({ preview }: InviteCardProps) {
         {t('join.invitedTo', { name: preview.name })}
       </h1>
       <p className="text-[0.9375rem] text-pretty text-muted-foreground">
-        <span className="font-bold">{t('join.inGroup')}:</span> {preview.memberNames.join(', ')}
+        <span className="font-bold">{t('join.inGroup')}:</span>{' '}
+        {preview.memberNames.map((memberName, index) => (
+          <Fragment key={index}>
+            {index > 0 && ', '}
+            <span className="whitespace-nowrap">{memberName}</span>
+          </Fragment>
+        ))}
       </p>
     </div>
   )

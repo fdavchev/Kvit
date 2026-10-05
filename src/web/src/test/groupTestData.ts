@@ -17,6 +17,8 @@ export const groupEmojis: readonly string[] = [
 
 export const defaultGroupEmoji: string = groupEmojis[0]
 
+export const groupNameMaxLength = 60
+
 export const testGroupId = '7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e'
 
 export const testInviteToken = 'q3Fz8-mXk2_Lw9Tn5Vb1Rc7Yh0JdAeSgUiOpKfXzM4'

@@ -4,6 +4,7 @@ import { errorMessageKey } from '@/core/api/errors'
 import type { GroupMember } from '@/core/services/groups/membersService'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitSheet } from '@/shared/components/KvitSheet'
+import { useKvitSheet } from '@/shared/components/useKvitSheet'
 import { showUndoToast } from '@/shared/toasts/showUndoToast'
 import { useLetBackIn } from '../hooks/useLetBackIn'
 import { useMakeOwner } from '../hooks/useMakeOwner'
@@ -22,6 +23,7 @@ export function MemberOptionsSheet({ groupId, member, onClose }: MemberOptionsSh
   const undoClaim = useUndoClaim(groupId)
   const removeMember = useRemoveMember(groupId)
   const letBackIn = useLetBackIn(groupId)
+  const sheet = useKvitSheet()
   const isPending = makeOwner.isPending || undoClaim.isPending || removeMember.isPending
 
   function showFailure(error: Error): void {
@@ -33,7 +35,7 @@ export function MemberOptionsSheet({ groupId, member, onClose }: MemberOptionsSh
     makeOwner.mutate(member.id, {
       onSuccess: () => {
         toast.success(t('members.ownerNow', { name: member.displayName }))
-        onClose()
+        sheet.close()
       },
       onError: showFailure,
     })
@@ -45,7 +47,7 @@ export function MemberOptionsSheet({ groupId, member, onClose }: MemberOptionsSh
         toast.success(
           t('members.claimUndone', { name: member.displayName, claimed: claimedName }),
         )
-        onClose()
+        sheet.close()
       },
       onError: showFailure,
     })
@@ -63,7 +65,7 @@ export function MemberOptionsSheet({ groupId, member, onClose }: MemberOptionsSh
           undoLabel: t('common.undo'),
           onUndo: undoRemove,
         })
-        onClose()
+        sheet.close()
       },
       onError: showFailure,
     })
@@ -72,7 +74,7 @@ export function MemberOptionsSheet({ groupId, member, onClose }: MemberOptionsSh
   const { claimedName } = member
 
   return (
-    <KvitSheet title={member.displayName} onClose={onClose}>
+    <KvitSheet title={member.displayName} onClose={onClose} actionsRef={sheet.actionsRef}>
       <div className="flex flex-col gap-2">
         {!member.isNameOnly && (
           <KvitButton
@@ -97,7 +99,7 @@ export function MemberOptionsSheet({ groupId, member, onClose }: MemberOptionsSh
         <KvitButton variant="danger" className="bg-field" disabled={isPending} onClick={removeNow}>
           {t('members.remove')}
         </KvitButton>
-        <KvitButton variant="link" onClick={onClose}>
+        <KvitButton variant="link" onClick={sheet.close}>
           {t('common.close')}
         </KvitButton>
       </div>

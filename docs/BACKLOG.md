@@ -48,6 +48,18 @@
 - [ ] Link a Google sign-in to an existing password account (a safe way, e.g. the person logs in with the password first, then adds Google in Settings). Phase 6 never merges automatically (DECISIONS), so today the pop-up only offers "Log in"
 - [ ] Google sign-in loose ends (Step 2b review): (a) a 401 `AUTH_GOOGLE_TOKEN_INVALID` is treated like "session ended" by `queryClient.ts` (only matters if a signed-in person taps Google on Welcome; fix: also exempt that code, with a test); (b) Google keeps one callback for the whole page, so two Google buttons that ever need different handlers would clash (today every button runs the same flow)- [ ] The main JavaScript file is 559 kB (limit warning at 500 kB; 497 kB before Phase 6). Split the code by screen (`React.lazy` per route) when the build warning matters or the app feels slow on a phone
 - [ ] Settings: change the display name (Phase 6 asks the name once, pre-filled from Google; changing it later has no screen yet)
+- [ ] **Found in the Phase 7 real-browser check (2026-10-05; Filip agreed to skip them for Phase 7):**
+  - The undo toast covers a sheet's Close button (about 3.4 s) when the sheet opens while the toast is still up. Fix: put the sheet and its backdrop above the toaster, so the toast keeps ticking underneath. Escape and a backdrop tap close the sheet meanwhile.
+  - The 61-character name error text is not linked to its field (`aria-describedby`) for a screen reader.
+  - A long hyphenated name breaks at its hyphen ("Petrovska-" / "Kostadinovska") in the claim button and on the Members row.
+  - Every group's emoji tile is the same orange; the mockup gives each group its own tile colour (needs a rule for which colour a group gets).
+  - On Members, a new toast stacks over the old "Removed: x · Undo" one and covers "Let back in" for about 4 s.
+  - Share sends only the link (no title or text).
+  - Join stays pressable on a dead link; each press repeats the 404 and counts toward the invite limit.
+  - The Google button measures its width once, so a resized window leaves it too wide or too narrow (Phase 6 component; a fresh load is fine).
+  - The console warning "google.accounts.id.initialize() is called multiple times" when Welcome or the join card is shown again in the same tab (since Phase 6).
+  - The browser's Back button after joining can open "Create account" while signed in: `/signup`, `/login` and `/welcome` should send a signed-in person away, and the in-app Back button and the Sign up / Log in links should replace history instead of adding to it.
+  - The backend's `Retry-After` is always 600 seconds (same item as the one above about the whole window).
 
 ## Skipped on purpose
 - CI runs twice on a pull-request branch (one run for `push`, one for `pull_request`; review finding 01-5, 2026-09-29). Left as it is: the second run tests the merge result with `main`, the cost is only free GitHub minutes, and limiting `push` to `main` would drop the check on a branch that has no pull request yet. Revisit only if the free minutes ever run short.

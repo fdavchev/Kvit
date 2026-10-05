@@ -104,6 +104,39 @@ describe('errorMessageKey', () => {
     expect(consoleError).not.toHaveBeenCalled()
   })
 
+  it('uses the group-not-found message for a 404 that carries no error code', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const error = new ApiError('GET /api/groups/not-an-id failed with status 404', {
+      httpStatus: 404,
+    })
+
+    expect(errorMessageKey(error)).toBe('errors.GROUP_NOT_FOUND')
+    expect(consoleError).not.toHaveBeenCalled()
+  })
+
+  it.each([400, 401, 403, 429, 500])('keeps the generic message for a %i that carries no error code', (httpStatus) => {
+    const error = new ApiError(`GET /api/x failed with status ${httpStatus}`, { httpStatus })
+
+    expect(errorMessageKey(error)).toBe('errors.generic')
+  })
+
+  it('keeps the own message of a known error code on a 404', () => {
+    const error = new ApiError('POST /api/invites/join failed with status 404', {
+      httpStatus: 404,
+      errorCode: 'INVITE_NOT_FOUND',
+    })
+
+    expect(errorMessageKey(error)).toBe('errors.INVITE_NOT_FOUND')
+  })
+
+  it('uses the network message and not the group-not-found message when no answer came', () => {
+    const error = new ApiError('GET /api/groups/1 could not reach the server', {
+      httpStatus: null,
+    })
+
+    expect(errorMessageKey(error)).toBe('errors.network')
+  })
+
   it('uses the generic message for an error that is not an ApiError', () => {
     expect(errorMessageKey(new Error('boom'))).toBe('errors.generic')
   })

@@ -10,6 +10,7 @@ import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 import type { Currency } from '@/shared/utils/formatMoney'
 import { GroupFields } from '../../shared/components/GroupFields'
 import { defaultGroupEmoji } from '../../shared/groupEmojis'
+import { isValidGroupName } from '../../shared/groupName'
 import { useCreateGroup } from '../hooks/useCreateGroup'
 
 export function NewGroupScreen() {
@@ -19,15 +20,15 @@ export function NewGroupScreen() {
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState(defaultGroupEmoji)
   const [currency, setCurrency] = useState<Currency>('MKD')
-  const [isNameMissing, setIsNameMissing] = useState<boolean>(false)
+  const [isNameInvalid, setIsNameInvalid] = useState<boolean>(false)
 
   function submit(): void {
-    if (name.trim() === '') {
-      setIsNameMissing(true)
+    if (!isValidGroupName(name)) {
+      setIsNameInvalid(true)
       createGroup.reset()
       return
     }
-    setIsNameMissing(false)
+    setIsNameInvalid(false)
     createGroup.mutate(
       { name, emoji, currency },
       {
@@ -54,7 +55,7 @@ export function NewGroupScreen() {
           name={name}
           emoji={emoji}
           currency={currency}
-          nameInvalid={isNameMissing ? t('groupFields.nameInvalid') : null}
+          nameInvalid={isNameInvalid ? t('groupFields.nameInvalid') : null}
           onNameChange={setName}
           onEmojiChange={setEmoji}
           onCurrencyChange={setCurrency}
