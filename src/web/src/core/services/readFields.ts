@@ -61,6 +61,20 @@ export function readCount(fields: Fields, name: string, what: string): number {
   return value
 }
 
+export function readCountOrNull(fields: Fields, name: string, what: string): number | null {
+  return fields[name] === null ? null : readCount(fields, name, what)
+}
+
+export function readPositiveNumber(fields: Fields, name: string, what: string): number {
+  const value = fields[name]
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+    throw new Error(
+      `Expected "${name}" of ${what} to be a number above 0, got ${describeValue(value)}`,
+    )
+  }
+  return value
+}
+
 export function readOneOf<Option extends string>(
   fields: Fields,
   name: string,
@@ -85,6 +99,10 @@ export function readDate(fields: Fields, name: string, what: string): string {
     )
   }
   return value
+}
+
+export function readDateOrNull(fields: Fields, name: string, what: string): string | null {
+  return fields[name] === null ? null : readDate(fields, name, what)
 }
 
 function describeValue(value: unknown): string {

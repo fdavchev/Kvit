@@ -7,11 +7,12 @@ import { KvitLinkButton } from '@/shared/components/KvitLinkButton'
 interface GroupLoadErrorProps {
   error: Error
   onRetry: () => void
+  messageKey?: string
 }
 
-export function GroupLoadError({ error, onRetry }: GroupLoadErrorProps) {
+export function GroupLoadError({ error, onRetry, messageKey }: GroupLoadErrorProps) {
   const { t } = useTranslation()
-  const message = t(errorMessageKey(error))
+  const message = t(messageKey ?? errorMessageKey(error))
 
   if (isNotFoundError(error)) {
     return (

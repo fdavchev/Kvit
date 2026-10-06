@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { routes } from '@/core/router/routes'
+import { GroupExpenses } from '@/features/expenses/list/components/GroupExpenses'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
 import { KvitLoading } from '@/shared/components/KvitLoading'
@@ -58,9 +59,7 @@ export function GroupScreen() {
             onShareLink={() => void inviteLinkActions.share(group.inviteToken)}
           />
         )}
-        <p className="pt-10 text-center text-[0.9375rem] text-muted-foreground">
-          {t('group.expensesSoon')}
-        </p>
+        <GroupExpenses groupId={group.id} />
         {isAddingName && (
           <AddNameSheet groupId={group.id} onClose={() => setIsAddingName(false)} />
         )}

@@ -16,7 +16,7 @@ namespace Kvit.Api.Tests.Groups
         public const string JoinPath = "/api/invites/join";
 
         public static readonly Regex TokenFormat = new("^[A-Za-z0-9_-]{43}$");
-        public static readonly string[] MemberFieldNames = ["claimedName", "displayName", "id", "isNameOnly", "isOwner", "isYou", "name", "userId"];
+        public static readonly string[] MemberFieldNames = ["claimedName", "displayName", "id", "isNameOnly", "isOwner", "isYou", "name", "pictureUrl", "userId"];
 
         public static string PathOf(Guid groupId)
         {

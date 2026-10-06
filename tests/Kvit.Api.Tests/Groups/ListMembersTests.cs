@@ -23,7 +23,7 @@ namespace Kvit.Api.Tests.Groups
         }
 
         [Fact]
-        public async Task List_MemberRow_AnswersExactlyTheEightFields()
+        public async Task List_MemberRow_AnswersExactlyTheNineFields()
         {
             SignedInUser owner = await _app.SignUpAsync();
             Guid groupId = await _app.CreateGroupAsync(owner);
@@ -146,7 +146,7 @@ namespace Kvit.Api.Tests.Groups
         }
 
         [Fact]
-        public async Task List_Owner_SeesRemovedMembersWithOnlyIdAndDisplayNameAndNotInMembers()
+        public async Task List_Owner_SeesRemovedMembersWithOnlyIdDisplayNameAndPictureUrlAndNotInMembers()
         {
             GroupSetup setup = await _app.CreateGroupWithMemberAsync();
             Guid removedPlainId = await GroupRows.InsertMemberAsync(_app, setup.GroupId, null, "Zora", setup.Owner.UserId, DateTimeOffset.UtcNow, "Removed");
@@ -157,7 +157,7 @@ namespace Kvit.Api.Tests.Groups
 
             JsonElement removed = body.GetProperty("removed");
             Assert.Equal(new[] { setup.MemberRowId, removedPlainId }.Order(), GroupRequests.IdsOf(removed).Order());
-            Assert.Equal(["displayName", "id"], GroupRequests.PropertyNamesOf(removed[0]));
+            Assert.Equal(["displayName", "id", "pictureUrl"], GroupRequests.PropertyNamesOf(removed[0]));
             Assert.Equal("Zoran", GroupRequests.RowWithId(removed, setup.MemberRowId).GetProperty("displayName").GetString());
             Assert.Equal("Zora", GroupRequests.RowWithId(removed, removedPlainId).GetProperty("displayName").GetString());
             Assert.Equal([setup.OwnerRowId], GroupRequests.IdsOf(body.GetProperty("members")));

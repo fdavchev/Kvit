@@ -79,3 +79,31 @@ describe('index.css design tokens', () => {
     expect(tokenValue(indexCss, '--color-brand-700')).toBe('#b54a00')
   })
 })
+
+describe('index.css avatar colour tokens', () => {
+  const avatarTokenNames = Array.from({ length: 10 }, (_, index) => `--avatar-${index}`)
+
+  function effectiveValue(name: string, mode: 'light' | 'dark'): string | undefined {
+    return mode === 'light'
+      ? tokenValue(light, name)
+      : (tokenValue(dark, name) ?? tokenValue(light, name))
+  }
+
+  it.each(avatarTokenNames)('defines %s with a colour in light mode', (name) => {
+    expect(effectiveValue(name, 'light')).toBeTruthy()
+  })
+
+  it.each(avatarTokenNames)('defines %s with a colour in dark mode', (name) => {
+    expect(effectiveValue(name, 'dark')).toBeTruthy()
+  })
+
+  it.each(['light', 'dark'] as const)('gives the ten tokens ten different colours in %s mode', (mode) => {
+    const colors = avatarTokenNames.map((name) => effectiveValue(name, mode))
+
+    expect(new Set(colors).size).toBe(10)
+  })
+
+  it('has no eleventh token, because the colour index wraps around after ten', () => {
+    expect(tokenValue(indexCss, '--avatar-10')).toBeUndefined()
+  })
+})

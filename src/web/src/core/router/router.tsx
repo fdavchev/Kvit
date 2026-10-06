@@ -5,6 +5,10 @@ import { LogInScreen } from '@/features/auth/logIn/components/LogInScreen'
 import { SetPasswordScreen } from '@/features/auth/setPassword/components/SetPasswordScreen'
 import { SignUpScreen } from '@/features/auth/signUp/components/SignUpScreen'
 import { WelcomeScreen } from '@/features/auth/welcome/components/WelcomeScreen'
+import { AddExpenseScreen } from '@/features/expenses/add/components/AddExpenseScreen'
+import { RecentlyDeletedExpensesScreen } from '@/features/expenses/deleted/components/RecentlyDeletedExpensesScreen'
+import { ExpenseDetailScreen } from '@/features/expenses/detail/components/ExpenseDetailScreen'
+import { EditExpenseScreen } from '@/features/expenses/edit/components/EditExpenseScreen'
 import { GroupScreen } from '@/features/groups/group/components/GroupScreen'
 import { JoinScreen } from '@/features/groups/join/components/JoinScreen'
 import { GroupsScreen } from '@/features/groups/list/components/GroupsScreen'
@@ -22,6 +26,7 @@ import { RouteError } from './RouteError'
 import { routes } from './routes'
 
 const groupIdPattern = ':groupId'
+const expenseIdPattern = ':expenseId'
 const inviteTokenPattern = ':token'
 
 export const routeObjects: RouteObject[] = [
@@ -50,6 +55,19 @@ export const routeObjects: RouteObject[] = [
           { path: routes.group(groupIdPattern), element: <GroupScreen /> },
           { path: routes.groupSettings(groupIdPattern), element: <GroupSettingsScreen /> },
           { path: routes.groupMembers(groupIdPattern), element: <MembersScreen /> },
+          { path: routes.groupExpenseNew(groupIdPattern), element: <AddExpenseScreen /> },
+          {
+            path: routes.groupExpensesDeleted(groupIdPattern),
+            element: <RecentlyDeletedExpensesScreen />,
+          },
+          {
+            path: routes.groupExpense(groupIdPattern, expenseIdPattern),
+            element: <ExpenseDetailScreen />,
+          },
+          {
+            path: routes.groupExpenseEdit(groupIdPattern, expenseIdPattern),
+            element: <EditExpenseScreen />,
+          },
           { path: routes.changePassword, element: <ChangePasswordScreen /> },
           { path: routes.setPassword, element: <SetPasswordScreen /> },
         ],

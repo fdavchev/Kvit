@@ -5,6 +5,8 @@ import type { Group } from '@/core/services/groups/groupsService'
 import { languages, type Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import { stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
+import { testCategories } from '@/test/expenseTestData'
+import { categoriesPath, expensesPath } from '@/test/expenseTestHelpers'
 import { expectDisabledWhilePending, typeInto } from '@/test/formTestHelpers'
 import { groupOf, testGroup, testInviteToken } from '@/test/groupTestData'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
@@ -47,6 +49,8 @@ async function renderGroup(options: RenderOptions = {}) {
   const language = options.language ?? 'en'
   const fetchMock = stubFetchByRequest({
     [`GET /api/groups/${group.id}`]: jsonAnswer(group),
+    [`GET ${expensesPath}`]: jsonAnswer({ expenses: [] }),
+    [`GET ${categoriesPath}`]: jsonAnswer({ categories: testCategories }),
     ...options.answers,
   })
   const rendered = await renderRoutesWithProviders(
@@ -321,11 +325,13 @@ describe('GroupScreen', () => {
       })
     })
 
-    it.each(languages)('tells that the expenses will show up soon (%s)', async (language) => {
-      await renderGroup({ language })
+    it('no longer tells that the expenses will show up soon', async () => {
+      await renderGroup()
       await showsGroupScreen()
+      await screen.findByText(translated('en', 'expenses.empty'))
 
-      expect(screen.getByText(translated(language, 'group.expensesSoon'))).toBeTruthy()
+      expect(screen.queryByText('Expenses will show up here soon.')).toBeNull()
+      expect(screen.queryByText(/soon/i)).toBeNull()
     })
   })
 
@@ -723,10 +729,13 @@ describe('GroupScreen', () => {
     })
   })
 
-  it('does not send any request besides asking for the group when nothing is pressed', async () => {
+  it('does not send any request besides asking for the group, its expenses and the categories when nothing is pressed', async () => {
     const { fetchMock } = await renderGroup()
     await showsGroupScreen()
+    await screen.findByText(translated('en', 'expenses.empty'))
 
-    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([groupPath])
+    expect(fetchMock.mock.calls.map(([url]) => String(url)).sort()).toEqual(
+      [groupPath, expensesPath, categoriesPath].sort(),
+    )
   })
 })

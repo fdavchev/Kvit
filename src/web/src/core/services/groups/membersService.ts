@@ -17,11 +17,13 @@ export interface GroupMember {
   isYou: boolean
   isNameOnly: boolean
   claimedName: string | null
+  pictureUrl: string | null
 }
 
 export interface RemovedMember {
   id: string
   displayName: string
+  pictureUrl: string | null
 }
 
 export interface GroupMembers {
@@ -88,6 +90,7 @@ function parseGroupMember(row: unknown): GroupMember {
     isYou: readYesNo(fields, 'isYou', what),
     isNameOnly: readYesNo(fields, 'isNameOnly', what),
     claimedName: readTextOrNull(fields, 'claimedName', what),
+    pictureUrl: readTextOrNull(fields, 'pictureUrl', what),
   }
 }
 
@@ -97,6 +100,7 @@ function parseRemovedMember(row: unknown): RemovedMember {
   return {
     id: readText(fields, 'id', what),
     displayName: readText(fields, 'displayName', what),
+    pictureUrl: readTextOrNull(fields, 'pictureUrl', what),
   }
 }
 

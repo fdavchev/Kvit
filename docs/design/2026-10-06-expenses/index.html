@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit: expenses (mockup)</title>
+<link rel="stylesheet" href="../2026-10-01-round-3/source/palette.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/base.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/app.css">
+<style>
+  html, body { background: #e9e6e1; color: #222; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; padding: 10px 16px 2px; font-size: .9rem; }
+  .bar .grp { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .bar b { margin-right: 4px; }
+  .bar button, .states button { border: 1px solid #999; background: #fff; color: #222; border-radius: 8px; padding: 6px 10px; font: inherit; cursor: pointer; }
+  .states button { padding: 4px 8px; font-size: .8rem; }
+  .bar button[aria-pressed='true'], .states button[aria-pressed='true'] { background: #222; color: #fff; border-color: #222; }
+  .note2 { max-width: 680px; margin: 6px auto 10px; text-align: center; font-size: .9rem; color: #444; padding: 0 16px; min-height: 2.6em; }
+  .states { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 auto 12px; max-width: 700px; }
+  .stage { display: flex; justify-content: center; padding: 0 16px 32px; }
+  .phone { position: relative; width: 360px; height: 740px; overflow: hidden; border-radius: 28px; box-shadow: 0 6px 24px rgba(0,0,0,.25);
+    --bg: var(--orange-200); --ink: var(--orange-950); --ink-soft: var(--orange-900); --wordmark: var(--orange-deep);
+    --primary: var(--orange-deep); --primary-ink: var(--white); --secondary: var(--orange-50); --secondary-ink: var(--orange-900);
+    --track: var(--orange-50); --track-active: var(--white); --track-shadow: var(--shadow); --field: var(--white); --field-ink: var(--orange-950);
+    --field-line: var(--orange-line); --field-line-focus: var(--orange-950); --card: var(--orange-50); --err: #a51d1d; --wine: #b71f1f; --wine-bg: #b71f1f; --wine-ink: #fff; --pill: #fff;
+    background: var(--bg); color: var(--ink); }
+  .phone.dark {
+    --bg: var(--dark-bg); --ink: var(--orange-50); --ink-soft: var(--orange-200); --primary: var(--dark-button); --primary-ink: var(--dark-bg);
+    --secondary: var(--dark-raised); --secondary-ink: var(--orange-50); --track: var(--dark-field); --track-active: var(--dark-raised); --track-shadow: transparent;
+    --field: var(--dark-field); --field-ink: var(--orange-50); --field-line: var(--dark-line); --field-line-focus: var(--orange); --card: var(--dark-raised);
+    --err: #ff8a80; --wine: #ff6b64; --wine-bg: #d12828; --pill: #351f1b; }
+  .screen { box-sizing: border-box; height: 740px; overflow-y: auto; padding: 8px 24px 24px; scrollbar-width: none; }
+  .screen.withbar { padding-bottom: 96px; }
+  .screen::-webkit-scrollbar { display: none; }
+  .top { display: flex; justify-content: space-between; align-items: center; min-height: 48px; }
+  .back { border: 0; background: transparent; color: var(--ink); font: inherit; font-weight: 600; min-height: 44px; cursor: pointer; padding: 0; }
+  .h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+  .h2 { font-size: 1.0625rem; font-weight: 700; margin: 18px 0 8px; }
+  .soft { color: var(--ink-soft); font-size: .9375rem; }
+  .small { font-size: .8125rem; color: var(--ink-soft); }
+  .center { text-align: center; }
+  .emoji { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; font-size: 1.4rem; flex: none; background: var(--orange-deep); }
+  .emoji.big { width: 72px; height: 72px; border-radius: 22px; font-size: 2.2rem; }
+  .emoji.sm { width: 36px; height: 36px; border-radius: 12px; font-size: 1.1rem; }
+  .k-orange { background: #c25a00; } .k-green { background: #5b7a3a; } .k-yellow { background: #b8860b; } .k-blue { background: #3b6ea5; } .k-pink { background: #b0527a; }
+  .k-purple { background: #7a4a8a; } .k-slate { background: #566573; } .k-red { background: #a93226; } .k-teal { background: #2a7f7a; } .k-gray { background: #707070; } .k-none { background: var(--track); border: 2px dashed var(--field-line); }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px; border-radius: 16px; background: var(--card); color: var(--ink); border: 0; font: inherit; text-align: left; cursor: pointer; min-height: 64px; }
+  .row.static { cursor: default; min-height: 52px; }
+  .grow { flex: 1; min-width: 0; }
+  .t { font-weight: 600; }
+  .amt { font-weight: 700; white-space: nowrap; text-align: right; }
+  .date { font-size: .8125rem; font-weight: 700; color: var(--ink-soft); margin: 14px 4px 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .badge { display: inline-block; font-size: .75rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--pill); color: var(--ink); margin-left: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border: 1px solid var(--field-line); background: var(--field); color: var(--field-ink); border-radius: 999px; padding: 8px 14px; min-height: 44px; font: inherit; font-weight: 600; cursor: pointer; }
+  .chip[aria-pressed='true'] { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+  .chip.dim { color: var(--ink-soft); font-weight: 500; }
+  .btn { border: 0; border-radius: 999px; min-height: 52px; padding: 0 22px; font: inherit; font-weight: 700; background: var(--primary); color: var(--primary-ink); cursor: pointer; width: 100%; }
+  .btn.sec { background: var(--secondary); color: var(--secondary-ink); }
+  .btn.off { opacity: .45; cursor: default; }
+  .btn.wine { background: transparent; color: var(--wine); border: 1px solid var(--wine); }
+  .mini { border: 0; border-radius: 999px; padding: 8px 14px; min-height: 40px; font: inherit; font-weight: 600; font-size: .9rem; background: var(--primary); color: var(--primary-ink); cursor: pointer; }
+  .link { background: none; border: 0; color: var(--ink); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 10px 0; min-height: 44px; }
+  .input { width: 100%; min-height: 52px; border-radius: 14px; border: 1px solid var(--field-line); background: var(--field); color: var(--field-ink); padding: 0 14px; font: inherit; }
+  .bigamt { font-size: 3rem; font-weight: 800; letter-spacing: -.02em; text-align: center; padding: 12px 0 2px; }
+  .bigamt small { font-size: 1.1rem; font-weight: 700; color: var(--ink-soft); margin-left: 6px; }
+  .fab { position: absolute; right: 20px; bottom: 96px; width: 60px; height: 60px; border-radius: 20px; border: 0; background: var(--primary); color: var(--primary-ink); font-size: 2rem; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.3); z-index: 3; }
+  .toast { position: absolute; left: 16px; right: 16px; bottom: 20px; background: var(--ink); color: var(--bg); border-radius: 14px; padding: 12px 14px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 12px; z-index: 6; animation: tin 220ms cubic-bezier(.2,.8,.2,1) both; }
+  .toast.dt { background: var(--wine-bg); color: var(--wine-ink); }
+  .toast.up { bottom: 100px; }
+  .toast button { border: 0; background: transparent; color: inherit; font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; min-height: 40px; }
+  @keyframes tin { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; padding: 0 16px 14px; }
+  .tabbar .in { display: flex; padding: 4px; border-radius: 999px; background: var(--card); box-shadow: 0 2px 10px var(--track-shadow); }
+  .tabbar button { flex: 1; min-height: 52px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-soft); font: inherit; font-weight: 600; font-size: .8rem; cursor: pointer; }
+  .tabbar button[aria-current='page'] { background: var(--track-active); color: var(--ink); }
+  .phone.dark .tabbar button[aria-current='page'] { background: #b54a00; color: #fff; }
+  .seg { display: flex; padding: 4px; border-radius: 999px; background: var(--card); gap: 2px; }
+  .seg button { flex: 1; min-height: 44px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-soft); font: inherit; font-weight: 700; cursor: pointer; }
+  .seg button[aria-current='true'] { background: var(--pill); color: var(--ink); box-shadow: 0 1px 3px var(--track-shadow); }
+  .ul { display: flex; border-bottom: 1px solid var(--field-line); }
+  .ul button { flex: 1; min-height: 48px; border: 0; background: transparent; color: var(--ink-soft); font: inherit; font-weight: 700; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+  .ul button[aria-current='true'] { color: var(--ink); border-bottom-color: var(--primary); }
+  .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: flex-end; z-index: 5; }
+  .sheet { background: var(--card); color: var(--ink); width: 100%; max-height: 88%; overflow-y: auto; border-radius: 24px 24px 0 0; padding: 20px; display: flex; flex-direction: column; gap: 10px; animation: sup 200ms cubic-bezier(.2,.8,.2,1) both; }
+  .sheet h3 { font-size: 1.125rem; font-weight: 700; }
+  @keyframes sup { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .grid button { border: 2px solid transparent; background: transparent; padding: 4px 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--ink); font: inherit; font-size: .6875rem; }
+  .grid button[aria-pressed='true'] { border-color: var(--primary); border-radius: 14px; }
+  .pr { display: flex; align-items: center; gap: 10px; min-height: 52px; }
+  .pr .grow { font-weight: 600; }
+  .tick { width: 28px; height: 28px; border-radius: 8px; border: 2px solid var(--field-line); display: grid; place-items: center; font-weight: 800; flex: none; background: var(--field); color: var(--field-ink); }
+  .tick.on { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+  .step { display: flex; align-items: center; gap: 10px; }
+  .step span { min-width: 22px; text-align: center; font-weight: 700; }
+  .step button { width: 36px; height: 36px; border-radius: 999px; border: 1px solid var(--field-line); background: var(--field); color: var(--field-ink); font-size: 1.1rem; cursor: pointer; }
+  .small-in { width: 92px; min-height: 40px; border-radius: 10px; border: 1px solid var(--field-line); background: var(--field); color: var(--field-ink); padding: 0 10px; font: inherit; text-align: right; }
+  .left { font-weight: 700; color: var(--err); }
+  .hist { border-left: 3px solid var(--field-line); padding-left: 12px; margin: 6px 0; }
+  .ev { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--field-line); }
+  .ev .dot { width: 34px; height: 34px; border-radius: 999px; background: var(--card); display: grid; place-items: center; flex: none; }
+  .formrow { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 0 14px; border-radius: 14px; background: var(--card); color: var(--ink); border: 0; font: inherit; text-align: left; cursor: pointer; }
+  .formrow .l { color: var(--ink-soft); width: 84px; flex: none; font-size: .875rem; }
+  .formrow .v { flex: 1; font-weight: 600; }
+  .legend { max-width: 700px; margin: 0 auto 16px; padding: 0 16px; font-size: .85rem; color: #444; }
+</style>
+</head>
+<body>
+<div class="bar"><div class="grp"><b>Screen:</b><span id="tabs"></span></div></div>
+<div class="bar">
+  <div class="grp"><b>Language:</b><button data-lang="en" aria-pressed="true">EN</button><button data-lang="mk" aria-pressed="false">МК</button></div>
+  <div class="grp"><b>Look:</b><button data-theme="light" aria-pressed="true">Light</button><button data-theme="dark" aria-pressed="false">Dark</button></div>
+  <div class="grp"><button data-act="reset">Reset demo</button></div>
+</div>
+<p class="note2" id="hint"></p>
+<div class="states" id="states"></div>
+<div class="stage"><div class="phone" id="phone"><div id="view" style="display:contents"></div></div></div>
+<p class="legend" id="legend"></p>
+
+<script>
+var CATS = [
+  ['food', '🍽️', 'k-orange', 'Food & drinks', 'Храна и пијалоци'], ['groceries', '🛒', 'k-green', 'Groceries', 'Намирници'],
+  ['transport', '🚕', 'k-yellow', 'Transport', 'Превоз'], ['accommodation', '🏨', 'k-blue', 'Accommodation', 'Сместување'],
+  ['fun', '🎉', 'k-pink', 'Fun', 'Забава'], ['shopping', '🛍️', 'k-purple', 'Shopping', 'Купување'],
+  ['bills', '🧾', 'k-slate', 'Bills', 'Сметки'], ['health', '💊', 'k-red', 'Health', 'Здравје'],
+  ['gifts', '🎁', 'k-teal', 'Gifts', 'Подароци'], ['other', '📦', 'k-gray', 'Other', 'Друго']
+];
+var T = {
+  en: {
+    expenses: 'Expenses', activity: 'Activity', members: 'Members', settings: 'Settings', recentlyDeleted: 'Recently deleted',
+    today: 'Today', yesterday: 'Yesterday', paidBy: 'Paid by', split: 'Split', date: 'Date', category: 'Category', title: 'Title (optional)', note: 'Note', more: 'More',
+    me: 'me', equally: 'equally', everyone: 'everyone', people: 'people', save: 'Save', done: 'Done', edit: 'Edit', delete: 'Delete', restore: 'Restore',
+    paid: 'paid', yourShare: 'your share', notInSplit: 'not in the split', yourShareIs: 'Your share',
+    leftAssign: 'left to assign', left: 'left', extra: '+ extra', total: 'Total',
+    eq: 'Equal', ex: 'Exact', pc: '%', sh: 'Shares',
+    deleted: 'Expense deleted', undo: 'Undo', restored: 'Expense restored', saved: 'Expense saved',
+    restoreUntil: 'Can be restored until', history: 'History', rate: 'Rate', rateLine: '1 EUR = 61.5610 MKD · 24 Sep 2026',
+    chose: 'Pick a category', cal: 'Pick a date', calHint: 'Any date, up to one year ahead.',
+    newGroup: 'New group', oneBill: 'One bill', group: 'Group', oneBillSub: 'A dinner or a taxi', groupSub: 'A trip or a household',
+    names: 'Who is with you?', addName: 'Type a name, press Enter', amount: 'Amount', createBill: 'Save bill',
+    noDeleted: 'Nothing deleted in the last 5 days.', addExpense: 'Add expense', editExpense: 'Edit expense',
+    activityEmpty: 'Nothing yet.', all4: 'Everyone (4)', more2: 'Note'
+  },
+  mk: {
+    expenses: 'Трошоци', activity: 'Активности', members: 'Членови', settings: 'Поставки', recentlyDeleted: 'Неодамна избришани',
+    today: 'Денес', yesterday: 'Вчера', paidBy: 'Платил', split: 'Поделба', date: 'Датум', category: 'Категорија', title: 'Наслов (по желба)', note: 'Белешка', more: 'Повеќе',
+    me: 'јас', equally: 'поеднакво', everyone: 'сите', people: 'луѓе', save: 'Зачувај', done: 'Готово', edit: 'Измени', delete: 'Избриши', restore: 'Врати',
+    paid: 'платил', yourShare: 'твој дел', notInSplit: 'не си во поделбата', yourShareIs: 'Твој дел',
+    leftAssign: 'уште да се распредели', left: 'уште', extra: '+ додаток', total: 'Вкупно',
+    eq: 'Поеднакво', ex: 'Точно', pc: '%', sh: 'Делови',
+    deleted: 'Трошокот е избришан', undo: 'Врати', restored: 'Трошокот е вратен', saved: 'Трошокот е зачуван',
+    restoreUntil: 'Може да се врати до', history: 'Историја', rate: 'Курс', rateLine: '1 EUR = 61,5610 MKD · 24 сеп 2026',
+    chose: 'Избери категорија', cal: 'Избери датум', calHint: 'Било кој датум, до една година однапред.',
+    newGroup: 'Нова група', oneBill: 'Една сметка', group: 'Група', oneBillSub: 'Вечера или такси', groupSub: 'Патување или домаќинство',
+    names: 'Кој е со тебе?', addName: 'Напиши име, притисни Enter', amount: 'Износ', createBill: 'Зачувај сметка',
+    noDeleted: 'Ништо не е избришано во последните 5 дена.', addExpense: 'Додади трошок', editExpense: 'Измени трошок',
+    activityEmpty: 'Засега ништо.', all4: 'Сите (4)', more2: 'Белешка'
+  }
+};
+var S = { screen: 'list', lang: 'en', dark: false, tabs: 'A', addStyle: 'B', sheet: null, splitTab: 'eq', cat: null, toast: null, delIdx: null, billOpt: 'B', cur: 'MKD', detailCur: 'MKD', paid: 'Filip', date: 'today' };
+var SCREENS = { list: 'Expenses tab', add: 'Add expense', detail: 'Expense detail', activity: 'Activity tab', deleted: 'Recently deleted', newgroup: 'New group', onebill: 'One bill form' };
+var HINTS = {
+  list: 'Expenses and Activity tabs, expenses grouped by date, a + button, a quiet “Recently deleted ›” link. Try the tab look A, B or C.',
+  add: 'The speed screen: the amount is focused, every chip is pre-filled. Tap a chip to open its sheet. Try the chip layout A, B or C.',
+  detail: 'Expense detail with the split, the saved rate (EUR only) and the history. Edit and Delete show only for who added it and the owner. Delete shows the Undo toast.',
+  activity: 'Newest first: who did what. Edits show old → new.',
+  deleted: 'Deleted in the last 5 days. Everyone sees the list; Restore only for who added it and the owner.',
+  newgroup: 'First choice: One bill or Group (1 tap).',
+  onebill: 'One bill, amount first. The old design plus three new ones that match the Add expense layout you chose. Try them all. In design 3 a person with a Google picture shows it in the circle (here: you); a plain name shows the initial.'
+};
+function t(k) { return T[S.lang][k]; }
+function catName(c) { return S.lang === 'mk' ? c[4] : c[3]; }
+function money(v, cur) { return cur === 'EUR' ? v.toFixed(2) + ' EUR' : v.toLocaleString('en-US') + ' MKD'; }
+
+var EXP = [
+  { d: 'today', title: 'Dinner', cat: 0, amt: 2400, cur: 'MKD', by: 'Filip', share: 600 },
+  { d: 'y', title: 'Taxi', cat: 2, amt: 600, cur: 'MKD', by: 'Ana', share: 150 },
+  { d: 'y', title: 'Groceries', cat: 1, amt: 45, cur: 'EUR', by: 'Marko', share: 11.25 },
+  { d: 'o', title: 'Hotel', cat: 3, amt: 3000, cur: 'MKD', by: 'Filip', share: 480 },
+  { d: 'o', title: '', cat: -1, amt: 900, cur: 'MKD', by: 'Bojan', share: null }
+];
+var DEL = [{ title: 'Museum tickets', cat: 4, amt: 800, cur: 'MKD', until: '10 Oct 2026' }, { title: 'Pharmacy', cat: 7, amt: 350, cur: 'MKD', until: '9 Oct 2026' }];
+function dLabel(d) { return d === 'today' ? t('today') + ' · 6 Oct' : d === 'y' ? t('yesterday') + ' · 5 Oct' : '3 Oct'; }
+
+function tile(ci, cls) { var c = CATS[ci]; return '<span class="emoji ' + (cls || '') + ' ' + (ci < 0 ? 'k-none' : c[2]) + '">' + (ci < 0 ? '·' : c[1]) + '</span>'; }
+
+function listRow(e, i) {
+  var ti = e.title || (e.cat >= 0 ? catName(CATS[e.cat]) : '—');
+  var sh = e.share === null ? t('notInSplit') : t('yourShare') + ' ' + money(e.share, e.cur);
+  return '<button class="row" data-go="detail" data-i="' + i + '">' + tile(e.cat) + '<span class="grow"><div class="t">' + ti + '</div><div class="small">' + e.by + ' ' + t('paid') + ' · ' + sh + '</div></span><span class="amt">' + money(e.amt, e.cur) + '</span></button>';
+}
+
+function header(back) {
+  return '<div class="top"><button class="back" data-go="' + (back || 'list') + '">‹ ' + (back === 'list' || !back ? 'Groups' : 'Back') + '</button></div>';
+}
+
+function tabsHtml(cur) {
+  var items = [['expenses', 'list'], ['activity', 'activity']];
+  var h = '';
+  if (S.tabs === 'A') { h = '<div class="seg">'; items.forEach(function (x) { h += '<button data-go="' + x[1] + '" aria-current="' + (x[1] === cur) + '">' + t(x[0]) + '</button>'; }); h += '</div>'; }
+  else if (S.tabs === 'B') { h = '<div class="ul">'; items.forEach(function (x) { h += '<button data-go="' + x[1] + '" aria-current="' + (x[1] === cur) + '">' + t(x[0]) + '</button>'; }); h += '</div>'; }
+  else { h = '<div class="chips" style="justify-content:center">'; items.forEach(function (x) { h += '<button class="chip" data-go="' + x[1] + '" aria-pressed="' + (x[1] === cur) + '">' + t(x[0]) + '</button>'; }); h += '</div>'; }
+  return '<div style="margin:6px 0 10px">' + h + '</div>';
+}
+
+function groupHead() {
+  return '<div class="center stack" style="align-items:center;gap:6px;padding:0 0 8px"><span class="emoji big">🏖️</span><div class="h1">Greece trip</div><div class="soft">4 people · MKD</div>' +
+    '<div class="chips" style="justify-content:center"><button class="chip">' + t('members') + '</button><button class="chip">' + t('settings') + '</button></div></div>';
+}
+
+function vList() {
+  var h = '<div class="screen withbar">' + header('list') + groupHead() + tabsHtml('list');
+  var last = '';
+  EXP.forEach(function (e, i) { if (e.d !== last) { h += '<div class="date">' + dLabel(e.d) + '</div>'; last = e.d; } h += '<div style="margin-bottom:8px">' + listRow(e, i) + '</div>'; });
+  h += '<div class="center"><button class="link" data-go="deleted">' + t('recentlyDeleted') + ' ›</button></div></div>';
+  h += '<button class="fab" data-go="add" aria-label="' + t('addExpense') + '">+</button>';
+  return h;
+}
+
+function chipLabel(k) {
+  if (k === 'paid') return t('paidBy') + ': ' + (S.paid === 'Filip' ? 'Filip (' + t('me') + ')' : S.paid);
+  if (k === 'split') return t('split') + ': ' + t('equally') + ' · ' + t('everyone');
+  if (k === 'date') return S.date === 'today' ? t('today') : S.date === 'y' ? t('yesterday') : '12 Dec 2026';
+  if (k === 'cat') return S.cat === null ? t('category') : CATS[S.cat][1] + ' ' + catName(CATS[S.cat]);
+  if (k === 'cur') return S.cur;
+}
+
+function vAdd() {
+  var h = '<div class="screen"><div class="top"><button class="back" data-go="list">‹ ' + t('addExpense') + '</button></div>';
+  h += '<div class="bigamt">1,200<small>' + S.cur + '</small></div><div class="small center" style="margin-bottom:12px">▮ ' + (S.lang === 'mk' ? 'бројчаник' : 'number keypad open') + '</div>';
+  if (S.addStyle === 'A') {
+    h += '<div class="chips" style="justify-content:center;margin-bottom:12px">';
+    ['paid', 'split', 'date', 'cat', 'cur'].forEach(function (k) { h += '<button class="chip' + (k === 'cat' && S.cat === null ? ' dim' : '') + '" data-sheet="' + k + '">' + chipLabel(k) + '</button>'; });
+    h += '</div><input class="input" placeholder="' + t('title') + '" style="margin-bottom:8px"><button class="link">' + t('more') + ' ›</button>';
+  } else if (S.addStyle === 'B') {
+    h += '<div class="stack">';
+    [['paidBy', 'paid'], ['split', 'split'], ['date', 'date'], ['category', 'cat']].forEach(function (x) {
+      var v = x[1] === 'paid' ? 'Filip (' + t('me') + ')' : x[1] === 'split' ? t('equally') + ' · ' + t('everyone') : x[1] === 'date' ? chipLabel('date') : (S.cat === null ? '—' : CATS[S.cat][1] + ' ' + catName(CATS[S.cat]));
+      h += '<button class="formrow" data-sheet="' + x[1] + '"><span class="l">' + t(x[0]) + '</span><span class="v">' + v + '</span><span>›</span></button>';
+    });
+    h += '<input class="input" placeholder="' + t('title') + '"></div>';
+  } else {
+    h += '<input class="input" placeholder="' + t('title') + '" style="margin-bottom:12px"><div class="chips" style="justify-content:center">';
+    ['paid', 'split', 'date', 'cat'].forEach(function (k) { h += '<button class="chip' + (k === 'cat' && S.cat === null ? ' dim' : '') + '" data-sheet="' + k + '">' + chipLabel(k) + '</button>'; });
+    h += '</div>';
+  }
+  h += '<div style="position:absolute;left:24px;right:24px;bottom:24px"><button class="btn" data-act="save">' + t('save') + '</button></div></div>';
+  return h + sheetHtml();
+}
+
+function sheetHtml() {
+  if (!S.sheet) return '';
+  var s = S.sheet, h = '<div class="scrim" data-act="closesheet"><div class="sheet">';
+  var names = ['Filip', 'Ana', 'Marko', 'Bojan'];
+  if (s === 'paid') {
+    h += '<h3>' + t('paidBy') + '</h3>';
+    names.forEach(function (n) { h += '<button class="pr" style="border:0;background:none;color:inherit;font:inherit;cursor:pointer" data-paid="' + n + '"><span class="grow" style="text-align:left">' + n + (n === 'Filip' ? ' (' + t('me') + ')' : '') + '</span><span class="tick ' + (S.paid === n ? 'on' : '') + '">' + (S.paid === n ? '✓' : '') + '</span></button>'; });
+  } else if (s === 'cat') {
+    h += '<h3>' + t('chose') + '</h3><div class="grid">';
+    CATS.forEach(function (c, i) { h += '<button data-cat="' + i + '" aria-pressed="' + (S.cat === i) + '"><span class="emoji sm ' + c[2] + '">' + c[1] + '</span><span>' + catName(c).split(' ')[0] + '</span></button>'; });
+    h += '</div>';
+  } else if (s === 'date') {
+    h += '<h3>' + t('cal') + '</h3><div class="chips"><button class="chip" aria-pressed="' + (S.date === 'today') + '" data-date="today">' + t('today') + '</button><button class="chip" aria-pressed="' + (S.date === 'y') + '" data-date="y">' + t('yesterday') + '</button><button class="chip" aria-pressed="' + (S.date === 'f') + '" data-date="f">12 Dec 2026</button></div>';
+    h += '<div class="card" style="background:var(--field);border-radius:16px;padding:12px;color:var(--field-ink)"><div class="center t">December 2026 ›</div><div class="small center">Mo Tu We Th Fr Sa Su</div><div class="small center">… 9 10 11 <b>12</b> 13 14 …</div></div><div class="small">' + t('calHint') + '</div>';
+  } else if (s === 'split') {
+    h += '<h3>' + t('split') + '</h3><div class="seg">';
+    [['eq', 'eq'], ['ex', 'ex'], ['pc', 'pc'], ['sh', 'sh']].forEach(function (x) { h += '<button data-st="' + x[0] + '" aria-current="' + (S.splitTab === x[0]) + '">' + t(x[1]) + '</button>'; });
+    h += '</div>';
+    var ok = true;
+    names.forEach(function (n, i) {
+      var right = '';
+      if (S.splitTab === 'eq') right = (i === 2 ? '<span class="small">+ 300</span> ' : '<button class="chip dim" style="min-height:36px;padding:4px 10px">' + t('extra') + '</button> ') + '<span class="tick on">✓</span>';
+      if (S.splitTab === 'ex') right = '<input class="small-in" value="' + [400, 400, 100, 0][i] + '">';
+      if (S.splitTab === 'pc') right = '<input class="small-in" value="' + [25, 25, 25, 12.5][i] + ' %">';
+      if (S.splitTab === 'sh') right = '<span class="step"><button>−</button><span>' + [1, 1, 2, 1][i] + '</span><button>+</button></span>';
+      h += '<div class="pr"><span class="grow">' + n + '</span>' + right + '</div>';
+    });
+    if (S.splitTab === 'ex') { h += '<div class="left">300 ' + t('leftAssign') + '</div>'; ok = false; }
+    if (S.splitTab === 'pc') { h += '<div class="left">12.5 % ' + t('left') + '</div>'; ok = false; }
+    if (S.splitTab === 'eq') h += '<div class="small">1,200 − 300 = 900 ÷ 4 = 225 · Marko 525</div>';
+    h += '<button class="btn ' + (ok ? '' : 'off') + '" data-act="closesheet">' + t('done') + '</button>';
+  }
+  return h + '</div></div>';
+}
+
+function vDetail() {
+  var e = EXP[S.detailIdx || 0], eur = e.cur === 'EUR';
+  var h = '<div class="screen">' + header('list');
+  h += '<div class="center stack" style="align-items:center;gap:6px">' + tile(e.cat, 'big') + '<div class="h1">' + (e.title || catName(CATS[e.cat >= 0 ? e.cat : 9])) + '</div><div class="h1" style="font-size:2.2rem">' + money(e.amt, e.cur) + '</div><div class="soft">' + e.by + ' ' + t('paid') + ' · ' + dLabel(e.d) + '</div></div>';
+  h += '<div class="h2">' + t('split') + ' · ' + t('equally') + '</div><div class="stack">';
+  [['Filip', 600], ['Ana', 600], ['Marko', 600], ['Bojan', 600]].forEach(function (p) { h += '<div class="row static"><span class="grow t">' + p[0] + '</span><span class="amt">' + money(eur ? p[1] / 53.3 : p[1], e.cur) + '</span></div>'; });
+  h += '</div>';
+  if (eur) h += '<div class="small" style="margin-top:10px">' + t('rate') + ': ' + t('rateLine') + '</div>';
+  h += '<div class="h2">' + t('history') + '</div><div class="hist"><div class="t">Filip changed 1,200 → 1,500</div><div class="small">2 h</div></div><div class="hist"><div class="t">Ana added it</div><div class="small">' + dLabel(e.d) + '</div></div>';
+  h += '<div class="stack" style="margin-top:16px"><button class="btn sec" data-go="add">' + t('edit') + '</button><button class="btn wine" data-act="delete">' + t('delete') + '</button></div></div>';
+  return h;
+}
+
+function vActivity() {
+  var ev = [['➕', 'Filip added Dinner · 2,400 MKD', '2 h'], ['✏️', 'Ana changed Taxi 500 → 600', '5 h'], ['🗑️', 'Marko deleted Museum tickets · 800 MKD', 'Yesterday'], ['↩️', 'Marko restored Museum tickets', 'Yesterday'], ['👋', 'Bojan joined', '3 Oct'], ['🏖️', 'Filip created Greece trip', '3 Oct']];
+  var h = '<div class="screen withbar">' + header('list') + groupHead() + tabsHtml('activity');
+  ev.forEach(function (x) { h += '<div class="ev"><span class="dot">' + x[0] + '</span><span class="grow"><div class="t">' + x[1] + '</div><div class="small">' + x[2] + '</div></span></div>'; });
+  return h + '</div>';
+}
+
+function vDeleted() {
+  var h = '<div class="screen">' + header('list') + '<div class="h1">' + t('recentlyDeleted') + '</div><div class="stack" style="margin-top:14px">';
+  DEL.forEach(function (d, i) { h += '<div class="row static" style="min-height:76px">' + tile(d.cat) + '<span class="grow"><div class="t">' + d.title + ' · ' + money(d.amt, d.cur) + '</div><div class="small">' + t('restoreUntil') + ' ' + d.until + '</div></span><button class="mini" data-act="restore" data-i="' + i + '">' + t('restore') + '</button></div>'; });
+  if (!DEL.length) h += '<div class="soft center" style="padding:30px 0">' + t('noDeleted') + '</div>';
+  return h + '</div></div>';
+}
+
+function vNewGroup() {
+  return '<div class="screen">' + header('list') + '<div class="h1">' + t('newGroup') + '</div><div class="stack" style="margin-top:18px"><button class="row" data-go="onebill"><span class="emoji">🧾</span><span class="grow"><div class="t">' + t('oneBill') + '</div><div class="small">' + t('oneBillSub') + '</div></span>›</button><button class="row"><span class="emoji">🏖️</span><span class="grow"><div class="t">' + t('group') + '</div><div class="small">' + t('groupSub') + '</div></span>›</button></div></div>';
+}
+
+function peopleChips() {
+  return '<div class="chips"><span class="chip" style="cursor:default">Filip (' + t('me') + ')</span><span class="chip" style="cursor:default">Marko ✕</span><span class="chip" style="cursor:default">Bojan ✕</span></div>';
+}
+var AVCOL = ['#c25a00', '#5b7a3a', '#3b6ea5', '#b0527a', '#7a4a8a', '#2a7f7a', '#a93226', '#b8860b', '#566573', '#707070'];
+function avatar(n, me, ix) {
+  return '<span class="stack" style="align-items:center;gap:4px;width:64px"><span class="emoji" style="border-radius:999px;width:52px;height:52px;font-size:1.1rem;font-weight:800;' + (me ? 'background:radial-gradient(circle at 35% 30%,#f2c9a5 0 22%,#6b8fb5 23% 100%);color:transparent' : 'background:' + AVCOL[ix % 10] + ';color:#fff') + '">' + n[0] + '</span><span class="small" style="max-width:64px;overflow:hidden;text-overflow:ellipsis">' + (me ? t('me') : n) + '</span></span>';
+}
+function vOneBill() {
+  var o = S.billOpt;
+  var h = '<div class="screen"><div class="top"><button class="back" data-go="newgroup">‹ ' + t('oneBill') + '</button></div>';
+  var amount = '<div class="bigamt">1,800<small>MKD</small></div>';
+  var nameIn = '<input class="input" placeholder="' + t('addName') + '" style="margin-top:10px">';
+  var titleIn = '<input class="input" placeholder="' + t('title') + '">';
+  var rows = '<button class="formrow" data-sheet="paid"><span class="l">' + t('paidBy') + '</span><span class="v">' + (S.paid === 'Filip' ? 'Filip (' + t('me') + ')' : S.paid) + '</span><span>›</span></button>' +
+    '<button class="formrow" data-sheet="split"><span class="l">' + t('split') + '</span><span class="v">' + t('equally') + ' · 3 ' + t('people') + '</span><span>›</span></button>' +
+    '<button class="formrow"><span class="l">' + t('date') + '</span><span class="v">' + t('today') + '</span><span>›</span></button>';
+  if (o === 'A') {
+    h += amount + '<div class="h2" style="margin-top:6px">' + t('names') + '</div>' + peopleChips() + nameIn +
+      '<div class="chips" style="margin:14px 0 10px"><button class="chip" data-sheet="paid">' + chipLabel('paid') + '</button><button class="chip" data-sheet="split">' + t('split') + ': ' + t('equally') + ' · 3 ' + t('people') + '</button><button class="chip">' + t('today') + '</button><button class="chip">MKD</button></div>' + titleIn;
+  } else if (o === 'B') {
+    h += amount + '<div class="stack" style="margin-top:10px">' +
+      '<div class="formrow" style="min-height:auto;padding:12px 14px;align-items:flex-start;flex-direction:column;gap:8px;cursor:default"><span class="l" style="width:auto">' + t('names') + '</span>' + peopleChips() + '<input class="input" placeholder="' + t('addName') + '"></div>' +
+      rows + titleIn + '</div>';
+  } else if (o === 'C') {
+    h += '<div class="card" style="background:var(--card);border-radius:20px;padding:6px 16px 16px;margin-bottom:12px">' + amount + '</div>' +
+      '<div class="card" style="background:var(--card);border-radius:20px;padding:14px 16px;margin-bottom:12px"><div class="t" style="margin-bottom:8px">' + t('names') + '</div>' + peopleChips() + nameIn + '</div>' +
+      '<div class="stack">' + rows + titleIn + '</div>';
+  } else {
+    h += amount + '<div class="h2" style="margin-top:4px">' + t('names') + '</div><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">' + avatar('Filip', true, 0) + avatar('Marko', false, 1) + avatar('Bojan', false, 2) +
+      '<span class="stack" style="align-items:center;gap:4px;width:64px"><button class="emoji" style="border:2px dashed var(--field-line);background:transparent;color:var(--ink);width:52px;height:52px;border-radius:999px;cursor:pointer;font-size:1.4rem">+</button><span class="small">' + (S.lang === 'mk' ? 'име' : 'name') + '</span></span></div>' +
+      '<div class="stack" style="margin-top:14px">' + rows + titleIn + '</div>';
+  }
+  h += '<div style="position:absolute;left:24px;right:24px;bottom:24px"><button class="btn" data-act="savebill">' + t('createBill') + '</button></div></div>';
+  return h + sheetHtml();
+}
+
+function render() {
+  var ph = document.getElementById('phone');
+  ph.className = 'phone' + (S.dark ? ' dark' : '');
+  document.documentElement.lang = S.lang;
+  var v = { list: vList, add: vAdd, detail: vDetail, activity: vActivity, deleted: vDeleted, newgroup: vNewGroup, onebill: vOneBill }[S.screen]();
+  if (S.screen === 'list' || S.screen === 'activity') v += '<div class="tabbar"><div class="in"><button>Home</button><button aria-current="page">Groups</button><button>' + t('settings') + '</button></div></div>';
+  if (S.toast) v += '<div class="toast dt ' + (S.screen === 'list' ? 'up' : '') + '"><span>' + S.toast.msg + '</span>' + (S.toast.undo ? '<button data-act="undo">' + t('undo') + '</button>' : '') + '</div>';
+  document.getElementById('view').innerHTML = v;
+  var tabs = ''; Object.keys(SCREENS).forEach(function (k) { tabs += '<button data-go="' + k + '" aria-pressed="' + (S.screen === k) + '">' + SCREENS[k] + '</button>'; });
+  document.getElementById('tabs').innerHTML = tabs;
+  document.getElementById('hint').textContent = HINTS[S.screen];
+  var st = '';
+  if (S.screen === 'list' || S.screen === 'activity') st = '<b>Tabs:</b>' + ['A', 'B', 'C'].map(function (o) { return '<button data-tabs="' + o + '" aria-pressed="' + (S.tabs === o) + '">' + o + ': ' + { A: 'pill switch', B: 'underline', C: 'chips' }[o] + '</button>'; }).join('');
+  if (S.screen === 'add') st = '<b>Layout:</b>' + ['A', 'B', 'C'].map(function (o) { return '<button data-add="' + o + '" aria-pressed="' + (S.addStyle === o) + '">' + o + ': ' + { A: 'chips under the amount', B: 'form rows', C: 'title first, then chips' }[o] + '</button>'; }).join('') + '<b>Currency:</b><button data-cur="MKD" aria-pressed="' + (S.cur === 'MKD') + '">MKD</button><button data-cur="EUR" aria-pressed="' + (S.cur === 'EUR') + '">EUR</button>';
+  if (S.screen === 'detail') st = '<b>Show:</b>' + [0, 2].map(function (i) { return '<button data-di="' + i + '" aria-pressed="' + ((S.detailIdx || 0) === i) + '">' + (i === 0 ? 'MKD expense' : 'EUR expense (shows the rate)') + '</button>'; }).join('');
+  if (S.screen === 'onebill') st = '<b>Design (amount first in all):</b>' + ['A', 'B', 'C', 'D'].map(function (o) { return '<button data-bill="' + o + '" aria-pressed="' + (S.billOpt === o) + '">' + { A: 'Old design', B: '1: form rows', C: '2: two cards', D: '3: people as circles' }[o] + '</button>'; }).join('');
+  document.getElementById('states').innerHTML = st;
+  document.getElementById('legend').innerHTML = '<b>Category colours</b> (Filip picks the look): ' + CATS.map(function (c) { return '<span class="emoji sm ' + c[2] + '" style="display:inline-grid;vertical-align:middle;margin:2px">' + c[1] + '</span>'; }).join('');
+}
+
+document.addEventListener('click', function (ev) {
+  var el = ev.target.closest('[data-go],[data-lang],[data-theme],[data-act],[data-tabs],[data-add],[data-cur],[data-sheet],[data-st],[data-paid],[data-cat],[data-date],[data-di],[data-bill],[data-i]');
+  if (!el) return;
+  var d = el.dataset;
+  if (el.classList.contains('scrim') && ev.target !== el) return;
+  if (d.go) { S.screen = d.go; S.sheet = null; S.toast = null; if (d.go === 'detail') S.detailIdx = +d.i || 0; }
+  else if (d.lang) S.lang = d.lang;
+  else if (d.theme) S.dark = d.theme === 'dark';
+  else if (d.tabs) S.tabs = d.tabs;
+  else if (d.add) S.addStyle = d.add;
+  else if (d.cur) S.cur = d.cur;
+  else if (d.sheet) S.sheet = d.sheet;
+  else if (d.st) S.splitTab = d.st;
+  else if (d.paid) { S.paid = d.paid; S.sheet = null; }
+  else if (d.cat) { S.cat = +d.cat; S.sheet = null; }
+  else if (d.date) { S.date = d.date; S.sheet = null; }
+  else if (d.di) S.detailIdx = +d.di;
+  else if (d.bill) S.billOpt = d.bill;
+  else if (d.act === 'closesheet') S.sheet = null;
+  else if (d.act === 'reset') { var keep = { lang: S.lang, dark: S.dark }; S = { screen: 'list', lang: keep.lang, dark: keep.dark, tabs: 'A', addStyle: 'B', sheet: null, splitTab: 'eq', cat: null, toast: null, billOpt: 'B', cur: 'MKD', paid: 'Filip', date: 'today' }; }
+  else if (d.act === 'save') { S.screen = 'list'; S.toast = { msg: t('saved') }; }
+  else if (d.act === 'savebill') { S.screen = 'list'; S.toast = { msg: t('saved') }; }
+  else if (d.act === 'delete') { S.screen = 'list'; S.toast = { msg: t('deleted'), undo: true }; }
+  else if (d.act === 'undo') { S.toast = { msg: t('restored') }; }
+  else if (d.act === 'restore') { DEL.splice(+d.i, 1); S.toast = { msg: t('restored') }; }
+  render();
+});
+render();
+</script>
+</body>
+</html>

@@ -311,7 +311,7 @@ namespace Kvit.Infrastructure.Auth
         {
             string email = user.Email ?? throw new InvalidOperationException($"User {user.Id} has no email.");
 
-            return new MeResponse(user.Id, user.DisplayName, email, user.Language, user.TimeZone, user.MustChangePassword, user.PasswordHash is not null);
+            return new MeResponse(user.Id, user.DisplayName, email, user.Language, user.TimeZone, user.MustChangePassword, user.PasswordHash is not null, user.GooglePictureUrl);
         }
     }
 }

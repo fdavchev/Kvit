@@ -1,6 +1,8 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useApiHealth } from '@/features/auth/welcome/hooks/useApiHealth'
+import { testCategories } from '@/test/expenseTestData'
+import { categoriesPath, expensesPath } from '@/test/expenseTestHelpers'
 import { stubGoogleSignIn } from '@/test/googleTestHelpers'
 import { greeceGroupRow, groupListOf, testGroup, testInviteToken } from '@/test/groupTestData'
 import { openInvitePreview, testInviteGroupName } from '@/test/inviteTestData'
@@ -52,6 +54,8 @@ function stubSignedInPerson() {
     'GET /api/groups': jsonAnswer(groupListOf({ groups: [greeceGroupRow] })),
     [`GET /api/groups/${testGroup.id}`]: jsonAnswer(testGroup),
     [`GET /api/groups/${testGroup.id}/members`]: jsonAnswer(ownerViewMembers),
+    [`GET ${expensesPath}`]: jsonAnswer({ expenses: [] }),
+    [`GET ${categoriesPath}`]: jsonAnswer({ categories: testCategories }),
   })
 }
 

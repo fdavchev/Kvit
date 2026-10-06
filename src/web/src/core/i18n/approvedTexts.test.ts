@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { collectTexts } from '@/test/localeTexts'
 import { translated } from '@/test/translated'
 import { createI18n } from './i18n'
+import en from './locales/en.json'
 import mk from './locales/mk.json'
 
 const approvedTexts: [string, string, string][] = [
@@ -72,7 +73,6 @@ const approvedPhase7Texts: [string, string, string][] = [
   ['group.shareLink', 'Share invite link', 'Сподели линк за покана'],
   ['group.linkCopied', 'Link copied', 'Линкот е копиран'],
   ['group.settings', 'Group settings', 'Поставки на групата'],
-  ['group.expensesSoon', 'Expenses will show up here soon.', 'Овде наскоро ќе се појавуваат трошоците.'],
   ['addName.title', 'Add a name', 'Додај име'],
   ['addName.label', 'Name', 'Име'],
   ['addName.hint', 'For someone without Kvit, like Grandma.', 'За некој без Kvit, на пример баба.'],
@@ -171,7 +171,73 @@ const approvedPhase8Step2Texts: [string, string, string][] = [
   ['errors.EXPENSE_CLIENT_REQUEST_ID_USED', 'This request was already used for something else.', 'Ова барање веќе е искористено за друго.'],
 ]
 
+const approvedPhase8Step4Texts: [string, string, string][] = [
+  ['expenses.title', 'Expenses', 'Трошоци'],
+  ['expenses.empty', 'No expenses yet. Tap + to add the first one.', 'Сè уште нема трошоци. Допри + за да додадеш.'],
+  ['expenses.paidByShare', 'Paid by {{name}} · your share {{amount}}', 'Платено од {{name}} · твој дел {{amount}}'],
+  ['expenses.paidByNotInSplit', "Paid by {{name}} · you're not in the split", 'Платено од {{name}} · не си во поделбата'],
+  ['expenses.today', 'Today', 'Денес'],
+  ['expenses.yesterday', 'Yesterday', 'Вчера'],
+  ['expenses.saved', 'Expense saved', 'Трошокот е зачуван'],
+  ['expenses.deleted', 'Expense deleted', 'Трошокот е избришан'],
+  ['expenses.restored', 'Expense restored', 'Трошокот е вратен'],
+  ['expenses.deletedEmpty', 'Nothing deleted in the last 5 days.', 'Ништо не е избришано во последните 5 дена.'],
+  ['expense.addTitle', 'Add expense', 'Додади трошок'],
+  ['expense.editTitle', 'Edit expense', 'Измени трошок'],
+  ['expense.paidBy', 'Paid by', 'Платено од'],
+  ['expense.split', 'Split', 'Поделба'],
+  ['expense.date', 'Date', 'Датум'],
+  ['expense.category', 'Category', 'Категорија'],
+  ['expense.titleField', 'Title (optional)', 'Наслов (по желба)'],
+  ['expense.note', 'Note', 'Белешка'],
+  ['expense.me', 'me', 'јас'],
+  ['expense.equally', 'equally', 'поеднакво'],
+  ['expense.everyone', 'everyone', 'сите'],
+  ['expense.done', 'Done', 'Готово'],
+  ['expense.splitEqual', 'Equal', 'Поеднакво'],
+  ['expense.splitExact', 'Exact', 'Точно'],
+  ['expense.splitPercentage', '%', '%'],
+  ['expense.splitShares', 'Shares', 'Делови'],
+  ['expense.extra', '+ extra', '+ додаток'],
+  ['expense.amountLeft', '{{amount}} left to assign', 'Уште {{amount}} да се распредели'],
+  ['expense.percentLeft', '{{percent}} % left', 'Уште {{percent}} %'],
+  ['expense.pickCategory', 'Pick a category', 'Избери категорија'],
+  ['expense.pickDate', 'Pick a date', 'Избери датум'],
+  ['expense.dateHint', 'Any date, up to one year ahead.', 'Било кој датум, до една година однапред.'],
+  ['expense.history', 'History', 'Историја'],
+  ['expense.rate', 'Rate: 1 EUR = {{rate}} MKD · {{date}}', 'Цена на еврото: 1 EUR = {{rate}} MKD · {{date}}'],
+  ['expense.edit', 'Edit', 'Измени'],
+  ['expense.delete', 'Delete', 'Избриши'],
+  ['expense.currencyToggle', 'Currency: {{currency}}. Tap to change.', 'Валута: {{currency}}. Допри за промена.'],
+  ['expense.amount', 'Amount', 'Износ'],
+  ['expense.paidByOn', 'Paid by {{name}} · {{date}}', 'Платено од {{name}} · {{date}}'],
+  ['expense.historyAdded', '{{name}} added it', '{{name}} го додаде'],
+  ['expense.historyChangedAmount', '{{name}} changed the amount: {{old}} → {{new}}', '{{name}} го измени износот: {{old}} → {{new}}'],
+  ['expense.historyChangedCurrency', '{{name}} changed the currency: {{old}} → {{new}}', '{{name}} ја измени валутата: {{old}} → {{new}}'],
+  ['expense.historyChangedTitle', '{{name}} changed the title: {{old}} → {{new}}', '{{name}} го измени насловот: {{old}} → {{new}}'],
+  ['expense.historyChangedNote', '{{name}} changed the note: {{old}} → {{new}}', '{{name}} ја измени белешката: {{old}} → {{new}}'],
+  ['expense.historyChangedDate', '{{name}} changed the date: {{old}} → {{new}}', '{{name}} го измени датумот: {{old}} → {{new}}'],
+  ['expense.historyChangedCategory', '{{name}} changed the category: {{old}} → {{new}}', '{{name}} ја измени категоријата: {{old}} → {{new}}'],
+  ['expense.historyChangedPaidBy', '{{name}} changed who paid: {{old}} → {{new}}', '{{name}} измени кој платил: {{old}} → {{new}}'],
+  ['expense.historyChangedSplit', '{{name}} changed the split', '{{name}} ја измени поделбата'],
+  ['expense.historyDeleted', '{{name}} deleted it', '{{name}} го избриша'],
+  ['expense.historyRestored', '{{name}} restored it', '{{name}} го врати'],
+  ['categories.food', 'Food & drinks', 'Храна и пијалоци'],
+  ['categories.groceries', 'Groceries', 'Намирници'],
+  ['categories.transport', 'Transport', 'Превоз'],
+  ['categories.accommodation', 'Accommodation', 'Сместување'],
+  ['categories.fun', 'Fun', 'Забава'],
+  ['categories.shopping', 'Shopping', 'Купување'],
+  ['categories.bills', 'Bills', 'Сметки'],
+  ['categories.health', 'Health', 'Здравје'],
+  ['categories.gifts', 'Gifts', 'Подароци'],
+  ['categories.other', 'Other', 'Друго'],
+]
+
+const expenseNamespaces = /^(expenses|expense|categories)\./
+
 const currencyCodes = /MKD|EUR/g
+const placeholders = /\{\{\w+\}\}/g
 
 const textsWhereMacedonianMeansConnection =['errors.network', 'welcome.googleUnavailable']
 
@@ -185,7 +251,7 @@ const pluralCounts: [number, string, string][] = [
   [101, '101 people', '101 лице'],
 ]
 
-const removedKeys = ['welcome.pitch', 'common.comingSoon']
+const removedKeys = ['welcome.pitch', 'common.comingSoon', 'group.expensesSoon']
 
 describe('the approved Phase 6 texts', () => {
   it.each(approvedTexts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
@@ -248,6 +314,72 @@ describe('the approved Phase 8 Step 2 texts', () => {
   it.each(approvedPhase8Step2Texts)('writes the Macedonian text of %s with Cyrillic letters only apart from the currency codes, no Latin look-alikes', (key, _english, macedonian) => {
     expect(macedonian.replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
     expect(translated('mk', key).replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
+  })
+})
+
+describe('the approved Phase 8 Step 4 texts', () => {
+  it.each(approvedPhase8Step4Texts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
+    expect(translated('en', key)).toBe(english)
+    expect(translated('mk', key)).toBe(macedonian)
+  })
+
+  it.each(approvedPhase8Step4Texts)('writes the Macedonian text of %s with Cyrillic letters only apart from the placeholders and the currency codes, no Latin look-alikes', (key, _english, macedonian) => {
+    expect(macedonian.replace(placeholders, '').replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
+    expect(translated('mk', key).replace(placeholders, '').replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
+  })
+
+  it.each(['en', 'mk'] as const)('has no text under expenses, expense or categories in %s that is not listed above, so every new line is locked', (language) => {
+    const texts = language === 'en' ? en : mk
+    const keysInTheFile = collectTexts(texts)
+      .map(([path]) => path)
+      .filter((path) => expenseNamespaces.test(path))
+      .sort()
+    const keysListedAbove = approvedPhase8Step4Texts
+      .map(([key]) => key)
+      .sort()
+
+    expect(keysInTheFile).toEqual(keysListedAbove)
+  })
+
+  it('writes the rate with a dot in English and a comma in Macedonian, with the exchange rate and the date filled in', () => {
+    expect(translated('en', 'expense.rate', { rate: '61.5610', date: '24 Sep 2026' })).toBe(
+      'Rate: 1 EUR = 61.5610 MKD · 24 Sep 2026',
+    )
+    expect(translated('mk', 'expense.rate', { rate: '61,5610', date: '24 сеп. 2026 г.' })).toBe(
+      'Цена на еврото: 1 EUR = 61,5610 MKD · 24 сеп. 2026 г.',
+    )
+  })
+
+  it('writes the history arrow between the old and the new value in every change sentence', () => {
+    const changeKeys = ['Amount', 'Currency', 'Title', 'Note', 'Date', 'Category', 'PaidBy']
+
+    for (const key of changeKeys) {
+      for (const language of ['en', 'mk'] as const) {
+        const text = translated(language, `expense.historyChanged${key}`, { name: 'N', old: 'A', new: 'B' })
+        expect(text).toContain('A → B')
+      }
+    }
+  })
+
+  it('writes the split change without old and new values', () => {
+    expect(translated('en', 'expense.historyChangedSplit', { name: 'N', old: 'A', new: 'B' })).not.toContain('A')
+    expect(translated('mk', 'expense.historyChangedSplit', { name: 'N', old: 'A', new: 'B' })).not.toContain('→')
+  })
+
+  it('does not call the exchange rate «Курс» in any Macedonian text, which Filip does not like', () => {
+    const textsWithTheWord = collectTexts(mk)
+      .filter(([, text]) => typeof text === 'string' && text.toLowerCase().includes('курс'))
+      .map(([path]) => path)
+
+    expect(textsWithTheWord).toEqual([])
+  })
+
+  it('never writes the singular «Активност» for the Activity tab in any Macedonian text', () => {
+    const activityTexts = collectTexts(mk)
+      .filter(([, text]) => typeof text === 'string' && /Активност(?!и)/.test(text))
+      .map(([path]) => path)
+
+    expect(activityTexts).toEqual([])
   })
 })
 

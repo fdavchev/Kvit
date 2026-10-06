@@ -55,7 +55,8 @@ namespace Kvit.Application.Queries.Groups
                     named.Member.UserId == ownerUserId,
                     named.Member.UserId == userId,
                     named.Member.UserId == null,
-                    named.Member.ClaimedAt == null ? null : named.Member.Name));
+                    named.Member.ClaimedAt == null ? null : named.Member.Name,
+                    named.PictureUrl));
         }
 
         private IQueryable<RemovedMemberRow> RemovedMemberRowsOf(Guid groupId)
@@ -64,7 +65,7 @@ namespace Kvit.Application.Queries.Groups
                 .AsNoTracking()
                 .Where(named => named.Member.EndKind == MemberEndKind.Removed)
                 .InJoiningOrder()
-                .Select(named => new RemovedMemberRow(named.Member.Id, named.DisplayName));
+                .Select(named => new RemovedMemberRow(named.Member.Id, named.DisplayName, named.PictureUrl));
         }
     }
 }

@@ -9,7 +9,10 @@ import {
 import { testGroupId, testInviteToken } from '@/test/groupTestData'
 import {
   anaMember,
+  anaPictureUrl,
   bojanRemoved,
+  filipMember,
+  filipPictureUrl,
   markoMember,
   ownerViewMembers,
   petarMember,
@@ -72,6 +75,59 @@ describe('getMembers', () => {
     const members = await getMembers(testGroupId)
 
     expect(members.members[0]).toMatchObject({ displayName: 'Petar', claimedName: 'Darko' })
+  })
+
+  it('keeps the picture address of a person who has a Google picture', async () => {
+    stubFetch(
+      Response.json({
+        ...ownerViewMembers,
+        members: [{ ...filipMember, pictureUrl: filipPictureUrl }, anaMember],
+        removed: [],
+      }),
+    )
+
+    const members = await getMembers(testGroupId)
+
+    expect(members.members[0].pictureUrl).toBe(filipPictureUrl)
+    expect(members.members[1].pictureUrl).toBeNull()
+  })
+
+  it('keeps null for the picture of a plain name', async () => {
+    stubFetch(Response.json({ ...ownerViewMembers, members: [markoMember], removed: [] }))
+
+    const members = await getMembers(testGroupId)
+
+    expect(members.members[0].pictureUrl).toBeNull()
+  })
+
+  it('keeps the picture address of a removed person and null for one without a picture', async () => {
+    stubFetch(
+      Response.json({
+        ...ownerViewMembers,
+        members: [],
+        removed: [{ ...bojanRemoved, pictureUrl: anaPictureUrl }, bojanRemoved],
+      }),
+    )
+
+    const members = await getMembers(testGroupId)
+
+    expect(members.removed.map((person) => person.pictureUrl)).toEqual([anaPictureUrl, null])
+  })
+
+  it.each([5, true, {}])('throws an error naming "pictureUrl" when its value in a member is %j', async (value) => {
+    stubFetch(
+      Response.json({ ...ownerViewMembers, members: [{ ...anaMember, pictureUrl: value }] }),
+    )
+
+    await expect(getMembers(testGroupId)).rejects.toThrow('pictureUrl')
+  })
+
+  it.each([5, true, {}])('throws an error naming "pictureUrl" when its value in a removed person is %j', async (value) => {
+    stubFetch(
+      Response.json({ ...ownerViewMembers, removed: [{ ...bojanRemoved, pictureUrl: value }] }),
+    )
+
+    await expect(getMembers(testGroupId)).rejects.toThrow('pictureUrl')
   })
 
   it('returns two empty lists when the group has nobody and nobody was removed', async () => {

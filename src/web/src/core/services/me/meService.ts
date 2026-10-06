@@ -1,6 +1,7 @@
 import { ApiError, apiRequest, jsonRequest, unauthorizedStatus } from '@/core/api/apiClient'
 import { endpoints } from '@/core/api/endpoints'
 import { isLanguage, type Language } from '@/core/i18n/language'
+import { readTextOrNull } from '@/core/services/readFields'
 
 export interface Me {
   id: string
@@ -10,6 +11,7 @@ export interface Me {
   timeZone: string
   mustChangePassword: boolean
   hasPassword: boolean
+  pictureUrl: string | null
 }
 
 type MeFields = Record<string, unknown>
@@ -29,6 +31,7 @@ export function parseMe(body: unknown): Me {
     timeZone: readText(fields, 'timeZone'),
     mustChangePassword: readYesNo(fields, 'mustChangePassword'),
     hasPassword: readYesNo(fields, 'hasPassword'),
+    pictureUrl: readTextOrNull(fields, 'pictureUrl', 'the signed-in person'),
   }
 }
 

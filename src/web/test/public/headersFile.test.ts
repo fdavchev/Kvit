@@ -111,12 +111,26 @@ describe('public/_headers', () => {
     ['style-src', ["'self'", "'unsafe-inline'", 'https://accounts.google.com/gsi/style']],
     ['frame-src', ['https://accounts.google.com/gsi/']],
     ['connect-src', ["'self'", 'https://accounts.google.com/gsi/']],
-    ['img-src', ["'self'", 'data:']],
+    ['img-src', ["'self'", 'data:', 'https://*.googleusercontent.com']],
   ])('allows %s to use at least %j', (name, required) => {
     expect(directive(name)).toEqual(expect.arrayContaining(required))
   })
 
   it.each(["'unsafe-inline'", "'unsafe-eval'", '*'])('does not allow %s in script-src', (source) => {
     expect(directive('script-src')).not.toContain(source)
+  })
+
+  it.each(['*', 'https:', 'http:', "'unsafe-inline'"])('does not allow %s in img-src, so only the Google picture host is added', (source) => {
+    expect(directive('img-src')).not.toContain(source)
+  })
+
+  it('names the Google picture host only once in img-src', () => {
+    expect(
+      directive('img-src').filter((source) => source === 'https://*.googleusercontent.com'),
+    ).toHaveLength(1)
+  })
+
+  it('does not let a script load from the Google picture host', () => {
+    expect(directive('script-src').join(' ')).not.toContain('googleusercontent')
   })
 })

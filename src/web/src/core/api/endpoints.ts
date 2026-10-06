@@ -12,6 +12,7 @@ export const endpoints = {
   groups: '/api/groups',
   invitePreview: '/api/invites/preview',
   inviteJoin: '/api/invites/join',
+  categories: '/api/categories',
   group: (groupId: string) => `/api/groups/${groupId}`,
   groupRestore: (groupId: string) => `/api/groups/${groupId}/restore`,
   groupLeave: (groupId: string) => `/api/groups/${groupId}/leave`,
@@ -26,4 +27,10 @@ export const endpoints = {
   groupOwner: (groupId: string) => `/api/groups/${groupId}/owner`,
   groupInviteReset: (groupId: string) => `/api/groups/${groupId}/invite/reset`,
   groupInviteUndoReset: (groupId: string) => `/api/groups/${groupId}/invite/undo-reset`,
+  groupExpenses: (groupId: string) => `/api/groups/${groupId}/expenses`,
+  groupExpensesDeleted: (groupId: string) => `/api/groups/${groupId}/expenses/deleted`,
+  groupExpense: (groupId: string, expenseId: string) =>
+    `/api/groups/${groupId}/expenses/${expenseId}`,
+  groupExpenseRestore: (groupId: string, expenseId: string) =>
+    `/api/groups/${groupId}/expenses/${expenseId}/restore`,
 } as const
