@@ -49,6 +49,8 @@ namespace Kvit.Api.Tests.Hosting
 
         public FakeGoogleTokenChecker GoogleTokens { get; }
 
+        public Action<IServiceCollection>? AdditionalTestServices { get; set; }
+
         public static KvitApiFactory WithConnectionString(string? connectionString)
         {
             return new KvitApiFactory(new Lazy<string?>(() => connectionString), TestCertificate.Base64, TestCertificate.Password, null, TestGoogleClientId, new FakeGoogleTokenChecker());
@@ -90,6 +92,7 @@ namespace Kvit.Api.Tests.Hosting
             {
                 services.RemoveAll<IGoogleTokenChecker>();
                 services.AddSingleton<IGoogleTokenChecker>(GoogleTokens);
+                AdditionalTestServices?.Invoke(services);
             });
         }
 

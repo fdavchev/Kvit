@@ -21,5 +21,15 @@ namespace Kvit.Domain.Entities
         public int SortOrder { get; private set; }
 
         public DateTimeOffset? ArchivedAt { get; private set; }
+
+        public bool CanTagGroupExpenses()
+        {
+            return OwnerUserId is null && ArchivedAt is null;
+        }
+
+        public string BuiltInKey()
+        {
+            return Key ?? throw new InvalidOperationException($"Category {Id} is a custom category without a key, but only built-in categories can be on a group expense.");
+        }
     }
 }

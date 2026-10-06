@@ -61,6 +61,8 @@
   - The browser's Back button after joining can open "Create account" while signed in: `/signup`, `/login` and `/welcome` should send a signed-in person away, and the in-app Back button and the Sign up / Log in links should replace history instead of adding to it.
   - The backend's `Retry-After` is always 600 seconds (same item as the one above about the whole window).
 
+- [ ] Editing an old expense whose split still lists a person who was removed or left is refused (`MEMBER_NOT_FOUND`) until that person is taken out of the split; even a title fix is blocked. Better: allow people already in that expense's split when their typed values do not change (found by the Phase 8 Step 2 tester, 2026-10-05).
+
 ## Skipped on purpose
 - CI runs twice on a pull-request branch (one run for `push`, one for `pull_request`; review finding 01-5, 2026-09-29). Left as it is: the second run tests the merge result with `main`, the cost is only free GitHub minutes, and limiting `push` to `main` would drop the check on a branch that has no pull request yet. Revisit only if the free minutes ever run short.
 

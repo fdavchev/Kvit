@@ -22,6 +22,10 @@ namespace Kvit.Infrastructure.Persistence
 
         public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
 
+        public DbSet<Expense> Expenses => Set<Expense>();
+
+        public DbSet<ExpenseShare> ExpenseShares => Set<ExpenseShare>();
+
         public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
         protected override void OnModelCreating(ModelBuilder builder)

@@ -156,6 +156,23 @@ const approvedPhase8Step1Texts: [string, string, string][] = [
   ['errors.EXPENSE_SPLIT_NO_SHARES', 'Give at least one person a share.', 'Дади барем на една личност дел.'],
 ]
 
+const approvedPhase8Step2Texts: [string, string, string][] = [
+  ['errors.EXPENSE_NOT_FOUND', "This expense doesn't exist or was deleted.", 'Овој трошок не постои или е избришан.'],
+  ['errors.EXPENSE_NOT_ALLOWED', "Only the person who added this expense or the group's owner can do this.", 'Ова може само личноста што го додала трошокот или сопственикот на групата.'],
+  ['errors.EXPENSE_NOT_DELETED', 'This expense is not deleted.', 'Овој трошок не е избришан.'],
+  ['errors.EXPENSE_RESTORE_EXPIRED', "This expense was deleted more than 5 days ago and can't be restored.", 'Овој трошок е избришан пред повеќе од 5 дена и не може да се врати.'],
+  ['errors.EXPENSE_TITLE_INVALID', 'The title can have up to 80 characters.', 'Насловот може да има најмногу 80 знаци.'],
+  ['errors.EXPENSE_NOTE_INVALID', 'The note can have up to 500 characters.', 'Белешката може да има најмногу 500 знаци.'],
+  ['errors.EXPENSE_DATE_INVALID', 'Pick a date between 2000 and one year from now.', 'Избери датум од 2000 до една година однапред.'],
+  ['errors.EXPENSE_CURRENCY_INVALID', 'Pick MKD or EUR.', 'Избери MKD или EUR.'],
+  ['errors.EXPENSE_SPLIT_TYPE_INVALID', 'Pick how to split: equally, exact amounts, percentages or shares.', 'Избери како да се подели: поеднакво, точни износи, проценти или делови.'],
+  ['errors.EXPENSE_CATEGORY_INVALID', 'Pick a category from the list.', 'Избери категорија од листата.'],
+  ['errors.EXPENSE_AMOUNT_TOO_LARGE', 'This amount is too large.', 'Овој износ е премногу голем.'],
+  ['errors.EXPENSE_CLIENT_REQUEST_ID_USED', 'This request was already used for something else.', 'Ова барање веќе е искористено за друго.'],
+]
+
+const currencyCodes = /MKD|EUR/g
+
 const textsWhereMacedonianMeansConnection =['errors.network', 'welcome.googleUnavailable']
 
 const macedonianWordForConnection = 'врск'
@@ -219,6 +236,18 @@ describe('the approved Phase 8 Step 1 texts', () => {
   it.each(approvedPhase8Step1Texts)('writes the Macedonian text of %s with Cyrillic letters only, no Latin look-alikes', (key, _english, macedonian) => {
     expect(macedonian).not.toMatch(/[A-Za-z]/)
     expect(translated('mk', key)).not.toMatch(/[A-Za-z]/)
+  })
+})
+
+describe('the approved Phase 8 Step 2 texts', () => {
+  it.each(approvedPhase8Step2Texts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
+    expect(translated('en', key)).toBe(english)
+    expect(translated('mk', key)).toBe(macedonian)
+  })
+
+  it.each(approvedPhase8Step2Texts)('writes the Macedonian text of %s with Cyrillic letters only apart from the currency codes, no Latin look-alikes', (key, _english, macedonian) => {
+    expect(macedonian.replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
+    expect(translated('mk', key).replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
   })
 })
 

@@ -1,3 +1,4 @@
+using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 
 namespace Kvit.Domain.Entities
@@ -17,6 +18,31 @@ namespace Kvit.Domain.Entities
         public Result<NamedMember> FindRemoved(Guid memberId)
         {
             return Find(memberId, row => row.Member.EndKind == MemberEndKind.Removed);
+        }
+
+        public NamedMember RowOf(Guid memberId)
+        {
+            return _rows.SingleOrDefault(row => row.Member.Id == memberId)
+                ?? throw new InvalidOperationException($"Member {memberId} is not a row of this group's roster, but something in the group points at it.");
+        }
+
+        public Result<IReadOnlyList<SplitInput>> CurrentInJoiningOrder(IReadOnlyList<SplitInput> inputs)
+        {
+            foreach (SplitInput input in inputs)
+            {
+                Result<NamedMember> row = FindCurrent(input.MemberId);
+                if (!row.IsSuccess)
+                {
+                    return row.ToFailure<IReadOnlyList<SplitInput>>();
+                }
+            }
+
+            return Result.Ok<IReadOnlyList<SplitInput>>(InJoiningOrder(inputs, input => input.MemberId));
+        }
+
+        public IReadOnlyList<T> InJoiningOrder<T>(IEnumerable<T> items, Func<T, Guid> memberIdOf)
+        {
+            return [.. items.OrderBy(item => RowOf(memberIdOf(item)).Member.JoinedAt).ThenBy(memberIdOf)];
         }
 
         public NamedMember? CurrentRowOf(Guid userId)

@@ -27,9 +27,11 @@ namespace Kvit.Api.Tests.Persistence
             await context.Database.MigrateAsync(TestContext.Current.CancellationToken);
         }
 
-        public virtual ValueTask DisposeAsync()
+        public virtual async ValueTask DisposeAsync()
         {
-            return _factory.DisposeAsync();
+            await _factory.DisposeAsync();
+            await using NpgsqlConnection poolOfThisDatabase = new(_connectionString);
+            NpgsqlConnection.ClearPool(poolOfThisDatabase);
         }
 
         public KvitApiFactory CreateAnotherInstance()

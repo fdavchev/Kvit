@@ -68,7 +68,19 @@
     "EXPENSE_SPLIT_NEGATIVE_INPUT": "Amounts, percentages and shares can't be negative.",
     "EXPENSE_SPLIT_EXTRAS_EXCEED_TOTAL": "The extras are more than the total.",
     "EXPENSE_SPLIT_DOES_NOT_ADD_UP": "The split doesn't add up to the total.",
-    "EXPENSE_SPLIT_NO_SHARES": "Give at least one person a share."
+    "EXPENSE_SPLIT_NO_SHARES": "Give at least one person a share.",
+    "EXPENSE_NOT_FOUND": "This expense doesn't exist or was deleted.",
+    "EXPENSE_NOT_ALLOWED": "Only the person who added this expense or the group's owner can do this.",
+    "EXPENSE_NOT_DELETED": "This expense is not deleted.",
+    "EXPENSE_RESTORE_EXPIRED": "This expense was deleted more than 5 days ago and can't be restored.",
+    "EXPENSE_TITLE_INVALID": "The title can have up to 80 characters.",
+    "EXPENSE_NOTE_INVALID": "The note can have up to 500 characters.",
+    "EXPENSE_DATE_INVALID": "Pick a date between 2000 and one year from now.",
+    "EXPENSE_CURRENCY_INVALID": "Pick MKD or EUR.",
+    "EXPENSE_SPLIT_TYPE_INVALID": "Pick how to split: equally, exact amounts, percentages or shares.",
+    "EXPENSE_CATEGORY_INVALID": "Pick a category from the list.",
+    "EXPENSE_AMOUNT_TOO_LARGE": "This amount is too large.",
+    "EXPENSE_CLIENT_REQUEST_ID_USED": "This request was already used for something else."
   },
   "language": {
     "label": "Language",

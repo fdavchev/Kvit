@@ -1,4 +1,5 @@
 using Kvit.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Kvit.Infrastructure.Persistence
 {
@@ -14,6 +15,14 @@ namespace Kvit.Infrastructure.Persistence
             IQueryable<GroupMember> currentMembers = context.CurrentGroupMembers();
 
             return context.Groups.Where(group => currentMembers.Any(member => member.GroupId == group.Id && member.UserId == userId));
+        }
+
+        public static IQueryable<Guid?> OwnerOfGroupForMember(this AppDbContext context, Guid groupId, Guid userId)
+        {
+            return context.GroupsWithCurrentMember(userId)
+                .AsNoTracking()
+                .Where(group => group.Id == groupId && group.DeletedAt == null)
+                .Select(group => (Guid?)group.OwnerUserId);
         }
 
         public static IQueryable<NamedMember> NamedGroupMembers(this AppDbContext context, Guid groupId)

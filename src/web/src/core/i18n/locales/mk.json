@@ -68,7 +68,19 @@
     "EXPENSE_SPLIT_NEGATIVE_INPUT": "Износите, процентите и деловите не можат да бидат негативни.",
     "EXPENSE_SPLIT_EXTRAS_EXCEED_TOTAL": "Додатоците се повеќе од вкупниот износ.",
     "EXPENSE_SPLIT_DOES_NOT_ADD_UP": "Поделбата не е иста како вкупниот износ.",
-    "EXPENSE_SPLIT_NO_SHARES": "Дади барем на една личност дел."
+    "EXPENSE_SPLIT_NO_SHARES": "Дади барем на една личност дел.",
+    "EXPENSE_NOT_FOUND": "Овој трошок не постои или е избришан.",
+    "EXPENSE_NOT_ALLOWED": "Ова може само личноста што го додала трошокот или сопственикот на групата.",
+    "EXPENSE_NOT_DELETED": "Овој трошок не е избришан.",
+    "EXPENSE_RESTORE_EXPIRED": "Овој трошок е избришан пред повеќе од 5 дена и не може да се врати.",
+    "EXPENSE_TITLE_INVALID": "Насловот може да има најмногу 80 знаци.",
+    "EXPENSE_NOTE_INVALID": "Белешката може да има најмногу 500 знаци.",
+    "EXPENSE_DATE_INVALID": "Избери датум од 2000 до една година однапред.",
+    "EXPENSE_CURRENCY_INVALID": "Избери MKD или EUR.",
+    "EXPENSE_SPLIT_TYPE_INVALID": "Избери како да се подели: поеднакво, точни износи, проценти или делови.",
+    "EXPENSE_CATEGORY_INVALID": "Избери категорија од листата.",
+    "EXPENSE_AMOUNT_TOO_LARGE": "Овој износ е премногу голем.",
+    "EXPENSE_CLIENT_REQUEST_ID_USED": "Ова барање веќе е искористено за друго."
   },
   "language": {
     "label": "Јазик",
