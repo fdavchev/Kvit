@@ -719,6 +719,48 @@ describe('ExpenseDetailScreen', () => {
       })
     })
 
+    it('marks the activity of the group as out of date after the delete, so the deletion shows up in it', async () => {
+      const key = ['groups', testGroupId, 'activity']
+      const { queryClient } = await renderDetail({
+        seedCache: (cache) => {
+          cache.setQueryData(key, [])
+        },
+      })
+      await showsDetail()
+
+      fireEvent.click(deleteButton())
+
+      await waitFor(() => {
+        expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true)
+      })
+    })
+
+    it('marks the activity of the group as out of date after Undo restored the expense, so the restore shows up in it', async () => {
+      const key = ['groups', testGroupId, 'activity']
+      const { queryClient, fetchMock } = await renderDetail({
+        seedCache: (cache) => {
+          cache.setQueryData(key, [])
+        },
+      })
+      await showsDetail()
+      fireEvent.click(deleteButton())
+      const shown = await waitFor(() => toastShownWithText(translated('en', 'expenses.deleted')))
+      await waitFor(() => {
+        expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true)
+      })
+      queryClient.setQueryData(key, [])
+      expect(queryClient.getQueryState(key)?.isInvalidated).toBe(false)
+
+      pressToastAction(shown)
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'POST', restorePath)).toBe(1)
+      })
+      await waitFor(() => {
+        expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true)
+      })
+    })
+
     it('disables Delete while the request waits for an answer', async () => {
       await renderDetail()
       await showsDetail()

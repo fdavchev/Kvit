@@ -211,7 +211,18 @@
   },
   "newGroup": {
     "title": "Нова група",
-    "create": "Направи група"
+    "create": "Направи група",
+    "oneBill": "Една сметка",
+    "oneBillHint": "Вечера или такси",
+    "group": "Група",
+    "groupHint": "Патување или домаќинство"
+  },
+  "oneBill": {
+    "people": "Кој е со тебе?",
+    "nameLabel": "име",
+    "removeName": "Отстрани „{{name}}“",
+    "save": "Зачувај сметка",
+    "titleTooLong": "Насловот може да има најмногу 60 знаци."
   },
   "group": {
     "addPeople": "Додај луѓе",
@@ -275,6 +286,31 @@
     "historyChangedSplit": "{{name}} ја измени поделбата",
     "historyDeleted": "{{name}} го избриша",
     "historyRestored": "{{name}} го врати"
+  },
+  "activity": {
+    "title": "Активности",
+    "empty": "Засега ништо.",
+    "groupCreated": "{{name}} ја создаде групата",
+    "groupRenamed": "{{name}} ја преименува групата: {{old}} → {{new}}",
+    "groupEmojiChanged": "{{name}} го измени емоџито на групата: {{old}} → {{new}}",
+    "groupCurrencyChanged": "{{name}} ја измени валутата на групата: {{old}} → {{new}}",
+    "inviteLinkReset": "{{name}} го ресетира линкот за покана",
+    "inviteLinkRestored": "{{name}} го врати стариот линк за покана",
+    "memberAdded": "{{name}} додаде „{{member}}“",
+    "memberJoined": "{{member}} се придружи",
+    "memberClaimed": "{{member}} го презеде името „{{claimedName}}“",
+    "claimUndone": "{{name}} го врати името „{{claimedName}}“",
+    "memberRemoved": "{{name}} отстрани „{{member}}“ од групата",
+    "memberLeft": "{{member}} ја напушти групата",
+    "ownershipTransferred": "{{name}} го/ја постави „{{member}}“ за сопственик",
+    "memberLetBackIn": "{{name}} го/ја врати „{{member}}“ во групата",
+    "groupDeleted": "{{name}} ја избриша групата",
+    "groupRestored": "{{name}} ја врати групата",
+    "expenseAdded": "{{name}} додаде „{{title}}“ · {{amount}}",
+    "expenseAddedNoTitle": "{{name}} додаде трошок · {{amount}}",
+    "expenseDeleted": "{{name}} го избриша „{{title}}“ · {{amount}}",
+    "expenseDeletedNoTitle": "{{name}} избриша трошок · {{amount}}",
+    "expenseRestored": "{{name}} врати трошок"
   },
   "categories": {
     "food": "Храна и пијалоци",

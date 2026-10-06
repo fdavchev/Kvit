@@ -367,6 +367,22 @@ describe('RecentlyDeletedExpensesScreen', () => {
       })
     })
 
+    it('marks the activity of the group as out of date after a restore, so the restore shows up in it', async () => {
+      const key = ['groups', testGroupId, 'activity']
+      const { queryClient } = await renderDeleted({
+        seedCache: (cache) => {
+          cache.setQueryData(key, [])
+        },
+      })
+      await showsRows()
+
+      fireEvent.click(restoreButtons()[0])
+
+      await waitFor(() => {
+        expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true)
+      })
+    })
+
     it('disables the Restore button while the request waits for an answer', async () => {
       await renderDeleted()
       await screen.findByText('Museum tickets', { exact: false })

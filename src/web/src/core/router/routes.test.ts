@@ -11,6 +11,8 @@ describe('routes', () => {
     ['privacy', '/privacy'],
     ['groups', '/groups'],
     ['newGroup', '/groups/new'],
+    ['newGroupGroup', '/groups/new/group'],
+    ['newBill', '/groups/new/bill'],
     ['recentlyDeletedGroups', '/groups/recently-deleted'],
   ] as const)('has the route %s at %s', (name, path) => {
     expect(routes[name]).toBe(path)
@@ -22,6 +24,7 @@ describe('routes', () => {
     ['groupMembers', '/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/members'],
     ['groupExpenseNew', '/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/expenses/new'],
     ['groupExpensesDeleted', '/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/expenses/deleted'],
+    ['groupActivity', '/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/activity'],
   ] as const)('builds the route %s for a group id as %s', (name, path) => {
     expect(routes[name](groupId)).toBe(path)
   })
@@ -46,6 +49,7 @@ describe('routes', () => {
   it.each([
     ['groupExpenseNew', '/groups/:groupId/expenses/new'],
     ['groupExpensesDeleted', '/groups/:groupId/expenses/deleted'],
+    ['groupActivity', '/groups/:groupId/activity'],
   ] as const)('turns %s into the route pattern when it is given :groupId', (name, pattern) => {
     expect(routes[name](':groupId')).toBe(pattern)
   })

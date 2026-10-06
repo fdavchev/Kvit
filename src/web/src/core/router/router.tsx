@@ -9,11 +9,13 @@ import { AddExpenseScreen } from '@/features/expenses/add/components/AddExpenseS
 import { RecentlyDeletedExpensesScreen } from '@/features/expenses/deleted/components/RecentlyDeletedExpensesScreen'
 import { ExpenseDetailScreen } from '@/features/expenses/detail/components/ExpenseDetailScreen'
 import { EditExpenseScreen } from '@/features/expenses/edit/components/EditExpenseScreen'
+import { OneBillScreen } from '@/features/expenses/oneBill/components/OneBillScreen'
 import { GroupScreen } from '@/features/groups/group/components/GroupScreen'
 import { JoinScreen } from '@/features/groups/join/components/JoinScreen'
 import { GroupsScreen } from '@/features/groups/list/components/GroupsScreen'
 import { RecentlyDeletedScreen } from '@/features/groups/list/components/RecentlyDeletedScreen'
 import { MembersScreen } from '@/features/groups/members/components/MembersScreen'
+import { NewGroupChoiceScreen } from '@/features/groups/newGroup/components/NewGroupChoiceScreen'
 import { NewGroupScreen } from '@/features/groups/newGroup/components/NewGroupScreen'
 import { GroupSettingsScreen } from '@/features/groups/settings/components/GroupSettingsScreen'
 import { HomeScreen } from '@/features/home/components/HomeScreen'
@@ -51,8 +53,11 @@ export const routeObjects: RouteObject[] = [
               { path: routes.settings, element: <SettingsScreen /> },
             ],
           },
-          { path: routes.newGroup, element: <NewGroupScreen /> },
+          { path: routes.newGroup, element: <NewGroupChoiceScreen /> },
+          { path: routes.newGroupGroup, element: <NewGroupScreen /> },
+          { path: routes.newBill, element: <OneBillScreen /> },
           { path: routes.group(groupIdPattern), element: <GroupScreen /> },
+          { path: routes.groupActivity(groupIdPattern), element: <GroupScreen /> },
           { path: routes.groupSettings(groupIdPattern), element: <GroupSettingsScreen /> },
           { path: routes.groupMembers(groupIdPattern), element: <MembersScreen /> },
           { path: routes.groupExpenseNew(groupIdPattern), element: <AddExpenseScreen /> },

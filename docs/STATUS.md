@@ -1,27 +1,27 @@
 # Status: Kvit
 
-_Last updated: 2026-10-05 (Phase 7 done and merged; Phase 8 is next)_
+_Last updated: 2026-10-06 (Phase 8 in progress, Steps 0 to 5 built)_
 
 ## Where we stopped
-- Phase 7 (groups, members, invite links) is done and merged into `main`. Report: `reports/2026-10-05-phase-07-groups.md`; guide: `guides/phase-07-groups.md`.
-- Next: **Phase 8, expenses** (`feat/08-expenses`): categories, exchange rates, add / edit / delete with Undo, the four split types, One bill, the Expenses tab. Start with a plan for Filip.
+- Branch `feat/08-expenses`, last commit `a667286 Add the expenses frontend: ...`. The PR is not opened yet.
+- Steps 0 to 5 are built and VERIFIED by automated test. Step 5 (Activity tab with the pill switch, New group choice, One bill form with circles) is built but **uncommitted** together with its tests and the docs edits (DECISIONS, ROADMAP, STATUS, BACKLOG).
 
 ## Next step
-1. Phase 7 is merged, CI is green and Filip tried it on the live site (REPORTED: works).
-2. Phase 8: read `ROADMAP.md` Phase 8 and `DECISIONS.md`, propose the plan, wait for Filip.
+1. Filip commits and pushes Step 5 (commit subject in the chat).
+2. Step 6: the real-browser check by the debugger. Ask Filip before launching it (and before every coder run, memory 2026-10-06).
 
 ## Then
-- Phase 9 balances and settle up, Phase 10 finishing groups, then the dashboard (Phase 11, Filip decides its layout, phone and web).
+- Step 6: real-browser check by the debugger (360 and 1280 px, EN light and dark, MK light; production build with the CSP; the real NBRM call; a stand-in Google picture; orange category colour contrast; the Date sheet on desktop).
+- Step 7: `/code-review`, phase report (decision log moves into it), ROADMAP and STATUS as merged, a plain-words guide, PR title, description and one commit subject in the chat. Filip merges.
+- Phase 9 balances and settle up. Remember: `Balances.Calculate` needs removed and left members too.
 
 ## Blockers and open questions
-- Nothing blocks Phase 8.
+- Nothing blocks Step 5.
+- BACKLOG: 12 Phase 7 browser items, animations, API error handler, joining without an account (top "must do"), editing an old expense with a removed person in its split, bundle size 650 kB.
 - Still Filip's decision: whether `START-HERE-PROMPT.md` stays in the public repository.
-- BACKLOG top "must do": joining a group without an account. Not built in Phase 7.
-- Private notes file `Desktop\secrets\kvit-secrets.txt` (outside the repo) holds the Neon strings, the online certificate pair, the proxy secret and the Render API key. Never lose the certificate pair (everybody would be logged out). The downloaded Google `client_secret_*.json` in the same folder holds a client secret Kvit never uses; it can be deleted.
 
 ## Verification state
-- VERIFIED by automated test (2026-10-05, after the last code change): backend build 0 warnings, `dotnet test` 1454/1454; `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 1940/1940.
-- VERIFIED by live run (2026-10-05, headless Chrome, local stack, throwaway local accounts): every Phase 7 screen at 360 px and 1280 px in English, light and dark; Members and Join in Macedonian at 360 px, light; the sheet slide, the dark pills, not-found, the Join states and the signed-out round trip. Details in the Phase 7 report.
-- NOT VERIFIED: Google sign-in from the join card (only a throw-away test), a real phone share menu and touch, a screen reader, Macedonian in dark mode and at 1280 px, the `Groups` migration on Neon (runs in CI at the merge).
-- REPORTED by Filip (2026-10-05): the Phase 7 live-site test (create a group, invite a second account, join, Google button on the invite page) "everything works fine"; CI on `main` green.
-- REPORTED by Filip (earlier phases): the real Google sign-in and the phone test (Phase 6); "In production" for the Google app.
+- VERIFIED by automated test (2026-10-06, after the Step 5 code, `.\scripts\start-local.ps1 -Check`): backend build 0 warnings, `dotnet test` 2082/2082; `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 3679/3679.
+- VERIFIED by live run: the migrations `CategoriesAndExchangeRates` and `Expenses` applied to the local database (10 categories, rate row 61.5610).
+- NOT VERIFIED: every Phase 8 screen in a real browser, the real NBRM call from the API, the Google picture host (`https://*.googleusercontent.com` is a guess), the new migrations on Neon (they run in CI at the merge).
+- REPORTED by Filip: Phase 7 works on the live site.

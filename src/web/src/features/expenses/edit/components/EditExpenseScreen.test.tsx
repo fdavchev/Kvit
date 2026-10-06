@@ -513,6 +513,21 @@ describe('EditExpenseScreen', () => {
       })
     })
 
+    it('marks the activity of the group as out of date after it was saved, so the edit shows up in it', async () => {
+      const key = ['groups', testGroupId, 'activity']
+      const { queryClient } = await renderReadyEdit({
+        seedCache: (cache) => {
+          cache.setQueryData(key, [])
+        },
+      })
+
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true)
+      })
+    })
+
     it('disables Save while the request waits for an answer', async () => {
       await renderReadyEdit()
       vi.stubGlobal('fetch', vi.fn<typeof fetch>(() => new Promise<Response>(() => {})))

@@ -63,6 +63,11 @@
 
 - [ ] Editing an old expense whose split still lists a person who was removed or left is refused (`MEMBER_NOT_FOUND`) until that person is taken out of the split; even a title fix is blocked. Better: allow people already in that expense's split when their typed values do not change (found by the Phase 8 Step 2 tester, 2026-10-05).
 
+- [ ] Joining a group through an invite link while taking a plain name (`claimMemberId`) does not apply the Phase 8 claim rule (a plain name's own row is checked, but the joiner has no row yet, so nothing to check; confirm there is no gap) (Phase 8 Step 2 coder note, 2026-10-05)
+- [ ] The main JavaScript file is now about 650 kB (Phase 8). Split by screen with `React.lazy` when the build warning matters
+
+- [ ] An Activity row for an edit of an expense that was deleted since shows a changed amount in the group's default currency (the change has no currency), which can be wrong for an expense in the other currency; store the currency in the `ExpenseEdited` change entries (Phase 8 Step 5, 2026-10-06)
+
 ## Skipped on purpose
 - CI runs twice on a pull-request branch (one run for `push`, one for `pull_request`; review finding 01-5, 2026-09-29). Left as it is: the second run tests the merge result with `main`, the cost is only free GitHub minutes, and limiting `push` to `main` would drop the check on a branch that has no pull request yet. Revisit only if the free minutes ever run short.
 

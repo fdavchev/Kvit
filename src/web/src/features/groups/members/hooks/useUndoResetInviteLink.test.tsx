@@ -43,6 +43,7 @@ describe('useUndoResetInviteLink', () => {
     ['the group', ['groups', testGroupId]],
     ['the members of the group', ['groups', testGroupId, 'members']],
     ['the group list', ['groups']],
+    ['the activity of the group', ['groups', testGroupId, 'activity']],
   ])('marks %s as out of date after the change so the new link is loaded', async (_name, queryKey) => {
     stubFetch(Response.json({ inviteToken: newInviteToken }))
     const { result, queryClient } = await renderHookWithProviders(() => useUndoResetInviteLink(testGroupId), {
@@ -69,6 +70,7 @@ describe('useUndoResetInviteLink', () => {
     })
     expect(queryClient.getQueryState(['groups', testGroupId])?.isInvalidated).toBe(false)
     expect(queryClient.getQueryState(['groups', testGroupId, 'members'])?.isInvalidated).toBe(false)
+    expect(queryClient.getQueryState(['groups', testGroupId, 'activity'])?.isInvalidated).toBe(false)
     expect(queryClient.getQueryState(['groups'])?.isInvalidated).toBe(false)
   })
 

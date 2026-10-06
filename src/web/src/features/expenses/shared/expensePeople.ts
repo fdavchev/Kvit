@@ -15,7 +15,7 @@ export interface FormerPerson {
   name: string
 }
 
-const neutralColorIndex = 9
+export const neutralColorIndex = 9
 
 export function expensePeople(
   members: readonly GroupMember[],

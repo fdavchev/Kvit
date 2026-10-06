@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query'
 import { updateExpense, type ExpenseChanges } from '@/core/services/expenses/expensesService'
-import { refreshExpenses } from '../../shared/expenseCache'
+import { refreshAfterExpenseChange } from '../../shared/expenseCache'
 
 export function useUpdateExpense(
   groupId: string,
@@ -10,6 +10,6 @@ export function useUpdateExpense(
 
   return useMutation({
     mutationFn: (changes: ExpenseChanges) => updateExpense(groupId, expenseId, changes),
-    onSuccess: () => refreshExpenses(queryClient, groupId),
+    onSuccess: () => refreshAfterExpenseChange(queryClient, groupId),
   })
 }

@@ -32,6 +32,7 @@ const addedMember = {
 function seedGroupAndList(queryClient: QueryClient): void {
   queryClient.setQueryData(['groups', testGroupId], testGroup)
   queryClient.setQueryData(['groups'], groupListOf({ groups: [greeceGroupRow] }))
+  queryClient.setQueryData(['groups', testGroupId, 'activity'], [])
 }
 
 describe('useAddMember', () => {
@@ -76,6 +77,17 @@ describe('useAddMember', () => {
     expect(queryClient.getQueryState(['groups'])?.isInvalidated).toBe(true)
   })
 
+  it('marks the activity of the group as out of date after adding so the new name shows up in it', async () => {
+    stubFetch(Response.json(addedMember))
+    const { result, queryClient } = await renderHookWithProviders(() => useAddMember(testGroupId), {
+      seedCache: seedGroupAndList,
+    })
+
+    await act(() => result.current.mutateAsync('Grandma'))
+
+    expect(queryClient.getQueryState(['groups', testGroupId, 'activity'])?.isInvalidated).toBe(true)
+  })
+
   it('exposes the ApiError and keeps the cache up to date when the name is already in the group', async () => {
     stubFetch(problemResponse(400, 'MEMBER_NAME_TAKEN'))
     const { result, queryClient } = await renderHookWithProviders(() => useAddMember(testGroupId), {
@@ -91,6 +103,7 @@ describe('useAddMember', () => {
     })
     expect(queryClient.getQueryState(['groups', testGroupId])?.isInvalidated).toBe(false)
     expect(queryClient.getQueryState(['groups'])?.isInvalidated).toBe(false)
+    expect(queryClient.getQueryState(['groups', testGroupId, 'activity'])?.isInvalidated).toBe(false)
   })
 
   it('does not touch queries that are not about groups', async () => {

@@ -113,6 +113,30 @@ export interface ExpenseInput extends ExpenseChanges {
   clientRequestId: string
 }
 
+export interface OneBillShareInput {
+  personIndex: number
+  inputValue: number
+}
+
+export interface OneBillInput {
+  clientRequestId: string
+  title: string | null
+  names: string[]
+  note: string | null
+  amountMinor: number
+  currency: Currency
+  expenseDate: string
+  categoryId: string | null
+  paidByPersonIndex: number
+  splitType: SplitType
+  shares: OneBillShareInput[]
+}
+
+export interface CreatedOneBill {
+  groupId: string
+  expenseId: string
+}
+
 export async function getExpenses(groupId: string): Promise<ExpenseListRow[]> {
   const what = 'the expenses of the group'
   const fields = readObject(await apiRequest(endpoints.groupExpenses(groupId)), what)
@@ -149,6 +173,22 @@ export async function getDeletedExpenses(groupId: string): Promise<DeletedExpens
   const what = 'the deleted expenses of the group'
   const fields = readObject(await apiRequest(endpoints.groupExpensesDeleted(groupId)), what)
   return readList(fields, 'expenses', what).map(parseDeletedExpenseRow)
+}
+
+export async function createOneBill(input: OneBillInput): Promise<CreatedOneBill> {
+  const what = 'the new One bill'
+  const fields = readObject(await apiRequest(endpoints.oneBill, jsonRequest('POST', input)), what)
+  return {
+    groupId: readText(fields, 'groupId', what),
+    expenseId: readText(fields, 'expenseId', what),
+  }
+}
+
+export function readChanges(fields: Fields, what: string): ExpenseChange[] | null {
+  if (fields.changes === null) {
+    return null
+  }
+  return readList(fields, 'changes', what).map(parseChange)
 }
 
 function parseExpenseListRow(row: unknown): ExpenseListRow {
@@ -215,13 +255,6 @@ function parseHistoryEntry(row: unknown): ExpenseHistoryEntry {
     createdAt: readDate(fields, 'createdAt', what),
     changes: readChanges(fields, what),
   }
-}
-
-function readChanges(fields: Fields, what: string): ExpenseChange[] | null {
-  if (fields.changes === null) {
-    return null
-  }
-  return readList(fields, 'changes', what).map(parseChange)
 }
 
 function parseChange(row: unknown): ExpenseChange {

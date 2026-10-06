@@ -10,3 +10,8 @@ export function expenseTitle(title: string | null, category: Category | null, t:
   }
   return category === null ? noValueText : t(categoryNameKey(category))
 }
+
+export function textOrNull(text: string): string | null {
+  const trimmed = text.trim()
+  return trimmed === '' ? null : trimmed
+}

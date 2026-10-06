@@ -5,6 +5,11 @@ const dayMonthYearFormats: Record<Language, Intl.DateTimeFormat> = {
   mk: new Intl.DateTimeFormat('mk', { day: 'numeric', month: 'long', year: 'numeric' }),
 }
 
+const minuteMs = 60_000
+const hourMs = 60 * minuteMs
+const dayMs = 24 * hourMs
+const daysShownAsRelative = 7
+
 const dayMonthYearParts: readonly Intl.DateTimeFormatPartTypes[] = ['day', 'month', 'year']
 const dayMonthParts: readonly Intl.DateTimeFormatPartTypes[] = ['day', 'month']
 const calendarDatePattern = /^\d{4}-\d{2}-\d{2}$/
@@ -37,6 +42,30 @@ export function formatExpenseDay(date: string, today: string, language: Language
 
 export function formatDayWithYear(date: string, language: Language): string {
   return formatCalendarDay(date, language, true)
+}
+
+export function formatHowLongAgo(
+  isoDateTime: string,
+  now: Date,
+  timeZone: string,
+  language: Language,
+): string {
+  const moment = new Date(isoDateTime)
+  if (Number.isNaN(moment.getTime())) {
+    throw new Error(`Expected a date and time to say how long ago it was, got "${isoDateTime}"`)
+  }
+  const elapsedMs = Math.max(0, now.getTime() - moment.getTime())
+  const relative = new Intl.RelativeTimeFormat(language)
+  if (elapsedMs < hourMs) {
+    return relative.format(-Math.floor(elapsedMs / minuteMs), 'minute')
+  }
+  if (elapsedMs < dayMs) {
+    return relative.format(-Math.floor(elapsedMs / hourMs), 'hour')
+  }
+  if (elapsedMs < daysShownAsRelative * dayMs) {
+    return relative.format(-Math.floor(elapsedMs / dayMs), 'day')
+  }
+  return formatExpenseDay(todayInTimeZone(timeZone, moment), todayInTimeZone(timeZone, now), language)
 }
 
 export function addDays(date: string, days: number): string {

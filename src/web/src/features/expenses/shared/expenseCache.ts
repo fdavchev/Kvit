@@ -1,4 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
+import { activityQueryKey } from '@/features/groups/shared/groupCache'
 
 export const categoriesQueryKey = ['categories'] as const
 
@@ -19,6 +20,9 @@ export function deletedExpensesQueryKey(
   return ['groups', groupId, 'expenses', 'deleted']
 }
 
-export async function refreshExpenses(queryClient: QueryClient, groupId: string): Promise<void> {
-  await queryClient.invalidateQueries({ queryKey: expensesQueryKey(groupId) })
+export async function refreshAfterExpenseChange(queryClient: QueryClient, groupId: string): Promise<void> {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: expensesQueryKey(groupId) }),
+    queryClient.invalidateQueries({ queryKey: activityQueryKey(groupId) }),
+  ])
 }

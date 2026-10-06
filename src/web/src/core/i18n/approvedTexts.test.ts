@@ -234,7 +234,46 @@ const approvedPhase8Step4Texts: [string, string, string][] = [
   ['categories.other', 'Other', 'Друго'],
 ]
 
+const approvedPhase8Step5Texts: [string, string, string][] = [
+  ['activity.title', 'Activity', 'Активности'],
+  ['activity.empty', 'Nothing yet.', 'Засега ништо.'],
+  ['activity.groupCreated', '{{name}} created the group', '{{name}} ја создаде групата'],
+  ['activity.groupRenamed', '{{name}} renamed the group: {{old}} → {{new}}', '{{name}} ја преименува групата: {{old}} → {{new}}'],
+  ['activity.groupEmojiChanged', "{{name}} changed the group's emoji: {{old}} → {{new}}", '{{name}} го измени емоџито на групата: {{old}} → {{new}}'],
+  ['activity.groupCurrencyChanged', "{{name}} changed the group's currency: {{old}} → {{new}}", '{{name}} ја измени валутата на групата: {{old}} → {{new}}'],
+  ['activity.inviteLinkReset', '{{name}} reset the invite link', '{{name}} го ресетира линкот за покана'],
+  ['activity.inviteLinkRestored', '{{name}} brought back the old invite link', '{{name}} го врати стариот линк за покана'],
+  ['activity.memberAdded', '{{name}} added “{{member}}”', '{{name}} додаде „{{member}}“'],
+  ['activity.memberJoined', '{{member}} joined', '{{member}} се придружи'],
+  ['activity.memberClaimed', '{{member}} took the name “{{claimedName}}”', '{{member}} го презеде името „{{claimedName}}“'],
+  ['activity.claimUndone', '{{name}} gave the name “{{claimedName}}” back', '{{name}} го врати името „{{claimedName}}“'],
+  ['activity.memberRemoved', '{{name}} removed “{{member}}”', '{{name}} отстрани „{{member}}“ од групата'],
+  ['activity.memberLeft', '{{member}} left the group', '{{member}} ја напушти групата'],
+  ['activity.ownershipTransferred', '{{name}} made “{{member}}” the owner', '{{name}} го/ја постави „{{member}}“ за сопственик'],
+  ['activity.memberLetBackIn', '{{name}} let “{{member}}” back in', '{{name}} го/ја врати „{{member}}“ во групата'],
+  ['activity.groupDeleted', '{{name}} deleted the group', '{{name}} ја избриша групата'],
+  ['activity.groupRestored', '{{name}} restored the group', '{{name}} ја врати групата'],
+  ['activity.expenseAdded', '{{name}} added “{{title}}” · {{amount}}', '{{name}} додаде „{{title}}“ · {{amount}}'],
+  ['activity.expenseAddedNoTitle', '{{name}} added an expense · {{amount}}', '{{name}} додаде трошок · {{amount}}'],
+  ['activity.expenseDeleted', '{{name}} deleted “{{title}}” · {{amount}}', '{{name}} го избриша „{{title}}“ · {{amount}}'],
+  ['activity.expenseDeletedNoTitle', '{{name}} deleted an expense · {{amount}}', '{{name}} избриша трошок · {{amount}}'],
+  ['activity.expenseRestored', '{{name}} restored an expense', '{{name}} врати трошок'],
+  ['newGroup.oneBill', 'One bill', 'Една сметка'],
+  ['newGroup.oneBillHint', 'A dinner or a taxi', 'Вечера или такси'],
+  ['newGroup.group', 'Group', 'Група'],
+  ['newGroup.groupHint', 'A trip or a household', 'Патување или домаќинство'],
+  ['oneBill.people', 'Who is with you?', 'Кој е со тебе?'],
+  ['oneBill.nameLabel', 'name', 'име'],
+  ['oneBill.removeName', 'Remove {{name}}', 'Отстрани „{{name}}“'],
+  ['oneBill.save', 'Save bill', 'Зачувај сметка'],
+  ['oneBill.titleTooLong', 'The title can have up to 60 characters.', 'Насловот може да има најмногу 60 знаци.'],
+]
+
 const expenseNamespaces = /^(expenses|expense|categories)\./
+const step5Namespaces = /^(activity|oneBill|newGroup)\./
+const phase7NewGroupKeys: string[] = approvedPhase7Texts
+  .map(([key]) => key)
+  .filter((key) => key.startsWith('newGroup.'))
 
 const currencyCodes = /MKD|EUR/g
 const placeholders = /\{\{\w+\}\}/g
@@ -380,6 +419,49 @@ describe('the approved Phase 8 Step 4 texts', () => {
       .map(([path]) => path)
 
     expect(activityTexts).toEqual([])
+  })
+})
+
+describe('the approved Phase 8 Step 5 texts', () => {
+  it.each(approvedPhase8Step5Texts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
+    expect(translated('en', key)).toBe(english)
+    expect(translated('mk', key)).toBe(macedonian)
+  })
+
+  it.each(approvedPhase8Step5Texts)('writes the Macedonian text of %s with Cyrillic letters only apart from the placeholders and the currency codes, no Latin look-alikes', (key, _english, macedonian) => {
+    expect(macedonian.replace(placeholders, '').replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
+    expect(translated('mk', key).replace(placeholders, '').replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
+  })
+
+  it.each(approvedPhase8Step5Texts)('uses the same placeholders in the English and the Macedonian text of %s', (_key, english, macedonian) => {
+    expect((english.match(placeholders) ?? []).sort()).toEqual((macedonian.match(placeholders) ?? []).sort())
+  })
+
+  it.each(['en', 'mk'] as const)('has no text under activity, oneBill or newGroup in %s that is not listed above or in the Phase 7 texts, so every new line is locked', (language) => {
+    const texts = language === 'en' ? en : mk
+    const keysInTheFile = collectTexts(texts)
+      .map(([path]) => path)
+      .filter((path) => step5Namespaces.test(path))
+      .sort()
+    const keysListedAbove = [
+      ...phase7NewGroupKeys,
+      ...approvedPhase8Step5Texts.map(([key]) => key).filter((key) => step5Namespaces.test(key)),
+    ].sort()
+
+    expect(keysInTheFile).toEqual(keysListedAbove)
+  })
+
+  it.each(['activity.ownershipTransferred', 'activity.memberLetBackIn'])('writes «го/ја» literally in the Macedonian text of %s, because the app does not know the gender of a person', (key) => {
+    expect(translated('mk', key)).toContain('го/ја')
+  })
+
+  it('writes the Macedonian name of the Activity tab in the plural, «Активности»', () => {
+    expect(translated('mk', 'activity.title')).toBe('Активности')
+  })
+
+  it('writes the Macedonian quotes around a name as „name“ and the English ones as “name”', () => {
+    expect(translated('mk', 'oneBill.removeName', { name: 'Марко' })).toBe('Отстрани „Марко“')
+    expect(translated('en', 'activity.memberAdded', { name: 'Ana', member: 'Marko' })).toBe('Ana added “Marko”')
   })
 })
 

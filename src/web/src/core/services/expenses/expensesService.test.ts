@@ -23,6 +23,7 @@ import { testGroupId } from '@/test/groupTestData'
 import { anaMember, filipMember, markoMember } from '@/test/memberTestData'
 import {
   createExpense,
+  createOneBill,
   deleteExpense,
   getDeletedExpenses,
   getExpense,
@@ -30,6 +31,7 @@ import {
   restoreExpense,
   updateExpense,
   type ExpenseInput,
+  type OneBillInput,
 } from './expensesService'
 
 const expensesPath = `/api/groups/${testGroupId}/expenses`
@@ -55,6 +57,29 @@ const expenseInput: ExpenseInput = {
   clientRequestId: '5b1f2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d',
   ...expenseChanges,
 }
+
+const oneBillPath = '/api/groups/one-bill'
+
+const oneBillInput: OneBillInput = {
+  clientRequestId: '7a9c1e3b-5d7f-4b9d-8f1a-3c5e7a9c1e3b',
+  title: 'Dinner',
+  names: ['Marko', 'Ana'],
+  note: null,
+  amountMinor: 180000,
+  currency: 'MKD',
+  expenseDate: '2026-10-06',
+  categoryId: accommodationCategory.id,
+  paidByPersonIndex: 0,
+  splitType: 'Equal',
+  shares: [
+    { personIndex: 0, inputValue: 0 },
+    { personIndex: 1, inputValue: 0 },
+    { personIndex: 2, inputValue: 30000 },
+  ],
+}
+
+const createdBill = { groupId: testGroupId, expenseId: hotelExpenseId }
+const createdBillFields = Object.keys(createdBill)
 
 const rowFields = Object.keys(dinnerRow)
 const deletedRowFields = Object.keys(museumDeletedRow)
@@ -699,5 +724,138 @@ describe('getDeletedExpenses', () => {
     stubFetch(Response.json(body))
 
     await expect(getDeletedExpenses(testGroupId)).rejects.toThrow(/object/)
+  })
+})
+
+describe('createOneBill', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('sends POST /api/groups/one-bill with the whole input as JSON, including the clientRequestId, and returns the new group id and expense id', async () => {
+    const fetchMock = stubFetch(Response.json(createdBill))
+
+    const created = await createOneBill(oneBillInput)
+
+    expect(created).toEqual(createdBill)
+    expect(sentRequest(fetchMock)).toEqual({
+      url: oneBillPath,
+      method: 'POST',
+      contentType: 'application/json',
+      body: oneBillInput,
+    })
+  })
+
+  it('never sends an emoji, so the server picks its default one', async () => {
+    const fetchMock = stubFetch(Response.json(createdBill))
+
+    await createOneBill(oneBillInput)
+
+    expect(sentRequest(fetchMock).body).not.toHaveProperty('emoji')
+  })
+
+  it('addresses the payer and every person of the split by their index, with the typed values', async () => {
+    const fetchMock = stubFetch(Response.json(createdBill))
+    const input: OneBillInput = {
+      ...oneBillInput,
+      paidByPersonIndex: 2,
+      splitType: 'Exact',
+      shares: [
+        { personIndex: 0, inputValue: 60000 },
+        { personIndex: 2, inputValue: 120000 },
+      ],
+    }
+
+    await createOneBill(input)
+
+    expect(sentRequest(fetchMock).body).toMatchObject({
+      paidByPersonIndex: 2,
+      splitType: 'Exact',
+      shares: [
+        { personIndex: 0, inputValue: 60000 },
+        { personIndex: 2, inputValue: 120000 },
+      ],
+    })
+  })
+
+  it('sends null for an empty title, note and category', async () => {
+    const fetchMock = stubFetch(Response.json(createdBill))
+
+    await createOneBill({ ...oneBillInput, title: null, note: null, categoryId: null })
+
+    expect(sentRequest(fetchMock).body).toMatchObject({ title: null, note: null, categoryId: null })
+  })
+
+  it('sends an empty list of names for a bill for one person', async () => {
+    const fetchMock = stubFetch(Response.json(createdBill))
+
+    await createOneBill({
+      ...oneBillInput,
+      names: [],
+      shares: [{ personIndex: 0, inputValue: 0 }],
+    })
+
+    expect(sentRequest(fetchMock).body).toMatchObject({ names: [] })
+  })
+
+  it.each([
+    [400, 'MEMBER_NAME_TAKEN'],
+    [400, 'MEMBER_NAME_INVALID'],
+    [400, 'EXPENSE_TITLE_INVALID'],
+    [400, 'EXPENSE_SPLIT_DOES_NOT_ADD_UP'],
+    [400, 'EXPENSE_CLIENT_REQUEST_ID_USED'],
+    [404, 'MEMBER_NOT_FOUND'],
+    [429, 'RATE_LIMITED'],
+  ])('rethrows the ApiError unchanged for %i %s', async (httpStatus, errorCode) => {
+    stubFetch(problemResponse(httpStatus, errorCode))
+
+    const error = await captureError(createOneBill(oneBillInput))
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ httpStatus, errorCode })
+  })
+
+  it('rethrows the ApiError unchanged when the network fails', async () => {
+    stubFetch(new TypeError('Failed to fetch'))
+
+    const error = await captureError(createOneBill(oneBillInput))
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ httpStatus: null })
+  })
+
+  it('tolerates a field it does not know in the answer', async () => {
+    stubFetch(Response.json({ ...createdBill, somethingNew: 1 }))
+
+    const created = await createOneBill(oneBillInput)
+
+    expect(created).toMatchObject(createdBill)
+  })
+
+  it.each(createdBillFields)('throws an error naming "%s" when the answer lacks it', async (field) => {
+    stubFetch(Response.json(withoutField(createdBill, field)))
+
+    await expect(createOneBill(oneBillInput)).rejects.toThrow(field)
+  })
+
+  it.each(
+    createdBillFields.flatMap((field) => [
+      [field, 42],
+      [field, null],
+    ]),
+  )('throws an error naming "%s" when its value is %j', async (field, value) => {
+    stubFetch(Response.json({ ...createdBill, [field]: value }))
+
+    await expect(createOneBill(oneBillInput)).rejects.toThrow(field)
+  })
+
+  it.each([
+    ['null', null],
+    ['a text', 'Healthy'],
+    ['a list', []],
+  ])('throws an error saying an object was expected when the answer is %s', async (_name, body) => {
+    stubFetch(Response.json(body))
+
+    await expect(createOneBill(oneBillInput)).rejects.toThrow(/object/)
   })
 })

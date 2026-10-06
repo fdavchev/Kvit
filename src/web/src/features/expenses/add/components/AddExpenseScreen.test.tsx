@@ -1413,6 +1413,38 @@ describe('AddExpenseScreen', () => {
       })
     })
 
+    it('marks the activity of the group as out of date after it was saved, so the new expense shows up in it', async () => {
+      const key = ['groups', testGroupId, 'activity']
+      const { queryClient } = await renderReadyAdd({
+        seedCache: (cache) => {
+          cache.setQueryData(key, [])
+        },
+      })
+      typeAmount('1200')
+
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true)
+      })
+    })
+
+    it('does not mark the activity of the group as out of date when the save failed', async () => {
+      const key = ['groups', testGroupId, 'activity']
+      const { queryClient } = await renderReadyAdd({
+        answers: { [`POST ${expensesPath}`]: problemAnswer(400, 'EXPENSE_AMOUNT_TOO_LARGE') },
+        seedCache: (cache) => {
+          cache.setQueryData(key, [])
+        },
+      })
+      typeAmount('1200')
+
+      fireEvent.click(saveButton())
+      await screen.findByRole('alert')
+
+      expect(queryClient.getQueryState(key)?.isInvalidated).toBe(false)
+    })
+
     it('disables Save while the request waits for an answer', async () => {
       await renderReadyAdd()
       typeAmount('1200')

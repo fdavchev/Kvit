@@ -54,9 +54,20 @@ export function withSplitType(draft: SplitDraft, splitType: SplitType): SplitDra
     splitType,
     people: draft.people.map((person) => ({
       ...person,
-      typedValue: splitType === 'Shares' && person.isIn ? startingShares : '',
+      typedValue: person.isIn ? startingValueOf(splitType) : '',
     })),
   }
+}
+
+export function withPersonAdded(draft: SplitDraft, memberId: string): SplitDraft {
+  return {
+    ...draft,
+    people: [...draft.people, { memberId, isIn: true, typedValue: startingValueOf(draft.splitType) }],
+  }
+}
+
+export function withoutPerson(draft: SplitDraft, memberId: string): SplitDraft {
+  return { ...draft, people: draft.people.filter((person) => person.memberId !== memberId) }
 }
 
 export function withPersonIn(draft: SplitDraft, memberId: string, isIn: boolean): SplitDraft {
@@ -124,6 +135,10 @@ export function buildSplitRequest(draft: SplitDraft, currency: Currency): SplitS
 
 export function percentText(hundredths: number): string {
   return hundredthsToText(hundredths, false)
+}
+
+function startingValueOf(splitType: SplitType): string {
+  return splitType === 'Shares' ? startingShares : ''
 }
 
 function parseTypedValue(splitType: SplitType, typedValue: string, currency: Currency): number | null {

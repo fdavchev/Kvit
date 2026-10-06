@@ -25,11 +25,11 @@ const groupName = 'Greece trip'
 async function renderNewGroup(language: Language = 'en') {
   return renderRoutesWithProviders(
     [
-      { path: routes.newGroup, element: <NewGroupScreen /> },
+      { path: routes.newGroupGroup, element: <NewGroupScreen /> },
       { path: '/groups/:groupId', element: <p>group page</p> },
       { path: routes.groups, element: <p>groups page</p> },
     ],
-    routes.newGroup,
+    routes.newGroupGroup,
     { language, seedCache: seedMe({ ...testMe, language }) },
   )
 }
@@ -228,7 +228,7 @@ describe('NewGroupScreen', () => {
 
     expect(await screen.findByText(translated('en', 'groupFields.nameInvalid'))).toBeTruthy()
     expect(fetchMock).not.toHaveBeenCalled()
-    expect(router.state.location.pathname).toBe(routes.newGroup)
+    expect(router.state.location.pathname).toBe(routes.newGroupGroup)
   })
 
   it('shows the name error and sends nothing when the name is only spaces', async () => {
@@ -261,7 +261,7 @@ describe('NewGroupScreen', () => {
     expect(await screen.findByText(translated(language, 'groupFields.nameInvalid'))).toBeTruthy()
     expect(nameField(language).getAttribute('aria-invalid')).toBe('true')
     expect(fetchMock).not.toHaveBeenCalled()
-    expect(router.state.location.pathname).toBe(routes.newGroup)
+    expect(router.state.location.pathname).toBe(routes.newGroupGroup)
   })
 
   it('shows the name error the same way for a too long name as for an empty one', async () => {
@@ -398,7 +398,7 @@ describe('NewGroupScreen', () => {
     expect(nameField().value).toBe(groupName)
     expect(emojiChip(groupEmojis[4]).getAttribute('aria-pressed')).toBe('true')
     expect(currencyChip('EUR').getAttribute('aria-pressed')).toBe('true')
-    expect(router.state.location.pathname).toBe(routes.newGroup)
+    expect(router.state.location.pathname).toBe(routes.newGroupGroup)
   })
 
   it('shows the network message when the server cannot be reached', async () => {

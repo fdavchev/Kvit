@@ -4,13 +4,13 @@ import {
   type ExpenseDetail,
   type ExpenseInput,
 } from '@/core/services/expenses/expensesService'
-import { refreshExpenses } from '../../shared/expenseCache'
+import { refreshAfterExpenseChange } from '../../shared/expenseCache'
 
 export function useCreateExpense(groupId: string): UseMutationResult<ExpenseDetail, Error, ExpenseInput> {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (input: ExpenseInput) => createExpense(groupId, input),
-    onSuccess: () => refreshExpenses(queryClient, groupId),
+    onSuccess: () => refreshAfterExpenseChange(queryClient, groupId),
   })
 }

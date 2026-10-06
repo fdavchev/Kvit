@@ -211,7 +211,18 @@
   },
   "newGroup": {
     "title": "New group",
-    "create": "Create group"
+    "create": "Create group",
+    "oneBill": "One bill",
+    "oneBillHint": "A dinner or a taxi",
+    "group": "Group",
+    "groupHint": "A trip or a household"
+  },
+  "oneBill": {
+    "people": "Who is with you?",
+    "nameLabel": "name",
+    "removeName": "Remove {{name}}",
+    "save": "Save bill",
+    "titleTooLong": "The title can have up to 60 characters."
   },
   "group": {
     "addPeople": "Add people",
@@ -275,6 +286,31 @@
     "historyChangedSplit": "{{name}} changed the split",
     "historyDeleted": "{{name}} deleted it",
     "historyRestored": "{{name}} restored it"
+  },
+  "activity": {
+    "title": "Activity",
+    "empty": "Nothing yet.",
+    "groupCreated": "{{name}} created the group",
+    "groupRenamed": "{{name}} renamed the group: {{old}} → {{new}}",
+    "groupEmojiChanged": "{{name}} changed the group's emoji: {{old}} → {{new}}",
+    "groupCurrencyChanged": "{{name}} changed the group's currency: {{old}} → {{new}}",
+    "inviteLinkReset": "{{name}} reset the invite link",
+    "inviteLinkRestored": "{{name}} brought back the old invite link",
+    "memberAdded": "{{name}} added “{{member}}”",
+    "memberJoined": "{{member}} joined",
+    "memberClaimed": "{{member}} took the name “{{claimedName}}”",
+    "claimUndone": "{{name}} gave the name “{{claimedName}}” back",
+    "memberRemoved": "{{name}} removed “{{member}}”",
+    "memberLeft": "{{member}} left the group",
+    "ownershipTransferred": "{{name}} made “{{member}}” the owner",
+    "memberLetBackIn": "{{name}} let “{{member}}” back in",
+    "groupDeleted": "{{name}} deleted the group",
+    "groupRestored": "{{name}} restored the group",
+    "expenseAdded": "{{name}} added “{{title}}” · {{amount}}",
+    "expenseAddedNoTitle": "{{name}} added an expense · {{amount}}",
+    "expenseDeleted": "{{name}} deleted “{{title}}” · {{amount}}",
+    "expenseDeletedNoTitle": "{{name}} deleted an expense · {{amount}}",
+    "expenseRestored": "{{name}} restored an expense"
   },
   "categories": {
     "food": "Food & drinks",
