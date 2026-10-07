@@ -21,6 +21,7 @@ import {
 import {
   addDays,
   amountField,
+  amountLeftText,
   currencyToggle,
   doneButton,
   formRow,
@@ -28,6 +29,7 @@ import {
   noteField,
   noteLink,
   openSheet,
+  personBoxValue,
   personButton,
   personGroup,
   saveButton,
@@ -38,6 +40,7 @@ import {
   typeInPerson,
   typeTitle,
   waitForSheetToClose,
+  type SplitTabKey,
 } from '@/test/expenseFormTestHelpers'
 import {
   categoriesPath,
@@ -87,6 +90,11 @@ vi.mock('sonner', async () => (await import('@/test/sonnerMock')).sonnerMock)
 const fiveMembers: GroupMembers = ownerViewMembers
 const fourMembers: GroupMembers = membersOf({
   members: [filipMember, anaMember, markoMember, grandmaMember],
+  removed: [],
+  canClaimNames: false,
+})
+const threeMembers: GroupMembers = membersOf({
+  members: [filipMember, anaMember, markoMember],
   removed: [],
   canClaimNames: false,
 })
@@ -1055,7 +1063,7 @@ describe('AddExpenseScreen', () => {
     })
 
     it('shows the exact amount left in euros on the Exact tab of an EUR expense', async () => {
-      await renderReadyAdd({ members: twoMembers, group: groupOf({ memberCount: 2, defaultCurrency: 'EUR' }) })
+      await renderReadyAdd({ members: threeMembers, group: groupOf({ memberCount: 3, defaultCurrency: 'EUR' }) })
       typeAmount('10.50')
       const sheet = await openSheet('split')
       fireEvent.click(splitTab(sheet, 'splitExact'))
@@ -1216,6 +1224,236 @@ describe('AddExpenseScreen', () => {
       const again = await openSheet('split')
       expect(splitTab(again, 'splitExact').getAttribute('aria-selected')).toBe('true')
       expect(within(personGroup(again, 'Filip')).getByRole<HTMLInputElement>('textbox').value).toBe('480')
+    })
+  })
+
+  describe('the auto-fill of the Split sheet with two people', () => {
+    const eurTwoPeople: RenderOptions = {
+      members: twoMembers,
+      group: groupOf({ memberCount: 2, defaultCurrency: 'EUR' }),
+    }
+
+    async function openSheetOnTab(
+      tab: SplitTabKey,
+      amount: string,
+      options: RenderOptions = { members: twoMembers },
+    ): Promise<HTMLElement> {
+      await renderReadyAdd(options)
+      typeAmount(amount)
+      const sheet = await openSheet('split')
+      fireEvent.click(splitTab(sheet, tab))
+      return sheet
+    }
+
+    it('fills Ana with the rest of the amount when Filip types an amount on the Exact tab', async () => {
+      const sheet = await openSheetOnTab('splitExact', '1800')
+
+      typeInPerson(sheet, 'Filip', '700')
+
+      expect(personBoxValue(sheet, 'Filip')).toBe('700')
+      expect(personBoxValue(sheet, 'Ana')).toBe('1100')
+      expect(within(sheet).queryByText(amountLeftText(0, 'MKD'), { normalizer: plainSpaces })).toBeNull()
+      expect(isDisabled(doneButton(sheet))).toBe(false)
+    })
+
+    it('fills Filip with the rest of the amount when Ana types an amount on the Exact tab', async () => {
+      const sheet = await openSheetOnTab('splitExact', '1800')
+
+      typeInPerson(sheet, 'Ana', '500')
+
+      expect(personBoxValue(sheet, 'Filip')).toBe('1300')
+      expect(personBoxValue(sheet, 'Ana')).toBe('500')
+    })
+
+    it('fills the rest in euros with cents on the Exact tab of an EUR expense', async () => {
+      const sheet = await openSheetOnTab('splitExact', '18.00', eurTwoPeople)
+
+      typeInPerson(sheet, 'Filip', '7.25')
+
+      expect(personBoxValue(sheet, 'Ana')).toBe('10.75')
+      expect(isDisabled(doneButton(sheet))).toBe(false)
+    })
+
+    it.each([
+      ['30', '70'],
+      ['33.33', '66.67'],
+    ])('fills Ana with the rest of 100 percent when Filip types %s on the percentage tab: %s', async (typed, rest) => {
+      const sheet = await openSheetOnTab('splitPercentage', '1800')
+
+      typeInPerson(sheet, 'Filip', typed)
+
+      expect(personBoxValue(sheet, 'Ana')).toBe(rest)
+      expect(isDisabled(doneButton(sheet))).toBe(false)
+    })
+
+    it('keeps the amount of the first box and shows what is left when the second box is typed in too', async () => {
+      const sheet = await openSheetOnTab('splitExact', '1800')
+      typeInPerson(sheet, 'Filip', '700')
+
+      typeInPerson(sheet, 'Ana', '500')
+
+      expect(personBoxValue(sheet, 'Filip')).toBe('700')
+      expect(personBoxValue(sheet, 'Ana')).toBe('500')
+      expect(within(sheet).getByText(amountLeftText(60000, 'MKD'), { normalizer: plainSpaces })).toBeTruthy()
+      expect(isDisabled(doneButton(sheet))).toBe(true)
+    })
+
+    it('does not overwrite the second box when the first box is typed in again afterwards', async () => {
+      const sheet = await openSheetOnTab('splitExact', '1800')
+      typeInPerson(sheet, 'Filip', '700')
+      typeInPerson(sheet, 'Ana', '500')
+
+      typeInPerson(sheet, 'Filip', '900')
+
+      expect(personBoxValue(sheet, 'Filip')).toBe('900')
+      expect(personBoxValue(sheet, 'Ana')).toBe('500')
+    })
+
+    it('leaves the other box empty and shows the amount left with a minus when the typed amount is above the total', async () => {
+      const sheet = await openSheetOnTab('splitExact', '1800')
+
+      typeInPerson(sheet, 'Filip', '2000')
+
+      expect(personBoxValue(sheet, 'Ana')).toBe('')
+      expect(within(sheet).getByText(amountLeftText(-20000, 'MKD'), { normalizer: plainSpaces })).toBeTruthy()
+      expect(isDisabled(doneButton(sheet))).toBe(true)
+    })
+
+    it('leaves the other percentage box empty and shows the percent left with a minus when the typed percentage is above 100', async () => {
+      const sheet = await openSheetOnTab('splitPercentage', '1800')
+
+      typeInPerson(sheet, 'Filip', '120')
+
+      expect(personBoxValue(sheet, 'Ana')).toBe('')
+      expect(within(sheet).getByText(translated('en', 'expense.percentLeft', { percent: '-20' }))).toBeTruthy()
+    })
+
+    it('empties the filled box again when the typed box is cleared', async () => {
+      const sheet = await openSheetOnTab('splitExact', '1800')
+      typeInPerson(sheet, 'Filip', '700')
+
+      typeInPerson(sheet, 'Filip', '')
+
+      expect(personBoxValue(sheet, 'Filip')).toBe('')
+      expect(personBoxValue(sheet, 'Ana')).toBe('')
+    })
+
+    it('sends both amounts when the filled Exact split is saved', async () => {
+      const body = await savedBody({ members: twoMembers }, async () => {
+        typeAmount('1800')
+        const sheet = await openSheet('split')
+        fireEvent.click(splitTab(sheet, 'splitExact'))
+        typeInPerson(sheet, 'Filip', '700')
+        fireEvent.click(doneButton(sheet))
+        await waitForSheetToClose()
+      })
+
+      expect(body.splitType).toBe('Exact')
+      expect(sharesOf(body)).toEqual([
+        { memberId: filipMember.id, inputValue: 70000 },
+        { memberId: anaMember.id, inputValue: 110000 },
+      ])
+    })
+
+    it('sends both percentages in hundredths when the filled % split is saved', async () => {
+      const body = await savedBody({ members: twoMembers }, async () => {
+        typeAmount('1800')
+        const sheet = await openSheet('split')
+        fireEvent.click(splitTab(sheet, 'splitPercentage'))
+        typeInPerson(sheet, 'Filip', '33.33')
+        fireEvent.click(doneButton(sheet))
+        await waitForSheetToClose()
+      })
+
+      expect(body.splitType).toBe('Percentage')
+      expect(sharesOf(body).map((share) => share.inputValue)).toEqual([3333, 6667])
+    })
+
+    it('fills the box nobody typed in again when the amount is changed after the sheet was closed', async () => {
+      const sheet = await openSheetOnTab('splitExact', '1800')
+      typeInPerson(sheet, 'Filip', '700')
+      fireEvent.keyDown(sheet, { key: 'Escape' })
+      await waitForSheetToClose()
+
+      typeAmount('2000')
+
+      const again = await openSheet('split')
+      expect(personBoxValue(again, 'Filip')).toBe('700')
+      expect(personBoxValue(again, 'Ana')).toBe('1300')
+      expect(isDisabled(doneButton(again))).toBe(false)
+    })
+
+    it('keeps a box that was typed in when the amount is changed after the sheet was closed', async () => {
+      const sheet = await openSheetOnTab('splitExact', '1800')
+      typeInPerson(sheet, 'Filip', '700')
+      typeInPerson(sheet, 'Ana', '500')
+      fireEvent.keyDown(sheet, { key: 'Escape' })
+      await waitForSheetToClose()
+
+      typeAmount('2000')
+
+      const again = await openSheet('split')
+      expect(personBoxValue(again, 'Filip')).toBe('700')
+      expect(personBoxValue(again, 'Ana')).toBe('500')
+    })
+
+    it.each(['splitExact', 'splitPercentage'] as const)('fills nobody with three people on the %s tab', async (tab) => {
+      const sheet = await openSheetOnTab(tab, '1800', { members: threeMembers })
+
+      typeInPerson(sheet, 'Filip', '25')
+
+      expect(personBoxValue(sheet, 'Filip')).toBe('25')
+      expect(personBoxValue(sheet, 'Ana')).toBe('')
+      expect(personBoxValue(sheet, 'Marko')).toBe('')
+    })
+
+    it('fills nobody on the Equal tab, where a typed amount is an extra', async () => {
+      await renderReadyAdd({ members: twoMembers })
+      typeAmount('1800')
+      const sheet = await openSheet('split')
+
+      fireEvent.click(within(personGroup(sheet, 'Filip')).getByRole('button', { name: translated('en', 'expense.extra') }))
+      typeInPerson(sheet, 'Filip', '300')
+
+      expect(personBoxValue(sheet, 'Filip')).toBe('300')
+      expect(within(personGroup(sheet, 'Ana')).queryByRole('textbox')).toBeNull()
+    })
+
+    it('leaves the shares of the other person alone on the Shares tab', async () => {
+      const sheet = await openSheetOnTab('splitShares', '1800')
+
+      fireEvent.click(within(personGroup(sheet, 'Filip')).getAllByRole('button')[1])
+
+      expect(within(personGroup(sheet, 'Filip')).getByText(/^\d+$/).textContent).toBe('2')
+      expect(within(personGroup(sheet, 'Ana')).getByText(/^\d+$/).textContent).toBe('1')
+    })
+
+    it('fills the other person who is in when a third person was ticked out on the Equal tab before the Exact tab was opened', async () => {
+      await renderReadyAdd({ members: threeMembers })
+      typeAmount('1800')
+      const sheet = await openSheet('split')
+      fireEvent.click(personButton(sheet, 'Marko'))
+      fireEvent.click(splitTab(sheet, 'splitExact'))
+
+      typeInPerson(sheet, 'Filip', '700')
+
+      expect(personBoxValue(sheet, 'Ana')).toBe('1100')
+      expect(within(sheet).queryByRole('group', { name: startsWith('Marko') })).toBeNull()
+    })
+
+    it('forgets what was typed and filled when another tab is opened, and fills again from nothing', async () => {
+      const sheet = await openSheetOnTab('splitExact', '1800')
+      typeInPerson(sheet, 'Filip', '700')
+
+      fireEvent.click(splitTab(sheet, 'splitPercentage'))
+      expect(personBoxValue(sheet, 'Filip')).toBe('')
+      expect(personBoxValue(sheet, 'Ana')).toBe('')
+      fireEvent.click(splitTab(sheet, 'splitExact'))
+      expect(personBoxValue(sheet, 'Filip')).toBe('')
+      expect(personBoxValue(sheet, 'Ana')).toBe('')
+      typeInPerson(sheet, 'Ana', '500')
+
+      expect(personBoxValue(sheet, 'Filip')).toBe('1300')
     })
   })
 

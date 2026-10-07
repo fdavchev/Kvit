@@ -5,8 +5,9 @@ import type { Group } from '@/core/services/groups/groupsService'
 import { languages, type Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import { stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
-import { testCategories } from '@/test/expenseTestData'
-import { categoriesPath, expensesPath } from '@/test/expenseTestHelpers'
+import { expensesTab, activityTab } from '@/test/activityTestHelpers'
+import { dinnerRow, testCategories } from '@/test/expenseTestData'
+import { categoriesPath, expensesPath, isBefore } from '@/test/expenseTestHelpers'
 import { expectDisabledWhilePending, typeInto } from '@/test/formTestHelpers'
 import { groupOf, testGroup, testInviteToken } from '@/test/groupTestData'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
@@ -68,6 +69,33 @@ async function renderGroup(options: RenderOptions = {}) {
 
 async function showsGroupScreen(name: string = testGroup.name): Promise<void> {
   await screen.findByRole('heading', { level: 1, name })
+}
+
+async function showsAddPeopleCard(language: Language = 'en'): Promise<void> {
+  await screen.findByRole('heading', { name: translated(language, 'group.addPeople') })
+}
+
+function addPeopleHeading(language: Language = 'en'): HTMLElement {
+  return screen.getByRole('heading', { name: translated(language, 'group.addPeople') })
+}
+
+function lowestCommonAncestor(first: HTMLElement, second: HTMLElement): HTMLElement {
+  let node: HTMLElement | null = first
+  while (node !== null && !node.contains(second)) {
+    node = node.parentElement
+  }
+  if (node === null) {
+    throw new Error('The two elements have no common ancestor')
+  }
+  return node
+}
+
+function expectNoAddPeopleCard(language: Language = 'en'): void {
+  expect(screen.queryByRole('heading', { name: translated(language, 'group.addPeople') })).toBeNull()
+  expect(screen.queryByText(translated(language, 'group.addPeopleNoKvit'))).toBeNull()
+  expect(screen.queryByText(translated(language, 'group.addPeopleHasKvit'))).toBeNull()
+  expect(screen.queryByRole('button', { name: translated(language, 'group.addName') })).toBeNull()
+  expect(screen.queryByRole('button', { name: translated(language, 'group.shareLink') })).toBeNull()
 }
 
 function addNameButton(language: Language = 'en'): HTMLElement {
@@ -336,45 +364,147 @@ describe('GroupScreen', () => {
   })
 
   describe('the Add people card', () => {
-    it.each(languages)('shows the card with its two lines and two buttons while the owner is alone (%s)', async (language) => {
+    it.each(languages)('shows the heading Add people while the owner is alone and there are no expenses (%s)', async (language) => {
       await renderGroup({ language })
-      await showsGroupScreen()
 
-      expect(screen.getByText(translated(language, 'group.addPeople'))).toBeTruthy()
-      expect(screen.getByText(translated(language, 'group.addPeopleNoKvit'))).toBeTruthy()
-      expect(screen.getByText(translated(language, 'group.addPeopleHasKvit'))).toBeTruthy()
-      expect(addNameButton(language)).toBeTruthy()
-      expect(shareButton(language)).toBeTruthy()
+      await showsAddPeopleCard(language)
+
+      expect(addPeopleHeading(language)).toBeTruthy()
+    })
+
+    it.each(languages)('puts each explanation text on the same row as its own button (%s)', async (language) => {
+      await renderGroup({ language })
+      await showsAddPeopleCard(language)
+      const noKvitText = screen.getByText(translated(language, 'group.addPeopleNoKvit'))
+      const hasKvitText = screen.getByText(translated(language, 'group.addPeopleHasKvit'))
+
+      const nameRow = lowestCommonAncestor(noKvitText, addNameButton(language))
+      const shareRow = lowestCommonAncestor(hasKvitText, shareButton(language))
+
+      expect(nameRow.contains(hasKvitText)).toBe(false)
+      expect(nameRow.contains(shareButton(language))).toBe(false)
+      expect(shareRow.contains(noKvitText)).toBe(false)
+      expect(shareRow.contains(addNameButton(language))).toBe(false)
+    })
+
+    it('lists the two rows in order: the name row first, the link row second', async () => {
+      await renderGroup()
+      await showsAddPeopleCard()
+
+      const order: HTMLElement[] = [
+        addPeopleHeading(),
+        screen.getByText(translated('en', 'group.addPeopleNoKvit')),
+        addNameButton(),
+        screen.getByText(translated('en', 'group.addPeopleHasKvit')),
+        shareButton(),
+      ]
+
+      order.slice(1).forEach((element, index) => {
+        expect(isBefore(order[index], element)).toBe(true)
+      })
+    })
+
+    it.each([
+      ['en', 'No Kvit? Add them as a name.', 'Add a name', 'Have Kvit? Share the link and they join with their own account.', 'Share invite link'],
+      ['mk', 'Немаат Kvit? Додај ги како име.', 'Додај име', 'Имаат Kvit? Сподели го линкот и ќе се придружат со свој профил.', 'Сподели линк за покана'],
+    ] as const)('writes the approved texts of both rows and both buttons (%s)', async (language, noKvit, addName, hasKvit, share) => {
+      await renderGroup({ language })
+      await showsAddPeopleCard(language)
+
+      expect(screen.getByText(noKvit)).toBeTruthy()
+      expect(screen.getByRole('button', { name: addName })).toBeTruthy()
+      expect(screen.getByText(hasKvit)).toBeTruthy()
+      expect(screen.getByRole('button', { name: share })).toBeTruthy()
+    })
+
+    it('comes after the header, the chips and the pill switch, and before the empty state of the expenses', async () => {
+      await renderGroup()
+      await showsAddPeopleCard()
+      const emptyState = await screen.findByText(translated('en', 'expenses.empty'))
+
+      const order: HTMLElement[] = [
+        screen.getByRole('heading', { level: 1, name: testGroup.name }),
+        screen.getByRole('link', { name: translated('en', 'members.title') }),
+        screen.getByRole('link', { name: translated('en', 'group.settings') }),
+        expensesTab(),
+        activityTab(),
+        addPeopleHeading(),
+        emptyState,
+      ]
+
+      order.slice(1).forEach((element, index) => {
+        expect(isBefore(order[index], element), `element number ${index + 1} should come before element number ${index + 2}`).toBe(true)
+      })
+    })
+
+    it('shows the empty state of the expenses below the card, with a receipt emoji', async () => {
+      await renderGroup()
+      await showsAddPeopleCard()
+      const emptyState = await screen.findByText(translated('en', 'expenses.empty'))
+
+      const receipt = screen.getByText('\u{1F9FE}')
+
+      expect(isBefore(addPeopleHeading(), receipt)).toBe(true)
+      expect(isBefore(shareButton(), emptyState)).toBe(true)
+    })
+
+    it('has exactly one Share invite link button, the one in the card and not one in the header', async () => {
+      await renderGroup()
+      await showsAddPeopleCard()
+
+      const buttons = screen.getAllByRole('button', { name: translated('en', 'group.shareLink') })
+
+      expect(buttons).toHaveLength(1)
+      expect(isBefore(expensesTab(), buttons[0])).toBe(true)
+    })
+
+    it('shows the card to a member who is not the owner while the group has one person', async () => {
+      await renderGroup({ group: groupOf({ isOwner: false, memberCount: 1 }) })
+
+      await showsAddPeopleCard()
+
+      expect(shareButton()).toBeTruthy()
+      expect(addNameButton()).toBeTruthy()
     })
 
     it.each([2, 3, 12])('does not show the card when the group has %i people', async (memberCount) => {
       await renderGroup({ group: groupOf({ memberCount }) })
       await showsGroupScreen()
+      await screen.findByText(translated('en', 'expenses.empty'))
 
-      expect(screen.queryByText(translated('en', 'group.addPeople'))).toBeNull()
-      expect(screen.queryByRole('button', { name: translated('en', 'group.addName') })).toBeNull()
-      expect(screen.queryByRole('button', { name: translated('en', 'group.shareLink') })).toBeNull()
+      expectNoAddPeopleCard()
     })
 
-    it('shows the card to a member who is not the owner while the group has one person', async () => {
-      await renderGroup({ group: groupOf({ isOwner: false, memberCount: 1 }) })
+    it('does not show the card when the group has one person and already has an expense', async () => {
+      await renderGroup({
+        answers: { [`GET ${expensesPath}`]: jsonAnswer({ expenses: [dinnerRow] }) },
+      })
       await showsGroupScreen()
+      await screen.findByRole('link', { name: /Dinner/ })
 
-      expect(shareButton()).toBeTruthy()
+      expectNoAddPeopleCard()
+    })
+
+    it('does not show the card in Macedonian either when the group has two people', async () => {
+      await renderGroup({ language: 'mk', group: groupOf({ memberCount: 2 }) })
+      await showsGroupScreen()
+      await screen.findByText(translated('mk', 'expenses.empty'))
+
+      expectNoAddPeopleCard('mk')
     })
   })
 
   describe('adding a name', () => {
     it('shows no sheet before Add a name is pressed', async () => {
       await renderGroup()
-      await showsGroupScreen()
+      await showsAddPeopleCard()
 
       expect(screen.queryByRole('dialog')).toBeNull()
     })
 
     it.each(languages)('opens a sheet with the name field, its hint and the Add button when Add a name is pressed (%s)', async (language) => {
       await renderGroup({ language })
-      await showsGroupScreen()
+      await showsAddPeopleCard(language)
 
       await openSheet(language)
 
@@ -387,7 +517,7 @@ describe('GroupScreen', () => {
       const { fetchMock } = await renderGroup({
         answers: { [`POST ${membersPath}`]: noContentAnswer() },
       })
-      await showsGroupScreen()
+      await showsAddPeopleCard()
       await openSheet()
       typeName('Grandma')
 
@@ -406,7 +536,7 @@ describe('GroupScreen', () => {
       const { fetchMock } = await renderGroup({
         answers: { [`POST ${membersPath}`]: noContentAnswer() },
       })
-      await showsGroupScreen()
+      await showsAddPeopleCard()
       await openSheet()
       typeName('Grandma')
       const form = within(sheet()).getByLabelText<HTMLInputElement>(translated('en', 'addName.label')).form
@@ -432,7 +562,7 @@ describe('GroupScreen', () => {
           },
         },
       })
-      await showsGroupScreen()
+      await showsAddPeopleCard()
       await openSheet()
       typeName('Grandma')
 
@@ -455,7 +585,7 @@ describe('GroupScreen', () => {
           },
         },
       })
-      await showsGroupScreen()
+      await showsAddPeopleCard()
       await openSheet()
       typeName('Grandma')
 
@@ -468,7 +598,7 @@ describe('GroupScreen', () => {
 
     it('disables the Add button while the request waits for an answer', async () => {
       await renderGroup()
-      await showsGroupScreen()
+      await showsAddPeopleCard()
       await openSheet()
       typeName('Grandma')
       stubFetchThatNeverAnswers()
@@ -483,7 +613,7 @@ describe('GroupScreen', () => {
         language,
         answers: { [`POST ${membersPath}`]: problemAnswer(400, 'MEMBER_NAME_INVALID') },
       })
-      await showsGroupScreen()
+      await showsAddPeopleCard(language)
       await openSheet(language)
 
       fireEvent.click(sheetAddButton(language))
@@ -498,7 +628,7 @@ describe('GroupScreen', () => {
         language,
         answers: { [`POST ${membersPath}`]: problemAnswer(400, 'MEMBER_NAME_TAKEN') },
       })
-      await showsGroupScreen()
+      await showsAddPeopleCard(language)
       await openSheet(language)
       typeName('Marko', language)
 
@@ -520,7 +650,7 @@ describe('GroupScreen', () => {
         language,
         answers: { [`POST ${membersPath}`]: problemAnswer(400, 'MEMBER_NAME_TAKEN') },
       })
-      await showsGroupScreen()
+      await showsAddPeopleCard(language)
       await openSheet(language)
       typeName('Marko', language)
 
@@ -533,7 +663,7 @@ describe('GroupScreen', () => {
       await renderGroup({
         answers: { [`POST ${membersPath}`]: problemAnswer(400, 'MEMBER_NAME_TAKEN') },
       })
-      await showsGroupScreen()
+      await showsAddPeopleCard()
       await openSheet()
       typeName("mARKO o'Brien & Co.")
 
@@ -546,7 +676,7 @@ describe('GroupScreen', () => {
 
     it('shows the network message inside the sheet when the server cannot be reached', async () => {
       await renderGroup({ answers: { [`POST ${membersPath}`]: networkFailureAnswer() } })
-      await showsGroupScreen()
+      await showsAddPeopleCard()
       await openSheet()
       typeName('Grandma')
 
@@ -559,7 +689,7 @@ describe('GroupScreen', () => {
 
     it('closes the sheet when Escape is pressed', async () => {
       await renderGroup()
-      await showsGroupScreen()
+      await showsAddPeopleCard()
       await openSheet()
 
       fireEvent.keyDown(sheet(), { key: 'Escape' })
@@ -571,7 +701,7 @@ describe('GroupScreen', () => {
 
     it('closes the sheet when its Close button is pressed', async () => {
       await renderGroup()
-      await showsGroupScreen()
+      await showsAddPeopleCard()
       await openSheet()
 
       fireEvent.click(within(sheet()).getByRole('button', { name: translated('en', 'common.close') }))
@@ -585,7 +715,7 @@ describe('GroupScreen', () => {
       await renderGroup({
         answers: { [`POST ${membersPath}`]: problemAnswer(400, 'MEMBER_NAME_TAKEN') },
       })
-      await showsGroupScreen()
+      await showsAddPeopleCard()
       await openSheet()
       typeName('Marko')
       fireEvent.click(sheetAddButton())
@@ -608,7 +738,7 @@ describe('GroupScreen', () => {
     it('opens the share menu of the phone with the invite link of the group', async () => {
       const share = stubShare(async () => {})
       await renderGroup()
-      await showsGroupScreen()
+      await showsAddPeopleCard()
 
       fireEvent.click(shareButton())
 
@@ -621,7 +751,7 @@ describe('GroupScreen', () => {
     it('uses the invite token of the group that is open', async () => {
       const share = stubShare(async () => {})
       await renderGroup({ group: groupOf({ inviteToken: 'another-token_42' }) })
-      await showsGroupScreen()
+      await showsAddPeopleCard()
 
       fireEvent.click(shareButton())
 
@@ -636,7 +766,7 @@ describe('GroupScreen', () => {
       stubShare(async () => {})
       const writeText = stubClipboard(async () => {})
       await renderGroup()
-      await showsGroupScreen()
+      await showsAddPeopleCard()
 
       fireEvent.click(shareButton())
       await letPendingWorkFinish()
@@ -647,7 +777,7 @@ describe('GroupScreen', () => {
     it('shows no toast when the share menu was shared through', async () => {
       stubShare(async () => {})
       await renderGroup()
-      await showsGroupScreen()
+      await showsAddPeopleCard()
 
       fireEvent.click(shareButton())
       await letPendingWorkFinish()
@@ -661,7 +791,7 @@ describe('GroupScreen', () => {
         throw abortError()
       })
       await renderGroup()
-      await showsGroupScreen()
+      await showsAddPeopleCard()
 
       fireEvent.click(shareButton())
       await letPendingWorkFinish()
@@ -677,7 +807,7 @@ describe('GroupScreen', () => {
         throw new Error('The share menu crashed')
       })
       await renderGroup()
-      await showsGroupScreen()
+      await showsAddPeopleCard()
 
       fireEvent.click(shareButton())
 
@@ -689,7 +819,7 @@ describe('GroupScreen', () => {
     it.each(languages)('copies the link to the clipboard and shows the Link copied toast when there is no share menu (%s)', async (language) => {
       const writeText = stubClipboard(async () => {})
       await renderGroup({ language })
-      await showsGroupScreen()
+      await showsAddPeopleCard(language)
 
       fireEvent.click(shareButton(language))
 
@@ -705,7 +835,7 @@ describe('GroupScreen', () => {
         throw new DOMException('Clipboard blocked', 'NotAllowedError')
       })
       await renderGroup()
-      await showsGroupScreen()
+      await showsAddPeopleCard()
 
       fireEvent.click(shareButton())
 
@@ -718,7 +848,7 @@ describe('GroupScreen', () => {
     it('shows the generic error toast and not Link copied when the phone has neither a share menu nor a clipboard', async () => {
       vi.spyOn(console, 'error').mockImplementation(() => {})
       await renderGroup()
-      await showsGroupScreen()
+      await showsAddPeopleCard()
 
       fireEvent.click(shareButton())
 

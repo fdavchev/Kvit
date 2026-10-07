@@ -14,7 +14,7 @@ import {
   splitProgress,
   withPersonIn,
   withSplitType,
-  withTypedValue,
+  withTypedValueAutoFilled,
   type SplitDraft,
   type SplitDraftPerson,
   type SplitProgress,
@@ -65,7 +65,7 @@ export function SplitSheet({
   }
 
   function typeValue(memberId: string, typedValue: string): void {
-    onChange(withTypedValue(draft, memberId, typedValue))
+    onChange(withTypedValueAutoFilled(draft, memberId, typedValue, amountMinor, currency))
   }
 
   function renderPersonName(person: ExpensePerson) {

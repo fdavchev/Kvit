@@ -40,9 +40,10 @@ export function GroupScreen() {
     }
     const group = groupQuery.data
     const isOneBill: boolean = group.kind === 'OneBill'
+    const showsAddPeopleCard: boolean = group.memberCount === 1 && !isOneBill
     return (
       <>
-        <div className="flex flex-col items-center gap-2.5 pt-2 pb-3 text-center">
+        <div className="flex flex-col items-center gap-2.5 pt-2 pb-4 text-center">
           <KvitEmojiTile emoji={group.emoji} size="large" />
           <h1 className="text-[1.75rem] leading-[1.15] font-extrabold tracking-[-0.02em] text-balance">
             {group.name}
@@ -66,15 +67,19 @@ export function GroupScreen() {
             </button>
           )}
         </div>
-        {group.memberCount === 1 && !isOneBill && (
-          <AddPeopleCard
-            onAddName={() => setIsAddingName(true)}
-            onShareLink={() => void inviteLinkActions.share(group.inviteToken)}
-          />
-        )}
         <GroupTabs groupId={group.id} currentTab={tab} />
         {tab === 'expenses' ? (
-          <GroupExpenses groupId={group.id} />
+          <GroupExpenses
+            groupId={group.id}
+            cardWhenEmpty={
+              showsAddPeopleCard ? (
+                <AddPeopleCard
+                  onAddName={() => setIsAddingName(true)}
+                  onShareLink={() => void inviteLinkActions.share(group.inviteToken)}
+                />
+              ) : null
+            }
+          />
         ) : (
           <GroupActivity groupId={group.id} groupCurrency={group.defaultCurrency} />
         )}

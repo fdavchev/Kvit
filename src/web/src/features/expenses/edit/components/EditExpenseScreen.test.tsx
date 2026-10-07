@@ -25,6 +25,7 @@ import {
   noteField,
   noteLink,
   openSheet,
+  personBoxValue,
   personButton,
   personGroup,
   saveButton,
@@ -53,6 +54,7 @@ import {
   filipMember,
   grandmaMember,
   markoMember,
+  membersOf,
   ownerViewMembers,
   petarMember,
 } from '@/test/memberTestData'
@@ -564,6 +566,66 @@ describe('EditExpenseScreen', () => {
       fireEvent.click(saveButton())
 
       expect((await screen.findByRole('alert')).textContent).toContain(translated('en', 'errors.network'))
+    })
+  })
+
+  describe('the auto-fill of the Split sheet with two people', () => {
+    const twoPeopleEqualDetail: ExpenseDetail = detailOf({
+      amountMinor: 180000,
+      splitType: 'Equal',
+      shares: [
+        { memberId: filipMember.id, name: 'Filip', inputValue: 0, shareMinor: 90000 },
+        { memberId: anaMember.id, name: 'Ana', inputValue: 0, shareMinor: 90000 },
+      ],
+    })
+    const twoMembers: GroupMembers = membersOf({
+      members: [filipMember, anaMember],
+      removed: [],
+      canClaimNames: false,
+    })
+
+    it('fills the other person with the rest of the amount when an amount is typed on the Exact tab', async () => {
+      await renderReadyEdit({ detail: twoPeopleEqualDetail, members: twoMembers })
+      const sheet = await openSheet('split')
+      fireEvent.click(splitTab(sheet, 'splitExact'))
+
+      typeInPerson(sheet, 'Filip', '700')
+
+      expect(personBoxValue(sheet, 'Ana')).toBe('1100')
+      expect(isDisabled(doneButton(sheet))).toBe(false)
+    })
+
+    it('sends both amounts when the filled Exact split is saved', async () => {
+      const { fetchMock } = await renderReadyEdit({ detail: twoPeopleEqualDetail, members: twoMembers })
+      const sheet = await openSheet('split')
+      fireEvent.click(splitTab(sheet, 'splitExact'))
+      typeInPerson(sheet, 'Filip', '700')
+      fireEvent.click(doneButton(sheet))
+      await waitForSheetToClose()
+
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'PUT', detailPath)).toBe(1)
+      })
+      const body = sentBody(fetchMock, 'PUT', detailPath)
+      expect(body.splitType).toBe('Exact')
+      expect(sharesOf(body)).toEqual([
+        { memberId: filipMember.id, inputValue: 70000 },
+        { memberId: anaMember.id, inputValue: 110000 },
+      ])
+    })
+
+    it('fills nobody with five people on the Exact tab', async () => {
+      await renderReadyEdit()
+      const sheet = await openSheet('split')
+      fireEvent.click(splitTab(sheet, 'splitExact'))
+
+      typeInPerson(sheet, 'Filip', '480')
+
+      for (const name of ['Ana', 'Marko', 'Grandma', 'Petar']) {
+        expect(personBoxValue(sheet, name)).toBe('')
+      }
     })
   })
 

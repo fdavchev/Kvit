@@ -3,6 +3,10 @@ import {
   buildSplitRequest,
   defaultSplitDraft,
   splitProgress,
+  withAutoFillRefreshed,
+  withPersonIn,
+  withSplitType,
+  withTypedValueAutoFilled,
   type SplitDraft,
 } from './splitDraft'
 
@@ -29,6 +33,7 @@ function draftOf(
       memberId,
       isIn: !peopleOutOfTheSplit.includes(memberId),
       typedValue: typedValues[index] ?? '',
+      isTyped: (typedValues[index] ?? '') !== '',
     })),
   }
 }
@@ -39,7 +44,12 @@ describe('defaultSplitDraft', () => {
 
     expect(draft).toEqual({
       splitType: 'Equal',
-      people: fivePeople.map((memberId) => ({ memberId, isIn: true, typedValue: '' })),
+      people: fivePeople.map((memberId) => ({
+        memberId,
+        isIn: true,
+        typedValue: '',
+        isTyped: false,
+      })),
     })
   })
 
@@ -387,5 +397,435 @@ describe('buildSplitRequest for the other split types', () => {
 
   it('stops with an error naming a typed value that is not a number, instead of sending a made-up 0', () => {
     expect(() => buildSplitRequest(draftOf('Exact', ['abc'], [filipId]), 'MKD')).toThrow('abc')
+  })
+})
+
+const twoPeople: readonly string[] = [filipId, anaId]
+const eighteenHundredMkd = 180000
+const eighteenEur = 1800
+
+function emptyDraftOf(
+  splitType: SplitDraft['splitType'],
+  memberIds: readonly string[] = twoPeople,
+): SplitDraft {
+  return withSplitType(defaultSplitDraft(memberIds), splitType)
+}
+
+function typedValuesOf(draft: SplitDraft): string[] {
+  return draft.people.map((person) => person.typedValue)
+}
+
+function typedFlagsOf(draft: SplitDraft): boolean[] {
+  return draft.people.map((person) => person.isTyped)
+}
+
+function exactDraftWithFilipTyped(typedValue: string): SplitDraft {
+  return withTypedValueAutoFilled(emptyDraftOf('Exact'), filipId, typedValue, eighteenHundredMkd, 'MKD')
+}
+
+describe('withSplitType', () => {
+  it('clears every typed value and every typed flag when the type changes', () => {
+    const typed = exactDraftWithFilipTyped('700')
+
+    const draft = withSplitType(typed, 'Percentage')
+
+    expect(draft.splitType).toBe('Percentage')
+    expect(typedValuesOf(draft)).toEqual(['', ''])
+    expect(typedFlagsOf(draft)).toEqual([false, false])
+  })
+
+  it('clears the typed values and flags also when the type stays the same, which is what a currency switch does', () => {
+    const draft = withSplitType(exactDraftWithFilipTyped('700'), 'Exact')
+
+    expect(typedValuesOf(draft)).toEqual(['', ''])
+    expect(typedFlagsOf(draft)).toEqual([false, false])
+  })
+
+  it('starts every person who is in with 1 share on the Shares tab and leaves a person who is out empty', () => {
+    const withMarkoOut = withPersonIn(defaultSplitDraft(threePeople), markoId, false)
+
+    const draft = withSplitType(withMarkoOut, 'Shares')
+
+    expect(typedValuesOf(draft)).toEqual(['1', '1', ''])
+    expect(typedFlagsOf(draft)).toEqual([false, false, false])
+  })
+
+  it('keeps the people, their order and who is in', () => {
+    const withMarkoOut = withPersonIn(defaultSplitDraft(threePeople), markoId, false)
+
+    const draft = withSplitType(withMarkoOut, 'Exact')
+
+    expect(draft.people.map((person) => [person.memberId, person.isIn])).toEqual([
+      [filipId, true],
+      [anaId, true],
+      [markoId, false],
+    ])
+  })
+
+  it('lets the auto-fill start again from nothing after a tab was switched', () => {
+    const afterSwitch = withSplitType(exactDraftWithFilipTyped('700'), 'Percentage')
+
+    const draft = withTypedValueAutoFilled(afterSwitch, anaId, '30', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['70', '30'])
+  })
+})
+
+describe('withTypedValueAutoFilled on the Exact tab with two people', () => {
+  it.each([
+    ['700', '1100'],
+    ['0', '1800'],
+    ['1800', '0'],
+    ['1', '1799'],
+    ['1799', '1'],
+  ])('fills Ana with the rest of 1,800 MKD when Filip types %s: %s', (typed, rest) => {
+    const draft = exactDraftWithFilipTyped(typed)
+
+    expect(typedValuesOf(draft)).toEqual([typed, rest])
+  })
+
+  it.each([
+    ['7.25', '10.75'],
+    ['7.5', '10.50'],
+    ['7,25', '10.75'],
+    ['0.01', '17.99'],
+    ['18', '0'],
+    ['0', '18'],
+  ])('fills Ana with the rest of 18.00 EUR in cents when Filip types %s: %s', (typed, rest) => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Exact'), filipId, typed, eighteenEur, 'EUR')
+
+    expect(typedValuesOf(draft)).toEqual([typed, rest])
+  })
+
+  it('fills Filip with the rest when Ana is the one who types', () => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Exact'), anaId, '500', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['1300', '500'])
+  })
+
+  it('keeps the typed text exactly as typed and marks only that person as typed', () => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Exact'), filipId, '7.50', eighteenEur, 'EUR')
+
+    expect(draft.people[0]).toMatchObject({ memberId: filipId, typedValue: '7.50', isTyped: true })
+    expect(draft.people[1]).toMatchObject({ memberId: anaId, isTyped: false })
+  })
+
+  it('updates the filled amount every time the typed amount changes', () => {
+    const first = exactDraftWithFilipTyped('700')
+
+    const second = withTypedValueAutoFilled(first, filipId, '800', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(second)).toEqual(['800', '1000'])
+  })
+
+  it('counts the filled amount as typed: the split adds up and is sent with both amounts', () => {
+    const draft = exactDraftWithFilipTyped('700')
+
+    expect(splitProgress(draft, eighteenHundredMkd, 'MKD')).toEqual({ kind: 'ok' })
+    expect(buildSplitRequest(draft, 'MKD')).toEqual([
+      { memberId: filipId, inputValue: 70000 },
+      { memberId: anaId, inputValue: 110000 },
+    ])
+  })
+
+  it('counts the filled amount as typed in cents for EUR', () => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Exact'), filipId, '7.25', eighteenEur, 'EUR')
+
+    expect(splitProgress(draft, eighteenEur, 'EUR')).toEqual({ kind: 'ok' })
+    expect(buildSplitRequest(draft, 'EUR').map((share) => share.inputValue)).toEqual([725, 1075])
+  })
+
+  it('leaves the other person empty when the typed amount is above the total, so the counter shows the minus', () => {
+    const draft = exactDraftWithFilipTyped('2000')
+
+    expect(typedValuesOf(draft)).toEqual(['2000', ''])
+    expect(splitProgress(draft, eighteenHundredMkd, 'MKD')).toEqual({ kind: 'amountLeft', minor: -20000 })
+  })
+
+  it('empties a filled amount again when a later typed amount goes above the total', () => {
+    const draft = withTypedValueAutoFilled(exactDraftWithFilipTyped('700'), filipId, '2000', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['2000', ''])
+  })
+
+  it('leaves the other person empty while there is no amount yet', () => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Exact'), filipId, '700', 0, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['700', ''])
+  })
+
+  it('empties the filled amount and the typed flag when the typed box is cleared', () => {
+    const draft = withTypedValueAutoFilled(exactDraftWithFilipTyped('700'), filipId, '', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['', ''])
+    expect(typedFlagsOf(draft)).toEqual([false, false])
+  })
+
+  it('keeps a text that is not a number in the box without throwing, and the split is not a number', () => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Exact'), filipId, 'abc', eighteenHundredMkd, 'MKD')
+
+    expect(draft.people[0]).toMatchObject({ typedValue: 'abc', isTyped: true })
+    expect(splitProgress(draft, eighteenHundredMkd, 'MKD')).toEqual({ kind: 'notANumber' })
+  })
+
+  it('does not change the draft it was given', () => {
+    const draft = emptyDraftOf('Exact')
+    const copy = structuredClone(draft)
+
+    withTypedValueAutoFilled(draft, filipId, '700', eighteenHundredMkd, 'MKD')
+
+    expect(draft).toEqual(copy)
+  })
+})
+
+describe('withTypedValueAutoFilled when the other person has typed too', () => {
+  it('keeps the typed amount of the first person and shows the gap when the other person types an amount', () => {
+    const draft = withTypedValueAutoFilled(exactDraftWithFilipTyped('700'), anaId, '500', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['700', '500'])
+    expect(typedFlagsOf(draft)).toEqual([true, true])
+    expect(splitProgress(draft, eighteenHundredMkd, 'MKD')).toEqual({ kind: 'amountLeft', minor: 60000 })
+  })
+
+  it('does not overwrite the second box when the first box is typed in again afterwards', () => {
+    const bothTyped = withTypedValueAutoFilled(exactDraftWithFilipTyped('700'), anaId, '500', eighteenHundredMkd, 'MKD')
+
+    const draft = withTypedValueAutoFilled(bothTyped, filipId, '900', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['900', '500'])
+  })
+
+  it('counts a typed 0 as typed: the other box typed afterwards does not overwrite it', () => {
+    const zeroTyped = exactDraftWithFilipTyped('0')
+
+    const draft = withTypedValueAutoFilled(zeroTyped, anaId, '500', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(zeroTyped)).toEqual(['0', '1800'])
+    expect(typedValuesOf(draft)).toEqual(['0', '500'])
+    expect(typedFlagsOf(draft)).toEqual([true, true])
+  })
+
+  it('does not overwrite a box that was typed first when the other box is typed second', () => {
+    const anaFirst = withTypedValueAutoFilled(emptyDraftOf('Exact'), anaId, '500', eighteenHundredMkd, 'MKD')
+
+    const draft = withTypedValueAutoFilled(anaFirst, filipId, '200', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['200', '500'])
+  })
+
+  it('leaves a typed box empty when it is cleared and does not fill it from the other typed box', () => {
+    const bothTyped = withTypedValueAutoFilled(exactDraftWithFilipTyped('700'), anaId, '500', eighteenHundredMkd, 'MKD')
+
+    const draft = withTypedValueAutoFilled(bothTyped, filipId, '', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['', '500'])
+    expect(typedFlagsOf(draft)).toEqual([false, true])
+  })
+
+  it('fills the other box again after a typed box was cleared and the first box is typed in again', () => {
+    const bothTyped = withTypedValueAutoFilled(exactDraftWithFilipTyped('700'), anaId, '500', eighteenHundredMkd, 'MKD')
+    const anaCleared = withTypedValueAutoFilled(bothTyped, anaId, '', eighteenHundredMkd, 'MKD')
+
+    const draft = withTypedValueAutoFilled(anaCleared, filipId, '800', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(anaCleared)).toEqual(['700', ''])
+    expect(typedValuesOf(draft)).toEqual(['800', '1000'])
+  })
+})
+
+describe('withTypedValueAutoFilled on the % tab with two people', () => {
+  it.each([
+    ['30', '70'],
+    ['33.33', '66.67'],
+    ['12.5', '87.5'],
+    ['0', '100'],
+    ['100', '0'],
+    ['0.01', '99.99'],
+    ['99.99', '0.01'],
+  ])('fills Ana with the rest of 100 percent when Filip types %s: %s', (typed, rest) => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Percentage'), filipId, typed, eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual([typed, rest])
+  })
+
+  it('fills Filip when Ana is the one who types', () => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Percentage'), anaId, '25', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['75', '25'])
+  })
+
+  it.each(['MKD', 'EUR'] as const)('does not depend on the amount or the currency (%s)', (currency) => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Percentage'), filipId, '30', 12345, currency)
+
+    expect(typedValuesOf(draft)).toEqual(['30', '70'])
+  })
+
+  it('counts the filled percentage as typed: the split adds up and is sent in hundredths of a percent', () => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Percentage'), filipId, '33.33', eighteenHundredMkd, 'MKD')
+
+    expect(splitProgress(draft, eighteenHundredMkd, 'MKD')).toEqual({ kind: 'ok' })
+    expect(buildSplitRequest(draft, 'MKD').map((share) => share.inputValue)).toEqual([3333, 6667])
+  })
+
+  it('leaves the other person empty when the typed percentage is above 100, so the counter shows the minus', () => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Percentage'), filipId, '120', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['120', ''])
+    expect(splitProgress(draft, eighteenHundredMkd, 'MKD')).toEqual({ kind: 'percentLeft', hundredths: -2000 })
+  })
+
+  it('keeps the typed percentage of the first person when the other person types one', () => {
+    const first = withTypedValueAutoFilled(emptyDraftOf('Percentage'), filipId, '30', eighteenHundredMkd, 'MKD')
+
+    const draft = withTypedValueAutoFilled(first, anaId, '50', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['30', '50'])
+    expect(splitProgress(draft, eighteenHundredMkd, 'MKD')).toEqual({ kind: 'percentLeft', hundredths: 2000 })
+  })
+
+  it('empties the filled percentage when the typed box is cleared', () => {
+    const first = withTypedValueAutoFilled(emptyDraftOf('Percentage'), filipId, '30', eighteenHundredMkd, 'MKD')
+
+    const draft = withTypedValueAutoFilled(first, filipId, '', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['', ''])
+  })
+})
+
+describe('withTypedValueAutoFilled when nothing may be filled', () => {
+  it.each(['Exact', 'Percentage'] as const)('fills nobody with three people on the %s tab', (splitType) => {
+    const draft = withTypedValueAutoFilled(
+      emptyDraftOf(splitType, threePeople),
+      filipId,
+      '480',
+      eighteenHundredMkd,
+      'MKD',
+    )
+
+    expect(typedValuesOf(draft)).toEqual(['480', '', ''])
+  })
+
+  it('fills nobody with five people on the Exact tab', () => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Exact', fivePeople), filipId, '480', hotelMinor, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['480', '', '', '', ''])
+  })
+
+  it.each(['Exact', 'Percentage'] as const)('fills nobody with a single person in on the %s tab', (splitType) => {
+    const onlyFilip = withPersonIn(withPersonIn(emptyDraftOf(splitType, threePeople), anaId, false), markoId, false)
+
+    const draft = withTypedValueAutoFilled(onlyFilip, filipId, '480', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['480', '', ''])
+  })
+
+  it.each([
+    ['Exact', '700', '1100'],
+    ['Percentage', '30', '70'],
+  ] as const)('fills the other person who is in and not the person who is out when two of three are in on the %s tab', (splitType, typed, rest) => {
+    const markoOut = withPersonIn(emptyDraftOf(splitType, threePeople), markoId, false)
+
+    const draft = withTypedValueAutoFilled(markoOut, filipId, typed, eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual([typed, rest, ''])
+  })
+
+  it('fills nobody with two people on the Equal tab, where a typed value is an extra', () => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Equal'), filipId, '300', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['300', ''])
+  })
+
+  it('fills nobody with two people on the Shares tab', () => {
+    const draft = withTypedValueAutoFilled(emptyDraftOf('Shares'), filipId, '3', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['3', '1'])
+  })
+
+  it('fills nobody once a third person has joined the split, and keeps the amounts that are already there', () => {
+    const twoFilled = exactDraftWithFilipTyped('700')
+    const threeIn: SplitDraft = {
+      ...twoFilled,
+      people: [...twoFilled.people, { memberId: markoId, isIn: true, typedValue: '', isTyped: false }],
+    }
+
+    const draft = withTypedValueAutoFilled(threeIn, filipId, '800', eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['800', '1100', ''])
+  })
+})
+
+describe('withAutoFillRefreshed', () => {
+  it('re-fills the box nobody typed in when the total changes', () => {
+    const draft = withAutoFillRefreshed(exactDraftWithFilipTyped('700'), 200000, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['700', '1300'])
+  })
+
+  it('re-fills Filip when Ana was the one who typed', () => {
+    const anaTyped = withTypedValueAutoFilled(emptyDraftOf('Exact'), anaId, '500', eighteenHundredMkd, 'MKD')
+
+    const draft = withAutoFillRefreshed(anaTyped, 200000, 'MKD')
+
+    expect(typedValuesOf(draft)).toEqual(['1500', '500'])
+  })
+
+  it('re-fills in cents for EUR', () => {
+    const typed = withTypedValueAutoFilled(emptyDraftOf('Exact'), filipId, '7.25', eighteenEur, 'EUR')
+
+    const draft = withAutoFillRefreshed(typed, 2000, 'EUR')
+
+    expect(typedValuesOf(draft)).toEqual(['7.25', '12.75'])
+  })
+
+  it('keeps both amounts when both boxes were typed in', () => {
+    const bothTyped = withTypedValueAutoFilled(exactDraftWithFilipTyped('700'), anaId, '500', eighteenHundredMkd, 'MKD')
+
+    const draft = withAutoFillRefreshed(bothTyped, 200000, 'MKD')
+
+    expect(draft).toEqual(bothTyped)
+  })
+
+  it('changes nothing when nobody typed anything', () => {
+    const empty = emptyDraftOf('Exact')
+
+    expect(withAutoFillRefreshed(empty, 200000, 'MKD')).toEqual(empty)
+  })
+
+  it('empties the filled box when the total drops below the typed amount and fills it again when the total rises', () => {
+    const typed = exactDraftWithFilipTyped('700')
+
+    const dropped = withAutoFillRefreshed(typed, 50000, 'MKD')
+    const raised = withAutoFillRefreshed(dropped, eighteenHundredMkd, 'MKD')
+
+    expect(typedValuesOf(dropped)).toEqual(['700', ''])
+    expect(typedValuesOf(raised)).toEqual(['700', '1100'])
+  })
+
+  it('changes nothing on the % tab, where the total does not matter', () => {
+    const typed = withTypedValueAutoFilled(emptyDraftOf('Percentage'), filipId, '30', eighteenHundredMkd, 'MKD')
+
+    expect(withAutoFillRefreshed(typed, 200000, 'MKD')).toEqual(typed)
+  })
+
+  it('changes nothing with three people', () => {
+    const typed = withTypedValueAutoFilled(emptyDraftOf('Exact', threePeople), filipId, '480', eighteenHundredMkd, 'MKD')
+
+    expect(withAutoFillRefreshed(typed, 200000, 'MKD')).toEqual(typed)
+  })
+
+  it.each(['Equal', 'Shares'] as const)('changes nothing on the %s tab', (splitType) => {
+    const typed = withTypedValueAutoFilled(emptyDraftOf(splitType), filipId, '3', eighteenHundredMkd, 'MKD')
+
+    expect(withAutoFillRefreshed(typed, 200000, 'MKD')).toEqual(typed)
+  })
+
+  it('does not change the draft it was given', () => {
+    const draft = exactDraftWithFilipTyped('700')
+    const copy = structuredClone(draft)
+
+    withAutoFillRefreshed(draft, 200000, 'MKD')
+
+    expect(draft).toEqual(copy)
   })
 })

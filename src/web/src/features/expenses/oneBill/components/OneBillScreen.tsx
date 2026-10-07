@@ -25,6 +25,7 @@ import { useCategories } from '../../shared/hooks/useCategories'
 import {
   defaultSplitDraft,
   splitProgress,
+  withAutoFillRefreshed,
   withPersonAdded,
   withSplitType,
   withoutPerson,
@@ -118,6 +119,11 @@ function OneBillForm({ me, categories }: OneBillFormProps) {
     setSplitDraft(withSplitType(splitDraft, splitDraft.splitType))
   }
 
+  function changeAmountText(nextAmountText: string): void {
+    setAmountText(nextAmountText)
+    setSplitDraft(withAutoFillRefreshed(splitDraft, parseMoneyInput(nextAmountText, currency) ?? 0, currency))
+  }
+
   function addName(name: string): void {
     const id = crypto.randomUUID()
     setNames([...names, { id, name }])
@@ -183,7 +189,7 @@ function OneBillForm({ me, categories }: OneBillFormProps) {
         <AmountField
           amountText={amountText}
           currency={currency}
-          onAmountTextChange={setAmountText}
+          onAmountTextChange={changeAmountText}
           onCurrencyChange={changeCurrency}
         />
         <BillPeople people={people} onRemove={removeName} onAddName={() => setIsAddingName(true)} />

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit: group screen, cleaner (mockup)</title>
+<link rel="stylesheet" href="../2026-10-01-round-3/source/palette.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/base.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/app.css">
+<style>
+  html, body { background: #e9e6e1; color: #222; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; padding: 10px 16px 2px; font-size: .9rem; }
+  .bar .grp { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .bar b { margin-right: 4px; }
+  .bar button { border: 1px solid #999; background: #fff; color: #222; border-radius: 8px; padding: 6px 10px; font: inherit; cursor: pointer; }
+  .bar button[aria-pressed='true'] { background: #222; color: #fff; border-color: #222; }
+  .note2 { max-width: 700px; margin: 6px auto 10px; text-align: center; font-size: .9rem; color: #444; padding: 0 16px; min-height: 3em; }
+  .stage { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; padding: 0 16px 32px; }
+  .phone { position: relative; width: 360px; height: 740px; overflow: hidden; border-radius: 28px; box-shadow: 0 6px 24px rgba(0,0,0,.25);
+    --bg: var(--orange-200); --ink: var(--orange-950); --ink-soft: var(--orange-900); --primary: var(--orange-deep); --primary-ink: #fff;
+    --card: var(--orange-50); --field-line: var(--orange-line); --pill: #fff; --track: var(--orange-50);
+    background: var(--bg); color: var(--ink); }
+  .phone.dark { --bg: var(--dark-bg); --ink: var(--orange-50); --ink-soft: var(--orange-200); --primary: var(--dark-button); --primary-ink: var(--dark-bg);
+    --card: var(--dark-raised); --field-line: var(--dark-line); --pill: #351f1b; --track: var(--dark-raised); }
+  .screen { box-sizing: border-box; height: 740px; overflow-y: auto; padding: 8px 24px 100px; scrollbar-width: none; }
+  .screen::-webkit-scrollbar { display: none; }
+  .back { border: 0; background: transparent; color: var(--ink); font: inherit; font-weight: 600; min-height: 44px; padding: 0; }
+  .center { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .emoji { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 22px; font-size: 2.2rem; background: var(--orange-deep); }
+  .emoji.sm { width: 44px; height: 44px; border-radius: 14px; font-size: 1.4rem; flex: none; }
+  .h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+  .soft { color: var(--ink-soft); font-size: .9375rem; }
+  .small { font-size: .8125rem; color: var(--ink-soft); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .chip { border: 1px solid var(--field-line); background: transparent; color: var(--ink); border-radius: 999px; padding: 8px 14px; min-height: 40px; font: inherit; font-weight: 600; }
+  .seg { display: flex; padding: 4px; border-radius: 999px; background: var(--card); gap: 2px; margin: 18px 0 18px; }
+  .seg button { flex: 1; min-height: 44px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-soft); font: inherit; font-weight: 700; }
+  .seg button.on { background: var(--pill); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .phone.dark .seg { box-shadow: inset 0 0 0 1px var(--field-line); }
+  .btn { border: 0; border-radius: 999px; min-height: 48px; padding: 0 18px; font: inherit; font-weight: 700; background: var(--primary); color: var(--primary-ink); }
+  .btn.out { background: transparent; color: var(--ink); border: 1.5px solid var(--field-line); }
+  .row2 { display: flex; gap: 10px; width: 100%; }
+  .row2 .btn { flex: 1; padding: 0 8px; font-size: .9375rem; }
+  .card { background: var(--card); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+  .card h3 { font-size: 1.0625rem; font-weight: 700; }
+  .line { display: flex; align-items: center; gap: 12px; }
+  .line .g { flex: 1; font-size: .9375rem; }
+  .empty { text-align: center; padding: 28px 8px 8px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .empty .big { font-size: 2.4rem; }
+  .date { font-size: .8125rem; font-weight: 700; color: var(--ink-soft); margin: 4px 4px 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .exp { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; background: var(--card); margin-bottom: 8px; min-height: 64px; }
+  .exp .grow { flex: 1; } .exp .t { font-weight: 600; } .exp .amt { font-weight: 700; }
+  .fab { position: absolute; right: 20px; bottom: 24px; width: 60px; height: 60px; border-radius: 20px; border: 0; background: var(--primary); color: var(--primary-ink); font-size: 2rem; box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+  .link { background: none; border: 0; color: var(--ink); font: inherit; font-weight: 600; text-decoration: underline; padding: 10px 0; }
+  .lbl { text-align: center; font-weight: 700; margin-bottom: 8px; }
+  .col { display: flex; flex-direction: column; align-items: center; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="grp"><b>Group:</b><button data-fill="empty" aria-pressed="true">New, 1 person</button><button data-fill="full" aria-pressed="false">With expenses</button></div>
+  <div class="grp"><b>Look:</b><button data-theme="light" aria-pressed="false">Light</button><button data-theme="dark" aria-pressed="true">Dark</button></div>
+</div>
+<p class="note2" id="hint"></p>
+<div class="stage" id="stage"></div>
+<script>
+var S = { fill: 'empty', dark: true };
+var HINT = {
+  empty: 'A new group with one person. All three keep the order header, chips, switch, content, with real gaps. They differ in how the two ways to add people are shown.',
+  full: 'A group that already has people and expenses. The Add people part disappears in A and B once the group has more than one person (as today); in C nothing changes.'
+};
+function head() {
+  return '<div class="center" style="padding-bottom:4px"><button class="back" style="align-self:flex-start">‹ Back</button><span class="emoji">🏠</span><div class="h1">mraz</div><div class="soft">' + (S.fill === 'empty' ? '1 person' : '3 people') + ' · EUR</div></div>';
+}
+function chipsRow(extra) {
+  return '<div class="chips" style="margin:10px 0 0"><span class="chip">Members</span><span class="chip">Group settings</span>' + (extra || '') + '</div>';
+}
+function sw() { return '<div class="seg"><button class="on">Expenses</button><button>Activity</button></div>'; }
+function list() {
+  return '<div class="date">Today · 6 Oct</div><div class="exp"><span class="emoji sm">🍽️</span><span class="grow"><div class="t">Dinner</div><div class="small">Paid by Filip · your share 600 MKD</div></span><span class="amt">2,400 MKD</span></div>' +
+    '<div class="date">Yesterday · 5 Oct</div><div class="exp"><span class="emoji sm">🚕</span><span class="grow"><div class="t">Taxi</div><div class="small">Paid by Ana · your share 150 MKD</div></span><span class="amt">600 MKD</span></div>' +
+    '<div class="date" style="text-align:center"><button class="link">Recently deleted ›</button></div>';
+}
+function emptyText() { return '<div class="empty"><div class="big">🧾</div><div class="t" style="font-weight:700">No expenses yet</div><div class="soft">Tap + to add the first one.</div></div>'; }
+function recent() { return '<div style="text-align:center"><button class="link">Recently deleted ›</button></div>'; }
+
+function phoneA() {
+  var h = head() + chipsRow() + sw();
+  if (S.fill === 'empty') {
+    h += '<div class="card"><h3>Add people</h3><div class="line"><span class="g">No Kvit? Add them as a name.</span><button class="btn out" style="min-height:42px">Add a name</button></div><div class="line"><span class="g">Have Kvit? Share the link.</span><button class="btn" style="min-height:42px">Share link</button></div></div>' + emptyText();
+  } else h += list();
+  return h;
+}
+function phoneB() {
+  var h = head() + chipsRow() + sw();
+  if (S.fill === 'empty') {
+    h += emptyText() + '<div class="row2" style="margin-top:22px"><button class="btn out">Add a name</button><button class="btn">Share invite link</button></div><div class="small center" style="margin-top:10px;text-align:center">No Kvit? Add them as a name.<br>Have Kvit? Share the link, they join with their account.</div>';
+  } else h += list();
+  return h;
+}
+function phoneC() {
+  var h = head() + chipsRow('<span class="chip" style="background:var(--primary);color:var(--primary-ink);border-color:var(--primary)">Share invite link</span>') + sw();
+  if (S.fill === 'empty') h += emptyText() + '<div class="small" style="text-align:center;margin-top:14px">Add people from <b>Members</b>: a name, or the invite link.</div>';
+  else h += list();
+  return h;
+}
+function phone(title, body) {
+  return '<div class="col"><div class="lbl">' + title + '</div><div class="phone' + (S.dark ? ' dark' : '') + '"><div class="screen">' + body + '</div><button class="fab">+</button></div></div>';
+}
+function render() {
+  document.getElementById('hint').textContent = HINT[S.fill];
+  document.getElementById('stage').innerHTML = phone('A: calmer card (one line per way)', phoneA()) + phone('B: no card, two buttons side by side', phoneB()) + phone('C: no card, Share link chip in the header', phoneC());
+  document.querySelectorAll('[data-fill]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.fill === S.fill); });
+  document.querySelectorAll('[data-theme]').forEach(function (b) { b.setAttribute('aria-pressed', (b.dataset.theme === 'dark') === S.dark); });
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-fill],[data-theme]');
+  if (!b) return;
+  if (b.dataset.fill) S.fill = b.dataset.fill;
+  if (b.dataset.theme) S.dark = b.dataset.theme === 'dark';
+  render();
+});
+render();
+</script>
+</body>
+</html>

@@ -435,6 +435,62 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
     })
   })
 
+  describe('the Add people card and the tabs', () => {
+    const aloneGroup = groupOf({ kind: 'Group', memberCount: 1 })
+    const aloneOneBill = groupOf({ kind: 'OneBill', memberCount: 1 })
+
+    function addPeopleHeading(): HTMLElement {
+      return screen.getByRole('heading', { name: translated('en', 'group.addPeople') })
+    }
+
+    function expectNoAddPeopleCard(): void {
+      expect(screen.queryByRole('heading', { name: translated('en', 'group.addPeople') })).toBeNull()
+      expect(screen.queryByText(translated('en', 'group.addPeopleNoKvit'))).toBeNull()
+      expect(screen.queryByText(translated('en', 'group.addPeopleHasKvit'))).toBeNull()
+      expect(screen.queryByRole('button', { name: translated('en', 'group.addName') })).toBeNull()
+    }
+
+    it.each([
+      ['an empty activity', [], translated('en', 'activity.empty')],
+      ['activity with events', [inviteLinkResetEvent], 'Ana reset the invite link'],
+    ])('shows no card and no Share invite link button on the Activity tab of a group with one person and no expenses, with %s', async (_name, events, shownText) => {
+      await renderGroupApp(routes.groupActivity(groupId), { group: aloneGroup, expenses: [], events })
+      await screen.findByText(shownText)
+
+      expectNoAddPeopleCard()
+      expect(screen.queryByRole('button', { name: translated('en', 'group.shareLink') })).toBeNull()
+    })
+
+    it('shows the card on the Expenses tab only: it goes away on the Activity tab and comes back on the Expenses tab', async () => {
+      await renderGroupApp(routes.group(groupId), { group: aloneGroup, expenses: [] })
+      await screen.findByText(translated('en', 'expenses.empty'))
+      expect(addPeopleHeading()).toBeTruthy()
+
+      fireEvent.click(activityTab())
+      await screen.findByText(translated('en', 'activity.empty'))
+      expectNoAddPeopleCard()
+
+      fireEvent.click(expensesTab())
+      await screen.findByText(translated('en', 'expenses.empty'))
+      expect(addPeopleHeading()).toBeTruthy()
+    })
+
+    it.each([
+      ['the Expenses tab', routes.group(groupId), translated('en', 'expenses.empty')],
+      ['the Activity tab', routes.groupActivity(groupId), translated('en', 'activity.empty')],
+    ])('shows the Share invite link chip of a One bill with one person and no expenses but never the card, on %s', async (_name, path, shownText) => {
+      await renderGroupApp(path, { group: aloneOneBill, expenses: [], events: [] })
+      await showsGroupScreen(aloneOneBill.name)
+      await screen.findByText(shownText)
+
+      const chips = screen.getAllByRole('button', { name: translated('en', 'group.shareLink') })
+
+      expect(chips).toHaveLength(1)
+      expect(isBefore(chips[0], expensesTab())).toBe(true)
+      expectNoAddPeopleCard()
+    })
+  })
+
   describe('the sentences of the events', () => {
     describe.each(languages)('in %s', (language) => {
       it.each(sentenceCases)('writes the event $name as one sentence', async ({ event, key, params }) => {

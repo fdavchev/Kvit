@@ -12,6 +12,7 @@ import { textOrNull } from '../expenseTitle'
 import {
   buildSplitRequest,
   splitProgress,
+  withAutoFillRefreshed,
   withSplitType,
   type SplitDraft,
 } from '../splitDraft'
@@ -70,6 +71,11 @@ export function ExpenseForm({
     setSplitDraft(withSplitType(splitDraft, splitDraft.splitType))
   }
 
+  function changeAmountText(nextAmountText: string): void {
+    setAmountText(nextAmountText)
+    setSplitDraft(withAutoFillRefreshed(splitDraft, parseMoneyInput(nextAmountText, currency) ?? 0, currency))
+  }
+
   function submit(): void {
     if (amountMinor === null) {
       throw new Error(`Save was pressed with an amount that is not valid: "${amountText}"`)
@@ -98,7 +104,7 @@ export function ExpenseForm({
       <AmountField
         amountText={amountText}
         currency={currency}
-        onAmountTextChange={setAmountText}
+        onAmountTextChange={changeAmountText}
         onCurrencyChange={changeCurrency}
       />
       <ExpenseRows

@@ -20,7 +20,7 @@ export function GroupTabs({ groupId, currentTab }: GroupTabsProps) {
   ]
 
   return (
-    <div className="mb-2.5 flex gap-0.5 rounded-full bg-card p-1">
+    <div className="mb-4 flex gap-0.5 rounded-full bg-card p-1 dark:inset-ring dark:inset-ring-field-border">
       {tabs.map((item) => (
         <Link
           key={item.tab}

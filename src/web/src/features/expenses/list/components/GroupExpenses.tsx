@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
@@ -15,6 +16,7 @@ import { ExpenseListItem } from './ExpenseListItem'
 
 interface GroupExpensesProps {
   groupId: string
+  cardWhenEmpty: ReactNode
 }
 
 interface ExpenseDay {
@@ -22,7 +24,9 @@ interface ExpenseDay {
   rows: ExpenseListRow[]
 }
 
-export function GroupExpenses({ groupId }: GroupExpensesProps) {
+const receiptEmoji = '\u{1F9FE}'
+
+export function GroupExpenses({ groupId, cardWhenEmpty }: GroupExpensesProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const me = useSignedInMe()
@@ -53,7 +57,12 @@ export function GroupExpenses({ groupId }: GroupExpensesProps) {
       return <KvitLoading />
     }
     if (expensesQuery.data.length === 0) {
-      return <KvitEmpty message={t('expenses.empty')} />
+      return (
+        <>
+          {cardWhenEmpty}
+          <KvitEmpty emoji={receiptEmoji} message={t('expenses.empty')} />
+        </>
+      )
     }
     const categories = categoriesQuery.data
     const today = todayInTimeZone(me.timeZone, new Date())

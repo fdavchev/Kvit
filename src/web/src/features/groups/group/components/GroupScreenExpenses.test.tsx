@@ -423,26 +423,43 @@ describe('GroupScreen expenses', () => {
   })
 
   describe('with the Add people card', () => {
-    it('still shows the card with one person, together with the empty text of the expenses', async () => {
+    function addPeopleHeading(): HTMLElement {
+      return screen.getByRole('heading', { name: translated('en', 'group.addPeople') })
+    }
+
+    it('shows the card above the empty text of the expenses when the group has one person and no expenses', async () => {
       await renderGroup({ group: groupOf({ memberCount: 1 }), expenses: [] })
 
-      expect(await screen.findByText(translated('en', 'expenses.empty'))).toBeTruthy()
-      expect(screen.getByText(translated('en', 'group.addPeople'))).toBeTruthy()
+      const emptyText = await screen.findByText(translated('en', 'expenses.empty'))
+
+      expect(addPeopleHeading()).toBeTruthy()
       expect(screen.getByRole('button', { name: translated('en', 'group.addName') })).toBeTruthy()
+      expect(isBefore(addPeopleHeading(), emptyText)).toBe(true)
     })
 
-    it('still shows the card with one person, together with the expense rows', async () => {
+    it('shows no card when the group has one person and has expenses', async () => {
       await renderGroup({ group: groupOf({ memberCount: 1 }) })
       await showsExpenses()
 
-      expect(screen.getByText(translated('en', 'group.addPeople'))).toBeTruthy()
+      expect(screen.queryByRole('heading', { name: translated('en', 'group.addPeople') })).toBeNull()
+      expect(screen.queryByRole('button', { name: translated('en', 'group.addName') })).toBeNull()
+      expect(screen.queryByRole('button', { name: translated('en', 'group.shareLink') })).toBeNull()
     })
 
-    it('does not show the card when the group has several people', async () => {
+    it('shows no card when the group has several people', async () => {
       await renderGroup({ group: groupOf({ memberCount: 3 }) })
       await showsExpenses()
 
-      expect(screen.queryByText(translated('en', 'group.addPeople'))).toBeNull()
+      expect(screen.queryByRole('heading', { name: translated('en', 'group.addPeople') })).toBeNull()
+    })
+
+    it('keeps the + button and the Recently deleted link when the card is shown', async () => {
+      await renderGroup({ group: groupOf({ memberCount: 1 }), expenses: [] })
+      await screen.findByText(translated('en', 'expenses.empty'))
+
+      expect(addExpenseLink().getAttribute('href')).toBe(routes.groupExpenseNew(testGroup.id))
+      expect(recentlyDeletedLink().getAttribute('href')).toBe(routes.groupExpensesDeleted(testGroup.id))
+      expect(isBefore(screen.getByText(translated('en', 'expenses.empty')), recentlyDeletedLink())).toBe(true)
     })
   })
 

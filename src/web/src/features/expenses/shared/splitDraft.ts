@@ -6,6 +6,7 @@ export interface SplitDraftPerson {
   memberId: string
   isIn: boolean
   typedValue: string
+  isTyped: boolean
 }
 
 export interface SplitDraft {
@@ -26,7 +27,7 @@ const startingShares = '1'
 export function defaultSplitDraft(memberIds: readonly string[]): SplitDraft {
   return {
     splitType: 'Equal',
-    people: memberIds.map((memberId) => ({ memberId, isIn: true, typedValue: '' })),
+    people: memberIds.map((memberId) => ({ memberId, isIn: true, typedValue: '', isTyped: false })),
   }
 }
 
@@ -40,11 +41,8 @@ export function draftFromShares(
     splitType,
     people: memberIds.map((memberId) => {
       const share = shares.find((candidate) => candidate.memberId === memberId)
-      return {
-        memberId,
-        isIn: share !== undefined,
-        typedValue: share === undefined ? '' : typedValueOf(splitType, share.inputValue, currency),
-      }
+      const typedValue = share === undefined ? '' : typedValueOf(splitType, share.inputValue, currency)
+      return { memberId, isIn: share !== undefined, typedValue, isTyped: isTypedText(typedValue) }
     }),
   }
 }
@@ -55,6 +53,7 @@ export function withSplitType(draft: SplitDraft, splitType: SplitType): SplitDra
     people: draft.people.map((person) => ({
       ...person,
       typedValue: person.isIn ? startingValueOf(splitType) : '',
+      isTyped: false,
     })),
   }
 }
@@ -62,7 +61,10 @@ export function withSplitType(draft: SplitDraft, splitType: SplitType): SplitDra
 export function withPersonAdded(draft: SplitDraft, memberId: string): SplitDraft {
   return {
     ...draft,
-    people: [...draft.people, { memberId, isIn: true, typedValue: startingValueOf(draft.splitType) }],
+    people: [
+      ...draft.people,
+      { memberId, isIn: true, typedValue: startingValueOf(draft.splitType), isTyped: false },
+    ],
   }
 }
 
@@ -83,9 +85,38 @@ export function withTypedValue(draft: SplitDraft, memberId: string, typedValue: 
   return {
     ...draft,
     people: draft.people.map((person) =>
-      person.memberId === memberId ? { ...person, typedValue } : person,
+      person.memberId === memberId ? { ...person, typedValue, isTyped: isTypedText(typedValue) } : person,
     ),
   }
+}
+
+export function withTypedValueAutoFilled(
+  draft: SplitDraft,
+  memberId: string,
+  typedValue: string,
+  amountMinor: number,
+  currency: Currency,
+): SplitDraft {
+  const typed = withTypedValue(draft, memberId, typedValue)
+  const typedPerson = typed.people.find((person) => person.memberId === memberId)
+  if (typedPerson === undefined) {
+    throw new Error(`The split has no person with the member id ${memberId}`)
+  }
+  if (!autoFillsSplitType(typed.splitType)) {
+    return typed
+  }
+  return withRestFilledFrom(typed, typedPerson, amountMinor, currency)
+}
+
+export function withAutoFillRefreshed(draft: SplitDraft, amountMinor: number, currency: Currency): SplitDraft {
+  if (draft.splitType !== 'Exact') {
+    return draft
+  }
+  const typedPeople = draft.people.filter((person) => person.isIn && person.isTyped)
+  if (typedPeople.length !== 1) {
+    return draft
+  }
+  return withRestFilledFrom(draft, typedPeople[0], amountMinor, currency)
 }
 
 export function splitProgress(
@@ -135,6 +166,58 @@ export function buildSplitRequest(draft: SplitDraft, currency: Currency): SplitS
 
 export function percentText(hundredths: number): string {
   return hundredthsToText(hundredths, false)
+}
+
+function autoFillsSplitType(splitType: SplitType): boolean {
+  return splitType === 'Exact' || splitType === 'Percentage'
+}
+
+function withRestFilledFrom(
+  draft: SplitDraft,
+  typedPerson: SplitDraftPerson,
+  amountMinor: number,
+  currency: Currency,
+): SplitDraft {
+  const peopleIn = draft.people.filter((person) => person.isIn)
+  if (!typedPerson.isIn || peopleIn.length !== 2) {
+    return draft
+  }
+  const otherPerson = peopleIn.find((person) => person.memberId !== typedPerson.memberId)
+  if (otherPerson === undefined || otherPerson.isTyped) {
+    return draft
+  }
+  const restText = restTextOf(draft.splitType, typedPerson.typedValue, amountMinor, currency)
+  return {
+    ...draft,
+    people: draft.people.map((person) =>
+      person.memberId === otherPerson.memberId ? { ...person, typedValue: restText } : person,
+    ),
+  }
+}
+
+function restTextOf(splitType: SplitType, typedValue: string, amountMinor: number, currency: Currency): string {
+  if (!isTypedText(typedValue)) {
+    return ''
+  }
+  const typedNumber = parseTypedValue(splitType, typedValue, currency)
+  if (typedNumber === null) {
+    return ''
+  }
+  switch (splitType) {
+    case 'Exact':
+      return amountMinor === 0 || typedNumber > amountMinor
+        ? ''
+        : moneyInputText(amountMinor - typedNumber, currency)
+    case 'Percentage':
+      return typedNumber > wholePercentInHundredths ? '' : percentText(wholePercentInHundredths - typedNumber)
+    case 'Equal':
+    case 'Shares':
+      throw new Error(`The ${splitType} split has no rest to fill in`)
+  }
+}
+
+function isTypedText(typedValue: string): boolean {
+  return typedValue.trim() !== ''
 }
 
 function startingValueOf(splitType: SplitType): string {

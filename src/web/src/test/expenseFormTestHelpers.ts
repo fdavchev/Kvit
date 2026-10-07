@@ -1,7 +1,8 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { expect, type Mock } from 'vitest'
 import type { Language } from '@/core/i18n/language'
-import { startsWith } from './expenseTestHelpers'
+import { formatMoney, type Currency } from '@/shared/utils/formatMoney'
+import { plainSpaces, startsWith } from './expenseTestHelpers'
 import { requestsOf } from './requestTestHelpers'
 import { translated } from './translated'
 
@@ -93,6 +94,16 @@ export function typeInPerson(sheet: HTMLElement, name: string, text: string): vo
   fireEvent.change(within(personGroup(sheet, name)).getByRole('textbox'), {
     target: { value: text },
   })
+}
+
+export function personBoxValue(sheet: HTMLElement, name: string): string {
+  return within(personGroup(sheet, name)).getByRole<HTMLInputElement>('textbox').value
+}
+
+export function amountLeftText(amountMinor: number, currency: Currency, language: Language = 'en'): string {
+  return plainSpaces(
+    translated(language, 'expense.amountLeft', { amount: formatMoney(amountMinor, currency, language) }),
+  )
 }
 
 export function sentBody(fetchMock: Mock<typeof fetch>, method: string, url: string, index = 0): Record<string, unknown> {
