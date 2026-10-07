@@ -25,9 +25,11 @@ import {
   personButton,
   personGroup,
   sentBody,
+  sheetOf,
   splitTab,
   titleField,
   typeAmount,
+  typeDate,
   typeInPerson,
   typeTitle,
   waitForSheetToClose,
@@ -58,6 +60,7 @@ import {
 } from '@/test/requestTestHelpers'
 import { seedMe, testMe } from '@/test/testMe'
 import { shownToastTexts } from '@/test/toastTestHelpers'
+import { expectTapTarget } from '@/test/tapTargetTestHelpers'
 import { translated } from '@/test/translated'
 import { OneBillScreen } from './OneBillScreen'
 
@@ -143,6 +146,10 @@ async function openNameSheet(language: Language = 'en'): Promise<void> {
 
 function typeName(name: string, language: Language = 'en'): void {
   typeInto(translated(language, 'addName.label'), name)
+}
+
+function nameField(language: Language = 'en'): HTMLInputElement {
+  return within(nameDialog(language)).getByLabelText<HTMLInputElement>(translated(language, 'addName.label'))
 }
 
 async function addName(name: string, language: Language = 'en'): Promise<void> {
@@ -677,6 +684,90 @@ describe('OneBillScreen', () => {
         )
       })
 
+      it.each(languages)('does not mark the name field as invalid before a name was refused (%s)', async (language) => {
+        await renderReadyBill({ language })
+
+        await openNameSheet(language)
+
+        expect(nameField(language).getAttribute('aria-invalid')).not.toBe('true')
+      })
+
+      it.each(languages)('marks the name field with aria-invalid="true" when an empty name was refused (%s)', async (language) => {
+        await renderReadyBill({ language })
+        await openNameSheet(language)
+
+        fireEvent.click(sheetAddButton(language))
+
+        await within(nameDialog(language)).findByRole('alert')
+        expect(nameField(language).getAttribute('aria-invalid')).toBe('true')
+      })
+
+      it.each(languages)('marks the name field with aria-invalid="true" when a name of more than 60 characters was refused (%s)', async (language) => {
+        await renderReadyBill({ language })
+        await openNameSheet(language)
+        typeName('a'.repeat(nameMaxLength + 1), language)
+
+        fireEvent.click(sheetAddButton(language))
+
+        await within(nameDialog(language)).findByRole('alert')
+        expect(nameField(language).getAttribute('aria-invalid')).toBe('true')
+      })
+
+      it.each(languages)('marks the name field with aria-invalid="true" when a name that is taken was refused (%s)', async (language) => {
+        await renderReadyBill({ language })
+        await addName('Marko', language)
+        await openNameSheet(language)
+        typeName('marko', language)
+
+        fireEvent.click(sheetAddButton(language))
+
+        await within(nameDialog(language)).findByRole('alert')
+        expect(nameField(language).getAttribute('aria-invalid')).toBe('true')
+      })
+
+      it('clears the aria-invalid mark of the name field as soon as the typed text changes', async () => {
+        await renderReadyBill()
+        await addName('Marko')
+        await openNameSheet()
+        typeName('marko')
+        fireEvent.click(sheetAddButton())
+        await within(nameDialog()).findByRole('alert')
+
+        typeName('marko P')
+
+        expect(nameField().getAttribute('aria-invalid')).not.toBe('true')
+      })
+
+      it('marks the name field again when the corrected name is refused too', async () => {
+        await renderReadyBill()
+        await addName('Marko')
+        await openNameSheet()
+        typeName('marko')
+        fireEvent.click(sheetAddButton())
+        await within(nameDialog()).findByRole('alert')
+        typeName('MARKO')
+
+        fireEvent.click(sheetAddButton())
+
+        await waitFor(() => {
+          expect(nameField().getAttribute('aria-invalid')).toBe('true')
+        })
+      })
+
+      it('shows a new empty sheet without the mark after a refused name was corrected and added', async () => {
+        await renderReadyBill()
+        await openNameSheet()
+        fireEvent.click(sheetAddButton())
+        await within(nameDialog()).findByRole('alert')
+        typeName('Marko')
+        fireEvent.click(sheetAddButton())
+        await waitForSheetToClose()
+
+        await openNameSheet()
+
+        expect(nameField().getAttribute('aria-invalid')).not.toBe('true')
+      })
+
       it('lets a name that was refused be corrected and added', async () => {
         await renderReadyBill()
         await addName('Marko')
@@ -691,6 +782,29 @@ describe('OneBillScreen', () => {
         await waitForSheetToClose()
         expect(removeButton('Marko Petrov')).toBeTruthy()
       })
+    })
+  })
+
+  describe('the tap targets of the people circles, each at least 44 px: the class min-h-11 and the class min-w-11 on the tapped element', () => {
+    it('gives the Remove button of a name a tap target', async () => {
+      await renderReadyBill()
+      await addName('Marko')
+
+      expectTapTarget(removeButton('Marko'), 'the Remove button of Marko')
+    })
+
+    it('gives the Remove button of every name a tap target', async () => {
+      await renderReadyBill()
+      await addNames('Marko', 'Ana')
+
+      expectTapTarget(removeButton('Marko'), 'the Remove button of Marko')
+      expectTapTarget(removeButton('Ana'), 'the Remove button of Ana')
+    })
+
+    it('gives the + circle with its name label a tap target', async () => {
+      await renderReadyBill()
+
+      expectTapTarget(plusCircle(), 'the button of the + circle')
     })
   })
 
@@ -1141,6 +1255,32 @@ describe('OneBillScreen', () => {
       })
 
       expect(body.expenseDate).toBe(testYesterday)
+    })
+
+    it('applies a typed date with Done in the Date sheet, closes it and sends that date', async () => {
+      const body = await savedBody({}, async () => {
+        typeAmount('1800')
+        const sheet = await openSheet('date')
+        typeDate(sheet, '2026-12-12')
+        expect(sheetOf('date')).toBeTruthy()
+        fireEvent.click(doneButton(sheet))
+        await waitForSheetToClose()
+        expect(formRow('date').textContent).toContain('12 Dec')
+      })
+
+      expect(body.expenseDate).toBe('2026-12-12')
+    })
+
+    it('keeps Done disabled in the Date sheet while the typed date is empty or out of range', async () => {
+      await renderReadyBill()
+      const sheet = await openSheet('date')
+
+      typeDate(sheet, '')
+      expect(isDisabled(doneButton(sheet))).toBe(true)
+      typeDate(sheet, '2062-10-06')
+      expect(isDisabled(doneButton(sheet))).toBe(true)
+      typeDate(sheet, '2026-12-12')
+      expect(isDisabled(doneButton(sheet))).toBe(false)
     })
 
     it('closes with one tap on a category, shows its emoji and name in the row and sends its id', async () => {

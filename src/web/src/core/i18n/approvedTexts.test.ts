@@ -8,6 +8,7 @@ import mk from './locales/mk.json'
 const approvedTexts: [string, string, string][] = [
   ['common.privacy', 'Privacy', 'Приватност'],
   ['common.close', 'Close', 'Затвори'],
+  ['errors.AUTH_GOOGLE_NO_ACCOUNT', 'There is no Kvit account for this Google account yet.', 'За овој Google профил сѐ уште нема Kvit профил.'],
   ['welcome.or', 'or', 'или'],
   ['welcome.googleUnavailable', "Couldn't load Google sign-in. Check your connection and try again.", 'Не можевме да ја вчитаме најавата со Google. Провери ја врската и обиди се повторно.'],
   ['auth.googleTaken.title', 'This email already has an account.', 'Оваа е-пошта веќе има профил.'],
@@ -46,7 +47,7 @@ const approvedPhase7Texts: [string, string, string][] = [
   ['common.undo', 'Undo', 'Врати'],
   ['groups.title', 'Groups', 'Групи'],
   ['groups.newButton', 'New group', 'Нова група'],
-  ['groups.empty', 'You have no groups yet. Create one, or open a link a friend sent you.', 'Сè уште немаш групи. Направи една или отвори линк што ти го испратил пријател.'],
+  ['groups.empty', 'You have no groups yet. Create one, or open a link a friend sent you.', 'Сѐ уште немаш групи. Направи една или отвори линк што ти го испратил пријател.'],
   ['groups.people_one', '{{count}} person', '{{count}} лице'],
   ['groups.people_other', '{{count}} people', '{{count}} лица'],
   ['groups.finished', 'Finished', 'Завршени'],
@@ -66,7 +67,6 @@ const approvedPhase7Texts: [string, string, string][] = [
   ['groupFields.nameInvalid', 'Enter a name (up to 60 characters).', 'Внеси име (најмногу 60 знаци).'],
   ['newGroup.title', 'New group', 'Нова група'],
   ['newGroup.create', 'Create group', 'Направи група'],
-  ['group.addPeople', 'Add people', 'Додај луѓе'],
   ['group.addPeopleNoKvit', 'No Kvit? Add them as a name.', 'Немаат Kvit? Додај ги како име.'],
   ['group.addPeopleHasKvit', 'Have Kvit? Share the link and they join with their own account.', 'Имаат Kvit? Сподели го линкот и ќе се придружат со свој профил.'],
   ['group.addName', 'Add a name', 'Додај име'],
@@ -173,7 +173,6 @@ const approvedPhase8Step2Texts: [string, string, string][] = [
 
 const approvedPhase8Step4Texts: [string, string, string][] = [
   ['expenses.title', 'Expenses', 'Трошоци'],
-  ['expenses.empty', 'No expenses yet. Tap + to add the first one.', 'Сè уште нема трошоци. Допри + за да додадеш.'],
   ['expenses.paidByShare', 'Paid by {{name}} · your share {{amount}}', 'Платено од {{name}} · твој дел {{amount}}'],
   ['expenses.paidByNotInSplit', "Paid by {{name}} · you're not in the split", 'Платено од {{name}} · не си во поделбата'],
   ['expenses.today', 'Today', 'Денес'],
@@ -269,13 +268,32 @@ const approvedPhase8Step5Texts: [string, string, string][] = [
   ['oneBill.titleTooLong', 'The title can have up to 60 characters.', 'Насловот може да има најмногу 60 знаци.'],
 ]
 
+const approvedPhase8Step6bTexts: [string, string, string][] = [
+  ['time.justNow', 'just now', 'пред малку'],
+  ['time.minutes_one', '{{count}} minute ago', 'пред {{count}} минута'],
+  ['time.minutes_other', '{{count}} minutes ago', 'пред {{count}} минути'],
+  ['time.hours_one', '{{count}} hour ago', 'пред {{count}} час'],
+  ['time.hours_other', '{{count}} hours ago', 'пред {{count}} часа'],
+  ['time.days_one', '{{count}} day ago', 'пред {{count}} ден'],
+  ['time.days_other', '{{count}} days ago', 'пред {{count}} дена'],
+  ['expense.fewerShares', 'Fewer shares for {{name}}', 'Помалку делови за {{name}}'],
+  ['expense.moreShares', 'More shares for {{name}}', 'Повеќе делови за {{name}}'],
+]
+
+const approvedPhase8Step5cTexts: [string, string, string][] = [
+  ['expenses.emptyTitle', 'No expenses yet', 'Сѐ уште нема трошоци'],
+  ['expenses.emptyHint', 'Tap + to add the first one.', 'Допри + за да додадеш.'],
+]
+
 const expenseNamespaces = /^(expenses|expense|categories)\./
+const timeNamespace = /^time\./
 const step5Namespaces = /^(activity|oneBill|newGroup)\./
 const phase7NewGroupKeys: string[] = approvedPhase7Texts
   .map(([key]) => key)
   .filter((key) => key.startsWith('newGroup.'))
 
 const currencyCodes = /MKD|EUR/g
+const latinLetters = /[A-Za-z\u00C0-\u024F]/
 const placeholders = /\{\{\w+\}\}/g
 
 const textsWhereMacedonianMeansConnection =['errors.network', 'welcome.googleUnavailable']
@@ -290,7 +308,27 @@ const pluralCounts: [number, string, string][] = [
   [101, '101 people', '101 лице'],
 ]
 
-const removedKeys = ['welcome.pitch', 'common.comingSoon', 'group.expensesSoon']
+const timePluralCounts: [number, string, string, string][] = [
+  [1, 'minutes', '1 minute ago', 'пред 1 минута'],
+  [2, 'minutes', '2 minutes ago', 'пред 2 минути'],
+  [5, 'minutes', '5 minutes ago', 'пред 5 минути'],
+  [11, 'minutes', '11 minutes ago', 'пред 11 минути'],
+  [21, 'minutes', '21 minutes ago', 'пред 21 минута'],
+  [22, 'minutes', '22 minutes ago', 'пред 22 минути'],
+  [1, 'hours', '1 hour ago', 'пред 1 час'],
+  [2, 'hours', '2 hours ago', 'пред 2 часа'],
+  [5, 'hours', '5 hours ago', 'пред 5 часа'],
+  [11, 'hours', '11 hours ago', 'пред 11 часа'],
+  [21, 'hours', '21 hours ago', 'пред 21 час'],
+  [22, 'hours', '22 hours ago', 'пред 22 часа'],
+  [1, 'days', '1 day ago', 'пред 1 ден'],
+  [2, 'days', '2 days ago', 'пред 2 дена'],
+  [5, 'days', '5 days ago', 'пред 5 дена'],
+  [11, 'days', '11 days ago', 'пред 11 дена'],
+  [21, 'days', '21 days ago', 'пред 21 ден'],
+]
+
+const removedKeys = ['welcome.pitch', 'common.comingSoon', 'group.expensesSoon', 'group.addPeople', 'expenses.empty']
 
 describe('the approved Phase 6 texts', () => {
   it.each(approvedTexts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
@@ -339,8 +377,8 @@ describe('the approved Phase 8 Step 1 texts', () => {
   })
 
   it.each(approvedPhase8Step1Texts)('writes the Macedonian text of %s with Cyrillic letters only, no Latin look-alikes', (key, _english, macedonian) => {
-    expect(macedonian).not.toMatch(/[A-Za-z]/)
-    expect(translated('mk', key)).not.toMatch(/[A-Za-z]/)
+    expect(macedonian).not.toMatch(latinLetters)
+    expect(translated('mk', key)).not.toMatch(latinLetters)
   })
 })
 
@@ -351,8 +389,8 @@ describe('the approved Phase 8 Step 2 texts', () => {
   })
 
   it.each(approvedPhase8Step2Texts)('writes the Macedonian text of %s with Cyrillic letters only apart from the currency codes, no Latin look-alikes', (key, _english, macedonian) => {
-    expect(macedonian.replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
-    expect(translated('mk', key).replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
+    expect(macedonian.replace(currencyCodes, '')).not.toMatch(latinLetters)
+    expect(translated('mk', key).replace(currencyCodes, '')).not.toMatch(latinLetters)
   })
 })
 
@@ -363,8 +401,8 @@ describe('the approved Phase 8 Step 4 texts', () => {
   })
 
   it.each(approvedPhase8Step4Texts)('writes the Macedonian text of %s with Cyrillic letters only apart from the placeholders and the currency codes, no Latin look-alikes', (key, _english, macedonian) => {
-    expect(macedonian.replace(placeholders, '').replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
-    expect(translated('mk', key).replace(placeholders, '').replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
+    expect(macedonian.replace(placeholders, '').replace(currencyCodes, '')).not.toMatch(latinLetters)
+    expect(translated('mk', key).replace(placeholders, '').replace(currencyCodes, '')).not.toMatch(latinLetters)
   })
 
   it.each(['en', 'mk'] as const)('has no text under expenses, expense or categories in %s that is not listed above, so every new line is locked', (language) => {
@@ -373,9 +411,11 @@ describe('the approved Phase 8 Step 4 texts', () => {
       .map(([path]) => path)
       .filter((path) => expenseNamespaces.test(path))
       .sort()
-    const keysListedAbove = approvedPhase8Step4Texts
-      .map(([key]) => key)
-      .sort()
+    const keysListedAbove = [
+      ...approvedPhase8Step4Texts.map(([key]) => key),
+      ...approvedPhase8Step5cTexts.map(([key]) => key),
+      ...approvedPhase8Step6bTexts.map(([key]) => key).filter((key) => expenseNamespaces.test(key)),
+    ].sort()
 
     expect(keysInTheFile).toEqual(keysListedAbove)
   })
@@ -384,8 +424,8 @@ describe('the approved Phase 8 Step 4 texts', () => {
     expect(translated('en', 'expense.rate', { rate: '61.5610', date: '24 Sep 2026' })).toBe(
       'Rate: 1 EUR = 61.5610 MKD · 24 Sep 2026',
     )
-    expect(translated('mk', 'expense.rate', { rate: '61,5610', date: '24 сеп. 2026 г.' })).toBe(
-      'Цена на еврото: 1 EUR = 61,5610 MKD · 24 сеп. 2026 г.',
+    expect(translated('mk', 'expense.rate', { rate: '61,5610', date: '24 сеп 2026' })).toBe(
+      'Цена на еврото: 1 EUR = 61,5610 MKD · 24 сеп 2026',
     )
   })
 
@@ -429,8 +469,8 @@ describe('the approved Phase 8 Step 5 texts', () => {
   })
 
   it.each(approvedPhase8Step5Texts)('writes the Macedonian text of %s with Cyrillic letters only apart from the placeholders and the currency codes, no Latin look-alikes', (key, _english, macedonian) => {
-    expect(macedonian.replace(placeholders, '').replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
-    expect(translated('mk', key).replace(placeholders, '').replace(currencyCodes, '')).not.toMatch(/[A-Za-z]/)
+    expect(macedonian.replace(placeholders, '').replace(currencyCodes, '')).not.toMatch(latinLetters)
+    expect(translated('mk', key).replace(placeholders, '').replace(currencyCodes, '')).not.toMatch(latinLetters)
   })
 
   it.each(approvedPhase8Step5Texts)('uses the same placeholders in the English and the Macedonian text of %s', (_key, english, macedonian) => {
@@ -462,6 +502,129 @@ describe('the approved Phase 8 Step 5 texts', () => {
   it('writes the Macedonian quotes around a name as „name“ and the English ones as “name”', () => {
     expect(translated('mk', 'oneBill.removeName', { name: 'Марко' })).toBe('Отстрани „Марко“')
     expect(translated('en', 'activity.memberAdded', { name: 'Ana', member: 'Marko' })).toBe('Ana added “Marko”')
+  })
+})
+
+describe('the approved Phase 8 Step 5c texts', () => {
+  it.each(approvedPhase8Step5cTexts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
+    expect(translated('en', key)).toBe(english)
+    expect(translated('mk', key)).toBe(macedonian)
+  })
+
+  it.each(approvedPhase8Step5cTexts)('writes the Macedonian text of %s with Cyrillic letters only, no Latin look-alikes', (key, _english, macedonian) => {
+    expect(macedonian).not.toMatch(latinLetters)
+    expect(translated('mk', key)).not.toMatch(latinLetters)
+  })
+
+  it('splits the old single sentence into a title without a full stop and a hint with one, in English and Macedonian', () => {
+    expect(translated('en', 'expenses.emptyTitle').endsWith('.')).toBe(false)
+    expect(translated('mk', 'expenses.emptyTitle').endsWith('.')).toBe(false)
+    expect(translated('en', 'expenses.emptyHint').endsWith('.')).toBe(true)
+    expect(translated('mk', 'expenses.emptyHint').endsWith('.')).toBe(true)
+  })
+
+  it('says the same words in the title and hint as the old approved sentence did, in English and Macedonian', () => {
+    expect(`${translated('en', 'expenses.emptyTitle')}. ${translated('en', 'expenses.emptyHint')}`).toBe(
+      'No expenses yet. Tap + to add the first one.',
+    )
+    expect(`${translated('mk', 'expenses.emptyTitle')}. ${translated('mk', 'expenses.emptyHint')}`).toBe(
+      'Сѐ уште нема трошоци. Допри + за да додадеш.',
+    )
+  })
+
+  it.each([
+    ['group.addPeopleNoKvit', 'No Kvit? Add them as a name.', 'Немаат Kvit? Додај ги како име.'],
+    ['group.addPeopleHasKvit', 'Have Kvit? Share the link and they join with their own account.', 'Имаат Kvit? Сподели го линкот и ќе се придружат со свој профил.'],
+    ['group.addName', 'Add a name', 'Додај име'],
+    ['group.shareLink', 'Share invite link', 'Сподели линк за покана'],
+  ])('keeps the approved wording of %s for the explanation lines and the buttons under the empty state', (key, english, macedonian) => {
+    expect(translated('en', key)).toBe(english)
+    expect(translated('mk', key)).toBe(macedonian)
+  })
+})
+
+describe('the approved Phase 8 Step 6b texts', () => {
+  const timeTexts: [string, string, string][] = approvedPhase8Step6bTexts.filter(([key]) => timeNamespace.test(key))
+
+  it.each(approvedPhase8Step6bTexts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
+    expect(translated('en', key)).toBe(english)
+    expect(translated('mk', key)).toBe(macedonian)
+  })
+
+  it.each(approvedPhase8Step6bTexts)('writes the Macedonian text of %s with Cyrillic letters only apart from the placeholders, no Latin look-alikes', (key, _english, macedonian) => {
+    expect(macedonian.replace(placeholders, '')).not.toMatch(latinLetters)
+    expect(translated('mk', key).replace(placeholders, '')).not.toMatch(latinLetters)
+  })
+
+  it.each(approvedPhase8Step6bTexts)('uses the same placeholders in the English and the Macedonian text of %s', (_key, english, macedonian) => {
+    expect((english.match(placeholders) ?? []).sort()).toEqual((macedonian.match(placeholders) ?? []).sort())
+  })
+
+  it.each(['en', 'mk'] as const)('has no text under time in %s that is not listed above, so every new line is locked', (language) => {
+    const texts = language === 'en' ? en : mk
+    const keysInTheFile = collectTexts(texts)
+      .map(([path]) => path)
+      .filter((path) => timeNamespace.test(path))
+      .sort()
+    const keysListedAbove = timeTexts.map(([key]) => key).sort()
+
+    expect(keysInTheFile).toEqual(keysListedAbove)
+  })
+
+  it.each(['minutes', 'hours', 'days'])('has both a one and an other form for time.%s in English and Macedonian, each with the number in it', (unit) => {
+    for (const language of ['en', 'mk'] as const) {
+      expect(translated(language, `time.${unit}_one`)).toContain('{{count}}')
+      expect(translated(language, `time.${unit}_other`)).toContain('{{count}}')
+    }
+  })
+
+  it.each(['time.justNow', 'time.minutes_one', 'time.hours_other', 'time.days_other'])('starts the Macedonian text of %s with «пред», because it says how long ago something was', (key) => {
+    expect(translated('mk', key).startsWith('пред ')).toBe(true)
+  })
+
+  it('has no placeholder in the text for just now', () => {
+    expect(translated('en', 'time.justNow').match(placeholders)).toBeNull()
+    expect(translated('mk', 'time.justNow').match(placeholders)).toBeNull()
+  })
+
+  it.each(timePluralCounts)('writes %i of time.%s in English as "%s" and in Macedonian as «%s»', async (count, unit, english, macedonian) => {
+    const englishI18n = await createI18n('en')
+    const macedonianI18n = await createI18n('mk')
+
+    expect(englishI18n.t(`time.${unit}`, { count })).toBe(english)
+    expect(macedonianI18n.t(`time.${unit}`, { count })).toBe(macedonian)
+  })
+
+  it('writes the English words for the Shares buttons with the name of the person filled in', () => {
+    expect(translated('en', 'expense.fewerShares', { name: 'Ana' })).toBe('Fewer shares for Ana')
+    expect(translated('en', 'expense.moreShares', { name: 'Ana' })).toBe('More shares for Ana')
+  })
+
+  it('writes the Macedonian words for the Shares buttons with the name of the person filled in', () => {
+    expect(translated('mk', 'expense.fewerShares', { name: 'Ана' })).toBe('Помалку делови за Ана')
+    expect(translated('mk', 'expense.moreShares', { name: 'Ана' })).toBe('Повеќе делови за Ана')
+  })
+})
+
+describe('the Macedonian texts and Latin look-alikes', () => {
+  it('has no Latin letter with an accent, such as the Latin è, anywhere in mk.json', () => {
+    const offenders: string[] = collectTexts(mk)
+      .filter(([, text]) => typeof text === 'string' && /[\u00C0-\u024F]/.test(text))
+      .map(([path]) => path)
+
+    expect(offenders).toEqual([])
+  })
+
+  it.each(['\u00E8', '\u00C8', '\u00E9', '\u0117'])('rejects the Latin letter %s in the Latin look-alike check', (letter) => {
+    expect(latinLetters.test(`\u0421${letter} \u0443\u0448\u0442\u0435`)).toBe(true)
+  })
+
+  it('accepts the Cyrillic ѐ (U+0450) that the Macedonian texts use for «сѐ»', () => {
+    expect(latinLetters.test('\u0421\u0450 \u0443\u0448\u0442\u0435')).toBe(false)
+  })
+
+  it.each(['groups.empty', 'errors.AUTH_GOOGLE_NO_ACCOUNT', 'expenses.emptyTitle'])('writes «сѐ» in the Macedonian text of %s with the Cyrillic ѐ (U+0450)', (key) => {
+    expect(translated('mk', key).toLowerCase()).toContain('\u0441\u0450 \u0443\u0448\u0442\u0435')
   })
 })
 

@@ -15,7 +15,7 @@ import { useGroupIdParam } from '../../shared/useGroupIdParam'
 import { useGroup } from '../hooks/useGroup'
 import { useInviteLinkActions } from '../useInviteLinkActions'
 import { AddNameSheet } from './AddNameSheet'
-import { AddPeopleCard } from './AddPeopleCard'
+import { AddPeopleButtons } from './AddPeopleButtons'
 import { GroupTabs, type GroupTab } from './GroupTabs'
 
 export function GroupScreen() {
@@ -40,7 +40,7 @@ export function GroupScreen() {
     }
     const group = groupQuery.data
     const isOneBill: boolean = group.kind === 'OneBill'
-    const showsAddPeopleCard: boolean = group.memberCount === 1 && !isOneBill
+    const showsAddPeopleButtons: boolean = group.memberCount === 1 && !isOneBill
     return (
       <>
         <div className="flex flex-col items-center gap-2.5 pt-2 pb-4 text-center">
@@ -71,9 +71,9 @@ export function GroupScreen() {
         {tab === 'expenses' ? (
           <GroupExpenses
             groupId={group.id}
-            cardWhenEmpty={
-              showsAddPeopleCard ? (
-                <AddPeopleCard
+            actionsWhenEmpty={
+              showsAddPeopleButtons ? (
+                <AddPeopleButtons
                   onAddName={() => setIsAddingName(true)}
                   onShareLink={() => void inviteLinkActions.share(group.inviteToken)}
                 />

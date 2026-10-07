@@ -45,6 +45,10 @@ export function formRow(key: FormRowKey, language: Language = 'en'): HTMLElement
   return screen.getByRole('button', { name: startsWith(translated(language, `expense.${key}`)) })
 }
 
+export function formRowBehindSheet(key: FormRowKey, language: Language = 'en'): HTMLElement {
+  return screen.getByRole('button', { name: startsWith(translated(language, `expense.${key}`)), hidden: true })
+}
+
 export function saveButton(language: Language = 'en'): HTMLElement {
   return screen.getByRole('button', { name: translated(language, 'groupSettings.save') })
 }
@@ -84,6 +88,24 @@ export function splitTab(sheet: HTMLElement, key: SplitTabKey, language: Languag
 
 export function doneButton(sheet: HTMLElement, language: Language = 'en'): HTMLElement {
   return within(sheet).getByRole('button', { name: translated(language, 'expense.done') })
+}
+
+export function dateField(sheet: HTMLElement, language: Language = 'en'): HTMLInputElement {
+  return within(sheet).getByLabelText<HTMLInputElement>(translated(language, 'expense.date'), {
+    selector: 'input',
+  })
+}
+
+export function typeDate(sheet: HTMLElement, text: string, language: Language = 'en'): void {
+  fireEvent.change(dateField(sheet, language), { target: { value: text } })
+}
+
+export function todayChip(sheet: HTMLElement, language: Language = 'en'): HTMLElement {
+  return within(sheet).getByRole('button', { name: translated(language, 'expenses.today') })
+}
+
+export function yesterdayChip(sheet: HTMLElement, language: Language = 'en'): HTMLElement {
+  return within(sheet).getByRole('button', { name: translated(language, 'expenses.yesterday') })
 }
 
 export function isDisabled(element: HTMLElement): boolean {

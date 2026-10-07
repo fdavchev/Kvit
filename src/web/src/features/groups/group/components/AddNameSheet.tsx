@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { errorMessageKey } from '@/core/api/errors'
+import { errorMessageKey, hasErrorCode } from '@/core/api/errors'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
 import { NameSheet } from '../../shared/components/NameSheet'
 import { useAddMember } from '../hooks/useAddMember'
@@ -26,6 +26,10 @@ export function AddNameSheet({ groupId, onClose }: AddNameSheetProps) {
         addMember.isError
           ? t(errorMessageKey(addMember.error), { name: addMember.variables })
           : null
+      }
+      isNameRefused={
+        hasErrorCode(addMember.error, 'MEMBER_NAME_TAKEN') ||
+        hasErrorCode(addMember.error, 'MEMBER_NAME_INVALID')
       }
       onSubmit={submit}
       onDismiss={sheet.close}

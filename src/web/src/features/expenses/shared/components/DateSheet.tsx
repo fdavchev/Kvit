@@ -1,9 +1,10 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitSheet } from '@/shared/components/KvitSheet'
 import { kvitChipLook } from '@/shared/components/kvitChipLook'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
-import { addDays } from '@/shared/utils/formatDate'
+import { addDays, isCalendarDate } from '@/shared/utils/formatDate'
 
 interface DateSheetProps {
   expenseDate: string
@@ -19,7 +20,11 @@ export function DateSheet({ expenseDate, today, onPick, onClose }: DateSheetProp
   const { t } = useTranslation()
   const sheet = useKvitSheet()
   const fieldId = useId()
+  const [typedDate, setTypedDate] = useState<string>(expenseDate)
   const yesterday = addDays(today, -1)
+  const latestDate = addDays(today, daysAhead)
+  const canApplyTypedDate: boolean =
+    isCalendarDate(typedDate) && typedDate >= earliestDate && typedDate <= latestDate
 
   function pick(pickedDate: string): void {
     onPick(pickedDate)
@@ -53,18 +58,17 @@ export function DateSheet({ expenseDate, today, onPick, onClose }: DateSheetProp
         <input
           id={fieldId}
           type="date"
-          value={expenseDate}
+          value={typedDate}
           min={earliestDate}
-          max={addDays(today, daysAhead)}
-          onChange={(event) => {
-            if (event.target.value !== '') {
-              pick(event.target.value)
-            }
-          }}
+          max={latestDate}
+          onChange={(event) => setTypedDate(event.target.value)}
           className="min-h-14 w-full rounded-[14px] border-2 border-field-border bg-field px-4 text-[1.0625rem] font-semibold text-field-foreground focus:border-field-border-focus focus-visible:outline-offset-0"
         />
         <p className="mt-2 text-[0.9375rem] text-muted-foreground">{t('expense.dateHint')}</p>
       </div>
+      <KvitButton disabled={!canApplyTypedDate} onClick={() => pick(typedDate)}>
+        {t('expense.done')}
+      </KvitButton>
     </KvitSheet>
   )
 }

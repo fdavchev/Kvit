@@ -1,4 +1,5 @@
 import type { Language } from '@/core/i18n/language'
+import { formatGroupedDecimal } from './formatNumber'
 
 export type Currency = 'MKD' | 'EUR'
 
@@ -27,17 +28,11 @@ export function formatMoney(
         `MKD amount must be whole denars (a multiple of 100 deni), got ${amountMinor}`,
       )
     }
-    const number = new Intl.NumberFormat(language, {
-      useGrouping: 'always',
-    }).format(whole)
+    const number = formatGroupedDecimal(whole.toString(), language)
     return `${sign}${number}${nonBreakingSpace}${denarSuffix[language]}`
   }
 
   const exactDecimal = `${whole}.${fraction.toString().padStart(2, '0')}`
-  const number = new Intl.NumberFormat(language, {
-    useGrouping: 'always',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(exactDecimal as Intl.StringNumericLiteral)
+  const number = formatGroupedDecimal(exactDecimal, language)
   return `${sign}€${number}`
 }

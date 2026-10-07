@@ -8,6 +8,7 @@ import { KvitSheet } from '@/shared/components/KvitSheet'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
 import { cn } from '@/shared/utils/cn'
 import { formatMoney, type Currency } from '@/shared/utils/formatMoney'
+import { formatUngroupedDecimal } from '@/shared/utils/formatNumber'
 import { personOf, type ExpensePerson } from '../expensePeople'
 import {
   percentText,
@@ -39,10 +40,12 @@ const splitTabKeys: Record<SplitType, string> = {
 }
 
 const smallFieldLook =
-  'min-h-10 w-24 rounded-[10px] border border-field-border bg-field px-2.5 text-right font-semibold text-field-foreground focus:border-field-border-focus focus-visible:outline-offset-0'
+  'min-h-11 min-w-11 w-24 rounded-[10px] border border-field-border bg-field px-2.5 text-right font-semibold text-field-foreground focus:border-field-border-focus focus-visible:outline-offset-0'
 
-const stepButtonLook =
-  'pressable grid size-9 place-items-center rounded-full border border-field-border bg-field text-lg text-field-foreground'
+const stepButtonLook = 'pressable grid min-h-11 min-w-11 place-items-center rounded-full'
+
+const stepCircleLook =
+  'grid size-9 place-items-center rounded-full border border-field-border bg-field text-lg text-field-foreground'
 
 export function SplitSheet({
   people,
@@ -86,7 +89,7 @@ export function SplitSheet({
           type="button"
           aria-pressed={draftPerson.isIn}
           onClick={() => onChange(withPersonIn(draft, draftPerson.memberId, !draftPerson.isIn))}
-          className="pressable flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left"
+          className="pressable flex min-h-11 min-w-11 flex-1 items-center gap-3 rounded-xl text-left"
         >
           {renderPersonName(person)}
           <Tick isOn={draftPerson.isIn} />
@@ -106,9 +109,11 @@ export function SplitSheet({
             <button
               type="button"
               onClick={() => setOpenedExtras([...openedExtras, draftPerson.memberId])}
-              className="pressable min-h-9 flex-none rounded-full border border-field-border bg-field px-2.5 text-[0.875rem] font-medium text-muted-foreground"
+              className="pressable flex min-h-11 min-w-11 flex-none items-center rounded-full"
             >
-              {t('expense.extra')}
+              <span className="grid min-h-9 place-items-center rounded-full border border-field-border bg-field px-2.5 text-[0.875rem] font-medium text-muted-foreground">
+                {t('expense.extra')}
+              </span>
             </button>
           ))}
       </>
@@ -138,22 +143,28 @@ export function SplitSheet({
     return (
       <>
         {renderPersonName(person)}
-        <span className="flex items-center gap-2.5">
+        <span className="flex items-center gap-1.5">
           <button
             type="button"
+            aria-label={t('expense.fewerShares', { name: person.name })}
             disabled={shares === 0}
             onClick={() => typeValue(draftPerson.memberId, String(shares - 1))}
             className={cn(stepButtonLook, 'disabled:opacity-45')}
           >
-            −
+            <span aria-hidden="true" className={stepCircleLook}>
+              −
+            </span>
           </button>
           <span className="min-w-6 text-center font-bold">{shares}</span>
           <button
             type="button"
+            aria-label={t('expense.moreShares', { name: person.name })}
             onClick={() => typeValue(draftPerson.memberId, String(shares + 1))}
             className={stepButtonLook}
           >
-            +
+            <span aria-hidden="true" className={stepCircleLook}>
+              +
+            </span>
           </button>
         </span>
       </>
@@ -239,8 +250,5 @@ function SplitProgressText({ progress, currency, language }: SplitProgressTextPr
 
 function formatPercent(hundredths: number, language: Language): string {
   const sign = hundredths < 0 ? '-' : ''
-  const number = `${sign}${percentText(Math.abs(hundredths))}`
-  return new Intl.NumberFormat(language, { maximumFractionDigits: 2, useGrouping: false }).format(
-    number as Intl.StringNumericLiteral,
-  )
+  return formatUngroupedDecimal(`${sign}${percentText(Math.abs(hundredths))}`, language)
 }

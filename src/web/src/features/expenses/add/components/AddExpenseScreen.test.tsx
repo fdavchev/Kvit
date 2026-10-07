@@ -23,8 +23,10 @@ import {
   amountField,
   amountLeftText,
   currencyToggle,
+  dateField,
   doneButton,
   formRow,
+  formRowBehindSheet,
   isDisabled,
   noteField,
   noteLink,
@@ -34,12 +36,16 @@ import {
   personGroup,
   saveButton,
   sentBody,
+  sheetOf,
   splitTab,
   titleField,
+  todayChip,
   typeAmount,
+  typeDate,
   typeInPerson,
   typeTitle,
   waitForSheetToClose,
+  yesterdayChip,
   type SplitTabKey,
 } from '@/test/expenseFormTestHelpers'
 import {
@@ -82,6 +88,7 @@ import {
 } from '@/test/requestTestHelpers'
 import { seedMe, testMe } from '@/test/testMe'
 import { shownToastTexts } from '@/test/toastTestHelpers'
+import { expectTapTarget } from '@/test/tapTargetTestHelpers'
 import { translated } from '@/test/translated'
 import { AddExpenseScreen } from './AddExpenseScreen'
 
@@ -591,6 +598,44 @@ describe('AddExpenseScreen', () => {
       }
     })
 
+    describe.each(languages)('the label of a category in the grid, kept inside its cell (%s)', (language) => {
+      async function openCategoryGrid(): Promise<{ sheet: HTMLElement; labels: HTMLElement[] }> {
+        await renderReadyAdd({ language })
+        const sheet = await openSheet('category', language)
+        const labels = testCategories.map((category) => within(sheet).getByText(categoryName(language, category)))
+        return { sheet, labels }
+      }
+
+      it('is never forced onto one line: no whitespace-nowrap, text-nowrap or truncate on a label', async () => {
+        const { labels } = await openCategoryGrid()
+
+        for (const label of labels) {
+          for (const forbidden of ['whitespace-nowrap', 'text-nowrap', 'truncate']) {
+            expect(label.classList.contains(forbidden), `the label "${label.textContent}" must not carry ${forbidden}`).toBe(false)
+          }
+        }
+      })
+
+      it('is as wide as its cell and breaks inside a long word: w-full or wrap-anywhere on a label', async () => {
+        const { labels } = await openCategoryGrid()
+
+        for (const label of labels) {
+          const limitsItsWidth: boolean = label.classList.contains('w-full') || label.classList.contains('wrap-anywhere')
+          expect(limitsItsWidth, `the label "${label.textContent}" has the classes: ${label.className}`).toBe(true)
+        }
+      })
+
+      it('sits in a cell that is allowed to be narrower than its longest word: min-w-0 on the cell', async () => {
+        const { labels } = await openCategoryGrid()
+
+        for (const label of labels) {
+          const cell = label.closest('button')
+          expect(cell, `the label "${label.textContent}" must sit in a button`).not.toBeNull()
+          expect(cell?.classList.contains('min-w-0'), `the cell of "${label.textContent}" has the classes: ${cell?.className}`).toBe(true)
+        }
+      })
+    })
+
     it('shows the emoji of every category in the grid', async () => {
       await renderReadyAdd()
 
@@ -696,16 +741,15 @@ describe('AddExpenseScreen', () => {
       })
     })
 
-    it('lets the person pick a date in the future, like a December trip, closes and sends that date', async () => {
+    it('lets the person pick a date in the future, like a December trip, with Done, which closes the sheet and sends that date', async () => {
       const { fetchMock } = await renderReadyAdd()
       const sheet = await openSheet('date')
 
-      fireEvent.change(within(sheet).getByLabelText(translated('en', 'expense.date'), { selector: 'input' }), {
-        target: { value: '2026-12-12' },
-      })
+      typeDate(sheet, '2026-12-12')
+      fireEvent.click(doneButton(sheet))
 
       await waitForSheetToClose()
-      expect(formRow('date').textContent).toContain('12')
+      expect(formRow('date').textContent).toContain('12 Dec')
       expect(formRow('date').textContent).not.toContain(translated('en', 'expenses.today'))
       typeAmount('1200')
       fireEvent.click(saveButton())
@@ -715,19 +759,227 @@ describe('AddExpenseScreen', () => {
       expect(sentBody(fetchMock, 'POST', expensesPath).expenseDate).toBe('2026-12-12')
     })
 
-    it('lets the person pick an old date', async () => {
+    it('lets the person pick an old date with Done', async () => {
       const { fetchMock } = await renderReadyAdd()
       const sheet = await openSheet('date')
 
-      fireEvent.change(within(sheet).getByLabelText(translated('en', 'expense.date'), { selector: 'input' }), {
-        target: { value: '2025-03-01' },
-      })
+      typeDate(sheet, '2025-03-01')
+      fireEvent.click(doneButton(sheet))
 
       await waitForSheetToClose()
       typeAmount('1200')
       fireEvent.click(saveButton())
       await waitFor(() => {
         expect(sentBody(fetchMock, 'POST', expensesPath).expenseDate).toBe('2025-03-01')
+      })
+    })
+
+    it('writes the picked date in the row in Macedonian after Done', async () => {
+      await renderReadyAdd({ language: 'mk' })
+      const sheet = await openSheet('date', 'mk')
+
+      typeDate(sheet, '2026-12-12', 'mk')
+      fireEvent.click(doneButton(sheet, 'mk'))
+
+      await waitForSheetToClose()
+      expect(formRow('date', 'mk').textContent).toContain('12 дек')
+    })
+
+    it.each(languages)('shows a Done button in the Date sheet (%s)', async (language) => {
+      await renderReadyAdd({ language })
+
+      const sheet = await openSheet('date', language)
+
+      expect(doneButton(sheet, language)).toBeTruthy()
+    })
+
+    it('shows the date of the row in the field when the sheet opens', async () => {
+      await renderReadyAdd()
+
+      const sheet = await openSheet('date')
+
+      expect(dateField(sheet).value).toBe(testToday)
+    })
+
+    it('shows the date picked earlier in the field when the sheet is opened again', async () => {
+      await renderReadyAdd()
+      const first = await openSheet('date')
+      typeDate(first, '2026-12-12')
+      fireEvent.click(doneButton(first))
+      await waitForSheetToClose()
+
+      const second = await openSheet('date')
+
+      expect(dateField(second).value).toBe('2026-12-12')
+    })
+
+    it('keeps the sheet open while a date is typed in the field', async () => {
+      await renderReadyAdd()
+      const sheet = await openSheet('date')
+
+      typeDate(sheet, '2026-12-12')
+
+      expect(sheetOf('date')).toBeTruthy()
+      expect(dateField(sheet).value).toBe('2026-12-12')
+    })
+
+    it('does not change the Date row while a date is typed, because only Done applies it', async () => {
+      await renderReadyAdd()
+      const sheet = await openSheet('date')
+
+      typeDate(sheet, '2026-12-12')
+
+      expect(formRowBehindSheet('date').textContent).toContain(translated('en', 'expenses.today'))
+      expect(formRowBehindSheet('date').textContent).not.toContain('12 Dec')
+    })
+
+    it('has Done enabled when the sheet opens, and closes without changing the date when Done is pressed', async () => {
+      const { fetchMock } = await renderReadyAdd()
+      const sheet = await openSheet('date')
+
+      expect(isDisabled(doneButton(sheet))).toBe(false)
+      fireEvent.click(doneButton(sheet))
+
+      await waitForSheetToClose()
+      expect(formRow('date').textContent).toContain(translated('en', 'expenses.today'))
+      typeAmount('1200')
+      fireEvent.click(saveButton())
+      await waitFor(() => {
+        expect(sentBody(fetchMock, 'POST', expensesPath).expenseDate).toBe(testToday)
+      })
+    })
+
+    it('sends the last full date when several dates were typed before Done, never one in between', async () => {
+      const { fetchMock } = await renderReadyAdd()
+      const sheet = await openSheet('date')
+
+      typeDate(sheet, '2026-12-12')
+      typeDate(sheet, '2026-12-14')
+      fireEvent.click(doneButton(sheet))
+
+      await waitForSheetToClose()
+      typeAmount('1200')
+      fireEvent.click(saveButton())
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'POST', expensesPath)).toBe(1)
+      })
+      expect(sentBody(fetchMock, 'POST', expensesPath).expenseDate).toBe('2026-12-14')
+    })
+
+    it('keeps Done disabled while the field is empty', async () => {
+      await renderReadyAdd()
+      const sheet = await openSheet('date')
+
+      typeDate(sheet, '')
+
+      expect(isDisabled(doneButton(sheet))).toBe(true)
+    })
+
+    it('keeps Done disabled while the date in the field is not complete', async () => {
+      await renderReadyAdd()
+      const sheet = await openSheet('date')
+
+      typeDate(sheet, '2026-12-')
+
+      expect(isDisabled(doneButton(sheet))).toBe(true)
+    })
+
+    it('does nothing when Done is pressed while it is disabled, and keeps the sheet open', async () => {
+      await renderReadyAdd()
+      const sheet = await openSheet('date')
+      typeDate(sheet, '')
+
+      fireEvent.click(doneButton(sheet))
+
+      expect(sheetOf('date')).toBeTruthy()
+    })
+
+    it('enables Done again when a full date is typed after the field was emptied', async () => {
+      await renderReadyAdd()
+      const sheet = await openSheet('date')
+      typeDate(sheet, '')
+
+      typeDate(sheet, '2026-12-12')
+
+      expect(isDisabled(doneButton(sheet))).toBe(false)
+    })
+
+    it.each([
+      ['1999-12-31', 'a day before the year 2000'],
+      ['1900-01-01', 'the year 1900'],
+      [addDays(testToday, 366), 'a year and a day from today'],
+      ['2062-10-06', 'the year 2062, a typo'],
+    ])('keeps Done disabled for %s, %s, which is out of range', async (date) => {
+      await renderReadyAdd()
+      const sheet = await openSheet('date')
+
+      typeDate(sheet, date)
+
+      expect(isDisabled(doneButton(sheet))).toBe(true)
+    })
+
+    it.each([
+      ['2000-01-01', 'the first day of the year 2000'],
+      [addDays(testToday, 365), 'a year from today'],
+      [testToday, 'today'],
+    ])('keeps Done enabled for %s, %s, which is in range', async (date) => {
+      await renderReadyAdd()
+      const sheet = await openSheet('date')
+
+      typeDate(sheet, date)
+
+      expect(isDisabled(doneButton(sheet))).toBe(false)
+    })
+
+    it('does not send a date that is out of range, because Done cannot apply it', async () => {
+      const { fetchMock } = await renderReadyAdd()
+      const sheet = await openSheet('date')
+
+      typeDate(sheet, '2062-10-06')
+      fireEvent.click(doneButton(sheet))
+      fireEvent.keyDown(sheet, { key: 'Escape' })
+      await waitForSheetToClose()
+
+      typeAmount('1200')
+      fireEvent.click(saveButton())
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'POST', expensesPath)).toBe(1)
+      })
+      expect(sentBody(fetchMock, 'POST', expensesPath).expenseDate).toBe(testToday)
+    })
+
+    it('applies Yesterday at once and closes, dropping a date that was typed but not applied', async () => {
+      const { fetchMock } = await renderReadyAdd()
+      const sheet = await openSheet('date')
+      typeDate(sheet, '2026-12-12')
+
+      fireEvent.click(yesterdayChip(sheet))
+
+      await waitForSheetToClose()
+      expect(formRow('date').textContent).toContain(translated('en', 'expenses.yesterday'))
+      typeAmount('1200')
+      fireEvent.click(saveButton())
+      await waitFor(() => {
+        expect(sentBody(fetchMock, 'POST', expensesPath).expenseDate).toBe(testYesterday)
+      })
+    })
+
+    it('applies Today at once and closes, dropping a date that was typed but not applied', async () => {
+      const { fetchMock } = await renderReadyAdd()
+      const first = await openSheet('date')
+      fireEvent.click(yesterdayChip(first))
+      await waitForSheetToClose()
+      const second = await openSheet('date')
+      typeDate(second, '2026-12-12')
+
+      fireEvent.click(todayChip(second))
+
+      await waitForSheetToClose()
+      expect(formRow('date').textContent).toContain(translated('en', 'expenses.today'))
+      typeAmount('1200')
+      fireEvent.click(saveButton())
+      await waitFor(() => {
+        expect(sentBody(fetchMock, 'POST', expensesPath).expenseDate).toBe(testToday)
       })
     })
 
@@ -991,6 +1243,101 @@ describe('AddExpenseScreen', () => {
       expect(within(sheet).getByText(translated('mk', 'expense.percentLeft', { percent: '12,5' }))).toBeTruthy()
     })
 
+    it('writes the amount left to assign in Macedonian as «Уште 1.920 ден. да се распредели», with a dot for thousands', async () => {
+      await renderReadyAdd({ language: 'mk' })
+      typeAmount('3000', 'mk')
+      const sheet = await openSheet('split', 'mk')
+      fireEvent.click(splitTab(sheet, 'splitExact', 'mk'))
+
+      typeInPerson(sheet, 'Marko', '1080')
+
+      expect(within(sheet).getByText('Уште 1.920 ден. да се распредели', { normalizer: plainSpaces })).toBeTruthy()
+    })
+
+    it('writes the amount left to assign in Macedonian with a minus when the amounts add up to more than the total', async () => {
+      await renderReadyAdd({ language: 'mk', members: fourMembers })
+      typeAmount('3000', 'mk')
+      const sheet = await openSheet('split', 'mk')
+      fireEvent.click(splitTab(sheet, 'splitExact', 'mk'))
+
+      typeInPerson(sheet, 'Filip', '1000')
+      typeInPerson(sheet, 'Ana', '1000')
+      typeInPerson(sheet, 'Marko', '1000')
+      typeInPerson(sheet, 'Grandma', '500')
+
+      expect(within(sheet).getByText('Уште -500 ден. да се распредели', { normalizer: plainSpaces })).toBeTruthy()
+    })
+
+    it('writes the whole total left to assign in Macedonian when nothing is typed', async () => {
+      await renderReadyAdd({ language: 'mk' })
+      typeAmount('3000', 'mk')
+      const sheet = await openSheet('split', 'mk')
+
+      fireEvent.click(splitTab(sheet, 'splitExact', 'mk'))
+
+      expect(within(sheet).getByText('Уште 3.000 ден. да се распредели', { normalizer: plainSpaces })).toBeTruthy()
+    })
+
+    it('writes the amount left to assign in English with a comma for thousands', async () => {
+      await renderReadyAdd()
+      typeAmount('3000')
+      const sheet = await openSheet('split')
+      fireEvent.click(splitTab(sheet, 'splitExact'))
+
+      typeInPerson(sheet, 'Marko', '1080')
+
+      expect(within(sheet).getByText('1,920 MKD left to assign', { normalizer: plainSpaces })).toBeTruthy()
+    })
+
+    it('writes the euros left to assign in Macedonian with a decimal comma', async () => {
+      await renderReadyAdd({
+        language: 'mk',
+        members: threeMembers,
+        group: groupOf({ memberCount: 3, defaultCurrency: 'EUR' }),
+      })
+      typeAmount('10.50', 'mk')
+      const sheet = await openSheet('split', 'mk')
+      fireEvent.click(splitTab(sheet, 'splitExact', 'mk'))
+
+      typeInPerson(sheet, 'Filip', '4.50')
+
+      expect(within(sheet).getByText('Уште €6,00 да се распредели', { normalizer: plainSpaces })).toBeTruthy()
+    })
+
+    it('writes the percent left in Macedonian with a minus when the percentages add up to more than 100', async () => {
+      await renderReadyAdd({ language: 'mk', members: fourMembers })
+      typeAmount('3000', 'mk')
+      const sheet = await openSheet('split', 'mk')
+      fireEvent.click(splitTab(sheet, 'splitPercentage', 'mk'))
+
+      typeInPerson(sheet, 'Filip', '60')
+      typeInPerson(sheet, 'Ana', '60')
+
+      expect(within(sheet).getByText('Уште -20 %')).toBeTruthy()
+    })
+
+    it('writes the percent left in Macedonian with a decimal comma and no thousands dot', async () => {
+      await renderReadyAdd({ language: 'mk', members: fourMembers })
+      typeAmount('3000', 'mk')
+      const sheet = await openSheet('split', 'mk')
+      fireEvent.click(splitTab(sheet, 'splitPercentage', 'mk'))
+
+      typeInPerson(sheet, 'Filip', '0.5')
+
+      expect(within(sheet).getByText('Уште 99,5 %')).toBeTruthy()
+    })
+
+    it('writes the percent left in English with a decimal dot', async () => {
+      await renderReadyAdd({ members: fourMembers })
+      typeAmount('3000')
+      const sheet = await openSheet('split')
+      fireEvent.click(splitTab(sheet, 'splitPercentage'))
+
+      typeInPerson(sheet, 'Filip', '0.5')
+
+      expect(within(sheet).getByText('99.5 % left')).toBeTruthy()
+    })
+
     it('sends percentages in hundredths of a percent when they add up to 100 %', async () => {
       const body = await savedBody({ members: fourMembers }, async () => {
         typeAmount('3000')
@@ -1076,6 +1423,135 @@ describe('AddExpenseScreen', () => {
           { normalizer: plainSpaces },
         ),
       ).toBeTruthy()
+    })
+  })
+
+  describe('the buttons of the Shares tab', () => {
+    async function openSharesTab(language: Language = 'en') {
+      await renderReadyAdd({ language, members: twoMembers })
+      typeAmount('3000', language)
+      const sheet = await openSheet('split', language)
+      fireEvent.click(splitTab(sheet, 'splitShares', language))
+      return sheet
+    }
+
+    function sharesOfPerson(sheet: HTMLElement, name: string): number {
+      return Number(within(personGroup(sheet, name)).getByText(/^\d+$/).textContent)
+    }
+
+    it.each([
+      ['Filip', 'Fewer shares for Filip', 'More shares for Filip'],
+      ['Ana', 'Fewer shares for Ana', 'More shares for Ana'],
+    ])('names the buttons of %s "%s" and "%s" in English', async (name, fewer, more) => {
+      const sheet = await openSharesTab()
+
+      expect(within(personGroup(sheet, name)).getByRole('button', { name: fewer })).toBeTruthy()
+      expect(within(personGroup(sheet, name)).getByRole('button', { name: more })).toBeTruthy()
+    })
+
+    it.each([
+      ['Filip', 'Помалку делови за Filip', 'Повеќе делови за Filip'],
+      ['Ana', 'Помалку делови за Ana', 'Повеќе делови за Ana'],
+    ])('names the buttons of %s «%s» and «%s» in Macedonian', async (name, fewer, more) => {
+      const sheet = await openSharesTab('mk')
+
+      expect(within(personGroup(sheet, name)).getByRole('button', { name: fewer })).toBeTruthy()
+      expect(within(personGroup(sheet, name)).getByRole('button', { name: more })).toBeTruthy()
+    })
+
+    it('has no button with the bare names − and + any more', async () => {
+      const sheet = await openSharesTab()
+
+      expect(within(sheet).queryByRole('button', { name: '−' })).toBeNull()
+      expect(within(sheet).queryByRole('button', { name: '+' })).toBeNull()
+    })
+
+    it('adds one share to that person only when their More button is pressed', async () => {
+      const sheet = await openSharesTab()
+
+      fireEvent.click(within(personGroup(sheet, 'Ana')).getByRole('button', { name: 'More shares for Ana' }))
+
+      expect(sharesOfPerson(sheet, 'Ana')).toBe(2)
+      expect(sharesOfPerson(sheet, 'Filip')).toBe(1)
+    })
+
+    it('takes one share from that person only when their Fewer button is pressed', async () => {
+      const sheet = await openSharesTab()
+      fireEvent.click(within(personGroup(sheet, 'Ana')).getByRole('button', { name: 'More shares for Ana' }))
+
+      fireEvent.click(within(personGroup(sheet, 'Ana')).getByRole('button', { name: 'Fewer shares for Ana' }))
+
+      expect(sharesOfPerson(sheet, 'Ana')).toBe(1)
+      expect(sharesOfPerson(sheet, 'Filip')).toBe(1)
+    })
+
+    it('disables the Fewer button of a person who is down to 0 shares', async () => {
+      const sheet = await openSharesTab()
+
+      fireEvent.click(within(personGroup(sheet, 'Ana')).getByRole('button', { name: 'Fewer shares for Ana' }))
+
+      expect(isDisabled(within(personGroup(sheet, 'Ana')).getByRole('button', { name: 'Fewer shares for Ana' }))).toBe(true)
+    })
+  })
+
+  describe('the tap targets, each at least 44 px: the class min-h-11 and the class min-w-11 on the tapped element', () => {
+    it.each(['Filip', 'Ana', 'Marko'])('gives the tick row of %s on the Equal tab a tap target', async (name) => {
+      await renderReadyAdd()
+      typeAmount('3000')
+      const sheet = await openSheet('split')
+
+      expectTapTarget(personButton(sheet, name), `the row button that holds the tick of ${name}`)
+    })
+
+    it('gives the + extra button a tap target', async () => {
+      await renderReadyAdd()
+      typeAmount('3000')
+      const sheet = await openSheet('split')
+
+      expectTapTarget(
+        within(personGroup(sheet, 'Marko')).getByRole('button', { name: translated('en', 'expense.extra') }),
+        'the + extra button',
+      )
+    })
+
+    it('gives the extra field that opens after + extra a tap target', async () => {
+      await renderReadyAdd()
+      typeAmount('3000')
+      const sheet = await openSheet('split')
+      fireEvent.click(within(personGroup(sheet, 'Marko')).getByRole('button', { name: translated('en', 'expense.extra') }))
+
+      expectTapTarget(within(personGroup(sheet, 'Marko')).getByRole('textbox'), 'the extra field')
+    })
+
+    it.each(['splitExact', 'splitPercentage'] as const)('gives every box on the %s tab a tap target', async (tab) => {
+      await renderReadyAdd()
+      typeAmount('3000')
+      const sheet = await openSheet('split')
+      fireEvent.click(splitTab(sheet, tab))
+
+      for (const name of ['Filip', 'Ana', 'Marko', 'Grandma', 'Petar']) {
+        expectTapTarget(within(personGroup(sheet, name)).getByRole('textbox'), `the box of ${name}`)
+      }
+    })
+
+    it('gives the Fewer and More buttons of the Shares tab a tap target', async () => {
+      await renderReadyAdd({ members: twoMembers })
+      typeAmount('3000')
+      const sheet = await openSheet('split')
+      fireEvent.click(splitTab(sheet, 'splitShares'))
+
+      for (const name of ['Filip', 'Ana']) {
+        const buttons = within(personGroup(sheet, name)).getAllByRole('button')
+        expect(buttons).toHaveLength(2)
+        expectTapTarget(buttons[0], `the Fewer button of ${name}`)
+        expectTapTarget(buttons[1], `the More button of ${name}`)
+      }
+    })
+
+    it('gives the Note link a tap target', async () => {
+      await renderReadyAdd()
+
+      expectTapTarget(noteLink(), 'the Note link')
     })
   })
 

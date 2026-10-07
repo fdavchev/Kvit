@@ -8,7 +8,6 @@ import {
   taxiExpenseId,
   untitledExpenseId,
 } from './expenseTestData'
-import { macedonianDay } from './expenseTestHelpers'
 import { testGroupId } from './groupTestData'
 import {
   anaMember,
@@ -83,7 +82,7 @@ function money(amountMinor: number, currency: 'MKD' | 'EUR', language: Language)
 }
 
 function dayText(language: Language, date: string): string {
-  return language === 'en' ? `${Number(date.slice(8))} Oct` : macedonianDay(date, false)
+  return `${Number(date.slice(8))} ${language === 'en' ? 'Oct' : 'окт'}`
 }
 
 function categoryText(language: Language, key: string): string {

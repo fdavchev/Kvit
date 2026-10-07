@@ -10,6 +10,12 @@ describe('formatMoney', () => {
     [500, 'en', `5${nbsp}MKD`],
     [123_456_700, 'en', `1,234,567${nbsp}MKD`],
     [123_456_700, 'mk', `1.234.567${nbsp}ден.`],
+    [300_000, 'en', `3,000${nbsp}MKD`],
+    [300_000, 'mk', `3.000${nbsp}ден.`],
+    [99_900, 'en', `999${nbsp}MKD`],
+    [99_900, 'mk', `999${nbsp}ден.`],
+    [100_000, 'mk', `1.000${nbsp}ден.`],
+    [10_000_000, 'mk', `100.000${nbsp}ден.`],
   ] as const)('formats %i deni in %s as %s', (amount, language, expected) => {
     expect(formatMoney(amount, 'MKD', language)).toBe(expected)
   })
@@ -21,6 +27,12 @@ describe('formatMoney', () => {
     [123_450, 'mk', '€1.234,50'],
     [5, 'en', '€0.05'],
     [100_000_001, 'mk', '€1.000.000,01'],
+    [99, 'mk', '€0,99'],
+    [100, 'mk', '€1,00'],
+    [100_000, 'mk', '€1.000,00'],
+    [100_000, 'en', '€1,000.00'],
+    [4_500, 'mk', '€45,00'],
+    [600, 'mk', '€6,00'],
   ] as const)('formats %i cents in %s as %s', (amount, language, expected) => {
     expect(formatMoney(amount, 'EUR', language)).toBe(expected)
   })
@@ -30,9 +42,32 @@ describe('formatMoney', () => {
     expect(formatMoney(-120_000, 'MKD', 'mk')).toBe(`-1.200${nbsp}ден.`)
   })
 
+  it.each([
+    [-30_000, 'en', `-300${nbsp}MKD`],
+    [-30_000, 'mk', `-300${nbsp}ден.`],
+    [-100, 'mk', `-1${nbsp}ден.`],
+  ] as const)('writes the negative amount of %i deni in %s as %s', (amount, language, expected) => {
+    expect(formatMoney(amount, 'MKD', language)).toBe(expected)
+  })
+
   it('puts the minus sign before the euro sign for negative EUR', () => {
     expect(formatMoney(-1_550, 'EUR', 'en')).toBe('-€15.50')
     expect(formatMoney(-123_450, 'EUR', 'mk')).toBe('-€1.234,50')
+  })
+
+  it.each([
+    [-5, 'en', '-€0.05'],
+    [-5, 'mk', '-€0,05'],
+    [-600, 'mk', '-€6,00'],
+  ] as const)('writes the negative amount of %i cents in %s as %s', (amount, language, expected) => {
+    expect(formatMoney(amount, 'EUR', language)).toBe(expected)
+  })
+
+  it.each([
+    [300_000, 'MKD'],
+    [123_450, 'EUR'],
+  ] as const)('writes %i minor units of %s in Macedonian with no Latin letter in it', (amount, currency) => {
+    expect(formatMoney(amount, currency, 'mk')).not.toMatch(/[A-Za-z]/)
   })
 
   it('formats zero in both currencies', () => {

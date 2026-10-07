@@ -32,7 +32,7 @@ export function ExpenseListItem({ groupId, row, category, language }: ExpenseLis
     >
       <CategoryTile category={category} />
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate font-semibold">{expenseTitle(row.title, category, t)}</span>
+        <span className="line-clamp-2 font-semibold break-words">{expenseTitle(row.title, category, t)}</span>
         <span className="text-[0.8125rem] text-muted-foreground">{paidByLine}</span>
       </span>
       <span className="text-right font-bold whitespace-nowrap">

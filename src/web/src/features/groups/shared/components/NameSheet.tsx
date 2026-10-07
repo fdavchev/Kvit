@@ -9,14 +9,34 @@ interface NameSheetProps {
   actionsRef: RefObject<KvitSheetActions | null>
   isPending: boolean
   errorMessage: string | null
+  isNameRefused: boolean
   onSubmit: (name: string) => void
   onDismiss: () => void
   onClose: () => void
 }
 
-export function NameSheet({ actionsRef, isPending, errorMessage, onSubmit, onDismiss, onClose }: NameSheetProps) {
+export function NameSheet({
+  actionsRef,
+  isPending,
+  errorMessage,
+  isNameRefused,
+  onSubmit,
+  onDismiss,
+  onClose,
+}: NameSheetProps) {
   const { t } = useTranslation()
   const [name, setName] = useState('')
+  const [isChangedSinceSubmit, setIsChangedSinceSubmit] = useState<boolean>(false)
+
+  function changeName(nextName: string): void {
+    setName(nextName)
+    setIsChangedSinceSubmit(true)
+  }
+
+  function submit(): void {
+    setIsChangedSinceSubmit(false)
+    onSubmit(name)
+  }
 
   return (
     <KvitSheet title={t('addName.title')} onClose={onClose} actionsRef={actionsRef}>
@@ -24,7 +44,7 @@ export function NameSheet({ actionsRef, isPending, errorMessage, onSubmit, onDis
         submitLabel={t('addName.submit')}
         isPending={isPending}
         errorMessage={errorMessage}
-        onSubmit={() => onSubmit(name)}
+        onSubmit={submit}
         footer={
           <KvitButton type="button" variant="link" onClick={onDismiss}>
             {t('common.close')}
@@ -35,8 +55,9 @@ export function NameSheet({ actionsRef, isPending, errorMessage, onSubmit, onDis
           id="add-name"
           label={t('addName.label')}
           value={name}
-          onChange={setName}
+          onChange={changeName}
           hint={t('addName.hint')}
+          invalid={isNameRefused && !isChangedSinceSubmit}
           autoComplete="off"
           enterKeyHint="done"
         />

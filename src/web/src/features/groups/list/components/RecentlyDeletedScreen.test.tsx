@@ -140,8 +140,8 @@ describe('RecentlyDeletedScreen', () => {
     stubRecentlyDeleted(jsonAnswer(twoDeletedGroups))
     await renderRecentlyDeleted('mk')
 
-    expect(await screen.findByText(/^Може да се врати до 2 ноември 2026( г\.)?$/)).toBeTruthy()
-    expect(screen.getByText(/^Може да се врати до 20 октомври 2026( г\.)?$/)).toBeTruthy()
+    expect(await screen.findByText('Може да се врати до 2 ноември 2026')).toBeTruthy()
+    expect(screen.getByText('Може да се врати до 20 октомври 2026')).toBeTruthy()
   })
 
   it.each(languages)('has one Restore button for each deleted group (%s)', async (language) => {

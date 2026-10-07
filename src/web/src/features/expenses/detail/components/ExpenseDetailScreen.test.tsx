@@ -26,13 +26,13 @@ import {
   findErrorText,
   freezeTime,
   groupPath,
-  macedonianDay,
+  isoSecondsAgo,
   membersPath,
   plainSpaces,
-  relativeTime,
   unfreezeTime,
   restoreRealRetryPolicy,
 } from '@/test/expenseTestHelpers'
+import { makePluralRulesLikeChromeWithoutMacedonian } from '@/test/chromeWithoutMacedonian'
 import { expectDisabledWhilePending } from '@/test/formTestHelpers'
 import { groupOf, testGroupId } from '@/test/groupTestData'
 import {
@@ -217,7 +217,7 @@ describe('ExpenseDetailScreen', () => {
       await renderDetail({ language })
       await showsDetail()
 
-      const dateText = language === 'en' ? '3 Oct' : macedonianDay('2026-10-03', false)
+      const dateText = language === 'en' ? '3 Oct' : '3 окт'
 
       expect(
         screen.getByText(translated(language, 'expense.paidByOn', { name: 'Filip', date: dateText })),
@@ -336,15 +336,32 @@ describe('ExpenseDetailScreen', () => {
       ).toBeTruthy()
     })
 
-    it('shows the saved rate for an EUR expense in Macedonian with the word «Цена на еврото», a decimal comma and the date the way Intl writes it', async () => {
+    it('shows the saved rate for an EUR expense in Macedonian with the word «Цена на еврото», a decimal comma and the date «24 сеп 2026»', async () => {
       await renderDetail({ language: 'mk', detail: groceriesDetail })
       await showsDetail('Groceries')
 
-      expect(
-        screen.getByText(
-          translated('mk', 'expense.rate', { rate: '61,5610', date: macedonianDay('2026-09-24', true) }),
-        ),
-      ).toBeTruthy()
+      expect(screen.getByText('Цена на еврото: 1 EUR = 61,5610 MKD · 24 сеп 2026')).toBeTruthy()
+    })
+
+    it('writes the rate in Macedonian with four decimals even when the last ones are zeros', async () => {
+      await renderDetail({ language: 'mk', detail: { ...groceriesDetail, mkdPerEur: 61.5 } })
+      await showsDetail('Groceries')
+
+      expect(screen.getByText(/1 EUR = 61,5000 MKD/)).toBeTruthy()
+    })
+
+    it('writes the rate in Macedonian with four decimals when the rate has more of them', async () => {
+      await renderDetail({ language: 'mk', detail: { ...groceriesDetail, mkdPerEur: 61.56789 } })
+      await showsDetail('Groceries')
+
+      expect(screen.getByText(/1 EUR = 61,5679 MKD/)).toBeTruthy()
+    })
+
+    it('writes the date of the rate in Macedonian with the year and no dot, whatever the month', async () => {
+      await renderDetail({ language: 'mk', detail: { ...groceriesDetail, rateDate: '2026-11-03' } })
+      await showsDetail('Groceries')
+
+      expect(screen.getByText(/MKD · 3 ное 2026$/)).toBeTruthy()
     })
 
     it('writes the rate with four decimals even when the last ones are zeros', async () => {
@@ -388,7 +405,7 @@ describe('ExpenseDetailScreen', () => {
     function sentencesIn(language: Language): Sentences {
       const dash = '—'
       const day = (date: string): string =>
-        language === 'en' ? `${Number(date.slice(8))} Oct` : macedonianDay(date, false)
+        language === 'en' ? `${Number(date.slice(8))} Oct` : `${Number(date.slice(8))} окт`
       return {
         restored: translated(language, 'expense.historyRestored', { name: 'Filip' }),
         deleted: translated(language, 'expense.historyDeleted', { name: 'Filip' }),
@@ -524,26 +541,192 @@ describe('ExpenseDetailScreen', () => {
       expect(screen.queryByText(/Filip changed the amount/)).toBeNull()
     })
 
-    it.each(languages)('writes how long ago a recent entry was with Intl.RelativeTimeFormat in minutes, hours and days (%s)', async (language) => {
+    it.each(languages)('writes how long ago a recent entry was in minutes, hours and days (%s)', async (language) => {
       await renderDetail({ language, detail: historyDetail })
       await showsDetail()
       const sentences = sentencesIn(language)
+      const expected = language === 'en'
+        ? { minutes: '5 minutes ago', hours: '2 hours ago', days: '2 days ago' }
+        : { minutes: 'пред 5 минути', hours: 'пред 2 часа', days: 'пред 2 дена' }
 
-      expect(elementWithAll([sentences.restored, relativeTime(language, -5, 'minute')], 40)).toBeTruthy()
-      expect(elementWithAll([sentences.deleted, relativeTime(language, -2, 'hour')], 40)).toBeTruthy()
-      expect(elementWithAll([sentences.amount, relativeTime(language, -2, 'day')], 40)).toBeTruthy()
+      expect(elementWithAll([sentences.restored, expected.minutes], 40)).toBeTruthy()
+      expect(elementWithAll([sentences.deleted, expected.hours], 40)).toBeTruthy()
+      expect(elementWithAll([sentences.amount, expected.days], 40)).toBeTruthy()
     })
 
     it.each(languages)('writes the date instead of a relative time for an entry older than seven days (%s)', async (language) => {
       await renderDetail({ language, detail: historyDetail })
       await showsDetail()
       const sentences = sentencesIn(language)
-      const olderDay = language === 'en' ? '28 Sep' : macedonianDay('2026-09-28', false)
-      const oldestDay = language === 'en' ? '20 Sep' : macedonianDay('2026-09-20', false)
+      const olderDay = language === 'en' ? '28 Sep' : '28 сеп'
+      const oldestDay = language === 'en' ? '20 Sep' : '20 сеп'
+      const eightDaysAgo = language === 'en' ? '8 days ago' : 'пред 8 дена'
 
       expect(elementWithAll([sentences.paidBy, olderDay], 40)).toBeTruthy()
       expect(elementWithAll([sentences.added, oldestDay], 40)).toBeTruthy()
-      expect(screen.queryByText(relativeTime(language, -8, 'day'))).toBeNull()
+      expect(screen.queryByText(eightDaysAgo)).toBeNull()
+    })
+
+    it('writes the date of an older entry in Macedonian with no dot and no «г.»', async () => {
+      await renderDetail({ language: 'mk', detail: historyDetail })
+      await showsDetail()
+
+      expect(screen.getByText('28 сеп')).toBeTruthy()
+      expect(screen.getByText('20 сеп')).toBeTruthy()
+      expect(screen.queryByText(/г\./)).toBeNull()
+    })
+
+    it('writes the year of an older entry that is not from this year', async () => {
+      await renderDetail({
+        language: 'mk',
+        detail: detailOf({
+          history: [{ type: 'ExpenseAdded', actorName: 'Bojan', createdAt: '2025-12-24T09:00:00Z', changes: null }],
+        }),
+      })
+      await showsDetail()
+
+      expect(screen.getByText('24 дек 2025')).toBeTruthy()
+    })
+
+    it('writes the amount of a change in Macedonian with a dot for thousands and «ден.»', async () => {
+      await renderDetail({ language: 'mk', detail: historyDetail })
+      await showsDetail()
+
+      expect(sentence('Ana го измени износот: 2.800 ден. → 3.000 ден.')).toBeTruthy()
+    })
+
+    it('writes the amount of a change in Macedonian euros with a decimal comma', async () => {
+      await renderDetail({
+        language: 'mk',
+        detail: {
+          ...historyDetail,
+          currency: 'EUR',
+          amountMinor: 4500,
+          shares: groceriesDetail.shares,
+          history: [
+            {
+              type: 'ExpenseEdited',
+              actorName: 'Ana',
+              createdAt: '2026-10-03T10:00:00Z',
+              changes: [{ field: 'amount', old: '4000', new: '4550' }],
+            },
+          ],
+        },
+      })
+      await showsDetail()
+
+      expect(sentence('Ana го измени износот: €40,00 → €45,50')).toBeTruthy()
+    })
+
+    describe.each(languages)('how long ago, as text of the app and not of the browser (%s)', (language) => {
+      let restorePluralRules: () => void = () => {}
+
+      beforeEach(() => {
+        restorePluralRules = makePluralRulesLikeChromeWithoutMacedonian()
+      })
+
+      afterEach(() => {
+        restorePluralRules()
+      })
+
+      function detailWithEntryAgo(seconds: number): ExpenseDetail {
+        return detailOf({
+          history: [
+            { type: 'ExpenseDeleted', actorName: 'Filip', createdAt: isoSecondsAgo(seconds), changes: null },
+          ],
+        })
+      }
+
+      async function showsEntryAgo(seconds: number): Promise<void> {
+        await renderDetail({ language, detail: detailWithEntryAgo(seconds) })
+        await showsDetail()
+      }
+
+      function expectedAgo(english: string, macedonian: string): string {
+        return language === 'en' ? english : macedonian
+      }
+
+      const minute = 60
+      const hour = 60 * minute
+      const day = 24 * hour
+
+      it.each([
+        [0, 'just now', 'пред малку'],
+        [1, 'just now', 'пред малку'],
+        [59, 'just now', 'пред малку'],
+        [-30, 'just now', 'пред малку'],
+      ])('writes an entry that is %i seconds old as "%s" / «%s»', async (seconds, english, macedonian) => {
+        await showsEntryAgo(seconds)
+
+        expect(screen.getByText(expectedAgo(english, macedonian))).toBeTruthy()
+      })
+
+      it.each([
+        [1, '1 minute ago', 'пред 1 минута'],
+        [2, '2 minutes ago', 'пред 2 минути'],
+        [5, '5 minutes ago', 'пред 5 минути'],
+        [11, '11 minutes ago', 'пред 11 минути'],
+        [21, '21 minutes ago', 'пред 21 минута'],
+        [22, '22 minutes ago', 'пред 22 минути'],
+        [59, '59 minutes ago', 'пред 59 минути'],
+      ])('writes an entry that is %i minutes old as "%s" / «%s»', async (minutes, english, macedonian) => {
+        await showsEntryAgo(minutes * minute)
+
+        expect(screen.getByText(expectedAgo(english, macedonian))).toBeTruthy()
+      })
+
+      it.each([
+        [1, '1 hour ago', 'пред 1 час'],
+        [2, '2 hours ago', 'пред 2 часа'],
+        [5, '5 hours ago', 'пред 5 часа'],
+        [11, '11 hours ago', 'пред 11 часа'],
+        [21, '21 hours ago', 'пред 21 час'],
+        [22, '22 hours ago', 'пред 22 часа'],
+        [23, '23 hours ago', 'пред 23 часа'],
+      ])('writes an entry that is %i hours old as "%s" / «%s»', async (hours, english, macedonian) => {
+        await showsEntryAgo(hours * hour)
+
+        expect(screen.getByText(expectedAgo(english, macedonian))).toBeTruthy()
+      })
+
+      it.each([
+        [1, '1 day ago', 'пред 1 ден'],
+        [2, '2 days ago', 'пред 2 дена'],
+        [5, '5 days ago', 'пред 5 дена'],
+        [6, '6 days ago', 'пред 6 дена'],
+      ])('writes an entry that is %i days old as "%s" / «%s»', async (days, english, macedonian) => {
+        await showsEntryAgo(days * day)
+
+        expect(screen.getByText(expectedAgo(english, macedonian))).toBeTruthy()
+      })
+
+      it.each([
+        [minute, 'a minute exactly', '1 minute ago', 'пред 1 минута'],
+        [2 * minute - 1, 'a second short of two minutes', '1 minute ago', 'пред 1 минута'],
+        [hour - 1, 'a second short of an hour', '59 minutes ago', 'пред 59 минути'],
+        [hour, 'an hour exactly', '1 hour ago', 'пред 1 час'],
+        [day - 1, 'a second short of a day', '23 hours ago', 'пред 23 часа'],
+        [day, 'a day exactly', '1 day ago', 'пред 1 ден'],
+        [7 * day - 1, 'a second short of seven days', '6 days ago', 'пред 6 дена'],
+      ])('counts whole units downwards: %i seconds (%s) is "%s" / «%s»', async (seconds, _name, english, macedonian) => {
+        await showsEntryAgo(seconds)
+
+        expect(screen.getByText(expectedAgo(english, macedonian))).toBeTruthy()
+      })
+
+      it('writes the date, not a number of days, for an entry eight days old', async () => {
+        await showsEntryAgo(8 * day)
+
+        expect(screen.getByText(expectedAgo('28 Sep', '28 сеп'))).toBeTruthy()
+        expect(screen.queryByText(/\d+ days? ago|пред \d+ дена?/)).toBeNull()
+      })
+
+      it('writes no word of the other language', async () => {
+        await showsEntryAgo(5 * minute)
+        const wordOfTheOtherLanguage = language === 'en' ? /пред/ : /ago/
+
+        expect(screen.queryByText(wordOfTheOtherLanguage)).toBeNull()
+      })
     })
 
     it('shows the newest entry first and the first entry last', async () => {
@@ -888,7 +1071,7 @@ describe('ExpenseDetailScreen', () => {
       await renderDetail({ language: 'mk' })
       await showsDetail()
 
-      expect(screen.getByText(money(300000, 'MKD', 'mk'), { normalizer: plainSpaces })).toBeTruthy()
+      expect(screen.getByText('3.000 ден.', { normalizer: plainSpaces })).toBeTruthy()
       expect(screen.getByText(translated('mk', 'expense.history'))).toBeTruthy()
       expect(screen.getByRole('link', { name: translated('mk', 'expense.edit') })).toBeTruthy()
       expect(screen.getByRole('button', { name: translated('mk', 'expense.delete') })).toBeTruthy()

@@ -107,3 +107,132 @@ describe('index.css avatar colour tokens', () => {
     expect(tokenValue(indexCss, '--avatar-10')).toBeUndefined()
   })
 })
+
+const categoryColourNames = [
+  'orange',
+  'green',
+  'yellow',
+  'blue',
+  'pink',
+  'purple',
+  'slate',
+  'red',
+  'teal',
+  'gray',
+]
+
+const minimumTextContrast = 4.5
+const hexColour = /^#[0-9a-f]{6}$/
+
+function effectiveTokenValue(name: string, mode: 'light' | 'dark'): string {
+  const value = mode === 'light' ? tokenValue(light, name) : (tokenValue(dark, name) ?? tokenValue(light, name))
+  if (value === undefined) {
+    throw new Error(`index.css defines no ${name} in ${mode} mode`)
+  }
+  return value
+}
+
+function channelLuminance(channel: number): number {
+  const fraction = channel / 255
+  return fraction <= 0.04045 ? fraction / 12.92 : ((fraction + 0.055) / 1.055) ** 2.4
+}
+
+function relativeLuminance(hex: string): number {
+  if (!hexColour.test(hex)) {
+    throw new Error(`Expected a colour written as #rrggbb, got "${hex}"`)
+  }
+  const red = Number.parseInt(hex.slice(1, 3), 16)
+  const green = Number.parseInt(hex.slice(3, 5), 16)
+  const blue = Number.parseInt(hex.slice(5, 7), 16)
+  return 0.2126 * channelLuminance(red) + 0.7152 * channelLuminance(green) + 0.0722 * channelLuminance(blue)
+}
+
+function contrastWithWhite(hex: string): number {
+  return 1.05 / (relativeLuminance(hex) + 0.05)
+}
+
+function hueInDegrees(hex: string): number {
+  const red = Number.parseInt(hex.slice(1, 3), 16) / 255
+  const green = Number.parseInt(hex.slice(3, 5), 16) / 255
+  const blue = Number.parseInt(hex.slice(5, 7), 16) / 255
+  const highest = Math.max(red, green, blue)
+  const spread = highest - Math.min(red, green, blue)
+  if (highest === red) {
+    return (60 * (((green - blue) / spread) % 6) + 360) % 360
+  }
+  return highest === green ? 60 * ((blue - red) / spread + 2) : 60 * ((red - green) / spread + 4)
+}
+
+describe('the contrast helpers of this test', () => {
+  it('gives white on white a ratio of 1', () => {
+    expect(contrastWithWhite('#ffffff')).toBeCloseTo(1, 5)
+  })
+
+  it('gives white on black a ratio of 21', () => {
+    expect(contrastWithWhite('#000000')).toBeCloseTo(21, 5)
+  })
+
+  it('gives white on #767676 a ratio of 4.54, the known limit of grey text', () => {
+    expect(contrastWithWhite('#767676')).toBeCloseTo(4.54, 2)
+  })
+
+  it('gives white on #777777 a ratio of 4.48, a little under the limit', () => {
+    expect(contrastWithWhite('#777777')).toBeCloseTo(4.48, 2)
+  })
+
+  it('stops with an error naming a colour that is not written as #rrggbb', () => {
+    expect(() => contrastWithWhite('var(--category-orange)')).toThrow('var(--category-orange)')
+  })
+})
+
+describe('index.css category colour tokens', () => {
+  it('defines exactly the ten category colours, in this order', () => {
+    const definedNames = [...indexCss.matchAll(/(?:^|[\s;{])--category-([a-z]+):/g)].map(([, name]) => name)
+
+    expect(definedNames).toEqual(categoryColourNames)
+  })
+
+  it.each(categoryColourNames)('writes --category-%s as a plain #rrggbb colour in light and in dark mode', (name) => {
+    expect(effectiveTokenValue(`--category-${name}`, 'light')).toMatch(hexColour)
+    expect(effectiveTokenValue(`--category-${name}`, 'dark')).toMatch(hexColour)
+  })
+
+  it.each(categoryColourNames)('gives white text on --category-%s a contrast of at least 4.5 to 1 in light mode', (name) => {
+    const colour = effectiveTokenValue(`--category-${name}`, 'light')
+
+    expect(
+      contrastWithWhite(colour),
+      `white on --category-${name} (${colour}) has the contrast ${contrastWithWhite(colour).toFixed(3)}`,
+    ).toBeGreaterThanOrEqual(minimumTextContrast)
+  })
+
+  it.each(categoryColourNames)('gives white text on --category-%s a contrast of at least 4.5 to 1 in dark mode', (name) => {
+    const colour = effectiveTokenValue(`--category-${name}`, 'dark')
+
+    expect(
+      contrastWithWhite(colour),
+      `white on --category-${name} (${colour}) has the contrast ${contrastWithWhite(colour).toFixed(3)}`,
+    ).toBeGreaterThanOrEqual(minimumTextContrast)
+  })
+
+  it('keeps the orange an orange: a hue between 22 and 35 degrees, close to the old #c25a00 at 28.5, not a brown-red or a yellow', () => {
+    const hue = hueInDegrees(effectiveTokenValue('--category-orange', 'light'))
+
+    expect(hue).toBeGreaterThanOrEqual(22)
+    expect(hue).toBeLessThanOrEqual(35)
+  })
+
+  it('gives the ten colours ten different values in each mode', () => {
+    for (const mode of ['light', 'dark'] as const) {
+      const colours = categoryColourNames.map((name) => effectiveTokenValue(`--category-${name}`, mode))
+
+      expect(new Set(colours).size).toBe(10)
+    }
+  })
+
+  it.each(
+    categoryColourNames.map((name, index) => [index, name] as const),
+  )('maps --avatar-%i to --category-%s, as before', (index, name) => {
+    expect(tokenValue(light, `--avatar-${index}`)).toBe(`var(--category-${name})`)
+  })
+})

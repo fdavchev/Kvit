@@ -68,6 +68,8 @@
 
 - [ ] An Activity row for an edit of an expense that was deleted since shows a changed amount in the group's default currency (the change has no currency), which can be wrong for an expense in the other currency; store the currency in the `ExpenseEdited` change entries (Phase 8 Step 5, 2026-10-06)
 
+- [ ] **Found in the Phase 8 real-browser check (2026-10-07; Filip agreed to skip):** dark-mode category tile and avatar edges are faint (1.6 to 2.4:1 against the card; the emoji still reads); one edit with 7 changes makes 7 Activity rows; "restored an expense" names no expense even when the title is known; typing your own name on a new One bill says "…already in this group" though no group exists yet; Save waits up to 10 s when NBRM hangs (once per 30 minutes); the API log writes dates US-style; `/expenses/not-a-guid` still sends one request (404); the Date field's `max` is today + 365 while the server accepts today + 366; a broken picture link is asked again on every screen.
+
 ## Skipped on purpose
 - CI runs twice on a pull-request branch (one run for `push`, one for `pull_request`; review finding 01-5, 2026-09-29). Left as it is: the second run tests the merge result with `main`, the cost is only free GitHub minutes, and limiting `push` to `main` would drop the check on a branch that has no pull request yet. Revisit only if the free minutes ever run short.
 

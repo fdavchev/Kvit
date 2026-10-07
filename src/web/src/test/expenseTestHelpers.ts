@@ -50,17 +50,8 @@ export function categoryName(language: Language, category: Category): string {
   return translated(language, `categories.${category.key}`)
 }
 
-export function macedonianDay(date: string, includesYear: boolean): string {
-  return new Intl.DateTimeFormat('mk', {
-    day: 'numeric',
-    month: 'short',
-    year: includesYear ? 'numeric' : undefined,
-    timeZone: 'UTC',
-  }).format(new Date(`${date}T00:00:00Z`))
-}
-
-export function relativeTime(language: Language, amount: number, unit: Intl.RelativeTimeFormatUnit): string {
-  return new Intl.RelativeTimeFormat(language).format(amount, unit)
+export function isoSecondsAgo(seconds: number): string {
+  return new Date(testNow.getTime() - seconds * 1000).toISOString()
 }
 
 export function elementWithAll(fragments: readonly string[], maxExtraLength: number): HTMLElement {

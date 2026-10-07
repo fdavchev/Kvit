@@ -1,9 +1,42 @@
+import type { TFunction } from 'i18next'
 import type { Language } from '@/core/i18n/language'
+import { countedText } from '@/core/i18n/pluralForm'
 
-const dayMonthYearFormats: Record<Language, Intl.DateTimeFormat> = {
-  en: new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
-  mk: new Intl.DateTimeFormat('mk', { day: 'numeric', month: 'long', year: 'numeric' }),
-}
+const englishDayMonthYearFormat = new Intl.DateTimeFormat('en-US', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+})
+
+const macedonianShortMonths: readonly string[] = [
+  'јан',
+  'фев',
+  'мар',
+  'апр',
+  'мај',
+  'јун',
+  'јул',
+  'авг',
+  'сеп',
+  'окт',
+  'ное',
+  'дек',
+]
+
+const macedonianLongMonths: readonly string[] = [
+  'јануари',
+  'февруари',
+  'март',
+  'април',
+  'мај',
+  'јуни',
+  'јули',
+  'август',
+  'септември',
+  'октомври',
+  'ноември',
+  'декември',
+]
 
 const minuteMs = 60_000
 const hourMs = 60 * minuteMs
@@ -19,7 +52,10 @@ export function formatDayMonthYear(isoDateTime: string, language: Language): str
   if (Number.isNaN(date.getTime())) {
     throw new Error(`Expected a date and time to format, got "${isoDateTime}"`)
   }
-  return joinParts(dayMonthYearFormats[language].formatToParts(date), dayMonthYearParts)
+  if (language === 'mk') {
+    return `${date.getDate()} ${macedonianLongMonths[date.getMonth()]} ${date.getFullYear()}`
+  }
+  return joinParts(englishDayMonthYearFormat.formatToParts(date), dayMonthYearParts)
 }
 
 export function todayInTimeZone(timeZone: string, now: Date): string {
@@ -49,21 +85,24 @@ export function formatHowLongAgo(
   now: Date,
   timeZone: string,
   language: Language,
+  t: TFunction,
 ): string {
   const moment = new Date(isoDateTime)
   if (Number.isNaN(moment.getTime())) {
     throw new Error(`Expected a date and time to say how long ago it was, got "${isoDateTime}"`)
   }
   const elapsedMs = Math.max(0, now.getTime() - moment.getTime())
-  const relative = new Intl.RelativeTimeFormat(language)
+  if (elapsedMs < minuteMs) {
+    return t('time.justNow')
+  }
   if (elapsedMs < hourMs) {
-    return relative.format(-Math.floor(elapsedMs / minuteMs), 'minute')
+    return countedText(t, 'time.minutes', Math.floor(elapsedMs / minuteMs), language)
   }
   if (elapsedMs < dayMs) {
-    return relative.format(-Math.floor(elapsedMs / hourMs), 'hour')
+    return countedText(t, 'time.hours', Math.floor(elapsedMs / hourMs), language)
   }
   if (elapsedMs < daysShownAsRelative * dayMs) {
-    return relative.format(-Math.floor(elapsedMs / dayMs), 'day')
+    return countedText(t, 'time.days', Math.floor(elapsedMs / dayMs), language)
   }
   return formatExpenseDay(todayInTimeZone(timeZone, moment), todayInTimeZone(timeZone, now), language)
 }
@@ -74,36 +113,34 @@ export function addDays(date: string, days: number): string {
   return moved.toISOString().slice(0, 10)
 }
 
+export function isCalendarDate(text: string): boolean {
+  if (!calendarDatePattern.test(text)) {
+    return false
+  }
+  const moment = new Date(`${text}T00:00:00Z`)
+  return !Number.isNaN(moment.getTime()) && moment.toISOString().slice(0, 10) === text
+}
+
 function formatCalendarDay(date: string, language: Language, includesYear: boolean): string {
   const moment = readCalendarDate(date)
-  const year = includesYear ? 'numeric' : undefined
   if (language === 'mk') {
-    return new Intl.DateTimeFormat('mk', {
-      day: 'numeric',
-      month: 'short',
-      year,
-      timeZone: 'UTC',
-    }).format(moment)
+    const dayAndMonth = `${moment.getUTCDate()} ${macedonianShortMonths[moment.getUTCMonth()]}`
+    return includesYear ? `${dayAndMonth} ${moment.getUTCFullYear()}` : dayAndMonth
   }
   const parts = new Intl.DateTimeFormat('en-US', {
     day: 'numeric',
     month: 'short',
-    year,
+    year: includesYear ? 'numeric' : undefined,
     timeZone: 'UTC',
   }).formatToParts(moment)
   return joinParts(parts, includesYear ? dayMonthYearParts : dayMonthParts)
 }
 
 function readCalendarDate(text: string): Date {
-  const moment = new Date(`${text}T00:00:00Z`)
-  if (
-    !calendarDatePattern.test(text) ||
-    Number.isNaN(moment.getTime()) ||
-    moment.toISOString().slice(0, 10) !== text
-  ) {
+  if (!isCalendarDate(text)) {
     throw new Error(`Expected a calendar date like 2026-10-06, got "${text}"`)
   }
-  return moment
+  return new Date(`${text}T00:00:00Z`)
 }
 
 function joinParts(

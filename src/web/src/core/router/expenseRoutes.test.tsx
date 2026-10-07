@@ -220,7 +220,7 @@ describe('expense routes followed through the real route table', () => {
         },
       })
       const { router } = await renderRoutesWithProviders(routeObjects, routes.group(groupId))
-      await screen.findByText(translated('en', 'expenses.empty'))
+      await screen.findByText(translated('en', 'expenses.emptyTitle'))
 
       fireEvent.click(screen.getByRole('link', { name: translated('en', 'expense.addTitle') }))
       const amount = await screen.findByLabelText(translated('en', 'expense.amount'))

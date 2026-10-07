@@ -37,13 +37,21 @@ import {
   freezeTime,
   groupPath,
   isBefore,
-  macedonianDay,
+  isoSecondsAgo,
   membersPath,
   plainSpaces,
-  relativeTime,
   restoreRealRetryPolicy,
   unfreezeTime,
 } from '@/test/expenseTestHelpers'
+import { makePluralRulesLikeChromeWithoutMacedonian } from '@/test/chromeWithoutMacedonian'
+import {
+  addNameButton,
+  expectEmptyStateTexts,
+  expectNoAddPeopleActions,
+  expectNoEmptyStateTexts,
+  findEmptyTitle,
+  shareLinkButton,
+} from '@/test/groupEmptyStateTestHelpers'
 import { groupOf, testGroup, testInviteToken } from '@/test/groupTestData'
 import {
   anaMember,
@@ -223,7 +231,7 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
       await renderGroupApp(routes.groupActivity(groupId), { events: [inviteLinkResetEvent] })
       await screen.findByText('Ana reset the invite link')
 
-      expect(screen.queryByText(translated('en', 'expenses.empty'))).toBeNull()
+      expectNoEmptyStateTexts()
       expect(screen.queryByRole('link', { name: /Dinner/ })).toBeNull()
     })
 
@@ -435,59 +443,80 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
     })
   })
 
-  describe('the Add people card and the tabs', () => {
+  describe('the empty state, the buttons and the tabs', () => {
     const aloneGroup = groupOf({ kind: 'Group', memberCount: 1 })
     const aloneOneBill = groupOf({ kind: 'OneBill', memberCount: 1 })
-
-    function addPeopleHeading(): HTMLElement {
-      return screen.getByRole('heading', { name: translated('en', 'group.addPeople') })
-    }
-
-    function expectNoAddPeopleCard(): void {
-      expect(screen.queryByRole('heading', { name: translated('en', 'group.addPeople') })).toBeNull()
-      expect(screen.queryByText(translated('en', 'group.addPeopleNoKvit'))).toBeNull()
-      expect(screen.queryByText(translated('en', 'group.addPeopleHasKvit'))).toBeNull()
-      expect(screen.queryByRole('button', { name: translated('en', 'group.addName') })).toBeNull()
-    }
 
     it.each([
       ['an empty activity', [], translated('en', 'activity.empty')],
       ['activity with events', [inviteLinkResetEvent], 'Ana reset the invite link'],
-    ])('shows no card and no Share invite link button on the Activity tab of a group with one person and no expenses, with %s', async (_name, events, shownText) => {
+    ])('shows no empty state, no buttons and no explanation lines on the Activity tab of a group with one person and no expenses, with %s', async (_name, events, shownText) => {
       await renderGroupApp(routes.groupActivity(groupId), { group: aloneGroup, expenses: [], events })
       await screen.findByText(shownText)
 
-      expectNoAddPeopleCard()
-      expect(screen.queryByRole('button', { name: translated('en', 'group.shareLink') })).toBeNull()
+      expectNoEmptyStateTexts()
+      expectNoAddPeopleActions()
     })
 
-    it('shows the card on the Expenses tab only: it goes away on the Activity tab and comes back on the Expenses tab', async () => {
+    it('shows the empty state and the buttons on the Expenses tab only: they go away on the Activity tab and come back on the Expenses tab', async () => {
       await renderGroupApp(routes.group(groupId), { group: aloneGroup, expenses: [] })
-      await screen.findByText(translated('en', 'expenses.empty'))
-      expect(addPeopleHeading()).toBeTruthy()
+      await findEmptyTitle()
+      expectEmptyStateTexts()
+      expect(addNameButton()).toBeTruthy()
+      expect(shareLinkButton()).toBeTruthy()
 
       fireEvent.click(activityTab())
       await screen.findByText(translated('en', 'activity.empty'))
-      expectNoAddPeopleCard()
+      expectNoEmptyStateTexts()
+      expectNoAddPeopleActions()
 
       fireEvent.click(expensesTab())
-      await screen.findByText(translated('en', 'expenses.empty'))
-      expect(addPeopleHeading()).toBeTruthy()
+      await findEmptyTitle()
+      expectEmptyStateTexts()
+      expect(addNameButton()).toBeTruthy()
+      expect(shareLinkButton()).toBeTruthy()
     })
 
-    it.each([
-      ['the Expenses tab', routes.group(groupId), translated('en', 'expenses.empty')],
-      ['the Activity tab', routes.groupActivity(groupId), translated('en', 'activity.empty')],
-    ])('shows the Share invite link chip of a One bill with one person and no expenses but never the card, on %s', async (_name, path, shownText) => {
-      await renderGroupApp(path, { group: aloneOneBill, expenses: [], events: [] })
+    it('shows the empty state without buttons on the Expenses tab of a group with several people, and none of it on the Activity tab', async () => {
+      await renderGroupApp(routes.group(groupId), { group: plainGroup, expenses: [] })
+      await findEmptyTitle()
+      expectEmptyStateTexts()
+      expectNoAddPeopleActions()
+
+      fireEvent.click(activityTab())
+      await screen.findByText(translated('en', 'activity.empty'))
+      expectNoEmptyStateTexts()
+      expectNoAddPeopleActions()
+    })
+
+    it('shows the Share invite link chip of a One bill with one person and no expenses, the empty state, but never the two buttons or the explanation lines, on the Expenses tab', async () => {
+      await renderGroupApp(routes.group(groupId), { group: aloneOneBill, expenses: [], events: [] })
       await showsGroupScreen(aloneOneBill.name)
-      await screen.findByText(shownText)
+      await findEmptyTitle()
 
       const chips = screen.getAllByRole('button', { name: translated('en', 'group.shareLink') })
 
       expect(chips).toHaveLength(1)
       expect(isBefore(chips[0], expensesTab())).toBe(true)
-      expectNoAddPeopleCard()
+      expectEmptyStateTexts()
+      expect(screen.queryByRole('button', { name: translated('en', 'group.addName') })).toBeNull()
+      expect(screen.queryByText(translated('en', 'group.addPeopleNoKvit'))).toBeNull()
+      expect(screen.queryByText(translated('en', 'group.addPeopleHasKvit'))).toBeNull()
+    })
+
+    it('shows the Share invite link chip of a One bill with one person on the Activity tab, with no empty state, no buttons and no explanation lines', async () => {
+      await renderGroupApp(routes.groupActivity(groupId), { group: aloneOneBill, expenses: [], events: [] })
+      await showsGroupScreen(aloneOneBill.name)
+      await screen.findByText(translated('en', 'activity.empty'))
+
+      const chips = screen.getAllByRole('button', { name: translated('en', 'group.shareLink') })
+
+      expect(chips).toHaveLength(1)
+      expect(isBefore(chips[0], expensesTab())).toBe(true)
+      expectNoEmptyStateTexts()
+      expect(screen.queryByRole('button', { name: translated('en', 'group.addName') })).toBeNull()
+      expect(screen.queryByText(translated('en', 'group.addPeopleNoKvit'))).toBeNull()
+      expect(screen.queryByText(translated('en', 'group.addPeopleHasKvit'))).toBeNull()
     })
   })
 
@@ -627,7 +656,7 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
       await screen.findByText(sentence)
 
       const row = activityRowOf(sentence)
-      const shownTime = relativeTime('en', -5, 'minute')
+      const shownTime = '5 minutes ago'
       const initialOfActor = 1
       const room = 6
       expect(plainSpaces(row.textContent ?? '').length).toBeLessThanOrEqual(
@@ -649,6 +678,49 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
       await screen.findByText(sentence, { normalizer: plainSpaces })
 
       expect(within(activityRowOf(sentence)).queryAllByText('Dinner')).toHaveLength(0)
+    })
+  })
+
+  describe('the amounts in Macedonian, written by the app and not by the browser', () => {
+    it('writes the amount of an added expense with a dot for thousands and «ден.»', async () => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        language: 'mk',
+        events: [
+          activityEventOf({
+            type: 'ExpenseAdded',
+            expenseId: dinnerExpenseId,
+            data: { title: 'Dinner', amountMinor: 240000, currency: 'MKD' },
+          }),
+        ],
+      })
+
+      expect(await screen.findByText('Ana додаде „Dinner“ · 2.400 ден.', { normalizer: plainSpaces })).toBeTruthy()
+    })
+
+    it('writes the amount of an expense in euros with a decimal comma', async () => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        language: 'mk',
+        events: [
+          activityEventOf({
+            type: 'ExpenseAdded',
+            expenseId: dinnerExpenseId,
+            data: { title: null, amountMinor: 4500, currency: 'EUR' },
+          }),
+        ],
+      })
+
+      expect(await screen.findByText('Ana додаде трошок · €45,00', { normalizer: plainSpaces })).toBeTruthy()
+    })
+
+    it('writes the amount of a change in Macedonian with a dot for thousands', async () => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        language: 'mk',
+        events: [editedEventOf([{ field: 'amount', old: '280000', new: '300000' }])],
+      })
+
+      expect(
+        await screen.findByText('Ana го измени износот: 2.800 ден. → 3.000 ден.', { normalizer: plainSpaces }),
+      ).toBeTruthy()
     })
   })
 
@@ -677,26 +749,30 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
       activityEventOf({ type: 'InviteLinkRestored', createdAt: '2026-09-20T09:00:00Z' }),
     ]
 
-    it.each(languages)('writes how long ago a recent event was with Intl.RelativeTimeFormat in minutes, hours and days (%s)', async (language) => {
+    it.each(languages)('writes how long ago a recent event was in minutes, hours and days (%s)', async (language) => {
       await renderGroupApp(routes.groupActivity(groupId), { language, events: timedEvents })
       await screen.findByText(translated(language, 'activity.groupCreated', { name: 'Ana' }))
+      const expected = language === 'en'
+        ? { minutes: '5 minutes ago', hours: '2 hours ago', days: '2 days ago' }
+        : { minutes: 'пред 5 минути', hours: 'пред 2 часа', days: 'пред 2 дена' }
 
       expect(
-        elementWithAll([translated(language, 'activity.groupCreated', { name: 'Ana' }), relativeTime(language, -5, 'minute')], 40),
+        elementWithAll([translated(language, 'activity.groupCreated', { name: 'Ana' }), expected.minutes], 40),
       ).toBeTruthy()
       expect(
-        elementWithAll([translated(language, 'activity.inviteLinkReset', { name: 'Ana' }), relativeTime(language, -2, 'hour')], 40),
+        elementWithAll([translated(language, 'activity.inviteLinkReset', { name: 'Ana' }), expected.hours], 40),
       ).toBeTruthy()
       expect(
-        elementWithAll([translated(language, 'activity.groupDeleted', { name: 'Ana' }), relativeTime(language, -2, 'day')], 40),
+        elementWithAll([translated(language, 'activity.groupDeleted', { name: 'Ana' }), expected.days], 40),
       ).toBeTruthy()
     })
 
     it.each(languages)('writes the date instead of a relative time for an event older than seven days (%s)', async (language) => {
       await renderGroupApp(routes.groupActivity(groupId), { language, events: timedEvents })
       await screen.findByText(translated(language, 'activity.groupCreated', { name: 'Ana' }))
-      const olderDay = language === 'en' ? '28 Sep' : macedonianDay('2026-09-28', false)
-      const oldestDay = language === 'en' ? '20 Sep' : macedonianDay('2026-09-20', false)
+      const olderDay = language === 'en' ? '28 Sep' : '28 сеп'
+      const oldestDay = language === 'en' ? '20 Sep' : '20 сеп'
+      const eightDaysAgo = language === 'en' ? '8 days ago' : 'пред 8 дена'
 
       expect(
         elementWithAll([translated(language, 'activity.groupRestored', { name: 'Ana' }), olderDay], 40),
@@ -704,7 +780,60 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
       expect(
         elementWithAll([translated(language, 'activity.inviteLinkRestored', { name: 'Ana' }), oldestDay], 40),
       ).toBeTruthy()
-      expect(screen.queryByText(relativeTime(language, -8, 'day'))).toBeNull()
+      expect(screen.queryByText(eightDaysAgo)).toBeNull()
+    })
+
+    it('writes the date of an old event in Macedonian with the year when it is not from this year, with no dot and no «г.»', async () => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        language: 'mk',
+        events: [activityEventOf({ type: 'GroupRestored', createdAt: '2025-12-24T09:00:00Z' })],
+      })
+      await screen.findByText(translated('mk', 'activity.groupRestored', { name: 'Ana' }))
+
+      expect(screen.getByText('24 дек 2025')).toBeTruthy()
+    })
+
+    describe.each(languages)('how long ago, as text of the app and not of the browser (%s)', (language) => {
+      let restorePluralRules: () => void = () => {}
+
+      beforeEach(() => {
+        restorePluralRules = makePluralRulesLikeChromeWithoutMacedonian()
+      })
+
+      afterEach(() => {
+        restorePluralRules()
+      })
+
+      async function showsEventAgo(seconds: number): Promise<void> {
+        await renderGroupApp(routes.groupActivity(groupId), {
+          language,
+          events: [activityEventOf({ type: 'InviteLinkReset', createdAt: isoSecondsAgo(seconds) })],
+        })
+        await screen.findByText(translated(language, 'activity.inviteLinkReset', { name: 'Ana' }))
+      }
+
+      const minute = 60
+      const hour = 60 * minute
+      const day = 24 * hour
+
+      it.each([
+        [0, 'just now', 'пред малку'],
+        [59, 'just now', 'пред малку'],
+        [60, '1 minute ago', 'пред 1 минута'],
+        [2 * minute, '2 minutes ago', 'пред 2 минути'],
+        [11 * minute, '11 minutes ago', 'пред 11 минути'],
+        [21 * minute, '21 minutes ago', 'пред 21 минута'],
+        [22 * minute, '22 minutes ago', 'пред 22 минути'],
+        [hour, '1 hour ago', 'пред 1 час'],
+        [5 * hour, '5 hours ago', 'пред 5 часа'],
+        [21 * hour, '21 hours ago', 'пред 21 час'],
+        [day, '1 day ago', 'пред 1 ден'],
+        [5 * day, '5 days ago', 'пред 5 дена'],
+      ])('writes an event that is %i seconds old as "%s" / «%s»', async (seconds, english, macedonian) => {
+        await showsEventAgo(seconds)
+
+        expect(screen.getByText(language === 'en' ? english : macedonian)).toBeTruthy()
+      })
     })
 
     it('decides the day of an old event in the time zone of the account', async () => {

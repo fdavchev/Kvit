@@ -15,12 +15,16 @@ import {
   hotelDetail,
   hotelExpenseId,
   testCategories,
+  testToday,
+  testYesterday,
 } from '@/test/expenseTestData'
 import {
   amountField,
   currencyToggle,
+  dateField,
   doneButton,
   formRow,
+  formRowBehindSheet,
   isDisabled,
   noteField,
   noteLink,
@@ -30,12 +34,16 @@ import {
   personGroup,
   saveButton,
   sentBody,
+  sheetOf,
   splitTab,
   titleField,
+  todayChip,
   typeAmount,
+  typeDate,
   typeInPerson,
   typeTitle,
   waitForSheetToClose,
+  yesterdayChip,
 } from '@/test/expenseFormTestHelpers'
 import {
   categoriesPath,
@@ -288,6 +296,108 @@ describe('EditExpenseScreen', () => {
 
       expect(personButton(sheet, 'Filip').getAttribute('aria-pressed')).toBe('true')
       expect(personButton(sheet, 'Marko').getAttribute('aria-pressed')).toBe('false')
+    })
+  })
+
+  describe('the Date sheet', () => {
+    async function sentDateAfter(steps: (sheet: HTMLElement) => void): Promise<unknown> {
+      const { fetchMock } = await renderReadyEdit()
+      const sheet = await openSheet('date')
+      steps(sheet)
+      await waitForSheetToClose()
+      fireEvent.click(saveButton())
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'PUT', detailPath)).toBe(1)
+      })
+      return sentBody(fetchMock, 'PUT', detailPath).expenseDate
+    }
+
+    it('shows the date of the expense in the field when the sheet opens', async () => {
+      await renderReadyEdit()
+
+      const sheet = await openSheet('date')
+
+      expect(dateField(sheet).value).toBe('2026-10-03')
+    })
+
+    it('keeps the sheet open and the Date row as it was while a date is typed', async () => {
+      await renderReadyEdit()
+      const sheet = await openSheet('date')
+
+      typeDate(sheet, '2026-12-12')
+
+      expect(sheetOf('date')).toBeTruthy()
+      expect(formRowBehindSheet('date').textContent).toContain('3 Oct')
+      expect(formRowBehindSheet('date').textContent).not.toContain('12 Dec')
+    })
+
+    it('applies the typed date and closes when Done is pressed, and saves that date', async () => {
+      const sentDate = await sentDateAfter((sheet) => {
+        typeDate(sheet, '2026-12-12')
+        fireEvent.click(doneButton(sheet))
+      })
+
+      expect(sentDate).toBe('2026-12-12')
+    })
+
+    it('shows the applied date in the Date row after Done', async () => {
+      await renderReadyEdit()
+      const sheet = await openSheet('date')
+
+      typeDate(sheet, '2026-12-12')
+      fireEvent.click(doneButton(sheet))
+
+      await waitForSheetToClose()
+      expect(formRow('date').textContent).toContain('12 Dec')
+    })
+
+    it('saves the last full date when several were typed, never one in between', async () => {
+      const sentDate = await sentDateAfter((sheet) => {
+        typeDate(sheet, '2026-11-11')
+        typeDate(sheet, '2026-11-20')
+        fireEvent.click(doneButton(sheet))
+      })
+
+      expect(sentDate).toBe('2026-11-20')
+    })
+
+    it('saves the old date when Done is pressed without typing', async () => {
+      const sentDate = await sentDateAfter((sheet) => {
+        fireEvent.click(doneButton(sheet))
+      })
+
+      expect(sentDate).toBe('2026-10-03')
+    })
+
+    it.each([
+      ['', 'empty'],
+      ['2026-12-', 'incomplete'],
+      ['1999-12-31', 'before the year 2000'],
+      ['2062-10-06', 'more than a year ahead'],
+    ])('keeps Done disabled for the value "%s" (%s)', async (value) => {
+      await renderReadyEdit()
+      const sheet = await openSheet('date')
+
+      typeDate(sheet, value)
+
+      expect(isDisabled(doneButton(sheet))).toBe(true)
+    })
+
+    it('applies Yesterday at once and closes, and saves yesterday', async () => {
+      const sentDate = await sentDateAfter((sheet) => {
+        typeDate(sheet, '2026-12-12')
+        fireEvent.click(yesterdayChip(sheet))
+      })
+
+      expect(sentDate).toBe(testYesterday)
+    })
+
+    it('applies Today at once and closes, and saves today', async () => {
+      const sentDate = await sentDateAfter((sheet) => {
+        fireEvent.click(todayChip(sheet))
+      })
+
+      expect(sentDate).toBe(testToday)
     })
   })
 

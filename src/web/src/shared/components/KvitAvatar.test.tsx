@@ -158,6 +158,147 @@ describe('KvitAvatar', () => {
     })
   })
 
+  describe('the upper-case initial', () => {
+    it.each([
+      ['simona', 'S'],
+      ['ана', 'А'],
+      ['Filip', 'F'],
+    ])('draws the name %s with the initial %s on a numbered colour', (name, initial) => {
+      render(<KvitAvatar name={name} pictureUrl={null} colorIndex={3} />)
+
+      expect(screen.getByText(initial)).toBeTruthy()
+    })
+
+    it.each([
+      ['simona', 'S'],
+      ['ана', 'А'],
+      ['Filip', 'F'],
+    ])('draws the name %s with the initial %s on the brand colour', (name, initial) => {
+      render(<KvitAvatar name={name} pictureUrl={null} colorIndex="brand" />)
+
+      expect(screen.getByText(initial)).toBeTruthy()
+    })
+
+    it.each([
+      ['simona', 'S'],
+      ['ана', 'А'],
+    ])('draws the name %s with the initial %s after the picture fails to load', (name, initial) => {
+      const { container } = render(
+        <KvitAvatar name={name} pictureUrl={pictureUrl} colorIndex={2} />,
+      )
+
+      fireEvent.error(pictureOf(container))
+
+      expect(screen.getByText(initial)).toBeTruthy()
+    })
+
+    it.each([
+      ['simona', 'S'],
+      ['ана', 'А'],
+    ])('draws the name %s with the initial %s on the brand colour after the picture fails to load', (name, initial) => {
+      const { container } = render(
+        <KvitAvatar name={name} pictureUrl={pictureUrl} colorIndex="brand" />,
+      )
+
+      fireEvent.error(pictureOf(container))
+
+      expect(screen.getByText(initial)).toBeTruthy()
+    })
+
+    it('upper-cases only the first letter of a lower-case name with several words', () => {
+      render(<KvitAvatar name="ана Петровска" pictureUrl={null} colorIndex={1} />)
+
+      expect(screen.getByText('А')).toBeTruthy()
+    })
+  })
+
+  describe('the brand colour', () => {
+    it('uses the bg-avatar and text-avatar-foreground classes', () => {
+      const { container } = render(<KvitAvatar name="Filip" pictureUrl={null} colorIndex="brand" />)
+
+      const circle = container.firstElementChild
+      expect(circle?.classList.contains('bg-avatar')).toBe(true)
+      expect(circle?.classList.contains('text-avatar-foreground')).toBe(true)
+    })
+
+    it('uses no --avatar-N colour token and no inline colour', () => {
+      const { container } = render(<KvitAvatar name="Filip" pictureUrl={null} colorIndex="brand" />)
+
+      expect(colorTokensIn(container)).toEqual([])
+      expect(container.firstElementChild?.getAttribute('style')).toBeNull()
+    })
+
+    it('is not used by a numbered colour', () => {
+      const { container } = render(<KvitAvatar name="Filip" pictureUrl={null} colorIndex={0} />)
+
+      expect(container.firstElementChild?.classList.contains('bg-avatar')).toBe(false)
+    })
+
+    it('shows the brand coloured initial when the picture fails to load', () => {
+      const { container } = render(
+        <KvitAvatar name="Filip" pictureUrl={pictureUrl} colorIndex="brand" />,
+      )
+
+      fireEvent.error(pictureOf(container))
+
+      const circle = container.firstElementChild
+      expect(container.querySelector('img')).toBeNull()
+      expect(circle?.classList.contains('bg-avatar')).toBe(true)
+      expect(colorTokensIn(container)).toEqual([])
+    })
+
+    it('draws a picture on the brand colour', () => {
+      const { container } = render(
+        <KvitAvatar name="Filip" pictureUrl={pictureUrl} colorIndex="brand" />,
+      )
+
+      expect(pictureOf(container).getAttribute('src')).toBe(pictureUrl)
+      expect(screen.queryByText('F')).toBeNull()
+    })
+  })
+
+  describe('the fill size', () => {
+    it('fills the space of its parent with a text-xl initial', () => {
+      const { container } = render(
+        <KvitAvatar name="Filip" pictureUrl={null} colorIndex="brand" size="fill" />,
+      )
+
+      const circle = container.firstElementChild
+      expect(circle?.classList.contains('size-full')).toBe(true)
+      expect(circle?.classList.contains('text-xl')).toBe(true)
+    })
+
+    it('does not give the circle a fixed size of its own', () => {
+      const { container } = render(
+        <KvitAvatar name="Filip" pictureUrl={null} colorIndex="brand" size="fill" />,
+      )
+
+      expect(container.firstElementChild?.classList.contains('size-9')).toBe(false)
+      expect(container.firstElementChild?.classList.contains('size-13')).toBe(false)
+    })
+
+    it('draws a picture in the fill size, in the same circle shape', () => {
+      const { container } = render(
+        <KvitAvatar name="Filip" pictureUrl={pictureUrl} colorIndex="brand" size="fill" />,
+      )
+
+      const circle = container.firstElementChild
+      expect(pictureOf(container).getAttribute('src')).toBe(pictureUrl)
+      expect(circle?.classList.contains('size-full')).toBe(true)
+      expect(circle?.classList.contains('rounded-full')).toBe(true)
+      expect(circle?.classList.contains('overflow-hidden')).toBe(true)
+    })
+
+    it('draws a numbered colour in the fill size too', () => {
+      const { container } = render(
+        <KvitAvatar name="Ana" pictureUrl={null} colorIndex={4} size="fill" />,
+      )
+
+      expect(colorIndexOf(container)).toBe('4')
+      expect(container.firstElementChild?.classList.contains('size-full')).toBe(true)
+    })
+  })
+
   describe('sizes', () => {
     it('looks different in the small and the large size', () => {
       const small = render(<KvitAvatar name="Ana" pictureUrl={null} colorIndex={1} size="small" />)

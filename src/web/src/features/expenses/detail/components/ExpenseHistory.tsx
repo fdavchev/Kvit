@@ -72,7 +72,7 @@ export function ExpenseHistory({ expense, categories, timeZone, language }: Expe
       return {
         key: `${entry.createdAt}-${index}`,
         sentences,
-        when: formatHowLongAgo(entry.createdAt, now, timeZone, language),
+        when: formatHowLongAgo(entry.createdAt, now, timeZone, language, t),
       }
     })
   }

@@ -46,6 +46,7 @@ export function BillNameSheet({ takenNames, onAdd, onClose }: BillNameSheetProps
       actionsRef={sheet.actionsRef}
       isPending={false}
       errorMessage={refusalMessage()}
+      isNameRefused={refusal !== null}
       onSubmit={submit}
       onDismiss={sheet.close}
       onClose={onClose}

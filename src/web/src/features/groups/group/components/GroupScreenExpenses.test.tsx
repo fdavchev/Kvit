@@ -23,12 +23,21 @@ import {
   expensesPath,
   freezeTime,
   isBefore,
-  macedonianDay,
   plainSpaces,
   startsWith,
   unfreezeTime,
   restoreRealRetryPolicy,
 } from '@/test/expenseTestHelpers'
+import {
+  addNameButton,
+  expectEmptyStateTexts,
+  expectNoAddPeopleActions,
+  expectNoEmptyStateTexts,
+  findEmptyTitle,
+  hasKvitLine,
+  noKvitLine,
+  shareLinkButton,
+} from '@/test/groupEmptyStateTestHelpers'
 import { groupOf, testGroup } from '@/test/groupTestData'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import {
@@ -287,16 +296,34 @@ describe('GroupScreen expenses', () => {
       expect(isBefore(rowOf('Hotel'), rowOf('Other'))).toBe(true)
     })
 
-    it('writes the labels in Macedonian with the date the way Intl writes it for Macedonian', async () => {
+    it('writes the labels in Macedonian with the Macedonian words for today and yesterday and the short month name «окт»', async () => {
       await renderGroup({ language: 'mk' })
       await screen.findByRole('link', { name: /Dinner/ })
 
-      expect(screen.getByText(`${translated('mk', 'expenses.today')} · ${macedonianDay('2026-10-06', false)}`)).toBeTruthy()
-      expect(
-        screen.getByText(`${translated('mk', 'expenses.yesterday')} · ${macedonianDay('2026-10-05', false)}`),
-      ).toBeTruthy()
-      expect(screen.getByText(macedonianDay('2026-10-03', false))).toBeTruthy()
-      expect(screen.getByText(macedonianDay('2025-12-24', true))).toBeTruthy()
+      expect(screen.getByText('Денес · 6 окт')).toBeTruthy()
+      expect(screen.getByText('Вчера · 5 окт')).toBeTruthy()
+      expect(screen.getByText('3 окт')).toBeTruthy()
+      expect(screen.getByText('24 дек 2025')).toBeTruthy()
+    })
+
+    it('writes the Macedonian day labels with no dot after the month and no «г.» after the year', async () => {
+      await renderGroup({ language: 'mk' })
+      await screen.findByRole('link', { name: /Dinner/ })
+
+      expect(screen.queryByText(/окт\./)).toBeNull()
+      expect(screen.queryByText(/г\./)).toBeNull()
+    })
+
+    it.each([
+      ['2026-01-15', '15 јан'],
+      ['2026-05-15', '15 мај'],
+      ['2026-09-15', '15 сеп'],
+      ['2026-11-15', '15 ное'],
+    ])('writes the day label of %s in Macedonian as «%s»', async (expenseDate, label) => {
+      await renderGroup({ language: 'mk', expenses: [{ ...dinnerRow, expenseDate }, hotelRow] })
+      await screen.findByRole('link', { name: /Dinner/ })
+
+      expect(screen.getByText(label)).toBeTruthy()
     })
 
     it('decides what Today is from the time zone of the account, not from the clock of the phone', async () => {
@@ -317,21 +344,59 @@ describe('GroupScreen expenses', () => {
     })
   })
 
+  describe('the title of a row', () => {
+    const longTitle = 'Birthday dinner for the whole family at the new place by the lake'
+
+    async function renderLongTitle(): Promise<HTMLElement> {
+      await renderGroup({ expenses: [{ ...dinnerRow, title: longTitle }, hotelRow] })
+      await screen.findByRole('link', { name: new RegExp(longTitle) })
+      return within(rowOf(longTitle)).getByText(longTitle)
+    }
+
+    it('may wrap to two lines: the title carries line-clamp-2', async () => {
+      const title = await renderLongTitle()
+
+      expect(title.classList.contains('line-clamp-2')).toBe(true)
+    })
+
+    it('is not cut to a single line: the title carries neither truncate nor whitespace-nowrap', async () => {
+      const title = await renderLongTitle()
+
+      expect(title.classList.contains('truncate')).toBe(false)
+      expect(title.classList.contains('whitespace-nowrap')).toBe(false)
+    })
+
+    it('has the whole title in the page, not a title cut after 16 characters by script', async () => {
+      const title = await renderLongTitle()
+
+      expect(title.textContent).toBe(longTitle)
+    })
+
+    it('keeps the amount on one line next to a title that wraps', async () => {
+      await renderLongTitle()
+
+      const amount = within(rowOf(longTitle)).getByText('2,400 MKD', { normalizer: plainSpaces })
+
+      expect(amount.classList.contains('whitespace-nowrap')).toBe(true)
+    })
+
+    it('lets a short title wrap in the same way, so every row looks alike', async () => {
+      await renderGroup()
+      await showsExpenses()
+
+      expect(within(rowOf('Dinner')).getByText('Dinner').classList.contains('line-clamp-2')).toBe(true)
+    })
+  })
+
   describe('in Macedonian', () => {
     it('writes who paid, the share and the amounts in Macedonian', async () => {
       await renderGroup({ language: 'mk' })
       await screen.findByRole('link', { name: /Dinner/ })
 
-      const line = translated('mk', 'expenses.paidByShare', {
-        name: 'Filip',
-        amount: formatMoney(60000, 'MKD', 'mk'),
-      })
       const dinner = screen.getByRole('link', { name: /Dinner/ })
 
-      expect(within(dinner).getByText(plainSpaces(line), { normalizer: plainSpaces })).toBeTruthy()
-      expect(plainSpaces(dinner.textContent ?? '')).toContain(
-        plainSpaces(formatMoney(240000, 'MKD', 'mk')),
-      )
+      expect(within(dinner).getByText('Платено од Filip · твој дел 600 ден.', { normalizer: plainSpaces })).toBeTruthy()
+      expect(plainSpaces(dinner.textContent ?? '')).toContain('2.400 ден.')
     })
 
     it('writes the name of a category in Macedonian when the expense has no title', async () => {
@@ -350,18 +415,20 @@ describe('GroupScreen expenses', () => {
   })
 
   describe('with no expenses', () => {
-    it.each(languages)('shows the empty text and no date label (%s)', async (language) => {
-      await renderGroup({ language, expenses: [] })
+    it.each(languages)('shows the emoji, the title line and the hint line and no date label (%s)', async (language) => {
+      await renderGroup({ language, group: groupOf({ memberCount: 3 }), expenses: [] })
 
-      expect(await screen.findByText(translated(language, 'expenses.empty'))).toBeTruthy()
+      await findEmptyTitle(language)
+
+      expectEmptyStateTexts(language)
       expect(screen.queryByText(translated(language, 'expenses.today'), { exact: false })).toBeNull()
     })
 
-    it('does not show the empty text while there are expenses', async () => {
-      await renderGroup()
+    it.each(languages)('does not show the emoji, the title line or the hint line while there are expenses (%s)', async (language) => {
+      await renderGroup({ language, expenses: [dinnerRow] })
       await showsExpenses()
 
-      expect(screen.queryByText(translated('en', 'expenses.empty'))).toBeNull()
+      expectNoEmptyStateTexts(language)
     })
   })
 
@@ -375,7 +442,7 @@ describe('GroupScreen expenses', () => {
 
     it('is shown when the group has no expenses yet', async () => {
       await renderGroup({ expenses: [] })
-      await screen.findByText(translated('en', 'expenses.empty'))
+      await findEmptyTitle()
 
       expect(addExpenseLink().getAttribute('href')).toBe(routes.groupExpenseNew(testGroup.id))
     })
@@ -405,7 +472,7 @@ describe('GroupScreen expenses', () => {
 
     it('is shown when the group has no expenses', async () => {
       await renderGroup({ expenses: [] })
-      await screen.findByText(translated('en', 'expenses.empty'))
+      await findEmptyTitle()
 
       expect(recentlyDeletedLink().getAttribute('href')).toBe(routes.groupExpensesDeleted(testGroup.id))
     })
@@ -422,44 +489,54 @@ describe('GroupScreen expenses', () => {
     })
   })
 
-  describe('with the Add people card', () => {
-    function addPeopleHeading(): HTMLElement {
-      return screen.getByRole('heading', { name: translated('en', 'group.addPeople') })
-    }
-
-    it('shows the card above the empty text of the expenses when the group has one person and no expenses', async () => {
+  describe('with the Add a name and Share invite link buttons', () => {
+    it('shows the buttons and the explanation lines below the hint of the empty state when the group has one person and no expenses', async () => {
       await renderGroup({ group: groupOf({ memberCount: 1 }), expenses: [] })
 
-      const emptyText = await screen.findByText(translated('en', 'expenses.empty'))
+      const title = await findEmptyTitle()
 
-      expect(addPeopleHeading()).toBeTruthy()
-      expect(screen.getByRole('button', { name: translated('en', 'group.addName') })).toBeTruthy()
-      expect(isBefore(addPeopleHeading(), emptyText)).toBe(true)
+      expect(isBefore(title, addNameButton())).toBe(true)
+      expect(isBefore(screen.getByText(translated('en', 'expenses.emptyHint')), addNameButton())).toBe(true)
+      expect(isBefore(shareLinkButton(), noKvitLine())).toBe(true)
+      expect(isBefore(noKvitLine(), hasKvitLine())).toBe(true)
     })
 
-    it('shows no card when the group has one person and has expenses', async () => {
+    it('shows no buttons and no explanation lines when the group has one person and has expenses', async () => {
       await renderGroup({ group: groupOf({ memberCount: 1 }) })
       await showsExpenses()
 
-      expect(screen.queryByRole('heading', { name: translated('en', 'group.addPeople') })).toBeNull()
-      expect(screen.queryByRole('button', { name: translated('en', 'group.addName') })).toBeNull()
-      expect(screen.queryByRole('button', { name: translated('en', 'group.shareLink') })).toBeNull()
+      expectNoAddPeopleActions()
     })
 
-    it('shows no card when the group has several people', async () => {
+    it('shows no buttons and no explanation lines when the group has several people and has expenses', async () => {
       await renderGroup({ group: groupOf({ memberCount: 3 }) })
       await showsExpenses()
 
-      expect(screen.queryByRole('heading', { name: translated('en', 'group.addPeople') })).toBeNull()
+      expectNoAddPeopleActions()
     })
 
-    it('keeps the + button and the Recently deleted link when the card is shown', async () => {
+    it('shows no buttons and no explanation lines when the group has several people and no expenses', async () => {
+      await renderGroup({ group: groupOf({ memberCount: 3 }), expenses: [] })
+      await findEmptyTitle()
+
+      expectNoAddPeopleActions()
+    })
+
+    it('keeps the + button and the Recently deleted link when the buttons are shown', async () => {
       await renderGroup({ group: groupOf({ memberCount: 1 }), expenses: [] })
-      await screen.findByText(translated('en', 'expenses.empty'))
+      await findEmptyTitle()
 
       expect(addExpenseLink().getAttribute('href')).toBe(routes.groupExpenseNew(testGroup.id))
       expect(recentlyDeletedLink().getAttribute('href')).toBe(routes.groupExpensesDeleted(testGroup.id))
-      expect(isBefore(screen.getByText(translated('en', 'expenses.empty')), recentlyDeletedLink())).toBe(true)
+      expect(isBefore(hasKvitLine(), recentlyDeletedLink())).toBe(true)
+    })
+
+    it('keeps the Recently deleted link below the empty state when the group has several people', async () => {
+      await renderGroup({ group: groupOf({ memberCount: 3 }), expenses: [] })
+
+      const hint = await screen.findByText(translated('en', 'expenses.emptyHint'))
+
+      expect(isBefore(hint, recentlyDeletedLink())).toBe(true)
     })
   })
 

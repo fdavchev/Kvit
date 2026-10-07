@@ -137,7 +137,7 @@ export function ExpenseForm({
           />
         </div>
       ) : (
-        <KvitButton type="button" variant="smallLink" className="w-auto self-start px-0" onClick={() => setIsNoteOpen(true)}>
+        <KvitButton type="button" variant="smallLink" className="min-h-11 w-auto min-w-11 self-start px-0" onClick={() => setIsNoteOpen(true)}>
           {t('expense.note')}
         </KvitButton>
       )}

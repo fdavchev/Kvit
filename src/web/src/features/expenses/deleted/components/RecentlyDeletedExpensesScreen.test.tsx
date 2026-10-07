@@ -218,12 +218,8 @@ describe('RecentlyDeletedExpensesScreen', () => {
       await renderDeleted({ language: 'mk' })
       await screen.findByText('Museum tickets', { exact: false })
 
-      expect(
-        within(museumRow()).getByText(/^Може да се врати до 10 октомври 2026( г\.)?$/),
-      ).toBeTruthy()
-      expect(
-        within(pharmacyRow()).getByText(/^Може да се врати до 9 октомври 2026( г\.)?$/),
-      ).toBeTruthy()
+      expect(within(museumRow()).getByText('Може да се врати до 10 октомври 2026')).toBeTruthy()
+      expect(within(pharmacyRow()).getByText('Може да се врати до 9 октомври 2026')).toBeTruthy()
     })
 
     it('keeps the order of the answer, newest deleted first', async () => {
@@ -239,7 +235,7 @@ describe('RecentlyDeletedExpensesScreen', () => {
       await renderDeleted({ language: 'mk' })
       await screen.findByText('Museum tickets', { exact: false })
 
-      expect(plainSpaces(museumRow().textContent ?? '')).toContain(money(80000, 'mk'))
+      expect(plainSpaces(museumRow().textContent ?? '')).toContain('800 ден.')
     })
   })
 

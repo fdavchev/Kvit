@@ -20,6 +20,7 @@ import { KvitScreen } from '@/shared/components/KvitScreen'
 import { showUndoToast } from '@/shared/toasts/showUndoToast'
 import { formatDayWithYear, formatExpenseDay, todayInTimeZone } from '@/shared/utils/formatDate'
 import { formatMoney } from '@/shared/utils/formatMoney'
+import { formatGroupedDecimal } from '@/shared/utils/formatNumber'
 import { CategoryTile } from '../../shared/components/CategoryTile'
 import { ExpenseLoadError } from '../../shared/components/ExpenseLoadError'
 import { categoryOf } from '../../shared/expenseCategories'
@@ -189,8 +190,10 @@ function SplitRows({ expense, members, language }: SplitRowsProps) {
 }
 
 function formatRate(mkdPerEur: number, language: Language): string {
-  return new Intl.NumberFormat(language, {
+  const plainRate = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: rateDecimals,
     maximumFractionDigits: rateDecimals,
+    useGrouping: false,
   }).format(mkdPerEur)
+  return formatGroupedDecimal(plainRate, language)
 }

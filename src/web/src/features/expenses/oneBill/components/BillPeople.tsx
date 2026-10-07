@@ -32,18 +32,27 @@ export function BillPeople({ people, onRemove, onAddName }: BillPeopleProps) {
                 type="button"
                 aria-label={t('oneBill.removeName', { name: person.name })}
                 onClick={() => onRemove(person.memberId)}
-                className="pressable absolute -top-1 right-0 grid size-6 place-items-center rounded-full border border-field-border bg-field text-xs font-bold text-field-foreground"
+                className="pressable absolute -top-3.5 -right-2.5 grid min-h-11 min-w-11 place-items-center rounded-full"
               >
-                <span aria-hidden="true">✕</span>
+                <span
+                  aria-hidden="true"
+                  className="grid size-6 place-items-center rounded-full border border-field-border bg-field text-xs font-bold text-field-foreground"
+                >
+                  ✕
+                </span>
               </button>
             )}
           </li>
         ))}
         <li className={circleLook}>
-          <button type="button" onClick={onAddName} className={`pressable ${circleLook}`}>
+          <button
+            type="button"
+            onClick={onAddName}
+            className={`pressable group min-h-11 min-w-11 focus-visible:outline-none ${circleLook}`}
+          >
             <span
               aria-hidden="true"
-              className="grid size-13 place-items-center rounded-full border-2 border-dashed border-field-border text-[1.4rem] text-foreground"
+              className="grid size-13 place-items-center rounded-full border-2 border-dashed border-field-border text-[1.4rem] text-foreground group-focus-visible:outline-3 group-focus-visible:outline-offset-2 group-focus-visible:outline-ring"
             >
               +
             </span>

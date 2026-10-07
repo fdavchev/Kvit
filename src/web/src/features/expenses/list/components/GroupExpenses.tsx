@@ -16,7 +16,7 @@ import { ExpenseListItem } from './ExpenseListItem'
 
 interface GroupExpensesProps {
   groupId: string
-  cardWhenEmpty: ReactNode
+  actionsWhenEmpty: ReactNode
 }
 
 interface ExpenseDay {
@@ -26,7 +26,7 @@ interface ExpenseDay {
 
 const receiptEmoji = '\u{1F9FE}'
 
-export function GroupExpenses({ groupId, cardWhenEmpty }: GroupExpensesProps) {
+export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const me = useSignedInMe()
@@ -59,8 +59,8 @@ export function GroupExpenses({ groupId, cardWhenEmpty }: GroupExpensesProps) {
     if (expensesQuery.data.length === 0) {
       return (
         <>
-          {cardWhenEmpty}
-          <KvitEmpty emoji={receiptEmoji} message={t('expenses.empty')} />
+          <KvitEmpty emoji={receiptEmoji} title={t('expenses.emptyTitle')} message={t('expenses.emptyHint')} />
+          {actionsWhenEmpty}
         </>
       )
     }

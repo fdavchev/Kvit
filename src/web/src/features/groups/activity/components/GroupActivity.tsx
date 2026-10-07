@@ -80,7 +80,7 @@ export function GroupActivity({ groupId, groupCurrency }: GroupActivityProps) {
             colorIndex={look.colorIndex}
             sentence={line.sentence}
             expenseTitle={line.expenseTitle}
-            when={formatHowLongAgo(line.createdAt, now, me.timeZone, language)}
+            when={formatHowLongAgo(line.createdAt, now, me.timeZone, language, t)}
             linkTo={line.linkedExpenseId === null ? null : routes.groupExpense(groupId, line.linkedExpenseId)}
           />
         )

@@ -30,10 +30,10 @@ export function CategorySheet({ categories, categoryId, onPick, onClose }: Categ
             type="button"
             aria-pressed={category.id === categoryId}
             onClick={() => pick(category.id)}
-            className="pressable flex flex-col items-center gap-1 rounded-[14px] border-2 border-transparent py-1 text-[0.6875rem] leading-tight font-semibold hover:bg-secondary-hover aria-pressed:border-primary"
+            className="pressable flex min-w-0 flex-col items-center gap-1 rounded-[14px] border-2 border-transparent py-1 text-[0.6875rem] leading-tight font-semibold hover:bg-secondary-hover aria-pressed:border-primary"
           >
             <CategoryTile category={category} />
-            <span className="text-center break-words">{t(categoryNameKey(category))}</span>
+            <span className="w-full text-center wrap-anywhere">{t(categoryNameKey(category))}</span>
           </button>
         ))}
       </div>

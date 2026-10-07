@@ -225,7 +225,6 @@
     "titleTooLong": "The title can have up to 60 characters."
   },
   "group": {
-    "addPeople": "Add people",
     "addPeopleNoKvit": "No Kvit? Add them as a name.",
     "addPeopleHasKvit": "Have Kvit? Share the link and they join with their own account.",
     "addName": "Add a name",
@@ -235,7 +234,8 @@
   },
   "expenses": {
     "title": "Expenses",
-    "empty": "No expenses yet. Tap + to add the first one.",
+    "emptyTitle": "No expenses yet",
+    "emptyHint": "Tap + to add the first one.",
     "paidByShare": "Paid by {{name}} · your share {{amount}}",
     "paidByNotInSplit": "Paid by {{name}} · you're not in the split",
     "today": "Today",
@@ -285,7 +285,9 @@
     "historyChangedPaidBy": "{{name}} changed who paid: {{old}} → {{new}}",
     "historyChangedSplit": "{{name}} changed the split",
     "historyDeleted": "{{name}} deleted it",
-    "historyRestored": "{{name}} restored it"
+    "historyRestored": "{{name}} restored it",
+    "fewerShares": "Fewer shares for {{name}}",
+    "moreShares": "More shares for {{name}}"
   },
   "activity": {
     "title": "Activity",
@@ -381,5 +383,14 @@
     "title": "Page not found",
     "message": "This page doesn't exist or has moved.",
     "goHome": "Go to the dashboard"
+  },
+  "time": {
+    "justNow": "just now",
+    "minutes_one": "{{count}} minute ago",
+    "minutes_other": "{{count}} minutes ago",
+    "hours_one": "{{count}} hour ago",
+    "hours_other": "{{count}} hours ago",
+    "days_one": "{{count}} day ago",
+    "days_other": "{{count}} days ago"
   }
 }

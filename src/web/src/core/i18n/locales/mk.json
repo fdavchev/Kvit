@@ -37,7 +37,7 @@
     "AUTH_PASSWORD_UNCHANGED": "Новата лозинка мора да се разликува од старата.",
     "AUTH_GOOGLE_TOKEN_INVALID": "Најавата со Google не успеа. Обиди се повторно.",
     "AUTH_GOOGLE_EMAIL_NOT_VERIFIED": "Google вели дека оваа е-пошта не е потврдена, па не можеме да ја користиме. Потврди ја кај Google или користи друг профил.",
-    "AUTH_GOOGLE_NO_ACCOUNT": "За овој Google профил сè уште нема Kvit профил.",
+    "AUTH_GOOGLE_NO_ACCOUNT": "За овој Google профил сѐ уште нема Kvit профил.",
     "AUTH_GOOGLE_EMAIL_TAKEN": "Оваа е-пошта веќе има профил.",
     "AUTH_USES_GOOGLE": "Овој профил се најавува преку Google.",
     "AUTH_PASSWORD_ALREADY_SET": "Овој профил веќе има лозинка. Користи „Промени лозинка“.",
@@ -185,7 +185,7 @@
   "groups": {
     "title": "Групи",
     "newButton": "Нова група",
-    "empty": "Сè уште немаш групи. Направи една или отвори линк што ти го испратил пријател.",
+    "empty": "Сѐ уште немаш групи. Направи една или отвори линк што ти го испратил пријател.",
     "people_one": "{{count}} лице",
     "people_other": "{{count}} лица",
     "finished": "Завршени",
@@ -225,7 +225,6 @@
     "titleTooLong": "Насловот може да има најмногу 60 знаци."
   },
   "group": {
-    "addPeople": "Додај луѓе",
     "addPeopleNoKvit": "Немаат Kvit? Додај ги како име.",
     "addPeopleHasKvit": "Имаат Kvit? Сподели го линкот и ќе се придружат со свој профил.",
     "addName": "Додај име",
@@ -235,7 +234,8 @@
   },
   "expenses": {
     "title": "Трошоци",
-    "empty": "Сè уште нема трошоци. Допри + за да додадеш.",
+    "emptyTitle": "Сѐ уште нема трошоци",
+    "emptyHint": "Допри + за да додадеш.",
     "paidByShare": "Платено од {{name}} · твој дел {{amount}}",
     "paidByNotInSplit": "Платено од {{name}} · не си во поделбата",
     "today": "Денес",
@@ -285,7 +285,9 @@
     "historyChangedPaidBy": "{{name}} измени кој платил: {{old}} → {{new}}",
     "historyChangedSplit": "{{name}} ја измени поделбата",
     "historyDeleted": "{{name}} го избриша",
-    "historyRestored": "{{name}} го врати"
+    "historyRestored": "{{name}} го врати",
+    "fewerShares": "Помалку делови за {{name}}",
+    "moreShares": "Повеќе делови за {{name}}"
   },
   "activity": {
     "title": "Активности",
@@ -381,5 +383,14 @@
     "title": "Страницата не е пронајдена",
     "message": "Оваа страница не постои или е преместена.",
     "goHome": "Оди на почетната страница"
+  },
+  "time": {
+    "justNow": "пред малку",
+    "minutes_one": "пред {{count}} минута",
+    "minutes_other": "пред {{count}} минути",
+    "hours_one": "пред {{count}} час",
+    "hours_other": "пред {{count}} часа",
+    "days_one": "пред {{count}} ден",
+    "days_other": "пред {{count}} дена"
   }
 }
