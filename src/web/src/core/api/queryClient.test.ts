@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { meQueryKey } from '@/core/auth/useMe'
 import type { Me } from '@/core/services/me/meService'
 import { captureError } from '@/test/apiTestHelpers'
+import { createTestPersister } from '@/test/testPersister'
 import { testMe } from '@/test/testMe'
 import { ApiError } from './apiClient'
 import { createQueryClient } from './queryClient'
@@ -32,7 +33,7 @@ async function failWith(
 }
 
 function defaultQueryRetry(): (failureCount: number, error: Error) => boolean {
-  const retry = createQueryClient().getDefaultOptions().queries?.retry
+  const retry = createQueryClient(createTestPersister()).getDefaultOptions().queries?.retry
   if (typeof retry !== 'function') {
     throw new Error(`The default query retry option is not a function: ${String(retry)}`)
   }
@@ -40,7 +41,7 @@ function defaultQueryRetry(): (failureCount: number, error: Error) => boolean {
 }
 
 function createClientWithSignedInPerson(): QueryClient {
-  const queryClient = createQueryClient()
+  const queryClient = createQueryClient(createTestPersister())
   queryClient.setQueryData<Me | null>(meQueryKey, testMe)
   return queryClient
 }
@@ -116,7 +117,7 @@ describe('createQueryClient', () => {
   })
 
   it('does not retry a failed mutation', async () => {
-    const queryClient = createQueryClient()
+    const queryClient = createQueryClient(createTestPersister())
     const mutationFn = vi.fn((): Promise<never> => Promise.reject(apiError(500, null)))
 
     await captureError(new MutationObserver(queryClient, { mutationFn }).mutate())
@@ -125,7 +126,7 @@ describe('createQueryClient', () => {
   })
 
   it('does not refetch a query when the window regains focus', async () => {
-    const queryClient = createQueryClient()
+    const queryClient = createQueryClient(createTestPersister())
     queryClient.mount()
     const queryFn = vi.fn(async () => 'groups')
     const observer = new QueryObserver(queryClient, { queryKey: ['groups'], queryFn })

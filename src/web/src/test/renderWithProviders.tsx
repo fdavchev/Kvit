@@ -1,4 +1,5 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
+import type { Persister } from '@tanstack/react-query-persist-client'
 import { render, renderHook, type RenderHookResult } from '@testing-library/react'
 import type { i18n as I18nInstance } from 'i18next'
 import { createElement, type ReactElement, type ReactNode } from 'react'
@@ -8,12 +9,14 @@ import { RouterProvider } from 'react-router/dom'
 import { createQueryClient } from '@/core/api/queryClient'
 import { createI18n } from '@/core/i18n/i18n'
 import type { Language } from '@/core/i18n/language'
+import { createTestPersister } from './testPersister'
 
 interface RenderOptions {
   language?: Language
   seedCache?: (queryClient: QueryClient) => void
   prepareI18n?: (i18n: I18nInstance) => void
   routerState?: unknown
+  persister?: Persister
 }
 
 interface Providers {
@@ -35,7 +38,7 @@ interface RoutesRender {
 }
 
 async function createProviders(options: RenderOptions): Promise<Providers> {
-  const queryClient = createQueryClient()
+  const queryClient = createQueryClient(options.persister ?? createTestPersister())
   const defaultOptions = queryClient.getDefaultOptions()
   queryClient.setDefaultOptions({
     ...defaultOptions,

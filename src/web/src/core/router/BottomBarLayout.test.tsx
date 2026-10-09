@@ -1,10 +1,18 @@
+import type { QueryClient } from '@tanstack/react-query'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import type { RouteObject } from 'react-router'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { endpoints } from '@/core/api/endpoints'
+import { checkRestoredMeWithServer } from '@/core/api/savedQueryCache'
+import { meQueryKey } from '@/core/auth/useMe'
 import { languages, type Language } from '@/core/i18n/language'
+import type { Me } from '@/core/services/me/meService'
+import { requestCountTo, stubFetch, stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
+import { testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
 import { BottomBarLayout } from './BottomBarLayout'
+import { RequireAuth } from './RequireAuth'
 import { routes } from './routes'
 
 const routeTable: RouteObject[] = [
@@ -111,5 +119,83 @@ describe('BottomBarLayout', () => {
     })
     expect(screen.getByText('settings page')).toBeTruthy()
     expect(tab('en', 'nav.settings').getAttribute('aria-current')).toBe('page')
+  })
+})
+
+const signedInRouteTable: RouteObject[] = [
+  { path: routes.welcome, element: <p>welcome page</p> },
+  { element: <RequireAuth />, children: routeTable },
+]
+
+const beforeThePageOpened = performance.timeOrigin - 60 * 60 * 1000
+
+function restoredMe(me: Me | null): (queryClient: QueryClient) => void {
+  return (queryClient) => {
+    queryClient.setQueryData<Me | null>(meQueryKey, me, { updatedAt: beforeThePageOpened })
+    void checkRestoredMeWithServer(queryClient)
+  }
+}
+
+function meFetchedInThisPage(queryClient: QueryClient): void {
+  queryClient.setQueryData<Me | null>(meQueryKey, testMe)
+  void checkRestoredMeWithServer(queryClient)
+}
+
+describe('BottomBarLayout Updating… note', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it.each(languages)('shows the Updating… note in %s while the saved person is checked with the server', async (language) => {
+    stubFetchThatNeverAnswers()
+
+    await renderRoutesWithProviders(signedInRouteTable, routes.groups, {
+      language,
+      seedCache: restoredMe({ ...testMe, language }),
+    })
+
+    expect(screen.getByText('groups page')).toBeTruthy()
+    expect((await screen.findByRole('status')).textContent).toBe(translated(language, 'common.updating'))
+  })
+
+  it('shows no note when the person was already fetched in this page and is checked again', async () => {
+    const fetchMock = vi.fn<typeof fetch>(() => new Promise<Response>(() => {}))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await renderRoutesWithProviders(signedInRouteTable, routes.groups, { seedCache: meFetchedInThisPage })
+
+    await waitFor(() => {
+      expect(requestCountTo(fetchMock, endpoints.me)).toBe(1)
+    })
+    expect(screen.getByText('groups page')).toBeTruthy()
+    expect(screen.queryByText(translated('en', 'common.updating'))).toBeNull()
+  })
+
+  it('shows no note on a later check after the first check of the saved person failed', async () => {
+    const fetchMock = stubFetch(new Response(null, { status: 503 }))
+    const { queryClient } = await renderRoutesWithProviders(signedInRouteTable, routes.groups, {
+      seedCache: restoredMe(testMe),
+    })
+    await waitFor(() => {
+      expect(queryClient.getQueryState(meQueryKey)?.status).toBe('error')
+    })
+    stubFetchThatNeverAnswers()
+
+    void queryClient.refetchQueries({ queryKey: meQueryKey })
+
+    await waitFor(() => {
+      expect(queryClient.getQueryState(meQueryKey)?.fetchStatus).toBe('fetching')
+    })
+    expect(requestCountTo(fetchMock, endpoints.me)).toBe(1)
+    expect(screen.queryByText(translated('en', 'common.updating'))).toBeNull()
+  })
+
+  it('shows no note and the Welcome page when the saved copy says nobody is signed in', async () => {
+    stubFetchThatNeverAnswers()
+
+    await renderRoutesWithProviders(signedInRouteTable, routes.groups, { seedCache: restoredMe(null) })
+
+    expect(await screen.findByText('welcome page')).toBeTruthy()
+    expect(screen.queryByText(translated('en', 'common.updating'))).toBeNull()
   })
 })

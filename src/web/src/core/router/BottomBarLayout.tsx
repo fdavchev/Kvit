@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { Outlet } from 'react-router'
+import { useIsRefreshingSavedData } from '@/core/api/useIsRefreshingSavedData'
 import { KvitTabBar } from '@/shared/components/KvitTabBar'
+import { KvitUpdatingNote } from '@/shared/components/KvitUpdatingNote'
 import { kvitIconAttributes } from '@/shared/components/kvitIconAttributes'
 import { routes } from './routes'
 
@@ -8,6 +10,7 @@ const iconLook = 'size-[22px]'
 
 export function BottomBarLayout() {
   const { t } = useTranslation()
+  const isRefreshingSavedData = useIsRefreshingSavedData()
 
   const items = [
     {
@@ -51,6 +54,11 @@ export function BottomBarLayout() {
         data-bottom-bar
         className="pointer-events-none sticky bottom-0 z-10 mx-auto h-(--bottom-bar-height) w-full max-w-md px-4 pt-2"
       >
+        {isRefreshingSavedData && (
+          <div className="absolute inset-x-0 bottom-full flex justify-center">
+            <KvitUpdatingNote />
+          </div>
+        )}
         <div className="pointer-events-auto">
           <KvitTabBar items={items} />
         </div>

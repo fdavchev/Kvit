@@ -133,6 +133,12 @@ Put the skeleton online early, so the hosting traps show up before there are fea
 - [x] **Code review done 2026-10-09 (VERIFIED by automated test: backend 2143, frontend 4402):** 4 findings fixed, the rest in BACKLOG. Filip's hand check of the finished screens is REPORTED, not independently verified. Report: `reports/2026-10-09-phase-08-expenses.md`; guide: `guides/phase-08-expenses.md`
 - [x] **Filip:** commit, push, open the pull request, see CI go green, merge into `main` (CI applies the two new migrations on Neon)
 
+## Phase 8b: Saved data shows instantly · `feat/08b-instant-saved-data`
+Moved forward from Phase 11 because the Render wake-up (about 22 s) made the app look stuck.
+- [x] **Done 2026-10-09 (VERIFIED by automated test, frontend 4481).** TanStack Query cache saved to IndexedDB (24 hours, version string), `me` included, one-person rule (log-out, 401 or another person wipes the saved copy), screens show at once while `/api/me` is re-checked once per app open
+- [x] **Done 2026-10-09 (VERIFIED by automated test).** "Updating…" note (EN + MK) above the bottom tab bar, a 3-second limit on reading the saved copy, one "server may be waking up" message for 502/503/504 and no answer
+- [ ] **Filip:** real-browser and phone check (see STATUS), then commit, push, open the pull request, see CI go green, merge into `main`
+
 ## Phase 9: Balances + settle up · `feat/09-settle-up`
 - [ ] Balances per currency; "who pays whom"
 - [ ] Pass `Balances.Calculate` every member the group has ever had, **including removed and left members** (`removed_at` set), in joining order; otherwise it throws by design (see `reports/2026-09-29-phase-03-money-core.md`, follow-up)
@@ -148,7 +154,7 @@ Put the skeleton online early, so the hosting traps show up before there are fea
 
 ## Phase 11: Dashboard + Release 1 · `feat/11-dashboard`
 - [ ] Dashboard (Filip decides the layout that day), recent activity, "+" to the last-used group
-- [ ] Saved data shown instantly (TanStack Query cache in IndexedDB), "Updating…" note, the full waking screen only without saved data
+- [x] Saved data shown instantly: moved to Phase 8b
 - [ ] `Active` usage event (once per user per day)
 - [ ] Full pass at 360 px in EN and MK, light and dark; every text translated
 - [ ] Deploy; **Filip** and friends use it on something real

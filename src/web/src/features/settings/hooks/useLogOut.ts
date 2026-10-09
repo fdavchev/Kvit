@@ -9,10 +9,6 @@ export function useLogOut(): UseMutationResult<void, Error, void> {
   return useMutation({
     mutationFn: logOut,
     onSuccess: () => {
-      const meQuery = queryClient
-        .getQueryCache()
-        .find({ queryKey: meQueryKey, exact: true })
-      queryClient.removeQueries({ predicate: (query) => query !== meQuery })
       queryClient.getMutationCache().clear()
       queryClient.setQueryData<Me | null>(meQueryKey, null)
     },

@@ -10,7 +10,7 @@
 - **Every text** comes from `en.json` / `mk.json`. `<html lang>` switches to `mk` for Macedonian.
 - **Bottom bar (decided 2026-10-03, Phase 7):** Home · Groups · Settings, in the pill look (the active tab is a white pill with icon and name), switched by tapping only. Release 2 adds **Budget** between Groups and Settings.
 - **Undo toast** instead of "Are you sure?": every delete shows "Deleted · Undo" for a few seconds.
-- **"Updating…"** small note while the server wakes (saved data is already on screen).
+- **"Updating…"** small note while the server wakes (saved data is already on screen). Built in Phase 8b as a small label just above the bottom tab bar on the main tabs.
 - **Errors** show the translated message for the API's error code (`ResultCodes`), never a raw error.
 
 ---

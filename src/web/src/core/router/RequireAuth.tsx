@@ -11,18 +11,18 @@ export function RequireAuth() {
   const location = useLocation()
   const meQuery = useMe()
 
-  if (meQuery.isPending) {
+  const me = meQuery.data
+  if (me === undefined) {
+    if (meQuery.isError) {
+      return (
+        <KvitError
+          message={t(errorMessageKey(meQuery.error))}
+          onRetry={() => void meQuery.refetch()}
+        />
+      )
+    }
     return <KvitLoading />
   }
-  if (meQuery.isError) {
-    return (
-      <KvitError
-        message={t(errorMessageKey(meQuery.error))}
-        onRetry={() => void meQuery.refetch()}
-      />
-    )
-  }
-  const me = meQuery.data
   if (me === null) {
     return <Navigate to={routes.welcome} replace />
   }

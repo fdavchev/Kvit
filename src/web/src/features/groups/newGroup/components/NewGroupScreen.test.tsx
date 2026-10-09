@@ -413,6 +413,20 @@ describe('NewGroupScreen', () => {
     )
   })
 
+  it.each(
+    languages.flatMap((language) => [502, 503, 504].map((httpStatus) => [language, httpStatus] as const)),
+  )('shows the waking-up message in %s when saving gets a %i because the server is asleep or too slow', async (language, httpStatus) => {
+    stubFetchByRequest({ 'POST /api/groups': () => new Response('Service Unavailable', { status: httpStatus }) })
+    await renderNewGroup(language)
+    typeInto(translated(language, 'groupFields.name'), groupName)
+
+    pressCreate(language)
+
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      translated(language, 'errors.network'),
+    )
+  })
+
   it('opens the new group and clears the error when Create is pressed again after the server refused the first try', async () => {
     let tries = 0
     stubFetchByRequest({
