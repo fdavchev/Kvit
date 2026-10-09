@@ -17,6 +17,7 @@ namespace Kvit.Api.Controllers
         {
             OneBillInput input = new(
                 request.Title,
+                request.GroupName,
                 request.Emoji,
                 request.Names,
                 request.Note,

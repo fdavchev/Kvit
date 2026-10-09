@@ -222,7 +222,8 @@
     "nameLabel": "name",
     "removeName": "Remove {{name}}",
     "save": "Save bill",
-    "titleTooLong": "The title can have up to 60 characters."
+    "titleTooLong": "The title can have up to 60 characters.",
+    "groupName": "Bill · {{date}}"
   },
   "group": {
     "addPeopleNoKvit": "No Kvit? Add them as a name.",

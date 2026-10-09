@@ -141,3 +141,41 @@ export function addDays(date: string, days: number): string {
   moved.setUTCDate(moved.getUTCDate() + days)
   return moved.toISOString().slice(0, 10)
 }
+
+export interface AmountTextCase {
+  name: string
+  currency: Currency
+  text: string
+}
+
+export const invalidAmountTextCases: AmountTextCase[] = [
+  { name: 'a decimal in MKD', currency: 'MKD', text: '12.50' },
+  { name: 'a thousands comma in MKD', currency: 'MKD', text: '1,200' },
+  { name: 'letters in MKD', currency: 'MKD', text: 'abc' },
+  { name: 'letters in EUR', currency: 'EUR', text: 'abc' },
+  { name: 'three decimals in EUR', currency: 'EUR', text: '12.555' },
+  { name: 'no digit before the point in EUR', currency: 'EUR', text: '.5' },
+  { name: 'no digit before the point in MKD', currency: 'MKD', text: '.5' },
+  { name: 'no digit after the point in EUR', currency: 'EUR', text: '5.' },
+  { name: 'zero in MKD', currency: 'MKD', text: '0' },
+  { name: 'zero in EUR', currency: 'EUR', text: '0.00' },
+  { name: '13 digits in MKD', currency: 'MKD', text: '1234567890123' },
+]
+
+export const validAmountTextCases: AmountTextCase[] = [
+  { name: 'whole denars in MKD', currency: 'MKD', text: '1200' },
+  { name: 'whole euros in EUR', currency: 'EUR', text: '12' },
+  { name: 'euros with two decimals', currency: 'EUR', text: '12.50' },
+  { name: 'euros with a decimal comma', currency: 'EUR', text: '12,5' },
+  { name: 'denars with spaces around them', currency: 'MKD', text: ' 1200 ' },
+]
+
+export const invalidFieldBorderClass = 'aria-invalid:border-destructive'
+
+export function expectAmountMarkedInvalid(language: Language = 'en'): void {
+  expect(amountField(language).getAttribute('aria-invalid')).toBe('true')
+}
+
+export function expectAmountNotMarkedInvalid(language: Language = 'en'): void {
+  expect(amountField(language).getAttribute('aria-invalid')).not.toBe('true')
+}

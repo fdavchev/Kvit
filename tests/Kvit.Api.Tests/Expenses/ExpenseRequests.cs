@@ -95,6 +95,7 @@ namespace Kvit.Api.Tests.Expenses
             {
                 clientRequestId,
                 input.Title,
+                input.GroupName,
                 input.Emoji,
                 input.Names,
                 input.Note,

@@ -32,7 +32,7 @@ namespace Kvit.Application.Commands.Expenses
                 return rate.ToFailure<OneBillResponse>();
             }
 
-            Result<OneBillCreated> created = await _unitOfWork.RunInTransactionAsync(
+            Result<OneBillCreated> created = await _unitOfWork.RunInTransactionOnceMoreIfClientRequestIdWasTakenAsync(
                 () => _createOneBill.Execute(me.Value.Id, me.Value.DisplayName, command.ClientRequestId, command.Input, rate.Value, cancellationToken),
                 cancellationToken);
             if (!created.IsSuccess)

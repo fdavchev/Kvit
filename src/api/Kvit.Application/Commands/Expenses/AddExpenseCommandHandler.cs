@@ -32,7 +32,7 @@ namespace Kvit.Application.Commands.Expenses
                 return rate.ToFailure<ExpenseDetailResponse>();
             }
 
-            Result<Guid> added = await _unitOfWork.RunInTransactionAsync(
+            Result<Guid> added = await _unitOfWork.RunInTransactionOnceMoreIfClientRequestIdWasTakenAsync(
                 () => _addExpense.Execute(command.GroupId, userId.Value, command.ClientRequestId, command.Input, rate.Value, cancellationToken),
                 cancellationToken);
             if (!added.IsSuccess)

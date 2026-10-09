@@ -80,6 +80,10 @@ export function formatDayWithYear(date: string, language: Language): string {
   return formatCalendarDay(date, language, true)
 }
 
+export function formatDayWithoutYear(date: string, language: Language): string {
+  return formatCalendarDay(date, language, false)
+}
+
 export function formatHowLongAgo(
   isoDateTime: string,
   now: Date,

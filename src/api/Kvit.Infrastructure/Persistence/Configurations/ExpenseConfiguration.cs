@@ -7,6 +7,8 @@ namespace Kvit.Infrastructure.Persistence.Configurations
 {
     public class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
     {
+        public const string ClientRequestIdIndexName = "ix_expenses_client_request_id";
+
         public void Configure(EntityTypeBuilder<Expense> builder)
         {
             builder.ToTable("expenses", table =>
@@ -23,7 +25,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
             builder.Property(expense => expense.SplitType).HasConversion<string>();
             builder.Property(expense => expense.MkdPerEur).HasPrecision(ExchangeRate.MkdPerEurPrecision, ExchangeRate.MkdPerEurDecimals);
 
-            builder.HasIndex(expense => expense.ClientRequestId).IsUnique();
+            builder.HasIndex(expense => expense.ClientRequestId).HasDatabaseName(ClientRequestIdIndexName).IsUnique();
 
             builder.HasOne<Group>()
                 .WithMany()

@@ -121,6 +121,7 @@ export interface OneBillShareInput {
 export interface OneBillInput {
   clientRequestId: string
   title: string | null
+  groupName: string | null
   names: string[]
   note: string | null
   amountMinor: number

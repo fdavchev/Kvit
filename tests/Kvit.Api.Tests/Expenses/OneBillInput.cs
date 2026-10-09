@@ -15,6 +15,8 @@ namespace Kvit.Api.Tests.Expenses
         string SplitType,
         IReadOnlyList<OneBillShareInput> Shares)
     {
+        public string? GroupName { get; init; }
+
         public static OneBillInput EqualAmongEveryone(long amountMinor, string currency, params string[] names)
         {
             OneBillShareInput[] shares = [.. Enumerable.Range(0, names.Length + 1).Select(personIndex => new OneBillShareInput(personIndex, 0))];

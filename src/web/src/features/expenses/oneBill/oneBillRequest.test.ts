@@ -26,6 +26,7 @@ function inputOf(changes: Partial<OneBillRequestInput>): OneBillRequestInput {
     paidById: meId,
     splitDraft: defaultSplitDraft([meId, markoId, anaId]),
     title: '',
+    groupName: 'Bill · 6 Oct',
     amountMinor: 180000,
     currency: 'MKD',
     expenseDate: '2026-10-06',
@@ -62,7 +63,7 @@ describe('buildOneBillRequest', () => {
     })
   })
 
-  it('has exactly the fields of the One bill request and never an emoji', () => {
+  it('has exactly the 12 fields of the One bill request and never an emoji', () => {
     const request = buildOneBillRequest(inputOf({}))
 
     expect(Object.keys(request).sort()).toEqual(
@@ -72,6 +73,7 @@ describe('buildOneBillRequest', () => {
         'clientRequestId',
         'currency',
         'expenseDate',
+        'groupName',
         'names',
         'note',
         'paidByPersonIndex',
@@ -280,6 +282,20 @@ describe('buildOneBillRequest', () => {
       const request = buildOneBillRequest(inputOf({ title: typed }))
 
       expect(request.title).toBeNull()
+    })
+
+    it.each([[''], ['   ']])('sends the given group name next to the empty title %j, and the title stays null', (typed) => {
+      const request = buildOneBillRequest(inputOf({ title: typed, groupName: 'Сметка · 7 окт' }))
+
+      expect(request.groupName).toBe('Сметка · 7 окт')
+      expect(request.title).toBeNull()
+    })
+
+    it.each([['Dinner'], ['  Dinner at Mario  ']])('sends a null group name when the title %j is typed, so the title names the group', (typed) => {
+      const request = buildOneBillRequest(inputOf({ title: typed, groupName: 'Bill · 6 Oct' }))
+
+      expect(request.groupName).toBeNull()
+      expect(request.title).not.toBeNull()
     })
 
     it('sends no note', () => {

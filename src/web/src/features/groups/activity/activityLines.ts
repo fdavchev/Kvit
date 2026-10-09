@@ -20,7 +20,6 @@ import { formatMoney, type Currency } from '@/shared/utils/formatMoney'
 
 export interface ActivityContext extends ChangeSentenceContext {
   expenses: readonly ExpenseListRow[]
-  groupCurrency: Currency
 }
 
 export interface ActivityLine {
@@ -85,14 +84,25 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
   function editSentences(event: ActivityEvent): string[] {
     const changes = changesOf(event)
     const expenseId = expenseIdOf(event)
-    const knownCurrency =
-      currencyOfOlderEdit.get(expenseId) ?? expenseRowOf(event)?.currency ?? context.groupCurrency
-    const currencyAfter = currencyAfterOf(changes, knownCurrency)
+    const currencyAfter = currencyAfterTheEdit(event, changes, expenseId)
     const currencyBefore = currencyBeforeOf(changes, currencyAfter)
     currencyOfOlderEdit.set(expenseId, currencyBefore)
     return changes.map((change) =>
       expenseChangeSentence(change, event.actorName, { before: currencyBefore, after: currencyAfter }, context),
     )
+  }
+
+  function currencyAfterTheEdit(event: ActivityEvent, changes: ExpenseChange[], expenseId: string): Currency {
+    if (event.data !== null) {
+      return readOneOf(event.data, 'currency', groupCurrencies, `the data of the ${event.type} event ${event.id}`)
+    }
+    const knownCurrency = currencyOfOlderEdit.get(expenseId) ?? expenseRowOf(event)?.currency
+    if (knownCurrency === undefined) {
+      throw new Error(
+        `The ${event.type} event ${event.id} carries no currency and its expense ${expenseId} is not in the list, so its amounts cannot be shown`,
+      )
+    }
+    return currencyAfterOf(changes, knownCurrency)
   }
 
   function sentencesOf(event: ActivityEvent): string[] {

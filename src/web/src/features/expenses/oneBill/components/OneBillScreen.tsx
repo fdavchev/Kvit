@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { errorMessageKey } from '@/core/api/errors'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
+import { useLanguage } from '@/core/i18n/useLanguage'
 import { routes } from '@/core/router/routes'
 import type { Category } from '@/core/services/categories/categoriesService'
 import type { Me } from '@/core/services/me/meService'
@@ -14,7 +15,7 @@ import { KvitForm } from '@/shared/components/KvitForm'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitTextField } from '@/shared/components/KvitTextField'
-import { todayInTimeZone } from '@/shared/utils/formatDate'
+import { formatDayWithoutYear, todayInTimeZone } from '@/shared/utils/formatDate'
 import type { Currency } from '@/shared/utils/formatMoney'
 import { parseMoneyInput } from '@/shared/utils/parseMoneyInput'
 import { AmountField } from '../../shared/components/AmountField'
@@ -76,6 +77,7 @@ export function OneBillScreen() {
 
 function OneBillForm({ me, categories }: OneBillFormProps) {
   const { t } = useTranslation()
+  const { language } = useLanguage()
   const navigate = useNavigate()
   const titleId = useId()
   const createOneBill = useCreateOneBill()
@@ -156,6 +158,7 @@ function OneBillForm({ me, categories }: OneBillFormProps) {
         paidById,
         splitDraft,
         title,
+        groupName: t('oneBill.groupName', { date: formatDayWithoutYear(expenseDate, language) }),
         amountMinor,
         currency,
         expenseDate,

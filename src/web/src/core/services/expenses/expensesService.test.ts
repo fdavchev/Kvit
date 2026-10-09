@@ -63,6 +63,7 @@ const oneBillPath = '/api/groups/one-bill'
 const oneBillInput: OneBillInput = {
   clientRequestId: '7a9c1e3b-5d7f-4b9d-8f1a-3c5e7a9c1e3b',
   title: 'Dinner',
+  groupName: null,
   names: ['Marko', 'Ana'],
   note: null,
   amountMinor: 180000,

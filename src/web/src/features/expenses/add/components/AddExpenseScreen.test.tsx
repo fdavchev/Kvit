@@ -7,7 +7,7 @@ import { routes } from '@/core/router/routes'
 import type { Group } from '@/core/services/groups/groupsService'
 import type { GroupMembers } from '@/core/services/groups/membersService'
 import type { Me } from '@/core/services/me/meService'
-import { formatMoney } from '@/shared/utils/formatMoney'
+import { formatMoney, type Currency } from '@/shared/utils/formatMoney'
 import { stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
 import {
   accommodationCategory,
@@ -25,8 +25,12 @@ import {
   currencyToggle,
   dateField,
   doneButton,
+  expectAmountMarkedInvalid,
+  expectAmountNotMarkedInvalid,
   formRow,
   formRowBehindSheet,
+  invalidAmountTextCases,
+  invalidFieldBorderClass,
   isDisabled,
   noteField,
   noteLink,
@@ -44,6 +48,7 @@ import {
   typeDate,
   typeInPerson,
   typeTitle,
+  validAmountTextCases,
   waitForSheetToClose,
   yesterdayChip,
   type SplitTabKey,
@@ -476,6 +481,102 @@ describe('AddExpenseScreen', () => {
         expect(isDisabled(saveButton()) || screen.queryByRole('alert') !== null).toBe(true)
       })
       expect(requestCount(fetchMock, 'POST', expensesPath)).toBe(0)
+    })
+  })
+
+  describe('the mark on an amount that is not valid for the currency', () => {
+    async function renderWithTypedAmount(currency: Currency, text: string): Promise<void> {
+      await renderReadyAdd()
+      if (currency === 'EUR') {
+        fireEvent.click(currencyToggle('MKD'))
+      }
+      typeAmount(text)
+    }
+
+    it.each(invalidAmountTextCases)('marks the amount field with aria-invalid="true" for $name: "$text"', async ({ currency, text }) => {
+      await renderWithTypedAmount(currency, text)
+
+      expectAmountMarkedInvalid()
+    })
+
+    it.each(validAmountTextCases)('does not mark the amount field for $name: "$text"', async ({ currency, text }) => {
+      await renderWithTypedAmount(currency, text)
+
+      expectAmountNotMarkedInvalid()
+    })
+
+    it('does not mark the amount field while it is empty', async () => {
+      await renderReadyAdd()
+
+      expectAmountNotMarkedInvalid()
+    })
+
+    it('does not mark the amount field after the invalid text was cleared again', async () => {
+      await renderReadyAdd()
+      typeAmount('abc')
+
+      typeAmount('')
+
+      expectAmountNotMarkedInvalid()
+    })
+
+    it('clears the mark as soon as the text is valid, and marks it again when it is broken again', async () => {
+      await renderReadyAdd()
+      typeAmount('abc')
+      expectAmountMarkedInvalid()
+
+      typeAmount('1200')
+      expectAmountNotMarkedInvalid()
+
+      typeAmount('12x')
+      expectAmountMarkedInvalid()
+    })
+
+    it('styles the amount field with the red border that every invalid field of the app has', async () => {
+      await renderReadyAdd()
+
+      expect(amountField().classList.contains(invalidFieldBorderClass)).toBe(true)
+    })
+
+    it('keeps the typed text 12.50 when EUR is switched to MKD, marks the field, keeps Save disabled, and clears the mark and enables Save when EUR is chosen again', async () => {
+      await renderReadyAdd()
+      fireEvent.click(currencyToggle('MKD'))
+      typeAmount('12.50')
+      expectAmountNotMarkedInvalid()
+      expect(isDisabled(saveButton())).toBe(false)
+
+      fireEvent.click(currencyToggle('EUR'))
+
+      expect(amountField().value).toBe('12.50')
+      expectAmountMarkedInvalid()
+      expect(isDisabled(saveButton())).toBe(true)
+
+      fireEvent.click(currencyToggle('MKD'))
+
+      expect(amountField().value).toBe('12.50')
+      expectAmountNotMarkedInvalid()
+      expect(isDisabled(saveButton())).toBe(false)
+    })
+
+    it('clears the mark of a decimal typed in MKD when the currency is switched to EUR', async () => {
+      await renderReadyAdd()
+      typeAmount('12.50')
+      expectAmountMarkedInvalid()
+
+      fireEvent.click(currencyToggle('MKD'))
+
+      expectAmountNotMarkedInvalid()
+    })
+
+    it('marks an amount of three decimals typed in EUR and clears the mark when the third decimal is removed', async () => {
+      await renderReadyAdd()
+      fireEvent.click(currencyToggle('MKD'))
+      typeAmount('12.555')
+      expectAmountMarkedInvalid()
+
+      typeAmount('12.55')
+
+      expectAmountNotMarkedInvalid()
     })
   })
 

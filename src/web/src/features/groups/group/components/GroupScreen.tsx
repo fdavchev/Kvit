@@ -81,7 +81,7 @@ export function GroupScreen() {
             }
           />
         ) : (
-          <GroupActivity groupId={group.id} groupCurrency={group.defaultCurrency} />
+          <GroupActivity groupId={group.id} />
         )}
         {isAddingName && (
           <AddNameSheet groupId={group.id} onClose={() => setIsAddingName(false)} />

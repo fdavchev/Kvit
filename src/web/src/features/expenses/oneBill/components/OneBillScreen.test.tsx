@@ -5,6 +5,7 @@ import type { Language } from '@/core/i18n/language'
 import { languages } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import type { Me } from '@/core/services/me/meService'
+import type { Currency } from '@/shared/utils/formatMoney'
 import { stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
 import {
   accommodationCategory,
@@ -18,7 +19,11 @@ import {
   amountLeftText,
   currencyToggle,
   doneButton,
+  expectAmountMarkedInvalid,
+  expectAmountNotMarkedInvalid,
   formRow,
+  invalidAmountTextCases,
+  invalidFieldBorderClass,
   isDisabled,
   openSheet,
   personBoxValue,
@@ -32,6 +37,7 @@ import {
   typeDate,
   typeInPerson,
   typeTitle,
+  validAmountTextCases,
   waitForSheetToClose,
   type SplitTabKey,
 } from '@/test/expenseFormTestHelpers'
@@ -199,6 +205,7 @@ function expectedBody(changes: Record<string, unknown> = {}): Record<string, unk
   return {
     clientRequestId: expect.stringMatching(uuidFormat),
     title: null,
+    groupName: 'Bill · 6 Oct',
     names: [],
     note: null,
     amountMinor: 180000,
@@ -414,6 +421,103 @@ describe('OneBillScreen', () => {
       typeAmount('1800')
 
       expect(isDisabled(saveBillButton())).toBe(false)
+    })
+  })
+
+  describe('the mark on an amount that is not valid for the currency', () => {
+    async function renderWithTypedAmount(currency: Currency, text: string): Promise<void> {
+      await renderReadyBill()
+      if (currency === 'EUR') {
+        fireEvent.click(currencyToggle('MKD'))
+      }
+      typeAmount(text)
+    }
+
+    it.each(invalidAmountTextCases)('marks the amount field with aria-invalid="true" for $name: "$text"', async ({ currency, text }) => {
+      await renderWithTypedAmount(currency, text)
+
+      expectAmountMarkedInvalid()
+    })
+
+    it.each(validAmountTextCases)('does not mark the amount field for $name: "$text"', async ({ currency, text }) => {
+      await renderWithTypedAmount(currency, text)
+
+      expectAmountNotMarkedInvalid()
+    })
+
+    it('does not mark the amount field while it is empty', async () => {
+      await renderReadyBill()
+
+      expectAmountNotMarkedInvalid()
+    })
+
+    it('does not mark the amount field after the invalid text was cleared again', async () => {
+      await renderReadyBill()
+      typeAmount('abc')
+
+      typeAmount('')
+
+      expectAmountNotMarkedInvalid()
+    })
+
+    it('clears the mark as soon as the text is valid, and marks it again when it is broken again', async () => {
+      await renderReadyBill()
+      typeAmount('abc')
+      expectAmountMarkedInvalid()
+
+      typeAmount('1800')
+      expectAmountNotMarkedInvalid()
+
+      typeAmount('18x')
+      expectAmountMarkedInvalid()
+    })
+
+    it('styles the amount field with the red border that every invalid field of the app has', async () => {
+      await renderReadyBill()
+
+      expect(amountField().classList.contains(invalidFieldBorderClass)).toBe(true)
+    })
+
+    it('keeps the typed text 12.50 when EUR is switched to MKD, marks the field, keeps Save bill disabled, and clears the mark and enables Save bill when EUR is chosen again', async () => {
+      await renderReadyBill()
+      fireEvent.click(currencyToggle('MKD'))
+      typeAmount('12.50')
+      expectAmountNotMarkedInvalid()
+      expect(isDisabled(saveBillButton())).toBe(false)
+
+      fireEvent.click(currencyToggle('EUR'))
+
+      expect(amountField().value).toBe('12.50')
+      expectAmountMarkedInvalid()
+      expect(isDisabled(saveBillButton())).toBe(true)
+
+      fireEvent.click(currencyToggle('MKD'))
+
+      expect(amountField().value).toBe('12.50')
+      expectAmountNotMarkedInvalid()
+      expect(isDisabled(saveBillButton())).toBe(false)
+    })
+
+    it('clears the mark of a decimal typed in MKD when the currency is switched to EUR', async () => {
+      await renderReadyBill()
+      typeAmount('12.50')
+      expectAmountMarkedInvalid()
+
+      fireEvent.click(currencyToggle('MKD'))
+
+      expectAmountNotMarkedInvalid()
+    })
+
+    it('keeps Save bill disabled and sends nothing while the amount is marked, even with names and a split', async () => {
+      const { fetchMock } = await renderReadyBill()
+      await addNames('Marko')
+      typeAmount('12.50')
+
+      fireEvent.click(saveBillButton())
+
+      expectAmountMarkedInvalid()
+      expect(isDisabled(saveBillButton())).toBe(true)
+      expect(requestCount(fetchMock, 'POST', oneBillPath)).toBe(0)
     })
   })
 
@@ -1369,6 +1473,117 @@ describe('OneBillScreen', () => {
     })
   })
 
+  describe('the group name of a bill without a title', () => {
+    const monthCases: [string, string, string][] = [
+      ['2026-01-07', '7 Jan', '7 јан'],
+      ['2026-02-25', '25 Feb', '25 фев'],
+      ['2026-03-07', '7 Mar', '7 мар'],
+      ['2026-04-25', '25 Apr', '25 апр'],
+      ['2026-05-07', '7 May', '7 мај'],
+      ['2026-06-25', '25 Jun', '25 јун'],
+      ['2026-07-07', '7 Jul', '7 јул'],
+      ['2026-08-25', '25 Aug', '25 авг'],
+      ['2026-09-07', '7 Sep', '7 сеп'],
+      ['2026-10-25', '25 Oct', '25 окт'],
+      ['2026-11-07', '7 Nov', '7 ное'],
+      ['2026-12-25', '25 Dec', '25 дек'],
+    ]
+
+    async function savedBodyForDate(language: Language, date: string | null, title = ''): Promise<Record<string, unknown>> {
+      const { fetchMock } = await renderReadyBill({ language })
+      typeAmount('1800', language)
+      if (title !== '') {
+        typeTitle(title, language)
+      }
+      if (date !== null) {
+        const sheet = await openSheet('date', language)
+        typeDate(sheet, date, language)
+        fireEvent.click(doneButton(sheet, language))
+        await waitForSheetToClose()
+      }
+      fireEvent.click(saveBillButton(language))
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'POST', oneBillPath)).toBe(1)
+      })
+      return sentBody(fetchMock, 'POST', oneBillPath)
+    }
+
+    it('sends "Bill · 6 Oct" in English for today, and the expense stays without a title', async () => {
+      const body = await savedBodyForDate('en', null)
+
+      expect(body.groupName).toBe('Bill · 6 Oct')
+      expect(body.title).toBeNull()
+    })
+
+    it('sends «Сметка · 6 окт» in Macedonian for today, and the expense stays without a title', async () => {
+      const body = await savedBodyForDate('mk', null)
+
+      expect(body.groupName).toBe('Сметка · 6 окт')
+      expect(body.title).toBeNull()
+    })
+
+    it.each(monthCases)('names the bill after the picked date %s as "Bill · %s" in English', async (date, english) => {
+      const body = await savedBodyForDate('en', date)
+
+      expect(body.groupName).toBe(`Bill · ${english}`)
+      expect(body.expenseDate).toBe(date)
+    })
+
+    it.each(monthCases.map(([date, , macedonian]) => [date, macedonian]))('names the bill after the picked date %s as «Сметка · %s» in Macedonian, with the Macedonian short month', async (date, macedonian) => {
+      const body = await savedBodyForDate('mk', date)
+
+      expect(body.groupName).toBe(`Сметка · ${macedonian}`)
+      expect(body.expenseDate).toBe(date)
+    })
+
+    it.each([
+      ['en', '2027-03-04', 'Bill · 4 Mar'],
+      ['en', '2025-03-04', 'Bill · 4 Mar'],
+      ['mk', '2027-03-04', 'Сметка · 4 мар'],
+      ['mk', '2025-03-04', 'Сметка · 4 мар'],
+    ] as const)('leaves the year out of the name for a date in another year, like the server does (%s, %s)', async (language, date, groupName) => {
+      const body = await savedBodyForDate(language, date)
+
+      expect(body.groupName).toBe(groupName)
+    })
+
+    it.each(languages)('sends the name next to a title of only spaces, which counts as no title (%s)', async (language) => {
+      const body = await savedBodyForDate(language, null, '   ')
+
+      expect(body.title).toBeNull()
+      expect(body.groupName).toBe(language === 'mk' ? 'Сметка · 6 окт' : 'Bill · 6 Oct')
+    })
+
+    it.each(languages)('sends a null group name when a title is typed, so the title names the group (%s)', async (language) => {
+      const body = await savedBodyForDate(language, null, 'Dinner at Mario')
+
+      expect(body.title).toBe('Dinner at Mario')
+      expect(body.groupName).toBeNull()
+    })
+
+    it('sends a null group name for a title of exactly 60 characters', async () => {
+      const body = await savedBodyForDate('en', null, 'a'.repeat(titleMaxLength))
+
+      expect(body.groupName).toBeNull()
+    })
+
+    it('sends the name again after a too long title was shortened to nothing', async () => {
+      const { fetchMock } = await renderReadyBill()
+      typeAmount('1800')
+      typeTitle('a'.repeat(titleMaxLength + 1))
+      fireEvent.click(saveBillButton())
+      await screen.findByRole('alert')
+
+      typeTitle('')
+      fireEvent.click(saveBillButton())
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'POST', oneBillPath)).toBe(1)
+      })
+      expect(sentBody(fetchMock, 'POST', oneBillPath)).toMatchObject({ title: null, groupName: 'Bill · 6 Oct' })
+    })
+  })
+
   describe('saving', () => {
     it('sends exactly the fields of the One bill request as JSON, with no emoji', async () => {
       const { fetchMock } = await renderReadyBill()
@@ -1404,6 +1619,7 @@ describe('OneBillScreen', () => {
       expect(body).toEqual(
         expectedBody({
           title: 'Taxi to the airport',
+          groupName: null,
           names: ['Marko', 'Ana'],
           amountMinor: 4550,
           currency: 'EUR',

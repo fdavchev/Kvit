@@ -15,6 +15,7 @@ export interface OneBillRequestInput {
   paidById: string
   splitDraft: SplitDraft
   title: string
+  groupName: string
   amountMinor: number
   currency: Currency
   expenseDate: string
@@ -30,9 +31,11 @@ export function buildOneBillRequest(input: OneBillRequestInput): OneBillInput {
     people: input.splitDraft.people.filter((person) => personIds.includes(person.memberId)),
   }
   const payerIndex = personIds.indexOf(input.paidById)
+  const title = textOrNull(input.title)
   return {
     clientRequestId: input.clientRequestId,
-    title: textOrNull(input.title),
+    title,
+    groupName: title === null ? input.groupName : null,
     names: input.names.map((billName) => billName.name),
     note: null,
     amountMinor: input.amountMinor,

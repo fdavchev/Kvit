@@ -1,7 +1,9 @@
+using Kvit.Contracts.Validation;
+
 namespace Kvit.Contracts.Expenses
 {
     public sealed record AddExpenseRequest(
-        Guid ClientRequestId,
+        [NotEmptyGuid] Guid ClientRequestId,
         string? Title,
         string? Note,
         long AmountMinor,

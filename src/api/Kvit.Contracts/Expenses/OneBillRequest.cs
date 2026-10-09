@@ -1,8 +1,11 @@
+using Kvit.Contracts.Validation;
+
 namespace Kvit.Contracts.Expenses
 {
     public sealed record OneBillRequest(
-        Guid ClientRequestId,
+        [NotEmptyGuid] Guid ClientRequestId,
         string? Title,
+        string? GroupName,
         string? Emoji,
         IReadOnlyList<string> Names,
         string? Note,

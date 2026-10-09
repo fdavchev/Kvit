@@ -10,7 +10,6 @@ import { useMembers } from '@/features/groups/members/hooks/useMembers'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { formatHowLongAgo, todayInTimeZone } from '@/shared/utils/formatDate'
-import type { Currency } from '@/shared/utils/formatMoney'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
 import { activityLines } from '../activityLines'
 import { useActivity } from '../hooks/useActivity'
@@ -18,7 +17,6 @@ import { ActivityRow } from './ActivityRow'
 
 interface GroupActivityProps {
   groupId: string
-  groupCurrency: Currency
 }
 
 interface ActorLook {
@@ -26,7 +24,7 @@ interface ActorLook {
   colorIndex: number
 }
 
-export function GroupActivity({ groupId, groupCurrency }: GroupActivityProps) {
+export function GroupActivity({ groupId }: GroupActivityProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const me = useSignedInMe()
@@ -66,7 +64,6 @@ export function GroupActivity({ groupId, groupCurrency }: GroupActivityProps) {
     today: todayInTimeZone(me.timeZone, now),
     categories: categoriesQuery.data,
     expenses: expensesQuery.data,
-    groupCurrency,
   })
   return (
     <ul className="flex flex-col pb-6">

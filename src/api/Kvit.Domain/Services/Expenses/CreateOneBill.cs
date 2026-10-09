@@ -47,7 +47,7 @@ namespace Kvit.Domain.Services.Expenses
                 return categoryKey.ToFailure<OneBillCreated>();
             }
 
-            string groupName = fields.Value.Title ?? Group.OneBillNameFor(fields.Value.ExpenseDate);
+            string groupName = fields.Value.Title ?? ExpenseFields.TrimToNull(input.GroupName) ?? Group.OneBillNameFor(fields.Value.ExpenseDate);
             Result<Group> created = Group.CreateOneBill(groupName, input.Emoji ?? Group.OneBillDefaultEmoji, fields.Value.Amount.Currency.ToString(), userId, _inviteTokenGenerator.NewToken(), now);
             if (!created.IsSuccess)
             {

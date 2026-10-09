@@ -222,7 +222,8 @@
     "nameLabel": "име",
     "removeName": "Отстрани „{{name}}“",
     "save": "Зачувај сметка",
-    "titleTooLong": "Насловот може да има најмногу 60 знаци."
+    "titleTooLong": "Насловот може да има најмногу 60 знаци.",
+    "groupName": "Сметка · {{date}}"
   },
   "group": {
     "addPeopleNoKvit": "Немаат Kvit? Додај ги како име.",

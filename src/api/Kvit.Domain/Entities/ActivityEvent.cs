@@ -115,10 +115,11 @@ namespace Kvit.Domain.Entities
             return activityEvent;
         }
 
-        public static ActivityEvent ExpenseEdited(Guid groupId, Guid actorUserId, Guid expenseId, IReadOnlyList<FieldChange> changes, DateTimeOffset createdAt)
+        public static ActivityEvent ExpenseEdited(Guid groupId, Guid actorUserId, Guid expenseId, IReadOnlyList<FieldChange> changes, Currency currencyAfterTheEdit, DateTimeOffset createdAt)
         {
             ActivityEvent activityEvent = WithChanges(groupId, actorUserId, ActivityEventType.ExpenseEdited, changes, createdAt);
             activityEvent.ExpenseId = expenseId;
+            activityEvent.Data = JsonSerializer.Serialize(new { currency = currencyAfterTheEdit.ToString() });
 
             return activityEvent;
         }

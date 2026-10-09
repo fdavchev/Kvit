@@ -3,12 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 import { languages, type Language } from '@/core/i18n/language'
 import { routeObjects } from '@/core/router/router'
 import { routes } from '@/core/router/routes'
+import { formatMoney } from '@/shared/utils/formatMoney'
 import { problemResponse } from '@/test/apiTestHelpers'
 import {
+  activityEventId,
   activityEventOf,
   activityPath,
   editCases,
   editedEventOf,
+  editedEventWithoutCurrencyOf,
   numberEvents,
   sentenceCases,
   type ActivityEventJson,
@@ -25,6 +28,7 @@ import {
   bojanUserId,
   dinnerExpenseId,
   expenseRows,
+  groceriesExpenseId,
   hotelExpenseId,
   museumExpenseId,
   taxiExpenseId,
@@ -678,6 +682,204 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
       await screen.findByText(sentence, { normalizer: plainSpaces })
 
       expect(within(activityRowOf(sentence)).queryAllByText('Dinner')).toHaveLength(0)
+    })
+  })
+
+  describe('the currency of the amounts in an edit', () => {
+    const mkdGroup = groupOf({ defaultCurrency: 'MKD' })
+
+    function amountSentence(language: Language, oldAmount: string, newAmount: string): string {
+      return sentenceOf(language, 'expense.historyChangedAmount', {
+        name: 'Ana',
+        old: oldAmount,
+        new: newAmount,
+      })
+    }
+
+    function currencySentence(language: Language, oldCurrency: string, newCurrency: string): string {
+      return sentenceOf(language, 'expense.historyChangedCurrency', {
+        name: 'Ana',
+        old: oldCurrency,
+        new: newCurrency,
+      })
+    }
+
+    async function showsSentence(sentence: string): Promise<void> {
+      expect(await screen.findByText(plainSpaces(sentence), { normalizer: plainSpaces })).toBeTruthy()
+    }
+
+    it.each(languages)('writes the amounts of an edit of an expense in euros that is not in the list in euros, in a group that uses MKD (%s)', async (language) => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        language,
+        group: mkdGroup,
+        events: [editedEventOf([{ field: 'amount', old: '1250', new: '2000' }], museumExpenseId, 'EUR')],
+      })
+
+      await showsSentence(
+        amountSentence(language, formatMoney(1250, 'EUR', language), formatMoney(2000, 'EUR', language)),
+      )
+      expect(screen.queryByRole('alert')).toBeNull()
+    })
+
+    it.each(languages)('writes the amounts of an edit of an expense in denars that is not in the list in denars, in a group that uses EUR (%s)', async (language) => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        language,
+        group: groupOf({ defaultCurrency: 'EUR' }),
+        events: [editedEventOf([{ field: 'amount', old: '280000', new: '300000' }], museumExpenseId, 'MKD')],
+      })
+
+      await showsSentence(
+        amountSentence(language, formatMoney(280000, 'MKD', language), formatMoney(300000, 'MKD', language)),
+      )
+      expect(screen.queryByRole('alert')).toBeNull()
+    })
+
+    it.each(languages)('writes the old amount in the old currency and the new amount in the new currency when the same edit changed the currency from MKD to EUR, for an expense that is not in the list (%s)', async (language) => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        language,
+        group: mkdGroup,
+        events: [
+          editedEventOf(
+            [
+              { field: 'currency', old: 'MKD', new: 'EUR' },
+              { field: 'amount', old: '120000', new: '2000' },
+            ],
+            museumExpenseId,
+            'EUR',
+          ),
+        ],
+      })
+
+      await showsSentence(
+        amountSentence(language, formatMoney(120000, 'MKD', language), formatMoney(2000, 'EUR', language)),
+      )
+      await showsSentence(currencySentence(language, 'MKD', 'EUR'))
+    })
+
+    it.each(languages)('writes the old amount in the old currency and the new amount in the new currency when the same edit changed the currency from EUR to MKD, for an expense that is in the list (%s)', async (language) => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        language,
+        group: groupOf({ defaultCurrency: 'EUR' }),
+        events: [
+          editedEventOf(
+            [
+              { field: 'currency', old: 'EUR', new: 'MKD' },
+              { field: 'amount', old: '2000', new: '120000' },
+            ],
+            hotelExpenseId,
+            'MKD',
+          ),
+        ],
+      })
+
+      await showsSentence(
+        amountSentence(language, formatMoney(2000, 'EUR', language), formatMoney(120000, 'MKD', language)),
+      )
+      await showsSentence(currencySentence(language, 'EUR', 'MKD'))
+    })
+
+    it('uses the currency of the event and not the current currency of the expense in the list, when the expense was changed to another currency later', async () => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        group: mkdGroup,
+        events: [editedEventOf([{ field: 'amount', old: '1250', new: '2000' }], hotelExpenseId, 'EUR')],
+      })
+
+      await showsSentence(amountSentence('en', formatMoney(1250, 'EUR', 'en'), formatMoney(2000, 'EUR', 'en')))
+      expect(screen.queryByRole('alert')).toBeNull()
+    })
+
+    it('writes every edit of an expense in the currency it had at that edit, newest edit first', async () => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        group: mkdGroup,
+        events: [
+          editedEventOf(
+            [
+              { field: 'currency', old: 'EUR', new: 'MKD' },
+              { field: 'amount', old: '2000', new: '120000' },
+            ],
+            hotelExpenseId,
+            'MKD',
+          ),
+          editedEventOf([{ field: 'amount', old: '1250', new: '2000' }], hotelExpenseId, 'EUR'),
+        ],
+      })
+
+      await showsSentence(amountSentence('en', formatMoney(2000, 'EUR', 'en'), formatMoney(120000, 'MKD', 'en')))
+      await showsSentence(currencySentence('en', 'EUR', 'MKD'))
+      await showsSentence(amountSentence('en', formatMoney(1250, 'EUR', 'en'), formatMoney(2000, 'EUR', 'en')))
+    })
+
+    it.each([
+      ['an expense in denars', hotelExpenseId, 280000, 300000, 'MKD'],
+      ['an expense in euros', groceriesExpenseId, 4000, 4500, 'EUR'],
+    ] as const)('writes the amounts of an old edit with no currency in its data in the current currency of the expense in the list: %s', async (_name, expenseId, oldMinor, newMinor, currency) => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        group: mkdGroup,
+        events: [
+          editedEventWithoutCurrencyOf(
+            [{ field: 'amount', old: String(oldMinor), new: String(newMinor) }],
+            expenseId,
+          ),
+        ],
+      })
+
+      await showsSentence(
+        amountSentence('en', formatMoney(oldMinor, currency, 'en'), formatMoney(newMinor, currency, 'en')),
+      )
+      expect(screen.queryByRole('alert')).toBeNull()
+    })
+
+    it('stops with an error that names the event type and the event when an old edit with no currency in its data is about an expense that is not in the list', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      await renderGroupApp(routes.groupActivity(groupId), {
+        group: mkdGroup,
+        events: [
+          editedEventWithoutCurrencyOf([{ field: 'amount', old: '280000', new: '300000' }], museumExpenseId),
+        ],
+      })
+
+      expect((await screen.findByRole('alert')).textContent).toContain(translated('en', 'errors.generic'))
+      await waitFor(() => {
+        expect(
+          crashErrors(consoleError).some(
+            (error) => error.message.includes('ExpenseEdited') && error.message.includes(activityEventId),
+          ),
+        ).toBe(true)
+      })
+    })
+
+    it('shows no sentence at all, not even the one before it, when an old edit cannot be written', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      await renderGroupApp(routes.groupActivity(groupId), {
+        group: mkdGroup,
+        events: [
+          activityEventOf({ type: 'GroupCreated', data: { name: 'Greece trip' } }),
+          editedEventWithoutCurrencyOf([{ field: 'amount', old: '280000', new: '300000' }], museumExpenseId),
+        ],
+      })
+
+      await screen.findByRole('alert')
+
+      expect(screen.queryByText('Ana created the group')).toBeNull()
+    })
+
+    it('stops with an error that names the currency when the data of an edit has a currency that is not MKD or EUR', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      await renderGroupApp(routes.groupActivity(groupId), {
+        events: [
+          activityEventOf({
+            type: 'ExpenseEdited',
+            expenseId: hotelExpenseId,
+            changes: [{ field: 'amount', old: '280000', new: '300000' }],
+            data: { currency: 'USD' },
+          }),
+        ],
+      })
+
+      expect((await screen.findByRole('alert')).textContent).toContain(translated('en', 'errors.generic'))
+      await waitFor(() => {
+        expect(crashErrors(consoleError).some((error) => error.message.includes('USD'))).toBe(true)
+      })
     })
   })
 

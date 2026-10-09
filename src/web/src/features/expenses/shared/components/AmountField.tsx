@@ -1,6 +1,7 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Currency } from '@/shared/utils/formatMoney'
+import { parseMoneyInput } from '@/shared/utils/parseMoneyInput'
 
 interface AmountFieldProps {
   amountText: string
@@ -14,6 +15,7 @@ const otherCurrency: Record<Currency, Currency> = { MKD: 'EUR', EUR: 'MKD' }
 export function AmountField({ amountText, currency, onAmountTextChange, onCurrencyChange }: AmountFieldProps) {
   const { t } = useTranslation()
   const amountId = useId()
+  const isAmountInvalid = amountText !== '' && parseMoneyInput(amountText, currency) === null
 
   return (
     <div className="flex items-center justify-center gap-2 pt-2">
@@ -28,8 +30,9 @@ export function AmountField({ amountText, currency, onAmountTextChange, onCurren
         autoFocus
         placeholder="0"
         value={amountText}
+        aria-invalid={isAmountInvalid}
         onChange={(event) => onAmountTextChange(event.target.value)}
-        className="w-full min-w-0 flex-1 rounded-[14px] bg-transparent py-1 text-right text-5xl font-extrabold tracking-[-0.02em] text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-offset-0"
+        className="-mx-0.5 w-full min-w-0 flex-1 rounded-[14px] border-2 border-transparent bg-transparent py-0.5 text-right text-5xl font-extrabold tracking-[-0.02em] text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-offset-0 aria-invalid:border-destructive"
       />
       <button
         type="button"

@@ -365,8 +365,21 @@ export const editCases: EditCase[] = [
 export function editedEventOf(
   changes: ActivityChangeJson[],
   expenseId: string = hotelExpenseId,
+  currencyAfterTheEdit: 'MKD' | 'EUR' = 'MKD',
 ): ActivityEventJson {
-  return activityEventOf({ type: 'ExpenseEdited', expenseId, changes })
+  return activityEventOf({
+    type: 'ExpenseEdited',
+    expenseId,
+    changes,
+    data: { currency: currencyAfterTheEdit },
+  })
+}
+
+export function editedEventWithoutCurrencyOf(
+  changes: ActivityChangeJson[],
+  expenseId: string = hotelExpenseId,
+): ActivityEventJson {
+  return activityEventOf({ type: 'ExpenseEdited', expenseId, changes, data: null })
 }
 
 export const filipActorUserId = testMe.id

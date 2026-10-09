@@ -82,7 +82,7 @@ namespace Kvit.Domain.Services.Expenses
             }
 
             expense.Update(fields.Value, input.PaidByMemberId, shares.Value, userId, now);
-            _activityEvents.Add(ActivityEvent.ExpenseEdited(groupId, userId, expenseId, changes, now));
+            _activityEvents.Add(ActivityEvent.ExpenseEdited(groupId, userId, expenseId, changes, fields.Value.Amount.Currency, now));
 
             return Result.Ok();
         }

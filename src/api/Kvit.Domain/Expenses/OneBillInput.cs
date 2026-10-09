@@ -2,6 +2,7 @@ namespace Kvit.Domain.Expenses
 {
     public sealed record OneBillInput(
         string? Title,
+        string? GroupName,
         string? Emoji,
         IReadOnlyList<string> Names,
         string? Note,

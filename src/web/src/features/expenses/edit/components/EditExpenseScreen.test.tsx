@@ -6,6 +6,7 @@ import { languages } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import type { ExpenseDetail } from '@/core/services/expenses/expensesService'
 import type { GroupMembers } from '@/core/services/groups/membersService'
+import type { Currency } from '@/shared/utils/formatMoney'
 import { parseMoneyInput } from '@/shared/utils/parseMoneyInput'
 import {
   accommodationCategory,
@@ -23,8 +24,12 @@ import {
   currencyToggle,
   dateField,
   doneButton,
+  expectAmountMarkedInvalid,
+  expectAmountNotMarkedInvalid,
   formRow,
   formRowBehindSheet,
+  invalidAmountTextCases,
+  invalidFieldBorderClass,
   isDisabled,
   noteField,
   noteLink,
@@ -42,6 +47,7 @@ import {
   typeDate,
   typeInPerson,
   typeTitle,
+  validAmountTextCases,
   waitForSheetToClose,
   yesterdayChip,
 } from '@/test/expenseFormTestHelpers'
@@ -398,6 +404,102 @@ describe('EditExpenseScreen', () => {
       })
 
       expect(sentDate).toBe(testToday)
+    })
+  })
+
+  describe('the mark on an amount that is not valid for the currency', () => {
+    async function renderWithTypedAmount(currency: Currency, text: string): Promise<void> {
+      await renderReadyEdit()
+      if (currency === 'EUR') {
+        fireEvent.click(currencyToggle('MKD'))
+      }
+      typeAmount(text)
+    }
+
+    it.each(invalidAmountTextCases)('marks the amount field with aria-invalid="true" for $name: "$text"', async ({ currency, text }) => {
+      await renderWithTypedAmount(currency, text)
+
+      expectAmountMarkedInvalid()
+    })
+
+    it.each(validAmountTextCases)('does not mark the amount field for $name: "$text"', async ({ currency, text }) => {
+      await renderWithTypedAmount(currency, text)
+
+      expectAmountNotMarkedInvalid()
+    })
+
+    it.each([
+      ['in denars', hotelDetail],
+      ['in euros', groceriesDetail],
+    ])('does not mark the amount of the expense that was loaded, %s', async (_name, detail) => {
+      await renderReadyEdit({ detail })
+
+      expectAmountNotMarkedInvalid()
+    })
+
+    it('does not mark the amount field after it was emptied', async () => {
+      await renderReadyEdit()
+
+      typeAmount('')
+
+      expectAmountNotMarkedInvalid()
+    })
+
+    it('clears the mark as soon as the text is valid, and marks it again when it is broken again', async () => {
+      await renderReadyEdit()
+      typeAmount('abc')
+      expectAmountMarkedInvalid()
+
+      typeAmount('1200')
+      expectAmountNotMarkedInvalid()
+
+      typeAmount('12x')
+      expectAmountMarkedInvalid()
+    })
+
+    it('styles the amount field with the red border that every invalid field of the app has', async () => {
+      await renderReadyEdit()
+
+      expect(amountField().classList.contains(invalidFieldBorderClass)).toBe(true)
+    })
+
+    it('keeps the typed text 12.50 when EUR is switched to MKD, marks the field, keeps Save disabled, and clears the mark and enables Save when EUR is chosen again', async () => {
+      await renderReadyEdit({ detail: groceriesDetail })
+      typeAmount('12.50')
+      expectAmountNotMarkedInvalid()
+      expect(isDisabled(saveButton())).toBe(false)
+
+      fireEvent.click(currencyToggle('EUR'))
+
+      expect(amountField().value).toBe('12.50')
+      expectAmountMarkedInvalid()
+      expect(isDisabled(saveButton())).toBe(true)
+
+      fireEvent.click(currencyToggle('MKD'))
+
+      expect(amountField().value).toBe('12.50')
+      expectAmountNotMarkedInvalid()
+      expect(isDisabled(saveButton())).toBe(false)
+    })
+
+    it('keeps Save disabled and sends nothing while the amount is marked', async () => {
+      const { fetchMock } = await renderReadyEdit()
+      typeAmount('12.50')
+
+      fireEvent.click(saveButton())
+
+      expectAmountMarkedInvalid()
+      expect(isDisabled(saveButton())).toBe(true)
+      expect(requestCount(fetchMock, 'PUT', detailPath)).toBe(0)
+    })
+
+    it('clears the typed Exact amounts when the currency is switched, as before', async () => {
+      await renderReadyEdit({ detail: exactSplitDetail })
+      fireEvent.click(currencyToggle('MKD'))
+
+      const sheet = await openSheet('split')
+
+      expect(personBoxValue(sheet, 'Filip')).toBe('')
     })
   })
 

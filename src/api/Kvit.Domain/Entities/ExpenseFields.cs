@@ -86,6 +86,13 @@ namespace Kvit.Domain.Entities
             return Result.Ok(new ExpenseFields(trimmedTitle, trimmedNote, amount.Value, date.Value, categoryId, Enum.Parse<SplitType>(splitType)));
         }
 
+        public static string? TrimToNull(string? text)
+        {
+            string trimmed = text?.Trim() ?? string.Empty;
+
+            return trimmed.Length == 0 ? null : trimmed;
+        }
+
         private static Result<Money> CheckAmount(long amountMinor, Currency currency)
         {
             if (amountMinor <= 0)
@@ -116,13 +123,6 @@ namespace Kvit.Domain.Entities
             }
 
             return Result.Ok(date);
-        }
-
-        private static string? TrimToNull(string? text)
-        {
-            string trimmed = text?.Trim() ?? string.Empty;
-
-            return trimmed.Length == 0 ? null : trimmed;
         }
     }
 }

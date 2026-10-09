@@ -266,6 +266,7 @@ const approvedPhase8Step5Texts: [string, string, string][] = [
   ['oneBill.removeName', 'Remove {{name}}', 'Отстрани „{{name}}“'],
   ['oneBill.save', 'Save bill', 'Зачувај сметка'],
   ['oneBill.titleTooLong', 'The title can have up to 60 characters.', 'Насловот може да има најмногу 60 знаци.'],
+  ['oneBill.groupName', 'Bill · {{date}}', 'Сметка · {{date}}'],
 ]
 
 const approvedPhase8Step6bTexts: [string, string, string][] = [
@@ -497,6 +498,11 @@ describe('the approved Phase 8 Step 5 texts', () => {
 
   it('writes the Macedonian name of the Activity tab in the plural, «Активности»', () => {
     expect(translated('mk', 'activity.title')).toBe('Активности')
+  })
+
+  it('writes the name of a One bill without a title as "Bill · 7 Oct" in English and «Сметка · 7 окт» in Macedonian, with a middle dot between the words and the date', () => {
+    expect(translated('en', 'oneBill.groupName', { date: '7 Oct' })).toBe('Bill · 7 Oct')
+    expect(translated('mk', 'oneBill.groupName', { date: '7 окт' })).toBe('Сметка · 7 окт')
   })
 
   it('writes the Macedonian quotes around a name as „name“ and the English ones as “name”', () => {
