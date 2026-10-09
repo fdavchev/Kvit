@@ -17,6 +17,7 @@ export const filipMember: GroupMember = {
   isYou: true,
   isNameOnly: false,
   claimedName: null,
+  pictureUrl: null,
 }
 
 export const anaMember: GroupMember = {
@@ -28,6 +29,7 @@ export const anaMember: GroupMember = {
   isYou: false,
   isNameOnly: false,
   claimedName: null,
+  pictureUrl: null,
 }
 
 export const markoMember: GroupMember = {
@@ -39,6 +41,7 @@ export const markoMember: GroupMember = {
   isYou: false,
   isNameOnly: true,
   claimedName: null,
+  pictureUrl: null,
 }
 
 export const grandmaMember: GroupMember = {
@@ -50,6 +53,7 @@ export const grandmaMember: GroupMember = {
   isYou: false,
   isNameOnly: true,
   claimedName: null,
+  pictureUrl: null,
 }
 
 export const petarMember: GroupMember = {
@@ -61,11 +65,13 @@ export const petarMember: GroupMember = {
   isYou: false,
   isNameOnly: false,
   claimedName: 'Darko',
+  pictureUrl: null,
 }
 
 export const bojanRemoved: RemovedMember = {
   id: 'a1b2c3d4-0006-4aaa-8bbb-000000000006',
   displayName: 'Bojan',
+  pictureUrl: null,
 }
 
 export const ownerViewMembers: GroupMembers = {
@@ -85,6 +91,9 @@ export const anaViewMembers: GroupMembers = {
   removed: [],
   canClaimNames: true,
 }
+
+export const filipPictureUrl = 'https://lh3.googleusercontent.com/a/filip-picture=s96-c'
+export const anaPictureUrl = 'https://lh3.googleusercontent.com/a/ana-picture=s96-c'
 
 export function membersOf(changes: Partial<GroupMembers>): GroupMembers {
   return { ...ownerViewMembers, ...changes }

@@ -12,7 +12,10 @@ export const endpoints = {
   groups: '/api/groups',
   invitePreview: '/api/invites/preview',
   inviteJoin: '/api/invites/join',
+  categories: '/api/categories',
+  oneBill: '/api/groups/one-bill',
   group: (groupId: string) => `/api/groups/${groupId}`,
+  groupActivity: (groupId: string) => `/api/groups/${groupId}/activity`,
   groupRestore: (groupId: string) => `/api/groups/${groupId}/restore`,
   groupLeave: (groupId: string) => `/api/groups/${groupId}/leave`,
   groupMembers: (groupId: string) => `/api/groups/${groupId}/members`,
@@ -26,4 +29,10 @@ export const endpoints = {
   groupOwner: (groupId: string) => `/api/groups/${groupId}/owner`,
   groupInviteReset: (groupId: string) => `/api/groups/${groupId}/invite/reset`,
   groupInviteUndoReset: (groupId: string) => `/api/groups/${groupId}/invite/undo-reset`,
+  groupExpenses: (groupId: string) => `/api/groups/${groupId}/expenses`,
+  groupExpensesDeleted: (groupId: string) => `/api/groups/${groupId}/expenses/deleted`,
+  groupExpense: (groupId: string, expenseId: string) =>
+    `/api/groups/${groupId}/expenses/${expenseId}`,
+  groupExpenseRestore: (groupId: string, expenseId: string) =>
+    `/api/groups/${groupId}/expenses/${expenseId}/restore`,
 } as const

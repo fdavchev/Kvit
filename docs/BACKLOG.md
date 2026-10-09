@@ -61,6 +61,21 @@
   - The browser's Back button after joining can open "Create account" while signed in: `/signup`, `/login` and `/welcome` should send a signed-in person away, and the in-app Back button and the Sign up / Log in links should replace history instead of adding to it.
   - The backend's `Retry-After` is always 600 seconds (same item as the one above about the whole window).
 
+- [ ] Editing an old expense whose split still lists a person who was removed or left is refused (`MEMBER_NOT_FOUND`) until that person is taken out of the split; even a title fix is blocked. Better: allow people already in that expense's split when their typed values do not change (found by the Phase 8 Step 2 tester, 2026-10-05).
+
+- [ ] Joining a group through an invite link while taking a plain name (`claimMemberId`) does not apply the Phase 8 claim rule (a plain name's own row is checked, but the joiner has no row yet, so nothing to check; confirm there is no gap) (Phase 8 Step 2 coder note, 2026-10-05)
+- [ ] The main JavaScript file is now about 650 kB (Phase 8). Split by screen with `React.lazy` when the build warning matters
+
+- [ ] An Activity row for an edit of an expense that was deleted since shows a changed amount in the group's default currency (the change has no currency), which can be wrong for an expense in the other currency; store the currency in the `ExpenseEdited` change entries (Phase 8 Step 5, 2026-10-06)
+
+- [ ] **Found in the Phase 8 real-browser check (2026-10-07; Filip agreed to skip):** dark-mode category tile and avatar edges are faint (1.6 to 2.4:1 against the card; the emoji still reads); one edit with 7 changes makes 7 Activity rows; "restored an expense" names no expense even when the title is known; typing your own name on a new One bill says "…already in this group" though no group exists yet; Save waits up to 10 s when NBRM hangs (once per 30 minutes); the API log writes dates US-style; `/expenses/not-a-guid` still sends one request (404); the Date field's `max` is today + 365 while the server accepts today + 366; a broken picture link is asked again on every screen.
+
+- [ ] **Found by the Phase 8 code review (2026-10-07), deferred:**
+  - The exchange rate is fetched before the group-membership and validation checks, and also for MKD expenses (the rate is saved on every expense by design). The first request after the 8-hour expiry can wait up to 10 s for NBRM even when it is going to be refused. Move the fetch behind the checks, or fetch only when needed.
+  - NBRM is asked only for today's UTC date. The researcher's live check showed a Sunday answers with the carried-over Friday rate (VERIFIED for one Sunday); a public holiday is NOT VERIFIED. If a holiday answers with no EUR entry, the save keeps the old rate, logs an error every 30 minutes and never refreshes `fetched_at`. Add a look-back to the latest published day if it ever happens.
+  - Editing an expense re-checks its category and refuses an archived one even when the expense already has it. Archived categories only exist from Release 2 (custom categories), so nothing triggers it today.
+  - Edit is last-write-wins (no concurrency token): two people editing one expense at the same moment lose the first edit and the second history line shows the wrong "old" value. Phase 10 adds `xmin` to groups; do the same for expenses.
+  - The Add expense screen keeps its split draft from the moment it opened: if a member is removed in another session while it is open, the Split row throws and the screen crashes with the typed amount. Drop people who are no longer members from the draft when the members list changes.
 ## Skipped on purpose
 - CI runs twice on a pull-request branch (one run for `push`, one for `pull_request`; review finding 01-5, 2026-09-29). Left as it is: the second run tests the merge result with `main`, the cost is only free GitHub minutes, and limiting `push` to `main` would drop the check on a branch that has no pull request yet. Revisit only if the free minutes ever run short.
 

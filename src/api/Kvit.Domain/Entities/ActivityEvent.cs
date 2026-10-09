@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Kvit.Domain.MoneyRules;
 
 namespace Kvit.Domain.Entities
 {
@@ -104,6 +105,49 @@ namespace Kvit.Domain.Entities
         public static ActivityEvent ClaimUndone(Guid groupId, Guid actorUserId, Guid memberId, string memberName, string claimedName, DateTimeOffset createdAt)
         {
             return AboutMember(groupId, actorUserId, ActivityEventType.ClaimUndone, memberId, new { name = memberName, claimedName }, createdAt);
+        }
+
+        public static ActivityEvent ExpenseAdded(Guid groupId, Guid actorUserId, Guid expenseId, string? title, long amountMinor, Currency currency, DateTimeOffset createdAt)
+        {
+            ActivityEvent activityEvent = AboutExpense(groupId, actorUserId, ActivityEventType.ExpenseAdded, expenseId, createdAt);
+            activityEvent.Data = ExpenseFacts(title, amountMinor, currency);
+
+            return activityEvent;
+        }
+
+        public static ActivityEvent ExpenseEdited(Guid groupId, Guid actorUserId, Guid expenseId, IReadOnlyList<FieldChange> changes, Currency currencyAfterTheEdit, DateTimeOffset createdAt)
+        {
+            ActivityEvent activityEvent = WithChanges(groupId, actorUserId, ActivityEventType.ExpenseEdited, changes, createdAt);
+            activityEvent.ExpenseId = expenseId;
+            activityEvent.Data = JsonSerializer.Serialize(new { currency = currencyAfterTheEdit.ToString() });
+
+            return activityEvent;
+        }
+
+        public static ActivityEvent ExpenseDeleted(Guid groupId, Guid actorUserId, Guid expenseId, string? title, long amountMinor, Currency currency, DateTimeOffset createdAt)
+        {
+            ActivityEvent activityEvent = AboutExpense(groupId, actorUserId, ActivityEventType.ExpenseDeleted, expenseId, createdAt);
+            activityEvent.Data = ExpenseFacts(title, amountMinor, currency);
+
+            return activityEvent;
+        }
+
+        public static ActivityEvent ExpenseRestored(Guid groupId, Guid actorUserId, Guid expenseId, DateTimeOffset createdAt)
+        {
+            return AboutExpense(groupId, actorUserId, ActivityEventType.ExpenseRestored, expenseId, createdAt);
+        }
+
+        private static ActivityEvent AboutExpense(Guid groupId, Guid actorUserId, ActivityEventType type, Guid expenseId, DateTimeOffset createdAt)
+        {
+            ActivityEvent activityEvent = New(groupId, actorUserId, type, createdAt);
+            activityEvent.ExpenseId = expenseId;
+
+            return activityEvent;
+        }
+
+        private static string ExpenseFacts(string? title, long amountMinor, Currency currency)
+        {
+            return JsonSerializer.Serialize(new { title, amountMinor, currency = currency.ToString() });
         }
 
         private static ActivityEvent AboutMember(Guid groupId, Guid actorUserId, ActivityEventType type, Guid memberId, object data, DateTimeOffset createdAt)

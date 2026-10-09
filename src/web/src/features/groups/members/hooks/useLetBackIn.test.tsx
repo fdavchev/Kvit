@@ -43,6 +43,7 @@ describe('useLetBackIn', () => {
     ['the group', ['groups', testGroupId]],
     ['the members of the group', ['groups', testGroupId, 'members']],
     ['the group list', ['groups']],
+    ['the activity of the group', ['groups', testGroupId, 'activity']],
   ])('marks %s as out of date after the change so it is loaded again', async (_name, queryKey) => {
     stubFetch(new Response(null, { status: 204 }))
     const { result, queryClient } = await renderHookWithProviders(() => useLetBackIn(testGroupId), {
@@ -69,6 +70,7 @@ describe('useLetBackIn', () => {
     })
     expect(queryClient.getQueryState(['groups', testGroupId])?.isInvalidated).toBe(false)
     expect(queryClient.getQueryState(['groups', testGroupId, 'members'])?.isInvalidated).toBe(false)
+    expect(queryClient.getQueryState(['groups', testGroupId, 'activity'])?.isInvalidated).toBe(false)
     expect(queryClient.getQueryState(['groups'])?.isInvalidated).toBe(false)
   })
 

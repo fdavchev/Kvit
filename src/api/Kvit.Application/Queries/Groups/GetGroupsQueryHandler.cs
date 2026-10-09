@@ -38,6 +38,7 @@ namespace Kvit.Application.Queries.Groups
                 .OrderByDescending(group => group.CreatedAt)
                 .Select(group => new GroupListRow(
                     group.Id,
+                    group.Kind,
                     group.Name,
                     group.Emoji,
                     group.DefaultCurrency,

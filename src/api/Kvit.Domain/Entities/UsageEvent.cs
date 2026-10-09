@@ -33,6 +33,11 @@ namespace Kvit.Domain.Entities
             return New(userId, UsageEventType.JoinedViaInvite, null, occurredAt);
         }
 
+        public static UsageEvent ExpenseAdded(Guid userId, DateTimeOffset occurredAt)
+        {
+            return New(userId, UsageEventType.ExpenseAdded, null, occurredAt);
+        }
+
         private static UsageEvent New(Guid userId, UsageEventType type, string? detail, DateTimeOffset occurredAt)
         {
             DateTimeOffset occurredAtUtc = occurredAt.ToUniversalTime();

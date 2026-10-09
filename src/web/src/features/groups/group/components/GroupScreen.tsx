@@ -1,23 +1,27 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
+import { Link, useMatch } from 'react-router'
 import { routes } from '@/core/router/routes'
+import { GroupExpenses } from '@/features/expenses/list/components/GroupExpenses'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { kvitChipLook } from '@/shared/components/kvitChipLook'
+import { GroupActivity } from '../../activity/components/GroupActivity'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
 import { GroupSizeLine } from '../../shared/components/GroupSizeLine'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
 import { useGroup } from '../hooks/useGroup'
 import { useInviteLinkActions } from '../useInviteLinkActions'
 import { AddNameSheet } from './AddNameSheet'
-import { AddPeopleCard } from './AddPeopleCard'
+import { AddPeopleButtons } from './AddPeopleButtons'
+import { GroupTabs, type GroupTab } from './GroupTabs'
 
 export function GroupScreen() {
   const { t } = useTranslation()
   const groupId = useGroupIdParam()
+  const tab: GroupTab = useMatch(routes.groupActivity(':groupId')) === null ? 'expenses' : 'activity'
   const groupQuery = useGroup(groupId)
   const inviteLinkActions = useInviteLinkActions()
   const [isAddingName, setIsAddingName] = useState<boolean>(false)
@@ -35,9 +39,11 @@ export function GroupScreen() {
       )
     }
     const group = groupQuery.data
+    const isOneBill: boolean = group.kind === 'OneBill'
+    const showsAddPeopleButtons: boolean = group.memberCount === 1 && !isOneBill
     return (
       <>
-        <div className="flex flex-col items-center gap-2.5 pt-2 pb-3 text-center">
+        <div className="flex flex-col items-center gap-2.5 pt-2 pb-4 text-center">
           <KvitEmojiTile emoji={group.emoji} size="large" />
           <h1 className="text-[1.75rem] leading-[1.15] font-extrabold tracking-[-0.02em] text-balance">
             {group.name}
@@ -51,16 +57,32 @@ export function GroupScreen() {
           <Link to={routes.groupSettings(group.id)} className={kvitChipLook}>
             {t('group.settings')}
           </Link>
+          {isOneBill && (
+            <button
+              type="button"
+              className={kvitChipLook}
+              onClick={() => void inviteLinkActions.share(group.inviteToken)}
+            >
+              {t('group.shareLink')}
+            </button>
+          )}
         </div>
-        {group.memberCount === 1 && (
-          <AddPeopleCard
-            onAddName={() => setIsAddingName(true)}
-            onShareLink={() => void inviteLinkActions.share(group.inviteToken)}
+        <GroupTabs groupId={group.id} currentTab={tab} />
+        {tab === 'expenses' ? (
+          <GroupExpenses
+            groupId={group.id}
+            actionsWhenEmpty={
+              showsAddPeopleButtons ? (
+                <AddPeopleButtons
+                  onAddName={() => setIsAddingName(true)}
+                  onShareLink={() => void inviteLinkActions.share(group.inviteToken)}
+                />
+              ) : null
+            }
           />
+        ) : (
+          <GroupActivity groupId={group.id} />
         )}
-        <p className="pt-10 text-center text-[0.9375rem] text-muted-foreground">
-          {t('group.expensesSoon')}
-        </p>
         {isAddingName && (
           <AddNameSheet groupId={group.id} onClose={() => setIsAddingName(false)} />
         )}

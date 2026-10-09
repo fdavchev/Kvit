@@ -8,5 +8,6 @@ namespace Kvit.Contracts.Groups
         bool IsOwner,
         bool IsYou,
         bool IsNameOnly,
-        string? ClaimedName);
+        string? ClaimedName,
+        string? PictureUrl);
 }

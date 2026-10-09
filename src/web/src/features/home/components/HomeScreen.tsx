@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
 import { routes } from '@/core/router/routes'
+import { KvitAvatar } from '@/shared/components/KvitAvatar'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 
 export function HomeScreen() {
@@ -17,9 +18,9 @@ export function HomeScreen() {
         <Link
           to={routes.settings}
           aria-label={t('settings.title')}
-          className="pressable grid size-12 flex-none place-items-center rounded-full bg-avatar text-xl font-extrabold text-avatar-foreground hover:bg-avatar-hover"
+          className="pressable grid size-12 flex-none overflow-hidden rounded-full hover:bg-avatar-hover"
         >
-          {me.displayName.charAt(0).toUpperCase()}
+          <KvitAvatar name={me.displayName} pictureUrl={me.pictureUrl} colorIndex="brand" size="fill" />
         </Link>
       </header>
       <section className="grid flex-1 place-items-center pt-8 pb-[18dvh]">

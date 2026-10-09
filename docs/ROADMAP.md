@@ -123,12 +123,15 @@ Put the skeleton online early, so the hosting traps show up before there are fea
 - [x] **Filip:** commit, push, open the pull request, see CI go green, merge into `main` (CI applies the `Groups` migration on Neon). Report: `reports/2026-10-05-phase-07-groups.md`; guide: `guides/phase-07-groups.md`
 
 ## Phase 8: Expenses · `feat/08-expenses`
-- [ ] A way to check that every API error code the frontend can receive has a translation key (review 02-5). `ResultCodes` is C# and the frontend is TypeScript, so decide how the two meet (for example a generated list of codes read by a Vitest test, or a backend test that reads `en.json` and `mk.json`) and record the choice in `DECISIONS.md`
-- [ ] Built-in categories (seed); exchange rate table + seed + lazy NBRM refresh
-- [ ] Add, edit, delete, Undo; all four split types through the Phase 3 functions; `client_request_id` duplicate protection
-- [ ] Change history in the activity feed (old → new)
-- [ ] One bill (group + expense in one step)
-- [ ] Screens 7 (One bill part), 8 (Expenses tab), 9 with its sheets, 10, 13
+- [x] **Done 2026-10-05 (VERIFIED by automated test).** A way to check that every API error code the frontend can receive has a translation key (review 02-5): a Vitest test reads `ResultCodes.cs` (`DECISIONS.md`, Phase 8)
+- [x] **Done 2026-10-05 (VERIFIED by automated test; the real NBRM call NOT VERIFIED).** Built-in categories (seed); exchange rate table + seed + lazy NBRM refresh
+- [x] **Done 2026-10-06 (VERIFIED by automated test).** Add, edit, delete, Undo and Recently deleted (5 days); all four split types through the Phase 3 functions; `client_request_id` duplicate protection (also for two requests at the same moment, 2026-10-09)
+- [x] **Done 2026-10-06 (VERIFIED by automated test).** Change history in the activity feed (old → new): backend, the detail History and the Activity tab
+- [x] **Done 2026-10-06 (VERIFIED by automated test).** One bill (group + expense in one step): backend and the form with circles; the group name follows the app language (2026-10-09)
+- [x] **Done 2026-10-06 (VERIFIED by automated test).** Screens 7 (One bill part), 8 (Expenses and Activity tabs), 9 with its sheets, 10, 13
+- [x] **Real-browser check done 2026-10-07 (VERIFIED by live run; findings fixed in Step 6b).**
+- [x] **Code review done 2026-10-09 (VERIFIED by automated test: backend 2143, frontend 4402):** 4 findings fixed, the rest in BACKLOG. Filip's hand check of the finished screens is REPORTED, not independently verified. Report: `reports/2026-10-09-phase-08-expenses.md`; guide: `guides/phase-08-expenses.md`
+- [x] **Filip:** commit, push, open the pull request, see CI go green, merge into `main` (CI applies the two new migrations on Neon)
 
 ## Phase 9: Balances + settle up · `feat/09-settle-up`
 - [ ] Balances per currency; "who pays whom"

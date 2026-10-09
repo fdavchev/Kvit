@@ -1,6 +1,9 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useApiHealth } from '@/features/auth/welcome/hooks/useApiHealth'
+import { activityPath } from '@/test/activityTestData'
+import { testCategories } from '@/test/expenseTestData'
+import { categoriesPath, expensesPath } from '@/test/expenseTestHelpers'
 import { stubGoogleSignIn } from '@/test/googleTestHelpers'
 import { greeceGroupRow, groupListOf, testGroup, testInviteToken } from '@/test/groupTestData'
 import { openInvitePreview, testInviteGroupName } from '@/test/inviteTestData'
@@ -27,8 +30,11 @@ const mustChangePasswordMe = { ...testMe, mustChangePassword: true }
 const groupRoutePaths = [
   routes.groups,
   routes.newGroup,
+  routes.newGroupGroup,
+  routes.newBill,
   routes.recentlyDeletedGroups,
   routes.group(testGroup.id),
+  routes.groupActivity(testGroup.id),
   routes.groupSettings(testGroup.id),
 ]
 
@@ -41,7 +47,10 @@ const barRoutePaths = [
 
 const noBarRoutePaths = [
   routes.newGroup,
+  routes.newGroupGroup,
+  routes.newBill,
   routes.group(testGroup.id),
+  routes.groupActivity(testGroup.id),
   routes.groupSettings(testGroup.id),
   routes.changePassword,
 ]
@@ -52,6 +61,9 @@ function stubSignedInPerson() {
     'GET /api/groups': jsonAnswer(groupListOf({ groups: [greeceGroupRow] })),
     [`GET /api/groups/${testGroup.id}`]: jsonAnswer(testGroup),
     [`GET /api/groups/${testGroup.id}/members`]: jsonAnswer(ownerViewMembers),
+    [`GET ${expensesPath}`]: jsonAnswer({ expenses: [] }),
+    [`GET ${categoriesPath}`]: jsonAnswer({ categories: testCategories }),
+    [`GET ${activityPath}`]: jsonAnswer({ events: [] }),
   })
 }
 
@@ -106,15 +118,16 @@ describe('group routes followed through the real route table', () => {
     expect(await screen.findByText(greeceGroupRow.name)).toBeTruthy()
   })
 
-  it('shows the new-group screen at /groups/new and does not ask for a group called new', async () => {
+  it('shows the new-group form at /groups/new/group and does not ask for a group called new', async () => {
     const fetchMock = stubSignedInPerson()
 
-    const { router } = await renderRoutesWithProviders(routeObjects, routes.newGroup)
+    const { router } = await renderRoutesWithProviders(routeObjects, routes.newGroupGroup)
 
     expect(
       await screen.findByRole('heading', { name: translated('en', 'newGroup.title') }),
     ).toBeTruthy()
-    expect(router.state.location.pathname).toBe(routes.newGroup)
+    expect(screen.getByLabelText(translated('en', 'groupFields.name'))).toBeTruthy()
+    expect(router.state.location.pathname).toBe(routes.newGroupGroup)
     expect(fetchMock.mock.calls.map(([url]) => String(url))).not.toContain('/api/groups/new')
   })
 

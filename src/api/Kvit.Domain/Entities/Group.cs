@@ -1,3 +1,4 @@
+using System.Globalization;
 using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 
@@ -6,6 +7,7 @@ namespace Kvit.Domain.Entities
     public class Group
     {
         public const int DeletedGroupRestoreDays = 30;
+        public const string OneBillDefaultEmoji = "\U0001F9FE";
 
         private Group()
         {
@@ -45,26 +47,17 @@ namespace Kvit.Domain.Entities
 
         public static Result<Group> Create(string name, string emoji, string currency, Guid ownerUserId, string inviteToken, DateTimeOffset createdAt)
         {
-            Result<GroupSettings> settings = GroupSettings.Create(name, emoji, currency);
-            if (!settings.IsSuccess)
-            {
-                return Result.Failure<Group>(settings.Error, settings.ErrorCode);
-            }
+            return New(GroupKind.Group, name, emoji, currency, ownerUserId, inviteToken, createdAt);
+        }
 
-            return Result.Ok(new Group
-            {
-                Id = Guid.CreateVersion7(),
-                Kind = GroupKind.Group,
-                Name = settings.Value.Name,
-                Emoji = settings.Value.Emoji,
-                DefaultCurrency = settings.Value.DefaultCurrency,
-                Status = GroupStatus.Open,
-                OwnerUserId = ownerUserId,
-                InviteToken = inviteToken,
-                InviteTokenCreatedAt = createdAt,
-                CreatedByUserId = ownerUserId,
-                CreatedAt = createdAt,
-            });
+        public static Result<Group> CreateOneBill(string name, string emoji, string currency, Guid ownerUserId, string inviteToken, DateTimeOffset createdAt)
+        {
+            return New(GroupKind.OneBill, name, emoji, currency, ownerUserId, inviteToken, createdAt);
+        }
+
+        public static string OneBillNameFor(DateOnly expenseDate)
+        {
+            return $"Bill \u00B7 {expenseDate.ToString("d MMM", CultureInfo.InvariantCulture)}";
         }
 
         public static Result<T> NotFound<T>(Guid groupId)
@@ -180,6 +173,30 @@ namespace Kvit.Domain.Entities
             DeletedByUserId = null;
 
             return Result.Ok();
+        }
+
+        private static Result<Group> New(GroupKind kind, string name, string emoji, string currency, Guid ownerUserId, string inviteToken, DateTimeOffset createdAt)
+        {
+            Result<GroupSettings> settings = GroupSettings.Create(name, emoji, currency);
+            if (!settings.IsSuccess)
+            {
+                return Result.Failure<Group>(settings.Error, settings.ErrorCode);
+            }
+
+            return Result.Ok(new Group
+            {
+                Id = Guid.CreateVersion7(),
+                Kind = kind,
+                Name = settings.Value.Name,
+                Emoji = settings.Value.Emoji,
+                DefaultCurrency = settings.Value.DefaultCurrency,
+                Status = GroupStatus.Open,
+                OwnerUserId = ownerUserId,
+                InviteToken = inviteToken,
+                InviteTokenCreatedAt = createdAt,
+                CreatedByUserId = ownerUserId,
+                CreatedAt = createdAt,
+            });
         }
     }
 }

@@ -15,8 +15,9 @@ namespace Kvit.Infrastructure.Repositories
         public async Task<GroupRoster> RosterOfAsync(Guid groupId, CancellationToken cancellationToken)
         {
             List<NamedMember> rows = await _context.NamedGroupMembers(groupId).ToListAsync(cancellationToken);
+            HashSet<Guid> inAnyExpense = [.. await _context.MemberIdsInAnyExpenseOf(groupId).ToListAsync(cancellationToken)];
 
-            return new GroupRoster(rows);
+            return new GroupRoster([.. rows.Select(row => row with { IsInAnyExpense = inAnyExpense.Contains(row.Member.Id) })]);
         }
 
         public Task SaveAsync(CancellationToken cancellationToken)

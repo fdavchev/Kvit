@@ -1,5 +1,24 @@
 # Decisions
 
+## 2026-10-09: Phase 8 (expenses): done, the rules that stay
+The whole Phase 8 decision log (Filip's product answers, the technical choices, the Step 1 to Step 6b contracts, the code-review fixes, rejected alternatives) moved word for word to the end of `reports/2026-10-09-phase-08-expenses.md`, section "Decisions and rejected alternatives". What stays true:
+- **Editing keeps the saved rate** unless the currency changes.
+- **Splits** always go through `Splitter.Calculate`, inputs in joining order, `share_minor` stored. Removed or left members stay in old splits; "everyone" in a new expense means current members, plain names included.
+- **Duplicate protection:** unique `client_request_id`; the same id again returns the first expense.
+- **Expenses list:** the whole list, newest date first, no paging.
+- **Change history:** `ExpenseEdited` with `changes` for amount, currency, title, note, date, category, payer and split (the split as one line with old and new shares).
+- **Claim rule:** `canClaimNames` and `MEMBER_CANNOT_CLAIM` turn false once the caller's own row is a payer or has a share.
+- **Deleted expenses:** a 4-second Undo toast, plus **Recently deleted** for 5 days with Restore (whoever added it, and the owner). Future dates are allowed, up to one year ahead. An expense counts in balances as soon as it is saved, whatever its date.
+- **Group tabs:** Expenses · Activity; Phase 9 adds Balances. One bill has the Paid by and Split chips too (me, equally by default).
+- **Exchange rate:** NBRM middle rate, refreshed lazily after 8 hours; on failure keep the last rate, show its date, log the error; never a made-up number.
+- **People circles:** the Google picture when there is one, otherwise the initial on a colour by place in the group's joining order (ten colours, then repeating).
+- **Group screen:** layout B (Filip's final pick) for an empty group: the 🧾, "No expenses yet", the buttons Add a name and Share invite link, two small explanation lines; no card.
+- **One bill name:** with no title the phone sends the group's default name in the app language ("Bill · 7 Oct" / «Сметка · 7 окт»); the expense stays untitled; a typed title wins.
+- **Two-person auto-fill:** with exactly two people in an Exact or % split, typing one box fills the other with the remainder (only a box the user has not typed in).
+- **`clientRequestId`:** required (missing or all-zero is a plain 400); two identical requests at the same moment both answer 200 with the same expense.
+- **Macedonian:** the Activity tab is «Активности»; the exchange rate is «Цена на еврото», never «Курс»; «го/ја» is written literally where the person's gender is unknown; dates, numbers and relative times come from our own tables, never from the browser.
+- **An activity event type with no sentence stops with a clear error** naming the type; settlements and closing add their sentences with their events (Phases 9 and 10).
+
 ## 2026-10-05: Phase 7 (groups, members, invite links): done and merged, the rules that stay
 The whole Phase 7 decision log (Filip's product answers, the technical choices, the Step 2 to Step 5 contracts, the Step 6 fixes, rejected alternatives) moved word for word to the end of `reports/2026-10-05-phase-07-groups.md`, section "Decisions and rejected alternatives". What stays true:
 - **Roles:** any member adds plain names and shares the link; only the owner renames, changes the emoji or currency, resets the link (with Undo), removes, makes someone owner, undoes a claim, deletes and restores. The owner can't leave until someone else is owner; only a person with an account can become owner. Zero-balance checks for leave, remove and delete come in Phase 9.

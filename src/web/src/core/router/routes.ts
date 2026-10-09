@@ -10,9 +10,17 @@ export const routes = {
   privacy: '/privacy',
   groups: '/groups',
   newGroup: '/groups/new',
+  newGroupGroup: '/groups/new/group',
+  newBill: '/groups/new/bill',
   recentlyDeletedGroups: '/groups/recently-deleted',
   group: (groupId: string) => `/groups/${groupId}`,
+  groupActivity: (groupId: string) => `/groups/${groupId}/activity`,
   groupSettings: (groupId: string) => `/groups/${groupId}/settings`,
   groupMembers: (groupId: string) => `/groups/${groupId}/members`,
+  groupExpenseNew: (groupId: string) => `/groups/${groupId}/expenses/new`,
+  groupExpensesDeleted: (groupId: string) => `/groups/${groupId}/expenses/deleted`,
+  groupExpense: (groupId: string, expenseId: string) => `/groups/${groupId}/expenses/${expenseId}`,
+  groupExpenseEdit: (groupId: string, expenseId: string) =>
+    `/groups/${groupId}/expenses/${expenseId}/edit`,
   join: (token: string) => `/join/${token}`,
 } as const

@@ -34,7 +34,9 @@ namespace Kvit.Application.Queries.Groups
             List<RemovedMemberRow> removed = owner == userId.Value
                 ? await RemovedMemberRowsOf(query.GroupId).ToListAsync(cancellationToken)
                 : [];
-            bool canClaimNames = members.Any(member => member.IsYou && member.ClaimedName is null);
+            GroupMemberRow ownRow = members.Single(member => member.IsYou);
+            bool isOwnRowInAnyExpense = await _context.MemberIdsInAnyExpenseOf(query.GroupId).ContainsAsync(ownRow.Id, cancellationToken);
+            bool canClaimNames = ownRow.ClaimedName is null && !isOwnRowInAnyExpense;
 
             return Result.Ok(new GroupMembersResponse(members, removed, canClaimNames));
         }
@@ -53,7 +55,8 @@ namespace Kvit.Application.Queries.Groups
                     named.Member.UserId == ownerUserId,
                     named.Member.UserId == userId,
                     named.Member.UserId == null,
-                    named.Member.ClaimedAt == null ? null : named.Member.Name));
+                    named.Member.ClaimedAt == null ? null : named.Member.Name,
+                    named.PictureUrl));
         }
 
         private IQueryable<RemovedMemberRow> RemovedMemberRowsOf(Guid groupId)
@@ -62,7 +65,7 @@ namespace Kvit.Application.Queries.Groups
                 .AsNoTracking()
                 .Where(named => named.Member.EndKind == MemberEndKind.Removed)
                 .InJoiningOrder()
-                .Select(named => new RemovedMemberRow(named.Member.Id, named.DisplayName));
+                .Select(named => new RemovedMemberRow(named.Member.Id, named.DisplayName, named.PictureUrl));
         }
     }
 }

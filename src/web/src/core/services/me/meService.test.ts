@@ -27,6 +27,29 @@ describe('getMe', () => {
     expect(me).toEqual(testMe)
   })
 
+  it('keeps the picture address of an account with a Google picture', async () => {
+    const pictureUrl = 'https://lh3.googleusercontent.com/a/filip-picture=s96-c'
+    stubFetch(Response.json({ ...testMe, pictureUrl }))
+
+    const me = await getMe()
+
+    expect(me).toMatchObject({ pictureUrl })
+  })
+
+  it('keeps null for an account without a picture', async () => {
+    stubFetch(Response.json({ ...testMe, pictureUrl: null }))
+
+    const me = await getMe()
+
+    expect(me).toMatchObject({ pictureUrl: null })
+  })
+
+  it.each([5, true, {}])('throws an error naming "pictureUrl" when its value is %j', async (value) => {
+    stubFetch(Response.json({ ...testMe, pictureUrl: value }))
+
+    await expect(getMe()).rejects.toThrow('pictureUrl')
+  })
+
   it('returns null when the server answers 401 because nobody is signed in', async () => {
     stubFetch(problemResponse(401, 'AUTH_NOT_SIGNED_IN'))
 

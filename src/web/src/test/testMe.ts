@@ -10,6 +10,7 @@ export const testMe: Me = {
   timeZone: 'Europe/Skopje',
   mustChangePassword: false,
   hasPassword: true,
+  pictureUrl: null,
 }
 
 export function seedMe(me: Me | null): (queryClient: QueryClient) => void {

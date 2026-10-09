@@ -20,5 +20,18 @@ namespace Kvit.Application.Persistence
 
             return result;
         }
+
+        public static async Task<TResult> RunInTransactionOnceMoreIfClientRequestIdWasTakenAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
+            where TResult : Result
+        {
+            try
+            {
+                return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
+            }
+            catch (ClientRequestIdAlreadySavedException)
+            {
+                return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
+            }
+        }
     }
 }

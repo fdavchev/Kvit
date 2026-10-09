@@ -33,6 +33,11 @@ namespace Kvit.Domain.Services.Groups
                 return canClaim;
             }
 
+            if (ownRow.IsInAnyExpense)
+            {
+                return Result.Failure($"Member {ownRow.Member.Id} already has expenses recorded under it, so it cannot claim another name.", ResultCodes.MEMBER_CANNOT_CLAIM);
+            }
+
             DateTimeOffset now = _timeProvider.GetUtcNow();
             ownRow.Member.SetAside(now);
             await _members.SaveAsync(cancellationToken);

@@ -2,6 +2,7 @@ using Kvit.Infrastructure.Auth;
 using Kvit.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using NpgsqlTypes;
 using Xunit;
 
 namespace Kvit.Api.Tests.Persistence
@@ -26,6 +27,14 @@ namespace Kvit.Api.Tests.Persistence
                 "UPDATE users SET display_name = @display_name WHERE id = @id",
                 new NpgsqlParameter("id", userId),
                 new NpgsqlParameter("display_name", displayName));
+        }
+
+        public static Task SetGooglePictureUrlAsync(MigratedDatabase database, Guid userId, string? pictureUrl)
+        {
+            return database.ExecuteAsync(
+                "UPDATE users SET google_picture_url = @picture_url WHERE id = @id",
+                new NpgsqlParameter("id", userId),
+                new NpgsqlParameter("picture_url", NpgsqlDbType.Text) { Value = (object?)pictureUrl ?? DBNull.Value });
         }
     }
 }

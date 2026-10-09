@@ -22,6 +22,7 @@ const changes = { name: 'Flat 4B', emoji: '\u{1F3E0}', currency: 'EUR' } as cons
 function seedGroupAndList(queryClient: QueryClient): void {
   queryClient.setQueryData(['groups', testGroupId], testGroup)
   queryClient.setQueryData(['groups'], groupListOf({ groups: [greeceGroupRow] }))
+  queryClient.setQueryData(['groups', testGroupId, 'activity'], [])
 }
 
 describe('useUpdateGroup', () => {
@@ -66,6 +67,17 @@ describe('useUpdateGroup', () => {
     expect(queryClient.getQueryState(['groups'])?.isInvalidated).toBe(true)
   })
 
+  it('marks the activity of the group as out of date after saving so the new name, emoji or currency shows up in it', async () => {
+    stubFetch(new Response(null, { status: 204 }))
+    const { result, queryClient } = await renderHookWithProviders(() => useUpdateGroup(testGroupId), {
+      seedCache: seedGroupAndList,
+    })
+
+    await act(() => result.current.mutateAsync(changes))
+
+    expect(queryClient.getQueryState(['groups', testGroupId, 'activity'])?.isInvalidated).toBe(true)
+  })
+
   it('exposes the ApiError and keeps the cache up to date when the person is not the owner', async () => {
     stubFetch(problemResponse(403, 'GROUP_NOT_OWNER'))
     const { result, queryClient } = await renderHookWithProviders(() => useUpdateGroup(testGroupId), {
@@ -81,5 +93,6 @@ describe('useUpdateGroup', () => {
     })
     expect(queryClient.getQueryState(['groups', testGroupId])?.isInvalidated).toBe(false)
     expect(queryClient.getQueryState(['groups'])?.isInvalidated).toBe(false)
+    expect(queryClient.getQueryState(['groups', testGroupId, 'activity'])?.isInvalidated).toBe(false)
   })
 })
