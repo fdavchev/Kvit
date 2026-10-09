@@ -12,7 +12,8 @@
     "switchToLightMode": "Switch to light mode",
     "privacy": "Privacy",
     "close": "Close",
-    "undo": "Undo"
+    "undo": "Undo",
+    "updating": "Updating…"
   },
   "nav": {
     "home": "Home",
@@ -21,7 +22,7 @@
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
-    "network": "Can't reach the server. Check your connection and try again.",
+    "network": "The server may be waking up. Check your connection and try again in a moment.",
     "AUTH_INVALID_CREDENTIALS": "Wrong email or password.",
     "AUTH_EMAIL_TAKEN": "This email already has an account. Log in, or use a different email.",
     "AUTH_EMAIL_INVALID": "Enter a valid email address.",

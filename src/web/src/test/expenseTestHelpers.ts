@@ -7,6 +7,7 @@ import type { Language } from '@/core/i18n/language'
 import type { Category } from '@/core/services/categories/categoriesService'
 import { testNow } from './expenseTestData'
 import { testGroupId } from './groupTestData'
+import { createTestPersister } from './testPersister'
 import { translated } from './translated'
 
 export const groupPath = `/api/groups/${testGroupId}`
@@ -29,7 +30,7 @@ export function restoreRealRetryPolicy(queryClient: QueryClient): void {
   const current = queryClient.getDefaultOptions()
   queryClient.setDefaultOptions({
     ...current,
-    queries: { ...current.queries, retry: createQueryClient().getDefaultOptions().queries?.retry },
+    queries: { ...current.queries, retry: createQueryClient(createTestPersister()).getDefaultOptions().queries?.retry },
   })
 }
 

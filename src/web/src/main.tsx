@@ -1,11 +1,16 @@
-import { QueryClientProvider } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { I18nextProvider } from 'react-i18next'
-import { RouterProvider } from 'react-router/dom'
 import { createQueryClient } from '@/core/api/queryClient'
+import {
+  checkRestoredMeWithServer,
+  createSavedQueryCachePersister,
+  reportRestoreFailure,
+  savedQueryCacheOptions,
+} from '@/core/api/savedQueryCache'
 import { startI18n } from '@/core/i18n/i18n'
-import { router } from '@/core/router/router'
+import { RouterAfterRestore } from '@/core/router/RouterAfterRestore'
 import { renderStartupFailure } from '@/core/startup/renderStartupFailure'
 import { startTheme } from '@/core/theme/startTheme'
 import { KvitToaster } from '@/shared/components/KvitToaster'
@@ -22,15 +27,21 @@ const i18n = await startI18n().catch((error: unknown) => {
   renderStartupFailure(rootElement, error)
   throw error
 })
-const queryClient = createQueryClient()
+const persister = createSavedQueryCachePersister()
+const queryClient = createQueryClient(persister)
 
 createRoot(rootElement).render(
   <StrictMode>
     <I18nextProvider i18n={i18n}>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={savedQueryCacheOptions(queryClient, persister)}
+        onSuccess={() => checkRestoredMeWithServer(queryClient)}
+        onError={() => reportRestoreFailure(persister)}
+      >
+        <RouterAfterRestore />
         <KvitToaster />
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </I18nextProvider>
   </StrictMode>,
 )

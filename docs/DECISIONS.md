@@ -1,5 +1,17 @@
 # Decisions
 
+## 2026-10-09: Phase 8b (saved data shows instantly), in progress
+Filip chose to build this before Phase 9 (it was a Phase 11 line) because the Render wake-up made the app look stuck.
+- **What:** the TanStack Query cache is saved in the browser (IndexedDB, via `idb-keyval`, packages pinned to 5.103.2 like `react-query`). Opening the app shows the last screens at once and re-checks them with the server in the background.
+- **`me` is saved too.** `RequireAuth` blocks every screen until `/api/me` answers, so without it the saved screens would stay hidden behind the spinner. Trade-off (Filip was told it and said to start the work; he did not answer the question separately): for the few seconds before the server answers, a person whose login has expired still sees their last screens (nothing can be saved or changed meanwhile). The first `/api/me` answer then either confirms them or sends them to Welcome and wipes the saved copy. The earlier prompt said not to save `me`; that was wrong.
+- **One-person rule** (`core/auth/keepCacheToOnePerson.ts`, the only place that wipes): `me` going from a person to nobody removes all saved data; a different person resets it. Nothing is saved while nobody is signed in.
+- **Saved copy:** 24 hours, plus a version string (`savedQueryCacheVersion`); bump it when saved data shapes change.
+- **3-second limit** on reading the saved copy, so broken browser storage cannot leave a blank screen. After a timeout the library's cleanup delete is started but not waited for.
+- **"Updating…" note** sits above the bottom tab bar on the main tabs only (Home, Groups, Recently deleted, Settings), shown only while the first re-check of a person loaded from the saved copy is running. Screens without the bar (a group opened from a link) do not show it. A toast can cover it.
+- **Error text:** 502, 503, 504 and "no answer" all map to `errors.network` ("The server may be waking up. Check your connection and try again in a moment."), so every save path shows it without per-screen code.
+- **Still not built:** saving while the server sleeps (the outbox). Saving waits for the server.
+- **Rejected:** saving every query without a signed-in check (another person on the same phone could see it); a timer only in the router (queries stay idle until the restore settles).
+
 ## 2026-10-09: Phase 8 (expenses): done, the rules that stay
 The whole Phase 8 decision log (Filip's product answers, the technical choices, the Step 1 to Step 6b contracts, the code-review fixes, rejected alternatives) moved word for word to the end of `reports/2026-10-09-phase-08-expenses.md`, section "Decisions and rejected alternatives". What stays true:
 - **Editing keeps the saved rate** unless the currency changes.

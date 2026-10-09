@@ -1,6 +1,6 @@
 import { ApiError, notFoundStatus } from './apiClient'
 
-const proxyCannotReachApiStatus = 502
+const serverNotReadyStatuses = [502, 503, 504]
 const translatedErrorCodes = [
   'AUTH_INVALID_CREDENTIALS',
   'AUTH_EMAIL_TAKEN',
@@ -80,7 +80,7 @@ export function errorMessageKey(error: unknown): string {
   }
   if (
     error.httpStatus === null ||
-    error.httpStatus === proxyCannotReachApiStatus
+    serverNotReadyStatuses.includes(error.httpStatus)
   ) {
     return 'errors.network'
   }

@@ -1,4 +1,6 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
+import type { Persister } from '@tanstack/react-query-persist-client'
+import { keepCacheToOnePerson } from '@/core/auth/keepCacheToOnePerson'
 import { meQueryKey } from '@/core/auth/useMe'
 import type { Me } from '@/core/services/me/meService'
 import {
@@ -8,12 +10,13 @@ import {
   tooManyRequestsStatus,
   unauthorizedStatus,
 } from './apiClient'
+import { savedQueryCacheMaxAge } from './savedQueryCache'
 
 const wrongPasswordAtLogInCode = 'AUTH_INVALID_CREDENTIALS'
 const mustChangePasswordCode = 'AUTH_MUST_CHANGE_PASSWORD'
 const maxQueryRetries = 3
 
-export function createQueryClient(): QueryClient {
+export function createQueryClient(persister: Persister): QueryClient {
   const queryClient: QueryClient = new QueryClient({
     queryCache: new QueryCache({
       onError: (error) => {
@@ -26,10 +29,15 @@ export function createQueryClient(): QueryClient {
       },
     }),
     defaultOptions: {
-      queries: { refetchOnWindowFocus: false, retry: shouldRetryQuery },
+      queries: {
+        refetchOnWindowFocus: false,
+        retry: shouldRetryQuery,
+        gcTime: savedQueryCacheMaxAge,
+      },
       mutations: { retry: false },
     },
   })
+  keepCacheToOnePerson(queryClient, persister)
   return queryClient
 }
 
