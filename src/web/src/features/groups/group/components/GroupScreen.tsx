@@ -9,6 +9,7 @@ import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { kvitChipLook } from '@/shared/components/kvitChipLook'
 import { GroupActivity } from '../../activity/components/GroupActivity'
+import { GroupBalances } from '../../balances/components/GroupBalances'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
 import { GroupSizeLine } from '../../shared/components/GroupSizeLine'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
@@ -21,7 +22,9 @@ import { GroupTabs, type GroupTab } from './GroupTabs'
 export function GroupScreen() {
   const { t } = useTranslation()
   const groupId = useGroupIdParam()
-  const tab: GroupTab = useMatch(routes.groupActivity(':groupId')) === null ? 'expenses' : 'activity'
+  const isActivityTab: boolean = useMatch(routes.groupActivity(':groupId')) !== null
+  const isBalancesTab: boolean = useMatch(routes.groupBalances(':groupId')) !== null
+  const tab: GroupTab = currentTabOf(isActivityTab, isBalancesTab)
   const groupQuery = useGroup(groupId)
   const inviteLinkActions = useInviteLinkActions()
   const [isAddingName, setIsAddingName] = useState<boolean>(false)
@@ -68,7 +71,7 @@ export function GroupScreen() {
           )}
         </div>
         <GroupTabs groupId={group.id} currentTab={tab} />
-        {tab === 'expenses' ? (
+        {tab === 'expenses' && (
           <GroupExpenses
             groupId={group.id}
             actionsWhenEmpty={
@@ -80,9 +83,9 @@ export function GroupScreen() {
               ) : null
             }
           />
-        ) : (
-          <GroupActivity groupId={group.id} />
         )}
+        {tab === 'balances' && <GroupBalances groupId={group.id} />}
+        {tab === 'activity' && <GroupActivity groupId={group.id} />}
         {isAddingName && (
           <AddNameSheet groupId={group.id} onClose={() => setIsAddingName(false)} />
         )}
@@ -98,4 +101,14 @@ export function GroupScreen() {
       {renderContent()}
     </KvitScreen>
   )
+}
+
+function currentTabOf(isActivityTab: boolean, isBalancesTab: boolean): GroupTab {
+  if (isActivityTab) {
+    return 'activity'
+  }
+  if (isBalancesTab) {
+    return 'balances'
+  }
+  return 'expenses'
 }

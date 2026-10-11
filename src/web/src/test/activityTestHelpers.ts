@@ -5,8 +5,11 @@ import type { Language } from '@/core/i18n/language'
 import { routeObjects } from '@/core/router/router'
 import type { ExpenseListRow } from '@/core/services/expenses/expensesService'
 import type { Group } from '@/core/services/groups/groupsService'
+import type { GroupBalances } from '@/core/services/balances/balancesService'
 import type { GroupMembers } from '@/core/services/groups/membersService'
+import type { Settlement } from '@/core/services/settlements/settlementsService'
 import { activityPath, numberEvents, type ActivityEventJson } from './activityTestData'
+import { balancesPath, noExpensesYetBalances, settlementsPath } from './balancesTestData'
 import {
   expenseRows,
   hotelDetail,
@@ -38,6 +41,8 @@ export interface GroupAppOptions {
   members?: GroupMembers
   expenses?: ExpenseListRow[]
   events?: ActivityEventJson[]
+  balances?: GroupBalances
+  settlements?: Settlement[]
   timeZone?: string
   answers?: Record<string, AnswerFactory>
   seedCache?: (queryClient: QueryClient) => void
@@ -57,6 +62,8 @@ export function stubGroupApp(options: GroupAppOptions = {}): Mock<typeof fetch> 
     [`GET ${expensesPath}`]: jsonAnswer({ expenses: options.expenses ?? expenseRows }),
     [`GET ${categoriesPath}`]: jsonAnswer({ categories: testCategories }),
     [`GET ${activityPath}`]: jsonAnswer({ events: numberEvents(options.events ?? []) }),
+    [`GET ${balancesPath}`]: jsonAnswer(options.balances ?? noExpensesYetBalances),
+    [`GET ${settlementsPath}`]: jsonAnswer({ settlements: options.settlements ?? [] }),
     [`GET ${expensePathOf(hotelExpenseId)}`]: jsonAnswer(hotelDetail),
     ...options.answers,
   })
@@ -93,4 +100,8 @@ export function expensesTab(language: Language = 'en'): HTMLElement {
 
 export function activityTab(language: Language = 'en'): HTMLElement {
   return screen.getByRole('link', { name: translated(language, 'activity.title') })
+}
+
+export function balancesTab(language: Language = 'en'): HTMLElement {
+  return screen.getByRole('link', { name: translated(language, 'balances.title') })
 }

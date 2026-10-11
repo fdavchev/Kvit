@@ -6,6 +6,7 @@ export function seedGroupMembersAndList(queryClient: QueryClient): void {
   queryClient.setQueryData(['groups', testGroupId], testGroup)
   queryClient.setQueryData(['groups', testGroupId, 'members'], ownerViewMembers)
   queryClient.setQueryData(['groups', testGroupId, 'activity'], [])
+  queryClient.setQueryData(['groups', testGroupId, 'balances'], { isEveryoneKvit: true, currencies: [] })
   queryClient.setQueryData(['groups'], groupListOf({ groups: [greeceGroupRow] }))
 }
 

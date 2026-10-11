@@ -62,6 +62,27 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
     return readText(dataOf(event), field, `the data of the ${event.type} event`)
   }
 
+  function settlementSentence(event: ActivityEvent, key: string): string {
+    const what = `the data of the ${event.type} event`
+    const data = dataOf(event)
+    return t(key, {
+      name: event.actorName,
+      from: readText(data, 'fromName', what),
+      to: readText(data, 'toName', what),
+      amount: money(data, what),
+    })
+  }
+
+  function settlementCancelledSentence(event: ActivityEvent): string {
+    const what = `the data of the ${event.type} event`
+    const data = dataOf(event)
+    return t('activity.settlementCancelled', {
+      name: event.actorName,
+      to: readText(data, 'toName', what),
+      amount: money(data, what),
+    })
+  }
+
   function groupSettingsSentence(event: ActivityEvent, change: ExpenseChange): string {
     const values = { name: event.actorName, old: change.old, new: change.new }
     switch (change.field) {
@@ -151,6 +172,18 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
         return [t('activity.expenseRestored', { name })]
       case 'ExpenseEdited':
         return editSentences(event)
+      case 'SettlementRecorded':
+        return [settlementSentence(event, 'activity.settlementRecorded')]
+      case 'SettlementConfirmed':
+        return [settlementSentence(event, 'activity.settlementConfirmed')]
+      case 'SettlementRejected':
+        return [settlementSentence(event, 'activity.settlementRejected')]
+      case 'SettlementCancelled':
+        return [settlementCancelledSentence(event)]
+      case 'SettlementDeleted':
+        return [settlementSentence(event, 'activity.settlementDeleted')]
+      case 'SettlementRestored':
+        return [settlementSentence(event, 'activity.settlementRestored')]
       default:
         throw new Error(`The activity has an event type Kvit has no sentence for: "${event.type}"`)
     }

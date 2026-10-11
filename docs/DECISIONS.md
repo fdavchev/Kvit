@@ -18,7 +18,15 @@ Filip's answers (2026-10-09/10): a **pending payment also blocks** leave, remove
   - **A claimed name keeps its balance:** whoever claims an indebted name cannot leave until it is settled.
   - **"That's me" counts payments:** the caller's own row being payer or receiver of any payment (every status, deleted ones too, like expenses today) blocks the claim and turns `canClaimNames` false. A plain name with only payments stays claimable and its payments stay on the name. Rejected: letting deleted payments through (Undo has no time limit, so a restored payment could land on a hidden row).
   - **Balances list hides `SetAside` rows** (left behind by "That's me"). They are filtered out BEFORE `Balances.Calculate`, so if such a row ever held money the call fails loudly. Left and Removed rows still show with `isCurrent` false.
-  - EN and MK texts for the 4 new codes added; the Macedonian is a draft until Filip approves it, and «салдо» ("balance") is a new word in the app.
+  - EN and MK texts for the 4 new codes added. «салдо» ("balance") is already used in the app (privacy page, Home placeholder); Filip chose to keep it everywhere (2026-10-11), so those 4 texts are approved.
+- **Step 4a, Balances tab (frontend, read-only):**
+  - **Design:** Filip approved the B3 mockup (`docs/design/2026-10-11-balances/index.html`): Needs you first, then the balance card with the payment rows inside it, then Between others, the "Simplified" line, Everyone, Record another payment. Glass look (translucent in the element's own colour, blur, soft edge highlight) on the + button, Mark paid, Confirm, Reject, Save and the payment sheet; Filip wants the same glass on every pop-up in the animation pass.
+  - **One card per currency** (MKD first), the currency code in the title only with two or more cards. English says "says **they** paid you" (the app does not know anyone's gender; Macedonian uses «платил/а»).
+  - **Row rules:** a suggested payment is hidden when any Pending settlement exists with the same from, to and currency; every Pending payment I made as payer gets its own "You paid … / Waiting for … to confirm" row, even when no suggestion matches, in a card made for its currency if needed; a Pending payment waiting for my answer (receiver, or owner for a name-only receiver) lives only in Needs you with its own amount. The kvit message shows only when the server says everyone is kvit and at least one currency exists.
+  - **Needs you** holds only things the person must answer; their own waiting payment is not a to-do. "Needs you" for the group stays on the Balances tab; the Home list across groups waits for the Phase 11 dashboard.
+  - **Cache:** new keys under `['groups', id, ...]`; every settlement change refreshes balances, payments, activity and expenses; every expense change refreshes balances.
+  - **Colours:** `text-positive` / `text-negative` tokens (contrast 4.9:1 to 8.7:1 on the page and card colours).
+  - **Open:** where a mistaken confirmed payment is deleted (Phase 9 Step 4b); the owner paying a plain name (see Step 4b).
 
 ## 2026-10-09: Phase 8b (saved data shows instantly), in progress
 Filip chose to build this before Phase 9 (it was a Phase 11 line) because the Render wake-up made the app look stuck.

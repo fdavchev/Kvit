@@ -14,6 +14,10 @@ export function activityQueryKey(groupId: string): readonly ['groups', string, '
   return ['groups', groupId, 'activity']
 }
 
+export function balancesQueryKey(groupId: string): readonly ['groups', string, 'balances'] {
+  return ['groups', groupId, 'balances']
+}
+
 export async function forgetGroup(queryClient: QueryClient, groupId: string): Promise<void> {
   queryClient.removeQueries({ queryKey: groupQueryKey(groupId), exact: true })
   await queryClient.invalidateQueries({ queryKey: groupsQueryKey, exact: true })

@@ -3,9 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vite
 import { activityPath } from '@/test/activityTestData'
 import {
   activityTab,
+  balancesTab,
   expensesTab,
   renderGroupApp,
 } from '@/test/activityTestHelpers'
+import { balancesPath, settlementsPath } from '@/test/balancesTestData'
 import { hotelExpenseId } from '@/test/expenseTestData'
 import { categoriesPath } from '@/test/expenseTestHelpers'
 import { typeAmount } from '@/test/expenseFormTestHelpers'
@@ -75,6 +77,19 @@ describe('the New group, One bill and Activity routes followed through the real 
       expect(urlsAsked(fetchMock)).toContain(activityPath)
     })
 
+    it('shows the group screen on its Balances tab at /groups/{id}/balances and asks for the balances and the payments of that group', async () => {
+      const { fetchMock, router } = await renderGroupApp(routes.groupBalances(groupId))
+
+      expect(await screen.findByRole('heading', { level: 1, name: testGroup.name })).toBeTruthy()
+      expect(await screen.findByText(translated('en', 'balances.empty'))).toBeTruthy()
+      expect(balancesTab().getAttribute('aria-current')).toBe('page')
+      expect(expensesTab().getAttribute('aria-current')).not.toBe('page')
+      expect(activityTab().getAttribute('aria-current')).not.toBe('page')
+      expect(router.state.location.pathname).toBe(routes.groupBalances(groupId))
+      expect(urlsAsked(fetchMock)).toContain(balancesPath)
+      expect(urlsAsked(fetchMock)).toContain(settlementsPath)
+    })
+
     it('keeps /groups/{id} on the Expenses tab', async () => {
       await renderGroupApp(routes.group(groupId))
 
@@ -141,6 +156,41 @@ describe('the New group, One bill and Activity routes followed through the real 
         expect(router.state.location.pathname).toBe(routes.group(groupId))
       })
       expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    })
+
+    it('takes a person from the Expenses tab to the Balances tab, on to the Activity tab and back to the Expenses tab, keeping one group screen', async () => {
+      const { router } = await renderGroupApp(routes.group(groupId))
+      await screen.findByRole('heading', { level: 1, name: testGroup.name })
+
+      fireEvent.click(balancesTab())
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.groupBalances(groupId))
+      })
+      await screen.findByText(translated('en', 'balances.empty'))
+      fireEvent.click(activityTab())
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.groupActivity(groupId))
+      })
+      await screen.findByText(translated('en', 'activity.empty'))
+      fireEvent.click(expensesTab())
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.group(groupId))
+      })
+      expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    })
+
+    it('goes back to the groups list from the group screen on the Balances tab', async () => {
+      const { router } = await renderGroupApp(routes.groupBalances(groupId), {
+        answers: { 'GET /api/groups': jsonAnswer(emptyGroupList) },
+      })
+      await screen.findByRole('heading', { level: 1, name: testGroup.name })
+
+      fireEvent.click(screen.getByRole('link', { name: translated('en', 'common.back') }))
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.groups)
+      })
     })
 
     it('goes back to the groups list from the group screen on the Activity tab', async () => {

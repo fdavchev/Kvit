@@ -58,6 +58,7 @@ export const routeObjects: RouteObject[] = [
           { path: routes.newBill, element: <OneBillScreen /> },
           { path: routes.group(groupIdPattern), element: <GroupScreen /> },
           { path: routes.groupActivity(groupIdPattern), element: <GroupScreen /> },
+          { path: routes.groupBalances(groupIdPattern), element: <GroupScreen /> },
           { path: routes.groupSettings(groupIdPattern), element: <GroupSettingsScreen /> },
           { path: routes.groupMembers(groupIdPattern), element: <MembersScreen /> },
           { path: routes.groupExpenseNew(groupIdPattern), element: <AddExpenseScreen /> },

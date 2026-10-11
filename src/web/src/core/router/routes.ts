@@ -15,6 +15,7 @@ export const routes = {
   recentlyDeletedGroups: '/groups/recently-deleted',
   group: (groupId: string) => `/groups/${groupId}`,
   groupActivity: (groupId: string) => `/groups/${groupId}/activity`,
+  groupBalances: (groupId: string) => `/groups/${groupId}/balances`,
   groupSettings: (groupId: string) => `/groups/${groupId}/settings`,
   groupMembers: (groupId: string) => `/groups/${groupId}/members`,
   groupExpenseNew: (groupId: string) => `/groups/${groupId}/expenses/new`,

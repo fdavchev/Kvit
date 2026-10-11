@@ -3,12 +3,15 @@ import type { Persister } from '@tanstack/react-query-persist-client'
 import { afterEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { createQueryClient } from '@/core/api/queryClient'
 import type { Me } from '@/core/services/me/meService'
+import { testGroupId } from '@/test/groupTestData'
 import { testMe } from '@/test/testMe'
 import { createTestPersister } from '@/test/testPersister'
 import { keepCacheToOnePerson } from './keepCacheToOnePerson'
 import { meQueryKey } from './useMe'
 
 const groupsKey = ['groups']
+const balancesKey = ['groups', testGroupId, 'balances']
+const settlementsKey = ['groups', testGroupId, 'settlements']
 const groups = ['Greece trip']
 const otherPerson: Me = { ...testMe, id: 'a7d1c2e4-0000-4000-8000-000000000002', displayName: 'Mila' }
 
@@ -43,6 +46,28 @@ describe('keepCacheToOnePerson', () => {
     expect(queryClient.getQueryCache().find({ queryKey: ['expenses', 'one'] })).toBeUndefined()
     expect(queryClient.getQueryData(meQueryKey)).toBeNull()
     expect(removeClient).toHaveBeenCalledTimes(1)
+  })
+
+  it('removes the balances and the payments of a group when the person signs out', () => {
+    const { queryClient } = setUpWithSignedInPerson()
+    queryClient.setQueryData(balancesKey, { isEveryoneKvit: true, currencies: [] })
+    queryClient.setQueryData(settlementsKey, [])
+
+    queryClient.setQueryData<Me | null>(meQueryKey, null)
+
+    expect(queryClient.getQueryCache().find({ queryKey: balancesKey })).toBeUndefined()
+    expect(queryClient.getQueryCache().find({ queryKey: settlementsKey })).toBeUndefined()
+  })
+
+  it('resets the balances and the payments of a group when another person signs in', () => {
+    const { queryClient } = setUpWithSignedInPerson()
+    queryClient.setQueryData(balancesKey, { isEveryoneKvit: true, currencies: [] })
+    queryClient.setQueryData(settlementsKey, [])
+
+    queryClient.setQueryData<Me | null>(meQueryKey, otherPerson)
+
+    expect(queryClient.getQueryData(balancesKey)).toBeUndefined()
+    expect(queryClient.getQueryData(settlementsKey)).toBeUndefined()
   })
 
   it('resets every query except me and deletes the saved copy when another person signs in', () => {

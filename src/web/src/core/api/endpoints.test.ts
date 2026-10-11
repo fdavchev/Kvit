@@ -4,6 +4,7 @@ import { endpoints } from './endpoints'
 const groupId = '7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e'
 const memberId = 'a1b2c3d4-0002-4aaa-8bbb-000000000002'
 const expenseId = 'e0000000-0000-4000-8000-000000000004'
+const settlementId = 'c0000000-0000-4000-8000-000000000001'
 
 describe('endpoints', () => {
   it.each([
@@ -30,6 +31,8 @@ describe('endpoints', () => {
     ['groupExpenses', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/expenses'],
     ['groupExpensesDeleted', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/expenses/deleted'],
     ['groupActivity', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/activity'],
+    ['groupBalances', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/balances'],
+    ['groupSettlements', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/settlements'],
   ] as const)('builds the path %s for a group id as %s', (name, path) => {
     expect(endpoints[name](groupId)).toBe(path)
   })
@@ -48,5 +51,15 @@ describe('endpoints', () => {
     ['groupExpenseRestore', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/expenses/e0000000-0000-4000-8000-000000000004/restore'],
   ] as const)('builds the path %s for a group id and an expense id as %s', (name, path) => {
     expect(endpoints[name](groupId, expenseId)).toBe(path)
+  })
+
+  it.each([
+    ['groupSettlement', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/settlements/c0000000-0000-4000-8000-000000000001'],
+    ['groupSettlementConfirm', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/settlements/c0000000-0000-4000-8000-000000000001/confirm'],
+    ['groupSettlementReject', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/settlements/c0000000-0000-4000-8000-000000000001/reject'],
+    ['groupSettlementCancel', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/settlements/c0000000-0000-4000-8000-000000000001/cancel'],
+    ['groupSettlementRestore', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/settlements/c0000000-0000-4000-8000-000000000001/restore'],
+  ] as const)('builds the path %s for a group id and a settlement id as %s', (name, path) => {
+    expect(endpoints[name](groupId, settlementId)).toBe(path)
   })
 })

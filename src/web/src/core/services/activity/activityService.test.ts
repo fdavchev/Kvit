@@ -10,6 +10,9 @@ import {
   activityEventOf,
   editedEventOf,
   expenseAddedEvent,
+  markoPaidFilipEventData,
+  settlementEventOf,
+  settlementEventTypes,
   type ActivityEventJson,
 } from '@/test/activityTestData'
 import { testGroupId } from '@/test/groupTestData'
@@ -68,6 +71,16 @@ describe('getActivity', () => {
     const result = await getActivity(testGroupId)
 
     expect(result[0]).toMatchObject({ changes: null, data: null })
+  })
+
+  it.each(settlementEventTypes)('returns a %s event with its type and its data unchanged', async (type) => {
+    const event = settlementEventOf(type)
+    stubFetch(Response.json({ events: [event] }))
+
+    const result = await getActivity(testGroupId)
+
+    expect(result).toEqual([event])
+    expect(result[0].data).toEqual(markoPaidFilipEventData)
   })
 
   it('keeps null for the expense id and the member id of an event about neither', async () => {
