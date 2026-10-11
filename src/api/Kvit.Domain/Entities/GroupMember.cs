@@ -65,11 +65,22 @@ namespace Kvit.Domain.Entities
             return Result.NotFound<T>($"Member {memberId} is not in this group, or not in a state that allows this.", ResultCodes.MEMBER_NOT_FOUND);
         }
 
-        public Result Remove(Guid ownerUserId, Guid byUserId, DateTimeOffset removedAt)
+        public Result CheckCanBeRemoved(Guid ownerUserId)
         {
             if (UserId == ownerUserId)
             {
                 return Result.Failure($"Member {Id} is the owner of the group and cannot be removed.", ResultCodes.MEMBER_IS_OWNER);
+            }
+
+            return Result.Ok();
+        }
+
+        public Result Remove(Guid ownerUserId, Guid byUserId, DateTimeOffset removedAt)
+        {
+            Result canBeRemoved = CheckCanBeRemoved(ownerUserId);
+            if (!canBeRemoved.IsSuccess)
+            {
+                return canBeRemoved;
             }
 
             End(MemberEndKind.Removed, byUserId, removedAt);
@@ -77,15 +88,25 @@ namespace Kvit.Domain.Entities
             return Result.Ok();
         }
 
-        public Result Leave(Guid ownerUserId, DateTimeOffset leftAt)
+        public Result CheckCanLeave(Guid ownerUserId)
         {
-            Guid leaverUserId = AccountUserId();
-            if (leaverUserId == ownerUserId)
+            if (AccountUserId() == ownerUserId)
             {
                 return Result.Failure("The owner cannot leave the group. Make someone else the owner first.", ResultCodes.MEMBER_OWNER_CANNOT_LEAVE);
             }
 
-            End(MemberEndKind.Left, leaverUserId, leftAt);
+            return Result.Ok();
+        }
+
+        public Result Leave(Guid ownerUserId, DateTimeOffset leftAt)
+        {
+            Result canLeave = CheckCanLeave(ownerUserId);
+            if (!canLeave.IsSuccess)
+            {
+                return canLeave;
+            }
+
+            End(MemberEndKind.Left, AccountUserId(), leftAt);
 
             return Result.Ok();
         }

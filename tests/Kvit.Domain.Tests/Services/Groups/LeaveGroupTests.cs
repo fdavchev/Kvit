@@ -4,6 +4,7 @@ using Kvit.Domain.Results;
 using Kvit.Domain.Services.Groups;
 using Kvit.Domain.Tests.Entities;
 using Kvit.Domain.Tests.Fakes;
+using Kvit.Domain.Tests.MoneyRules;
 using Kvit.Domain.Tests.Results;
 using Xunit;
 
@@ -13,6 +14,7 @@ namespace Kvit.Domain.Tests.Services.Groups
     {
         private readonly FakeGroupRepository _groups = new();
         private readonly FakeGroupMemberRepository _members = new();
+        private readonly FakeGroupMoneyRepository _money = new();
         private readonly FakeActivityEventRepository _activityEvents = new();
         private readonly LeaveGroup _leaveGroup;
         private readonly Group _group = GroupTestData.NewGroup();
@@ -26,7 +28,7 @@ namespace Kvit.Domain.Tests.Services.Groups
             _groups.Seed(_group, GroupTestData.OwnerId, GroupTestData.MemberId);
             _members.Seed(_ownerRow);
             _members.Seed(_memberRow, "Ana Petrova");
-            _leaveGroup = new LeaveGroup(_groups, _members, _activityEvents, new FixedTimeProvider(GroupTestData.Moment));
+            _leaveGroup = new LeaveGroup(_groups, _members, _money, _activityEvents,new FixedTimeProvider(GroupTestData.Moment));
         }
 
         [Fact]
@@ -84,6 +86,70 @@ namespace Kvit.Domain.Tests.Services.Groups
         }
 
         [Fact]
+        public async Task Execute_AMemberWhoIsSettledUpAfterAConfirmedPayment_Succeeds()
+        {
+            _money.AnswerWith(GroupMoneyTestData.Settled([_ownerRow.Id, _memberRow.Id], _ownerRow.Id, _memberRow.Id));
+
+            Result result = await ExecuteAsync(GroupTestData.MemberId);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(MemberEndKind.Left, _memberRow.EndKind);
+            Assert.Single(_activityEvents.Added);
+        }
+
+        [Fact]
+        public async Task Execute_AMemberWhoOwesMoney_FailsWith400MemberBalanceNotZeroAndChangesNothing()
+        {
+            _money.AnswerWith(GroupMoneyTestData.Owing([_ownerRow.Id, _memberRow.Id], _ownerRow.Id, _memberRow.Id));
+
+            Result result = await ExecuteAsync(GroupTestData.MemberId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_BALANCE_NOT_ZERO);
+            AssertMemberStillInTheGroup();
+        }
+
+        [Fact]
+        public async Task Execute_AMemberWhoIsOwedMoney_FailsWith400MemberBalanceNotZeroAndChangesNothing()
+        {
+            _money.AnswerWith(GroupMoneyTestData.Owing([_ownerRow.Id, _memberRow.Id], _memberRow.Id, _ownerRow.Id));
+
+            Result result = await ExecuteAsync(GroupTestData.MemberId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_BALANCE_NOT_ZERO);
+            AssertMemberStillInTheGroup();
+        }
+
+        [Fact]
+        public async Task Execute_AMemberWithAPaymentWaitingForAnAnswer_FailsWith400MemberHasPendingPaymentAndChangesNothing()
+        {
+            _money.AnswerWith(GroupMoneyTestData.PendingPayment([_ownerRow.Id, _memberRow.Id], _memberRow.Id, _ownerRow.Id));
+
+            Result result = await ExecuteAsync(GroupTestData.MemberId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_HAS_PENDING_PAYMENT);
+            AssertMemberStillInTheGroup();
+        }
+
+        [Fact]
+        public async Task Execute_TheOwnerWhileMoneyIsOpen_FailsWith400MemberOwnerCannotLeaveBeforeTheMoneyIsChecked()
+        {
+            _money.AnswerWith(GroupMoneyTestData.Owing([_ownerRow.Id, _memberRow.Id], _ownerRow.Id, _memberRow.Id));
+
+            Result result = await ExecuteAsync(GroupTestData.OwnerId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_OWNER_CANNOT_LEAVE);
+            Assert.Empty(_money.RequestedGroupIds);
+        }
+
+        [Fact]
+        public async Task Execute_AMemberWhoCanLeave_AsksForTheMoneyOfThisGroupOnly()
+        {
+            await ExecuteAsync(GroupTestData.MemberId);
+
+            Assert.Equal([_group.Id], _money.RequestedGroupIds);
+        }
+
+        [Fact]
         public async Task Execute_ANonMember_FailsWith404GroupNotFoundAndChangesNothing()
         {
             Result result = await ExecuteAsync(GroupTestData.StrangerId);
@@ -120,6 +186,14 @@ namespace Kvit.Domain.Tests.Services.Groups
         private Task<Result> ExecuteAsync(Guid userId)
         {
             return _leaveGroup.Execute(_group.Id, userId, TestContext.Current.CancellationToken);
+        }
+
+        private void AssertMemberStillInTheGroup()
+        {
+            Assert.Null(_memberRow.RemovedAt);
+            Assert.Null(_memberRow.RemovedByUserId);
+            Assert.Null(_memberRow.EndKind);
+            Assert.Empty(_activityEvents.Added);
         }
     }
 }

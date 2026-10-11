@@ -1,11 +1,13 @@
 using Kvit.Domain.Entities;
 using Kvit.Domain.Interfaces;
+using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 
 namespace Kvit.Domain.Services.Groups
 {
     public sealed class DeleteGroup(
         IGroupRepository _groups,
+        IGroupMoneyRepository _money,
         IActivityEventRepository _activityEvents,
         TimeProvider _timeProvider)
     {
@@ -22,6 +24,13 @@ namespace Kvit.Domain.Services.Groups
             if (!owner.IsSuccess)
             {
                 return owner;
+            }
+
+            GroupMoney money = await _money.MoneyOfAsync(group.Id, cancellationToken);
+            Result settled = money.CheckEveryoneSettled();
+            if (!settled.IsSuccess)
+            {
+                return settled;
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();

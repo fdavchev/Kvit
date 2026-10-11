@@ -60,6 +60,8 @@ namespace Kvit.Domain.Results
         public const string GROUP_CURRENCY_INVALID = "GROUP_CURRENCY_INVALID";
         public const string GROUP_NOT_DELETED = "GROUP_NOT_DELETED";
         public const string GROUP_RESTORE_EXPIRED = "GROUP_RESTORE_EXPIRED";
+        public const string GROUP_BALANCES_NOT_ZERO = "GROUP_BALANCES_NOT_ZERO";
+        public const string GROUP_HAS_PENDING_PAYMENT = "GROUP_HAS_PENDING_PAYMENT";
         public const string MEMBER_NAME_INVALID = "MEMBER_NAME_INVALID";
         public const string MEMBER_NAME_TAKEN = "MEMBER_NAME_TAKEN";
         public const string MEMBER_NOT_FOUND = "MEMBER_NOT_FOUND";
@@ -69,6 +71,8 @@ namespace Kvit.Domain.Results
         public const string MEMBER_ALREADY_OWNER = "MEMBER_ALREADY_OWNER";
         public const string MEMBER_CANNOT_CLAIM = "MEMBER_CANNOT_CLAIM";
         public const string MEMBER_NOT_CLAIMED = "MEMBER_NOT_CLAIMED";
+        public const string MEMBER_BALANCE_NOT_ZERO = "MEMBER_BALANCE_NOT_ZERO";
+        public const string MEMBER_HAS_PENDING_PAYMENT = "MEMBER_HAS_PENDING_PAYMENT";
         public const string INVITE_NOT_FOUND = "INVITE_NOT_FOUND";
         public const string INVITE_REMOVED = "INVITE_REMOVED";
         public const string INVITE_NOTHING_TO_UNDO = "INVITE_NOTHING_TO_UNDO";

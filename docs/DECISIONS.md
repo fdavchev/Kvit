@@ -11,8 +11,14 @@ Filip's answers (2026-10-09/10): a **pending payment also blocks** leave, remove
   - **Events:** recording writes `SettlementRecorded` only; a later confirm writes `SettlementConfirmed`. New type `SettlementRestored` (Undo of a delete). The activity sentences are written on the website in Step 4. One `SettlementConfirmed` usage event when a payment becomes Confirmed.
   - Check order for confirm, reject, cancel, delete, restore: who may act is checked before the payment's state (403 before 400), like expenses.
   - Migration `Settlements`: the table, four check constraints, a unique index on `client_request_id`, and `SettlementRestored` allowed in the activity type check.
-  - **Open:** the "That's me" claim rule ignores payments (a plain name with only a payment on it can still be claimed); recommended to count payments too, in Step 3.
   - 11 `SETTLEMENT_*` error texts added in EN and MK; the Macedonian is a draft until Filip approves it.
+- **Step 3, zero-balance rules, claim rule, balances list:**
+  - **Leave, remove, delete group** are refused (400) while the affected person's balance in any currency is not 0 (either sign), or a non-deleted Pending payment involves them. Delete group looks at every member row ever (left, removed, plain names) and any Pending payment in the group. Rejected, Cancelled and deleted payments never block; Confirmed ones count only through the balance. The balance reason wins over the pending one. The check runs after all existing checks and codes. Restore group never checks balances. Codes: `MEMBER_BALANCE_NOT_ZERO`, `MEMBER_HAS_PENDING_PAYMENT`, `GROUP_BALANCES_NOT_ZERO`, `GROUP_HAS_PENDING_PAYMENT`.
+  - **One definition of a balance:** a pure domain rule, `GroupMoney`, calls `Balances.Calculate` with every member row ever; one loader (`BalanceQueries`) decides which expenses and payments count, shared by the balances endpoint and these checks.
+  - **A claimed name keeps its balance:** whoever claims an indebted name cannot leave until it is settled.
+  - **"That's me" counts payments:** the caller's own row being payer or receiver of any payment (every status, deleted ones too, like expenses today) blocks the claim and turns `canClaimNames` false. A plain name with only payments stays claimable and its payments stay on the name. Rejected: letting deleted payments through (Undo has no time limit, so a restored payment could land on a hidden row).
+  - **Balances list hides `SetAside` rows** (left behind by "That's me"). They are filtered out BEFORE `Balances.Calculate`, so if such a row ever held money the call fails loudly. Left and Removed rows still show with `isCurrent` false.
+  - EN and MK texts for the 4 new codes added; the Macedonian is a draft until Filip approves it, and «салдо» ("balance") is a new word in the app.
 
 ## 2026-10-09: Phase 8b (saved data shows instantly), in progress
 Filip chose to build this before Phase 9 (it was a Phase 11 line) because the Render wake-up made the app look stuck.

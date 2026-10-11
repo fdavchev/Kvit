@@ -11,6 +11,85 @@ namespace Kvit.Domain.Tests.Entities
         private static readonly DateTimeOffset EndedAt = GroupTestData.Moment.AddHours(1);
 
         [Fact]
+        public void CheckCanBeRemoved_AnAccountThatIsNotTheOwner_SucceedsAndChangesNothing()
+        {
+            GroupMember member = MemberTestData.Account(MemberTestData.GroupId, GroupTestData.MemberId, "Ana");
+
+            Result result = member.CheckCanBeRemoved(GroupTestData.OwnerId);
+
+            Assert.True(result.IsSuccess);
+            Assert.Null(member.RemovedAt);
+            Assert.Null(member.EndKind);
+        }
+
+        [Fact]
+        public void CheckCanBeRemoved_APlainName_Succeeds()
+        {
+            GroupMember plainName = MemberTestData.PlainName(MemberTestData.GroupId, "Grandma");
+
+            Result result = plainName.CheckCanBeRemoved(GroupTestData.OwnerId);
+
+            Assert.True(result.IsSuccess);
+        }
+
+        [Fact]
+        public void CheckCanBeRemoved_TheOwner_FailsWith400MemberIsOwnerNamingTheMember()
+        {
+            GroupMember owner = MemberTestData.Account(MemberTestData.GroupId, GroupTestData.OwnerId, "Filip");
+
+            Result result = owner.CheckCanBeRemoved(GroupTestData.OwnerId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_IS_OWNER);
+            Assert.Contains(owner.Id.ToString(), result.Error, StringComparison.Ordinal);
+            Assert.Null(owner.RemovedAt);
+            Assert.Null(owner.EndKind);
+        }
+
+        [Fact]
+        public void CheckCanBeRemoved_ANameTheOwnerClaimed_FailsWith400MemberIsOwner()
+        {
+            GroupMember claimedByOwner = MemberTestData.Claimed(MemberTestData.GroupId, GroupTestData.OwnerId, "Grandma");
+
+            Result result = claimedByOwner.CheckCanBeRemoved(GroupTestData.OwnerId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_IS_OWNER);
+        }
+
+        [Fact]
+        public void CheckCanLeave_AnAccountThatIsNotTheOwner_SucceedsAndChangesNothing()
+        {
+            GroupMember member = MemberTestData.Account(MemberTestData.GroupId, GroupTestData.MemberId, "Ana");
+
+            Result result = member.CheckCanLeave(GroupTestData.OwnerId);
+
+            Assert.True(result.IsSuccess);
+            Assert.Null(member.RemovedAt);
+            Assert.Null(member.EndKind);
+        }
+
+        [Fact]
+        public void CheckCanLeave_TheOwner_FailsWith400MemberOwnerCannotLeave()
+        {
+            GroupMember owner = MemberTestData.Account(MemberTestData.GroupId, GroupTestData.OwnerId, "Filip");
+
+            Result result = owner.CheckCanLeave(GroupTestData.OwnerId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_OWNER_CANNOT_LEAVE);
+            Assert.Null(owner.RemovedAt);
+            Assert.Null(owner.EndKind);
+        }
+
+        [Fact]
+        public void CheckCanLeave_APlainName_ThrowsBecauseOnlyAnAccountCanLeave()
+        {
+            GroupMember plainName = MemberTestData.PlainName(MemberTestData.GroupId, "Grandma");
+
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => plainName.CheckCanLeave(GroupTestData.OwnerId));
+
+            Assert.Contains(plainName.Id.ToString(), exception.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
         public void Remove_AnAccountThatIsNotTheOwner_EndsTheRowAsRemovedByTheCaller()
         {
             GroupMember member = MemberTestData.Account(MemberTestData.GroupId, GroupTestData.MemberId, "Ana");

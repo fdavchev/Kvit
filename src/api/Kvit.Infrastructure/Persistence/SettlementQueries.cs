@@ -18,5 +18,19 @@ namespace Kvit.Infrastructure.Persistence
                     ToName = to.DisplayName,
                 });
         }
+
+        public static IQueryable<Guid> MemberIdsInAnySettlementOf(this AppDbContext context, Guid groupId)
+        {
+            IQueryable<Settlement> settlementsOfGroup = context.Settlements.Where(settlement => settlement.GroupId == groupId);
+
+            return settlementsOfGroup
+                .Select(settlement => settlement.FromMemberId)
+                .Union(settlementsOfGroup.Select(settlement => settlement.ToMemberId));
+        }
+
+        public static IQueryable<Guid> MemberIdsInAnyExpenseOrSettlementOf(this AppDbContext context, Guid groupId)
+        {
+            return context.MemberIdsInAnyExpenseOf(groupId).Union(context.MemberIdsInAnySettlementOf(groupId));
+        }
     }
 }

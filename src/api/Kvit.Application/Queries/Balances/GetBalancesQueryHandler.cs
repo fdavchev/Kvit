@@ -28,12 +28,12 @@ namespace Kvit.Application.Queries.Balances
             }
 
             List<BalanceMemberDto> members = await BalanceMemberDtosOf(query.GroupId).ToListAsync(cancellationToken);
-            List<BalanceExpenseDto> expenses = await BalanceExpenseDtosOf(query.GroupId).ToListAsync(cancellationToken);
-            List<BalanceSettlementDto> settlements = await BalanceSettlementDtosOf(query.GroupId).ToListAsync(cancellationToken);
+            List<BalanceExpense> expenses = await _context.CountedBalanceExpensesOfAsync(query.GroupId, cancellationToken);
+            List<BalanceSettlement> settlements = await _context.CountedBalanceSettlementsOfAsync(query.GroupId, cancellationToken);
             BalanceSummary summary = Domain.MoneyRules.Balances.Calculate(
                 [.. members.Select(member => member.MemberId)],
-                [.. expenses.Select(BalanceExpenseOf)],
-                [.. settlements.Select(BalanceSettlementOf)]);
+                expenses,
+                settlements);
             List<CurrencyBalancesResponse> currencies = [.. summary.ByCurrency
                 .OrderBy(currencyBalances => currencyBalances.Key)
                 .Select(currencyBalances => CurrencyBalancesResponseOf(currencyBalances.Key, currencyBalances.Value, members))];
@@ -45,48 +45,9 @@ namespace Kvit.Application.Queries.Balances
         {
             return _context.NamedGroupMembers(groupId)
                 .AsNoTracking()
+                .Where(named => named.Member.EndKind != MemberEndKind.SetAside)
                 .InJoiningOrder()
                 .Select(named => new BalanceMemberDto(named.Member.Id, named.DisplayName, named.Member.RemovedAt == null));
-        }
-
-        private IQueryable<BalanceExpenseDto> BalanceExpenseDtosOf(Guid groupId)
-        {
-            return _context.Expenses
-                .AsNoTracking()
-                .Where(expense => expense.GroupId == groupId && expense.DeletedAt == null)
-                .Select(expense => new BalanceExpenseDto(
-                    expense.PaidByMemberId,
-                    expense.AmountMinor,
-                    expense.Currency,
-                    expense.Shares.Select(share => new BalanceShareDto(share.MemberId, share.InputValue, share.ShareMinor)).ToList()));
-        }
-
-        private IQueryable<BalanceSettlementDto> BalanceSettlementDtosOf(Guid groupId)
-        {
-            return _context.Settlements
-                .AsNoTracking()
-                .Where(settlement => settlement.GroupId == groupId && settlement.DeletedAt == null)
-                .Select(settlement => new BalanceSettlementDto(
-                    settlement.FromMemberId,
-                    settlement.ToMemberId,
-                    settlement.AmountMinor,
-                    settlement.Currency,
-                    settlement.Status));
-        }
-
-        private static BalanceSettlement BalanceSettlementOf(BalanceSettlementDto settlement)
-        {
-            return new BalanceSettlement(settlement.FromMemberId, settlement.ToMemberId, Money.Create(settlement.AmountMinor, settlement.Currency).Value, settlement.Status, false);
-        }
-
-        private static BalanceExpense BalanceExpenseOf(BalanceExpenseDto expense)
-        {
-            List<SplitShare> shares = [.. expense.Shares.Select(share => new SplitShare(
-                share.MemberId,
-                share.InputValue,
-                Money.Create(share.ShareMinor, expense.Currency).Value))];
-
-            return new BalanceExpense(expense.PaidByMemberId, Money.Create(expense.AmountMinor, expense.Currency).Value, shares, false);
         }
 
         private static CurrencyBalancesResponse CurrencyBalancesResponseOf(Currency currency, IReadOnlyList<MemberBalance> balances, IReadOnlyList<BalanceMemberDto> members)

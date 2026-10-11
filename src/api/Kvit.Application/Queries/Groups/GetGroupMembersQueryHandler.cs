@@ -35,8 +35,8 @@ namespace Kvit.Application.Queries.Groups
                 ? await RemovedMemberRowsOf(query.GroupId).ToListAsync(cancellationToken)
                 : [];
             GroupMemberRow ownRow = members.Single(member => member.IsYou);
-            bool isOwnRowInAnyExpense = await _context.MemberIdsInAnyExpenseOf(query.GroupId).ContainsAsync(ownRow.Id, cancellationToken);
-            bool canClaimNames = ownRow.ClaimedName is null && !isOwnRowInAnyExpense;
+            bool isOwnRowInAnyExpenseOrSettlement = await _context.MemberIdsInAnyExpenseOrSettlementOf(query.GroupId).ContainsAsync(ownRow.Id, cancellationToken);
+            bool canClaimNames = ownRow.ClaimedName is null && !isOwnRowInAnyExpenseOrSettlement;
 
             return Result.Ok(new GroupMembersResponse(members, removed, canClaimNames));
         }
