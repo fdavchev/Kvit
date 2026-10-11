@@ -81,7 +81,18 @@
     "EXPENSE_SPLIT_TYPE_INVALID": "Избери како да се подели: поеднакво, точни износи, проценти или делови.",
     "EXPENSE_CATEGORY_INVALID": "Избери категорија од листата.",
     "EXPENSE_AMOUNT_TOO_LARGE": "Овој износ е премногу голем.",
-    "EXPENSE_CLIENT_REQUEST_ID_USED": "Ова барање веќе е искористено за друго."
+    "EXPENSE_CLIENT_REQUEST_ID_USED": "Ова барање веќе е искористено за друго.",
+    "SETTLEMENT_NOT_FOUND": "Ова плаќање не постои или е избришано.",
+    "SETTLEMENT_NOT_ALLOWED": "Не можеш да го направиш ова со ова плаќање.",
+    "SETTLEMENT_NOT_PENDING": "Ова плаќање веќе не чека одговор.",
+    "SETTLEMENT_NOT_CONFIRMED": "Може да се избрише само потврдено плаќање.",
+    "SETTLEMENT_NOT_DELETED": "Ова плаќање не е избришано.",
+    "SETTLEMENT_AMOUNT_NOT_POSITIVE": "Износот мора да е поголем од 0.",
+    "SETTLEMENT_SAME_MEMBER": "Избери две различни личности.",
+    "SETTLEMENT_MEMBER_NOT_CURRENT": "Оваа личност веќе не е во групата.",
+    "SETTLEMENT_CURRENCY_INVALID": "Избери MKD или EUR.",
+    "SETTLEMENT_AMOUNT_TOO_LARGE": "Овој износ е премногу голем.",
+    "SETTLEMENT_CLIENT_REQUEST_ID_USED": "Ова барање веќе е искористено за друго."
   },
   "language": {
     "label": "Јазик",

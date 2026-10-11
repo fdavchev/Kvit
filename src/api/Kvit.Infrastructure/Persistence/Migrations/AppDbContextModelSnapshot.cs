@@ -75,7 +75,7 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                     b.ToTable("activity_events", null, t =>
                         {
-                            t.HasCheckConstraint("ck_activity_events_type", "type IN ('GroupCreated', 'GroupRenamed', 'GroupSettingsChanged', 'InviteLinkReset', 'MemberAdded', 'MemberJoined', 'MemberClaimed', 'ClaimUndone', 'MemberRemoved', 'MemberLeft', 'OwnershipTransferred', 'MemberLetBackIn', 'InviteLinkRestored', 'ExpenseAdded', 'ExpenseEdited', 'ExpenseDeleted', 'ExpenseRestored', 'SettlementRecorded', 'SettlementConfirmed', 'SettlementRejected', 'SettlementCancelled', 'SettlementDeleted', 'ClosingStarted', 'ClosingConfirmed', 'ClosingObjected', 'ClosingCancelled', 'GroupFinished', 'GroupReopened', 'GroupDeleted', 'GroupRestored')");
+                            t.HasCheckConstraint("ck_activity_events_type", "type IN ('GroupCreated', 'GroupRenamed', 'GroupSettingsChanged', 'InviteLinkReset', 'MemberAdded', 'MemberJoined', 'MemberClaimed', 'ClaimUndone', 'MemberRemoved', 'MemberLeft', 'OwnershipTransferred', 'MemberLetBackIn', 'InviteLinkRestored', 'ExpenseAdded', 'ExpenseEdited', 'ExpenseDeleted', 'ExpenseRestored', 'SettlementRecorded', 'SettlementConfirmed', 'SettlementRejected', 'SettlementCancelled', 'SettlementDeleted', 'SettlementRestored', 'ClosingStarted', 'ClosingConfirmed', 'ClosingObjected', 'ClosingCancelled', 'GroupFinished', 'GroupReopened', 'GroupDeleted', 'GroupRestored')");
                         });
                 });
 
@@ -558,6 +558,95 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Kvit.Domain.Entities.Settlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<long>("AmountMinor")
+                        .HasColumnType("bigint")
+                        .HasColumnName("amount_minor");
+
+                    b.Property<Guid>("ClientRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_request_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("currency");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by_user_id");
+
+                    b.Property<Guid>("FromMemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("from_member_id");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<Guid>("RecordedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recorded_by_user_id");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resolved_at");
+
+                    b.Property<Guid?>("ResolvedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("resolved_by_user_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("ToMemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("to_member_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_settlements");
+
+                    b.HasIndex("ClientRequestId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_settlements_client_request_id");
+
+                    b.HasIndex("FromMemberId")
+                        .HasDatabaseName("ix_settlements_from_member_id");
+
+                    b.HasIndex("GroupId")
+                        .HasDatabaseName("ix_settlements_group_id");
+
+                    b.HasIndex("ToMemberId")
+                        .HasDatabaseName("ix_settlements_to_member_id");
+
+                    b.ToTable("settlements", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_settlements_amount_minor_positive", "amount_minor > 0");
+
+                            t.HasCheckConstraint("ck_settlements_currency", "currency IN ('MKD', 'EUR')");
+
+                            t.HasCheckConstraint("ck_settlements_different_members", "from_member_id <> to_member_id");
+
+                            t.HasCheckConstraint("ck_settlements_status", "status IN ('Pending', 'Confirmed', 'Rejected', 'Cancelled')");
+                        });
+                });
+
             modelBuilder.Entity("Kvit.Domain.Entities.UsageEvent", b =>
                 {
                     b.Property<long>("Id")
@@ -997,6 +1086,30 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_group_members_users_user_id");
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.Settlement", b =>
+                {
+                    b.HasOne("Kvit.Domain.Entities.GroupMember", null)
+                        .WithMany()
+                        .HasForeignKey("FromMemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_settlements_group_members_from_member_id");
+
+                    b.HasOne("Kvit.Domain.Entities.Group", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_settlements_groups_group_id");
+
+                    b.HasOne("Kvit.Domain.Entities.GroupMember", null)
+                        .WithMany()
+                        .HasForeignKey("ToMemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_settlements_group_members_to_member_id");
                 });
 
             modelBuilder.Entity("Kvit.Domain.Entities.UsageEvent", b =>

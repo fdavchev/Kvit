@@ -24,6 +24,7 @@ namespace Kvit.Domain.Entities
         SettlementRejected,
         SettlementCancelled,
         SettlementDeleted,
+        SettlementRestored,
         ClosingStarted,
         ClosingConfirmed,
         ClosingObjected,

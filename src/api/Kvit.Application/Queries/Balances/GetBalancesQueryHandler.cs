@@ -29,10 +29,11 @@ namespace Kvit.Application.Queries.Balances
 
             List<BalanceMemberDto> members = await BalanceMemberDtosOf(query.GroupId).ToListAsync(cancellationToken);
             List<BalanceExpenseDto> expenses = await BalanceExpenseDtosOf(query.GroupId).ToListAsync(cancellationToken);
+            List<BalanceSettlementDto> settlements = await BalanceSettlementDtosOf(query.GroupId).ToListAsync(cancellationToken);
             BalanceSummary summary = Domain.MoneyRules.Balances.Calculate(
                 [.. members.Select(member => member.MemberId)],
                 [.. expenses.Select(BalanceExpenseOf)],
-                []);
+                [.. settlements.Select(BalanceSettlementOf)]);
             List<CurrencyBalancesResponse> currencies = [.. summary.ByCurrency
                 .OrderBy(currencyBalances => currencyBalances.Key)
                 .Select(currencyBalances => CurrencyBalancesResponseOf(currencyBalances.Key, currencyBalances.Value, members))];
@@ -58,6 +59,24 @@ namespace Kvit.Application.Queries.Balances
                     expense.AmountMinor,
                     expense.Currency,
                     expense.Shares.Select(share => new BalanceShareDto(share.MemberId, share.InputValue, share.ShareMinor)).ToList()));
+        }
+
+        private IQueryable<BalanceSettlementDto> BalanceSettlementDtosOf(Guid groupId)
+        {
+            return _context.Settlements
+                .AsNoTracking()
+                .Where(settlement => settlement.GroupId == groupId && settlement.DeletedAt == null)
+                .Select(settlement => new BalanceSettlementDto(
+                    settlement.FromMemberId,
+                    settlement.ToMemberId,
+                    settlement.AmountMinor,
+                    settlement.Currency,
+                    settlement.Status));
+        }
+
+        private static BalanceSettlement BalanceSettlementOf(BalanceSettlementDto settlement)
+        {
+            return new BalanceSettlement(settlement.FromMemberId, settlement.ToMemberId, Money.Create(settlement.AmountMinor, settlement.Currency).Value, settlement.Status, false);
         }
 
         private static BalanceExpense BalanceExpenseOf(BalanceExpenseDto expense)

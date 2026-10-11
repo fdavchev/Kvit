@@ -26,6 +26,8 @@ namespace Kvit.Infrastructure.Persistence
 
         public DbSet<ExpenseShare> ExpenseShares => Set<ExpenseShare>();
 
+        public DbSet<Settlement> Settlements => Set<Settlement>();
+
         public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
         protected override void OnModelCreating(ModelBuilder builder)

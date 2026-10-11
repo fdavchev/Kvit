@@ -16,14 +16,6 @@ namespace Kvit.Api.Tests.Persistence
         }
 
         [Fact]
-        public async Task Migration_Expenses_IsTheLatestAppliedOne()
-        {
-            List<string> applied = await AppliedMigrationsAsync();
-
-            Assert.EndsWith("_Expenses", applied[^1], StringComparison.Ordinal);
-        }
-
-        [Fact]
         public async Task Migration_Expenses_ComesAfterTheCategoriesAndExchangeRatesOne()
         {
             List<string> applied = await AppliedMigrationsAsync();

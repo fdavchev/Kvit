@@ -1,5 +1,19 @@
 # Decisions
 
+## 2026-10-10: Phase 9 (balances + settle up), in progress
+Filip's answers (2026-10-09/10): a **pending payment also blocks** leave, remove and delete group (not only a non-zero balance); **overpaying is allowed** (no cap, a partial amount too); **reject has no reason field**.
+- **Step 1, balances:** `GET /api/groups/{groupId}/balances` returns, per currency (MKD before EUR, only currencies a counted row uses), every member the group ever had in joining order (`isCurrent` false once `removed_at` is set), their balance in minor units, the simplified payments, and `isEveryoneKvit`. Any current member may read it. Rows left behind by "That's me" (`SetAside`) currently show as extra 0 rows; hiding them is not decided yet.
+- **Step 2, settlements (backend):**
+  - **Who acts:** the caller's own row is `to` -> Confirmed at once; own row is `from` -> Pending; otherwise only the owner, for a plain name (`to` plain -> Confirmed, else `from` plain -> Pending); anything else 403 `SETTLEMENT_NOT_ALLOWED`. The own-row rule wins over the owner rule (the owner recording "Ana paid Marko-the-plain-name" is Pending and she confirms it herself).
+  - Confirm and reject: the receiver, or the owner when the receiver is a plain name. Cancel: the payer, or the owner when the payer is a plain name. Delete (Confirmed only) and restore: whoever recorded it, or the owner. **Undo of a delete has no time limit.**
+  - A payment confirmed at once also gets `resolved_by_user_id` (the recorder) and `resolved_at` (creation time). Rejected alternative: leave them empty.
+  - Both people must be current members. Duplicate protection like expenses: same `clientRequestId` returns the first payment; two at the same moment both answer 200; another person's or another group's id answers 400 `SETTLEMENT_CLIENT_REQUEST_ID_USED`.
+  - **Events:** recording writes `SettlementRecorded` only; a later confirm writes `SettlementConfirmed`. New type `SettlementRestored` (Undo of a delete). The activity sentences are written on the website in Step 4. One `SettlementConfirmed` usage event when a payment becomes Confirmed.
+  - Check order for confirm, reject, cancel, delete, restore: who may act is checked before the payment's state (403 before 400), like expenses.
+  - Migration `Settlements`: the table, four check constraints, a unique index on `client_request_id`, and `SettlementRestored` allowed in the activity type check.
+  - **Open:** the "That's me" claim rule ignores payments (a plain name with only a payment on it can still be claimed); recommended to count payments too, in Step 3.
+  - 11 `SETTLEMENT_*` error texts added in EN and MK; the Macedonian is a draft until Filip approves it.
+
 ## 2026-10-09: Phase 8b (saved data shows instantly), in progress
 Filip chose to build this before Phase 9 (it was a Phase 11 line) because the Render wake-up made the app look stuck.
 - **What:** the TanStack Query cache is saved in the browser (IndexedDB, via `idb-keyval`, packages pinned to 5.103.2 like `react-query`). Opening the app shows the last screens at once and re-checks them with the server in the background.

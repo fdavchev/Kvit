@@ -81,7 +81,18 @@
     "EXPENSE_SPLIT_TYPE_INVALID": "Pick how to split: equally, exact amounts, percentages or shares.",
     "EXPENSE_CATEGORY_INVALID": "Pick a category from the list.",
     "EXPENSE_AMOUNT_TOO_LARGE": "This amount is too large.",
-    "EXPENSE_CLIENT_REQUEST_ID_USED": "This request was already used for something else."
+    "EXPENSE_CLIENT_REQUEST_ID_USED": "This request was already used for something else.",
+    "SETTLEMENT_NOT_FOUND": "This payment doesn't exist or was deleted.",
+    "SETTLEMENT_NOT_ALLOWED": "You can't do this with this payment.",
+    "SETTLEMENT_NOT_PENDING": "This payment is no longer waiting for an answer.",
+    "SETTLEMENT_NOT_CONFIRMED": "Only a confirmed payment can be deleted.",
+    "SETTLEMENT_NOT_DELETED": "This payment is not deleted.",
+    "SETTLEMENT_AMOUNT_NOT_POSITIVE": "The amount must be more than 0.",
+    "SETTLEMENT_SAME_MEMBER": "Pick two different people.",
+    "SETTLEMENT_MEMBER_NOT_CURRENT": "This person is no longer in the group.",
+    "SETTLEMENT_CURRENCY_INVALID": "Pick MKD or EUR.",
+    "SETTLEMENT_AMOUNT_TOO_LARGE": "This amount is too large.",
+    "SETTLEMENT_CLIENT_REQUEST_ID_USED": "This request was already used for something else."
   },
   "language": {
     "label": "Language",

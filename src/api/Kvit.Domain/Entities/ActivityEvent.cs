@@ -137,6 +137,53 @@ namespace Kvit.Domain.Entities
             return AboutExpense(groupId, actorUserId, ActivityEventType.ExpenseRestored, expenseId, createdAt);
         }
 
+        public static ActivityEvent SettlementRecorded(Guid actorUserId, Settlement settlement, GroupRoster roster, DateTimeOffset createdAt)
+        {
+            return AboutSettlement(actorUserId, ActivityEventType.SettlementRecorded, settlement, roster, createdAt);
+        }
+
+        public static ActivityEvent SettlementConfirmed(Guid actorUserId, Settlement settlement, GroupRoster roster, DateTimeOffset createdAt)
+        {
+            return AboutSettlement(actorUserId, ActivityEventType.SettlementConfirmed, settlement, roster, createdAt);
+        }
+
+        public static ActivityEvent SettlementRejected(Guid actorUserId, Settlement settlement, GroupRoster roster, DateTimeOffset createdAt)
+        {
+            return AboutSettlement(actorUserId, ActivityEventType.SettlementRejected, settlement, roster, createdAt);
+        }
+
+        public static ActivityEvent SettlementCancelled(Guid actorUserId, Settlement settlement, GroupRoster roster, DateTimeOffset createdAt)
+        {
+            return AboutSettlement(actorUserId, ActivityEventType.SettlementCancelled, settlement, roster, createdAt);
+        }
+
+        public static ActivityEvent SettlementDeleted(Guid actorUserId, Settlement settlement, GroupRoster roster, DateTimeOffset createdAt)
+        {
+            return AboutSettlement(actorUserId, ActivityEventType.SettlementDeleted, settlement, roster, createdAt);
+        }
+
+        public static ActivityEvent SettlementRestored(Guid actorUserId, Settlement settlement, GroupRoster roster, DateTimeOffset createdAt)
+        {
+            return AboutSettlement(actorUserId, ActivityEventType.SettlementRestored, settlement, roster, createdAt);
+        }
+
+        private static ActivityEvent AboutSettlement(Guid actorUserId, ActivityEventType type, Settlement settlement, GroupRoster roster, DateTimeOffset createdAt)
+        {
+            ActivityEvent activityEvent = New(settlement.GroupId, actorUserId, type, createdAt);
+            activityEvent.SettlementId = settlement.Id;
+            activityEvent.Data = JsonSerializer.Serialize(new
+            {
+                amountMinor = settlement.AmountMinor,
+                currency = settlement.Currency.ToString(),
+                fromMemberId = settlement.FromMemberId,
+                toMemberId = settlement.ToMemberId,
+                fromName = roster.RowOf(settlement.FromMemberId).DisplayName,
+                toName = roster.RowOf(settlement.ToMemberId).DisplayName,
+            });
+
+            return activityEvent;
+        }
+
         private static ActivityEvent AboutExpense(Guid groupId, Guid actorUserId, ActivityEventType type, Guid expenseId, DateTimeOffset createdAt)
         {
             ActivityEvent activityEvent = New(groupId, actorUserId, type, createdAt);

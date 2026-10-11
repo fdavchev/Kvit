@@ -38,7 +38,7 @@ namespace Kvit.Infrastructure.Persistence
             return exception.InnerException is PostgresException
             {
                 SqlState: PostgresErrorCodes.UniqueViolation,
-                ConstraintName: ExpenseConfiguration.ClientRequestIdIndexName,
+                ConstraintName: ExpenseConfiguration.ClientRequestIdIndexName or SettlementConfiguration.ClientRequestIdIndexName,
             };
         }
     }

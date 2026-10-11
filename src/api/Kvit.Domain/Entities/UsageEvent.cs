@@ -38,6 +38,11 @@ namespace Kvit.Domain.Entities
             return New(userId, UsageEventType.ExpenseAdded, null, occurredAt);
         }
 
+        public static UsageEvent SettlementConfirmed(Guid userId, DateTimeOffset occurredAt)
+        {
+            return New(userId, UsageEventType.SettlementConfirmed, null, occurredAt);
+        }
+
         private static UsageEvent New(Guid userId, UsageEventType type, string? detail, DateTimeOffset occurredAt)
         {
             DateTimeOffset occurredAtUtc = occurredAt.ToUniversalTime();
