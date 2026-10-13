@@ -3,6 +3,11 @@ export const balancesSectionHeadingLook =
 
 export const balancesCardLook = 'rounded-[20px] bg-card px-4 py-3.5 text-card-foreground'
 
+export const balancesActionButtonLook =
+  'min-h-10 w-auto min-w-28 flex-none rounded-full px-3.5 text-[0.9375rem] whitespace-nowrap'
+
+export const balancesTextButtonLook = 'min-h-11 w-auto flex-none px-2 text-[0.9375rem]'
+
 export function amountLookOf(amountMinor: number): string {
   if (amountMinor > 0) {
     return 'text-positive'

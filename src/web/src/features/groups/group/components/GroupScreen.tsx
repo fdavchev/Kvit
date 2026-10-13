@@ -84,7 +84,7 @@ export function GroupScreen() {
             }
           />
         )}
-        {tab === 'balances' && <GroupBalances groupId={group.id} />}
+        {tab === 'balances' && <GroupBalances groupId={group.id} defaultCurrency={group.defaultCurrency} />}
         {tab === 'activity' && <GroupActivity groupId={group.id} />}
         {isAddingName && (
           <AddNameSheet groupId={group.id} onClose={() => setIsAddingName(false)} />

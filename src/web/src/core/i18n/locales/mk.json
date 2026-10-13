@@ -367,6 +367,24 @@
     "kvitHint": "Никој никому не должи.",
     "recordAnother": "Запиши друго плаќање"
   },
+  "settlements": {
+    "markPaid": "Означи платено",
+    "iPaidName": "Платив на {{name}}",
+    "namePaidMe": "{{name}} ми плати",
+    "fromPaidTo": "{{from}} плати на {{to}}",
+    "waitsUntil": "Чека додека {{name}} не потврди. Дотогаш можеш да го откажеш.",
+    "countsRightAway": "Се смета веднаш.",
+    "iPaid": "Јас платив",
+    "someonePaidMe": "Некој ми плати",
+    "whoPaid": "Кој плати",
+    "person": "Лице",
+    "payments": "Плаќања",
+    "deleted": "Плаќањето е избришано",
+    "restored": "Плаќањето е вратено",
+    "confirm": "Потврди",
+    "reject": "Одбиј",
+    "cancel": "Откажи"
+  },
   "categories": {
     "food": "Храна и пијалоци",
     "groceries": "Намирници",

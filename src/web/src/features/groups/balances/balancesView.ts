@@ -8,6 +8,7 @@ import {
   type ExpensePerson,
   type FormerPerson,
 } from '@/features/expenses/shared/expensePeople'
+import type { PaymentToRecord } from '@/features/settlements/record/paymentToRecord'
 import type { Currency } from '@/shared/utils/formatMoney'
 
 export type OwedLine =
@@ -16,9 +17,9 @@ export type OwedLine =
   | { kind: 'allEven' }
 
 export type BalanceCardRow =
-  | { kind: 'youPay'; key: string; other: ExpensePerson; amountMinor: number }
-  | { kind: 'paysYou'; key: string; other: ExpensePerson; amountMinor: number }
-  | { kind: 'youPaid'; key: string; other: ExpensePerson; amountMinor: number }
+  | { kind: 'youPay'; key: string; other: ExpensePerson; amountMinor: number; payment: PaymentToRecord }
+  | { kind: 'paysYou'; key: string; other: ExpensePerson; amountMinor: number; payment: PaymentToRecord }
+  | { kind: 'youPaid'; key: string; other: ExpensePerson; amountMinor: number; settlementId: string }
 
 export interface BalanceCardView {
   currency: Currency
@@ -43,6 +44,17 @@ export interface BetweenOthersView {
   amountMinor: number
   currency: Currency
   isWaiting: boolean
+  canMarkPaid: boolean
+}
+
+export interface ConfirmedPaymentView {
+  settlementId: string
+  payer: ExpensePerson
+  receiver: ExpensePerson
+  amountMinor: number
+  currency: Currency
+  createdAt: string
+  canDelete: boolean
 }
 
 export interface EveryoneRowView {
@@ -56,11 +68,14 @@ export interface EveryoneCardView {
 }
 
 export interface BalancesView {
+  me: GroupMember
   needsYou: NeedsYouView[]
   cards: BalanceCardView[]
   betweenOthers: BetweenOthersView[]
   hasSuggestedPayments: boolean
   everyone: EveryoneCardView[]
+  payments: ConfirmedPaymentView[]
+  hasOtherMembers: boolean
   isKvit: boolean
   isEmpty: boolean
 }
@@ -69,6 +84,7 @@ export function balancesView(
   balances: GroupBalances,
   settlements: readonly Settlement[],
   members: readonly GroupMember[],
+  myUserId: string,
 ): BalancesView {
   const me = members.find((member) => member.isYou)
   if (me === undefined) {
@@ -82,6 +98,7 @@ export function balancesView(
   const myPending = pending.filter((settlement) => settlement.fromMemberId === me.id)
   const isNameOnly = (memberId: string): boolean =>
     members.some((member) => member.id === memberId && member.isNameOnly)
+  const myself = personOf(people, me.id)
 
   const needsYou: NeedsYouView[] = pending
     .filter((settlement) => settlement.toMemberId === me.id || (me.isOwner && isNameOnly(settlement.toMemberId)))
@@ -108,21 +125,26 @@ export function balancesView(
     )
     const suggestedRows: BalanceCardRow[] = myPayments
       .filter((payment) => !pendingPairs.has(pairKey(payment.fromMemberId, payment.toMemberId, currency)))
-      .map((payment): BalanceCardRow =>
-        payment.fromMemberId === me.id
-          ? {
-              kind: 'youPay',
-              key: `pay-${payment.toMemberId}`,
-              other: personOf(people, payment.toMemberId),
-              amountMinor: payment.amountMinor,
-            }
-          : {
-              kind: 'paysYou',
-              key: `get-${payment.fromMemberId}`,
-              other: personOf(people, payment.fromMemberId),
-              amountMinor: payment.amountMinor,
-            },
-      )
+      .map((payment): BalanceCardRow => {
+        if (payment.fromMemberId === me.id) {
+          const receiver = personOf(people, payment.toMemberId)
+          return {
+            kind: 'youPay',
+            key: `pay-${payment.toMemberId}`,
+            other: receiver,
+            amountMinor: payment.amountMinor,
+            payment: { payer: myself, receiver, amountMinor: payment.amountMinor, currency },
+          }
+        }
+        const payer = personOf(people, payment.fromMemberId)
+        return {
+          kind: 'paysYou',
+          key: `get-${payment.fromMemberId}`,
+          other: payer,
+          amountMinor: payment.amountMinor,
+          payment: { payer, receiver: myself, amountMinor: payment.amountMinor, currency },
+        }
+      })
     const pendingRows: BalanceCardRow[] = myPending
       .filter((settlement) => settlement.currency === currency)
       .map((settlement): BalanceCardRow => ({
@@ -130,6 +152,7 @@ export function balancesView(
         key: settlement.id,
         other: personOf(people, settlement.toMemberId),
         amountMinor: settlement.amountMinor,
+        settlementId: settlement.id,
       }))
     return {
       currency,
@@ -142,14 +165,19 @@ export function balancesView(
   const betweenOthers: BetweenOthersView[] = balances.currencies.flatMap((entry) =>
     entry.payments
       .filter((payment) => payment.fromMemberId !== me.id && payment.toMemberId !== me.id)
-      .map((payment): BetweenOthersView => ({
-        key: `${entry.currency}-${payment.fromMemberId}-${payment.toMemberId}`,
-        payer: personOf(people, payment.fromMemberId),
-        receiver: personOf(people, payment.toMemberId),
-        amountMinor: payment.amountMinor,
-        currency: entry.currency,
-        isWaiting: pendingPairs.has(pairKey(payment.fromMemberId, payment.toMemberId, entry.currency)),
-      })),
+      .map((payment): BetweenOthersView => {
+        const isWaiting: boolean = pendingPairs.has(pairKey(payment.fromMemberId, payment.toMemberId, entry.currency))
+        return {
+          key: `${entry.currency}-${payment.fromMemberId}-${payment.toMemberId}`,
+          payer: personOf(people, payment.fromMemberId),
+          receiver: personOf(people, payment.toMemberId),
+          amountMinor: payment.amountMinor,
+          currency: entry.currency,
+          isWaiting,
+          canMarkPaid:
+            me.isOwner && !isWaiting && (isNameOnly(payment.fromMemberId) || isNameOnly(payment.toMemberId)),
+        }
+      }),
   )
 
   const everyone: EveryoneCardView[] = balances.currencies.map((entry): EveryoneCardView => ({
@@ -159,12 +187,28 @@ export function balancesView(
       .map((row): EveryoneRowView => ({ person: personOf(people, row.memberId), balanceMinor: row.balanceMinor })),
   }))
 
+  const payments: ConfirmedPaymentView[] = settlements
+    .filter((settlement) => settlement.status === 'Confirmed')
+    .sort((first, second) => Date.parse(second.createdAt) - Date.parse(first.createdAt))
+    .map((settlement): ConfirmedPaymentView => ({
+      settlementId: settlement.id,
+      payer: personOf(people, settlement.fromMemberId),
+      receiver: personOf(people, settlement.toMemberId),
+      amountMinor: settlement.amountMinor,
+      currency: settlement.currency,
+      createdAt: settlement.createdAt,
+      canDelete: me.isOwner || settlement.recordedByUserId === myUserId,
+    }))
+
   return {
+    me,
     needsYou,
     cards,
     betweenOthers,
     hasSuggestedPayments: balances.currencies.some((entry) => entry.payments.length > 0),
     everyone,
+    payments,
+    hasOtherMembers: members.some((member) => !member.isYou),
     isKvit: balances.isEveryoneKvit && balances.currencies.length > 0,
     isEmpty: cards.length === 0 && needsYou.length === 0,
   }

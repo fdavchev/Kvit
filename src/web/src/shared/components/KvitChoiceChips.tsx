@@ -13,6 +13,7 @@ interface KvitChoiceChipsProps<Value extends string> {
   value: string
   onChange: (value: Value) => void
   chipClassName?: string
+  labelClassName?: string
 }
 
 export function KvitChoiceChips<Value extends string>({
@@ -21,12 +22,13 @@ export function KvitChoiceChips<Value extends string>({
   value,
   onChange,
   chipClassName,
+  labelClassName,
 }: KvitChoiceChipsProps<Value>) {
   const labelId = useId()
 
   return (
     <div role="group" aria-labelledby={labelId} className="flex flex-col">
-      <span id={labelId} className="mb-2 text-[0.9375rem] font-bold">
+      <span id={labelId} className={cn('mb-2 text-[0.9375rem] font-bold', labelClassName)}>
         {label}
       </span>
       <div className="flex flex-wrap gap-2">

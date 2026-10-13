@@ -68,7 +68,7 @@ namespace Kvit.Api.Tests.Settlements
             _app.Clock.Advance(OneMinute);
             Guid middle = await SettlementSteps.PendingBojanToDimeAsync(group);
             _app.Clock.Advance(OneMinute);
-            Guid newest = await SettlementSteps.PendingAnaToMarkoAsync(group);
+            Guid newest = await SettlementSteps.PendingBojanToMarkoAsync(group);
 
             JsonElement settlements = await SettlementSteps.ReadListAsync(group.Owner, group.GroupId);
 

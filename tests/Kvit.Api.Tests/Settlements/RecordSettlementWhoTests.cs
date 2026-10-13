@@ -15,9 +15,11 @@ namespace Kvit.Api.Tests.Settlements
         [InlineData("Bojan", "Ana", "Bojan", "Confirmed")]
         [InlineData("Dime", "Dime", "Ana", "Pending")]
         [InlineData("Dime", "Dime", "Marko", "Pending")]
+        [InlineData("Bojan", "Bojan", "Marko", "Pending")]
         [InlineData("Dime", "Marko", "Dime", "Confirmed")]
         [InlineData("Ana", "Ana", "Bojan", "Pending")]
-        [InlineData("Ana", "Ana", "Marko", "Pending")]
+        [InlineData("Ana", "Ana", "Marko", "Confirmed")]
+        [InlineData("Ana", "Ana", "Cveta", "Confirmed")]
         [InlineData("Ana", "Marko", "Ana", "Confirmed")]
         [InlineData("Ana", "Marko", "Bojan", "Pending")]
         [InlineData("Ana", "Bojan", "Marko", "Confirmed")]
@@ -61,11 +63,11 @@ namespace Kvit.Api.Tests.Settlements
         }
 
         [Fact]
-        public async Task Record_ByThePayerWhoOwesAPlainNameReceiver_IsPendingEvenForTheOwnerBecauseHerOwnRowIsTheSender()
+        public async Task Record_ByAPayerWhoIsNotTheOwnerToAPlainNameReceiver_IsPendingBecauseOnlyTheOwnerCanConfirmForAPlainName()
         {
             SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
 
-            Guid settlementId = await SettlementSteps.PendingAnaToMarkoAsync(group);
+            Guid settlementId = await SettlementSteps.PendingBojanToMarkoAsync(group);
 
             Assert.Equal("Pending", await SettlementRows.ValueAsync(_app, settlementId, "status"));
         }

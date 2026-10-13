@@ -3,17 +3,22 @@ import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { countedText } from '@/core/i18n/pluralForm'
 import type { Language } from '@/core/i18n/language'
+import type { PaymentToRecord } from '@/features/settlements/record/paymentToRecord'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
 import { cn } from '@/shared/utils/cn'
 import { formatMoney } from '@/shared/utils/formatMoney'
 import { formatSignedMoney } from '@/shared/utils/formatSignedMoney'
 import { amountLookOf, balancesCardLook } from '../balancesLooks'
 import type { BalanceCardRow, BalanceCardView, OwedLine } from '../balancesView'
+import { MarkPaidButton } from './MarkPaidButton'
+import { WaitingPaymentRow } from './WaitingPaymentRow'
 
 interface BalanceCardProps {
+  groupId: string
   title: string
   card: BalanceCardView
   language: Language
+  onMarkPaid: (payment: PaymentToRecord) => void
 }
 
 interface RowTexts {
@@ -21,7 +26,7 @@ interface RowTexts {
   detail: string
 }
 
-export function BalanceCard({ title, card, language }: BalanceCardProps) {
+export function BalanceCard({ groupId, title, card, language, onMarkPaid }: BalanceCardProps) {
   const { t } = useTranslation()
   const headingId = useId()
 
@@ -60,6 +65,18 @@ export function BalanceCard({ title, card, language }: BalanceCardProps) {
         <ul className="flex flex-col gap-2.5">
           {card.rows.map((row) => {
             const texts = rowTexts(row)
+            if (row.kind === 'youPaid') {
+              return (
+                <WaitingPaymentRow
+                  key={row.key}
+                  groupId={groupId}
+                  settlementId={row.settlementId}
+                  receiver={row.other}
+                  title={texts.title}
+                  detail={texts.detail}
+                />
+              )
+            }
             return (
               <li key={row.key} className="flex items-center gap-3 border-t border-field-border pt-2.5">
                 <KvitAvatar
@@ -71,6 +88,7 @@ export function BalanceCard({ title, card, language }: BalanceCardProps) {
                   <p className="font-bold break-words">{texts.title}</p>
                   <p className="text-[0.8125rem] text-muted-foreground">{texts.detail}</p>
                 </div>
+                <MarkPaidButton onClick={() => onMarkPaid(row.payment)} />
               </li>
             )
           })}

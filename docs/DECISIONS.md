@@ -4,7 +4,7 @@
 Filip's answers (2026-10-09/10): a **pending payment also blocks** leave, remove and delete group (not only a non-zero balance); **overpaying is allowed** (no cap, a partial amount too); **reject has no reason field**.
 - **Step 1, balances:** `GET /api/groups/{groupId}/balances` returns, per currency (MKD before EUR, only currencies a counted row uses), every member the group ever had in joining order (`isCurrent` false once `removed_at` is set), their balance in minor units, the simplified payments, and `isEveryoneKvit`. Any current member may read it. Rows left behind by "That's me" (`SetAside`) currently show as extra 0 rows; hiding them is not decided yet.
 - **Step 2, settlements (backend):**
-  - **Who acts:** the caller's own row is `to` -> Confirmed at once; own row is `from` -> Pending; otherwise only the owner, for a plain name (`to` plain -> Confirmed, else `from` plain -> Pending); anything else 403 `SETTLEMENT_NOT_ALLOWED`. The own-row rule wins over the owner rule (the owner recording "Ana paid Marko-the-plain-name" is Pending and she confirms it herself).
+  - **Who acts:** the caller's own row is `to` -> Confirmed at once; own row is `from` -> Pending; otherwise only the owner, for a plain name (`to` plain -> Confirmed, else `from` plain -> Pending); anything else 403 `SETTLEMENT_NOT_ALLOWED`. The own-row rule wins over the owner rule, with one exception added in Step 4b: the owner paying a plain name is Confirmed at once (see "Step 4b decisions").
   - Confirm and reject: the receiver, or the owner when the receiver is a plain name. Cancel: the payer, or the owner when the payer is a plain name. Delete (Confirmed only) and restore: whoever recorded it, or the owner. **Undo of a delete has no time limit.**
   - A payment confirmed at once also gets `resolved_by_user_id` (the recorder) and `resolved_at` (creation time). Rejected alternative: leave them empty.
   - Both people must be current members. Duplicate protection like expenses: same `clientRequestId` returns the first payment; two at the same moment both answer 200; another person's or another group's id answers 400 `SETTLEMENT_CLIENT_REQUEST_ID_USED`.
@@ -26,7 +26,16 @@ Filip's answers (2026-10-09/10): a **pending payment also blocks** leave, remove
   - **Needs you** holds only things the person must answer; their own waiting payment is not a to-do. "Needs you" for the group stays on the Balances tab; the Home list across groups waits for the Phase 11 dashboard.
   - **Cache:** new keys under `['groups', id, ...]`; every settlement change refreshes balances, payments, activity and expenses; every expense change refreshes balances.
   - **Colours:** `text-positive` / `text-negative` tokens (contrast 4.9:1 to 8.7:1 on the page and card colours).
-  - **Open:** where a mistaken confirmed payment is deleted (Phase 9 Step 4b); the owner paying a plain name (see Step 4b).
+- **Step 4b decisions (Filip, 2026-10-11, taken from Claude's recommendations):**
+  - **The owner paying a plain name is Confirmed at once** ("I paid Grandma" by the owner). Reason: the owner would otherwise have to confirm their own payment, and the same payment showed twice (Needs you and the owner's card). A non-owner paying a plain name, and the owner paying an account member, stay Pending. One condition in `Settlement.StatusWhenRecordedBy`; backend tests updated first.
+  - **Deleting a mistaken confirmed payment:** a **Payments** list at the bottom of the Balances tab (Confirmed payments, newest first, **Delete** for whoever recorded it and the owner, Undo toast). Rejected: deleting from the Activity tab.
+  - **The Macedonian drafts of Step 4a** (tab «Салда», «Твое салдо», «Должиш на», «ти должи», «Чека на тебе», the payment sentences, …) were approved by Filip on 2026-10-11 by his instruction to follow Claude's recommendations; he did not read them line by line.
+- **Phase 9 code review and Step 4b results (2026-10-13):**
+  - **Delete and Restore of a payment need both people to be current members** (`SETTLEMENT_MEMBER_NOT_CURRENT`, the same code Record uses). Reason: leave and remove need a zero balance, so deleting a confirmed payment of someone who already left would leave a balance nobody can settle and block deleting the group. Order of errors: not allowed, member not current, not confirmed / not deleted. Rejected: a new error code; letting the owner delete anyway.
+  - **Every payment change also refreshes the members list** (the "That's me" rule depends on payments).
+  - **Balances rows are built from the balance list and matched to members by id**; a mismatch throws instead of mislabeling.
+  - **The amount number sits on the left in the two payment sheets** (Filip, 2026-10-13), with a small gap from the border. Add expense and One bill keep it on the right; the switch is that the field has no currency toggle.
+  - **Left in BACKLOG:** same-moment answers to one pending payment, partial-debt rows, retry after delete, unlimited settlements list.
 
 ## 2026-10-09: Phase 8b (saved data shows instantly), in progress
 Filip chose to build this before Phase 9 (it was a Phase 11 line) because the Render wake-up made the app look stuck.

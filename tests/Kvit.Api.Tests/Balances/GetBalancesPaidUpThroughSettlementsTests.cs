@@ -50,7 +50,7 @@ namespace Kvit.Api.Tests.Balances
         }
 
         [Fact]
-        public async Task Get_AfterTwoMkdPaymentsAreSettledAndTheThirdIsStillPending_AnswersTheHandCheckedBalancesAndIsNotKvit()
+        public async Task Get_AfterTwoMkdPaymentsAreSettledAndTheOwnerPaysThePlainNameAtOnce_AnswersZeroMkdBalancesAndIsNotKvitBecauseEurIsOpen()
         {
             ExpenseGroup group = await BalanceScenario.CreateGroupAsync(_app);
             await BalanceScenario.AddMixedExpensesAsync(_app, group);
@@ -60,23 +60,23 @@ namespace Kvit.Api.Tests.Balances
             await SettlementSteps.RecordAsync(group.Owner, group.GroupId, group.OwnerRowId, group.PlainRowIds[1], 10_000);
 
             JsonElement body = await BalanceRequests.ReadBalancedAsync(group.Owner.Client, group.GroupId);
-            Assert.Equal([-10_000L, 0L, 0L, 10_000L], BalanceJson.BalanceMinors(BalanceJson.CurrencyOf(body, "MKD")));
+            JsonElement mkd = BalanceJson.CurrencyOf(body, "MKD");
+            Assert.Equal([0L, 0L, 0L, 0L], BalanceJson.BalanceMinors(mkd));
+            Assert.Empty(BalanceJson.PaymentsOf(mkd));
+            Assert.Equal(BalanceScenario.EurBalancesInJoiningOrder, BalanceJson.BalanceMinors(BalanceJson.CurrencyOf(body, "EUR")));
             Assert.False(body.GetProperty("isEveryoneKvit").GetBoolean());
         }
 
         [Fact]
-        public async Task Get_WhenOnlyTheLastPendingPaymentIsStillOpenAndTheOwnerThenConfirmsItForThePlainNameReceiver_EveryoneBecomesKvit()
+        public async Task Get_WhenTheOwnerRecordsTheLastPaymentToAPlainName_EveryoneBecomesKvitAtOnce()
         {
             ExpenseGroup group = await BalanceScenario.CreateGroupAsync(_app);
             await BalanceScenario.AddMixedExpensesAsync(_app, group);
             await SettleEveryEurPaymentAsync(group);
             await SettlementSteps.RecordAsync(group.Member, group.GroupId, group.PlainRowIds[0], group.MemberRowId, 53_300);
             await SettlementSteps.RecordAsync(group.Member, group.GroupId, group.OwnerRowId, group.MemberRowId, 13_300);
-            Guid last = await SettlementSteps.RecordAsync(group.Owner, group.GroupId, group.OwnerRowId, group.PlainRowIds[1], 10_000);
-            JsonElement beforeConfirm = await BalanceRequests.ReadBalancedAsync(group.Owner.Client, group.GroupId);
-            Assert.False(beforeConfirm.GetProperty("isEveryoneKvit").GetBoolean());
 
-            await SettlementSteps.ConfirmAsync(group.Owner, group.GroupId, last);
+            await SettlementSteps.RecordAsync(group.Owner, group.GroupId, group.OwnerRowId, group.PlainRowIds[1], 10_000);
 
             JsonElement body = await BalanceRequests.ReadBalancedAsync(group.Owner.Client, group.GroupId);
             Assert.True(body.GetProperty("isEveryoneKvit").GetBoolean());
@@ -91,8 +91,7 @@ namespace Kvit.Api.Tests.Balances
 
             await SettlementSteps.RecordAsync(group.Member, group.GroupId, marko, bojan, 53_300);
             await SettlementSteps.RecordAsync(group.Member, group.GroupId, ana, bojan, 13_300);
-            Guid anaPaysCveta = await SettlementSteps.RecordAsync(group.Owner, group.GroupId, ana, cveta, 10_000);
-            await SettlementSteps.ConfirmAsync(group.Owner, group.GroupId, anaPaysCveta);
+            await SettlementSteps.RecordAsync(group.Owner, group.GroupId, ana, cveta, 10_000);
         }
 
         private static async Task SettleEveryEurPaymentAsync(ExpenseGroup group)

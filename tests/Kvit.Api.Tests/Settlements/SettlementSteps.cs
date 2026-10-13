@@ -69,7 +69,12 @@ namespace Kvit.Api.Tests.Settlements
             return RecordAsync(group.Owner, group.GroupId, group.MarkoRowId, group.MemberRowId);
         }
 
-        public static Task<Guid> PendingAnaToMarkoAsync(SettlementGroup group)
+        public static Task<Guid> PendingAnaToBojanAsync(SettlementGroup group)
+        {
+            return RecordAsync(group.Owner, group.GroupId, group.OwnerRowId, group.MemberRowId);
+        }
+
+        public static Task<Guid> ConfirmedAnaToMarkoAsync(SettlementGroup group)
         {
             return RecordAsync(group.Owner, group.GroupId, group.OwnerRowId, group.MarkoRowId);
         }

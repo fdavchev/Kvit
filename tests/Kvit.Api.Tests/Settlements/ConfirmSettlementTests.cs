@@ -58,15 +58,16 @@ namespace Kvit.Api.Tests.Settlements
         }
 
         [Fact]
-        public async Task Confirm_ByTheOwnerWhoIsThePayerToAPlainNameReceiver_Answers204()
+        public async Task Confirm_OwnerPaymentToAPlainNameReceiverThatWasConfirmedAtOnce_Answers400NotPendingAndChangesNothing()
         {
             SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
-            Guid settlementId = await SettlementSteps.PendingAnaToMarkoAsync(group);
+            Guid settlementId = await SettlementSteps.ConfirmedAnaToMarkoAsync(group);
+            string before = await SettlementRows.SnapshotAsync(_app, group.GroupId);
 
             HttpResponseMessage response = await SettlementRequests.ConfirmAsync(group.Owner.Client, group.GroupId, settlementId);
 
-            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-            Assert.Equal("Confirmed", await SettlementRows.ValueAsync(_app, settlementId, "status"));
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, ResultCodes.SETTLEMENT_NOT_PENDING);
+            Assert.Equal(before, await SettlementRows.SnapshotAsync(_app, group.GroupId));
         }
 
         [Fact]

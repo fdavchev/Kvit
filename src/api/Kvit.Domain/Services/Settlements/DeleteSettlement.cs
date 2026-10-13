@@ -26,14 +26,14 @@ namespace Kvit.Domain.Services.Settlements
             }
 
             Settlement settlement = foundSettlement.Value;
+            GroupRoster roster = await _members.RosterOfAsync(groupId, cancellationToken);
             DateTimeOffset now = _timeProvider.GetUtcNow();
-            Result deleted = settlement.Delete(userId, found.Value.OwnerUserId, now);
+            Result deleted = settlement.Delete(roster, userId, found.Value.OwnerUserId, now);
             if (!deleted.IsSuccess)
             {
                 return deleted;
             }
 
-            GroupRoster roster = await _members.RosterOfAsync(groupId, cancellationToken);
             _activityEvents.Add(ActivityEvent.SettlementDeleted(userId, settlement, roster, now));
 
             return Result.Ok();

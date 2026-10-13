@@ -26,13 +26,13 @@ namespace Kvit.Domain.Services.Settlements
             }
 
             Settlement settlement = foundSettlement.Value;
-            Result restored = settlement.Restore(userId, found.Value.OwnerUserId);
+            GroupRoster roster = await _members.RosterOfAsync(groupId, cancellationToken);
+            Result restored = settlement.Restore(roster, userId, found.Value.OwnerUserId);
             if (!restored.IsSuccess)
             {
                 return restored;
             }
 
-            GroupRoster roster = await _members.RosterOfAsync(groupId, cancellationToken);
             _activityEvents.Add(ActivityEvent.SettlementRestored(userId, settlement, roster, _timeProvider.GetUtcNow()));
 
             return Result.Ok();

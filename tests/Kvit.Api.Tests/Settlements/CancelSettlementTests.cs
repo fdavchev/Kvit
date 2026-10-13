@@ -25,7 +25,7 @@ namespace Kvit.Api.Tests.Settlements
         public async Task Cancel_ByTheOwnerWhoIsThePayer_Answers204()
         {
             SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
-            Guid settlementId = await SettlementSteps.PendingAnaToMarkoAsync(group);
+            Guid settlementId = await SettlementSteps.PendingAnaToBojanAsync(group);
 
             HttpResponseMessage response = await SettlementRequests.CancelAsync(group.Owner.Client, group.GroupId, settlementId);
 

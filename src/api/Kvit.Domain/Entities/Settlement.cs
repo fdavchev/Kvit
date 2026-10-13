@@ -142,12 +142,18 @@ namespace Kvit.Domain.Entities
             return Resolve(SettlementStatus.Cancelled, byUserId, cancelledAt);
         }
 
-        public Result Delete(Guid byUserId, Guid groupOwnerUserId, DateTimeOffset deletedAt)
+        public Result Delete(GroupRoster roster, Guid byUserId, Guid groupOwnerUserId, DateTimeOffset deletedAt)
         {
             Result allowed = CheckRecorderOrOwner(byUserId, groupOwnerUserId);
             if (!allowed.IsSuccess)
             {
                 return allowed;
+            }
+
+            Result bothCurrent = CheckBothSidesCurrent(roster);
+            if (!bothCurrent.IsSuccess)
+            {
+                return bothCurrent;
             }
 
             if (Status != SettlementStatus.Confirmed)
@@ -161,12 +167,18 @@ namespace Kvit.Domain.Entities
             return Result.Ok();
         }
 
-        public Result Restore(Guid byUserId, Guid groupOwnerUserId)
+        public Result Restore(GroupRoster roster, Guid byUserId, Guid groupOwnerUserId)
         {
             Result allowed = CheckRecorderOrOwner(byUserId, groupOwnerUserId);
             if (!allowed.IsSuccess)
             {
                 return allowed;
+            }
+
+            Result bothCurrent = CheckBothSidesCurrent(roster);
+            if (!bothCurrent.IsSuccess)
+            {
+                return bothCurrent;
             }
 
             if (DeletedAt is null)
@@ -215,7 +227,8 @@ namespace Kvit.Domain.Entities
 
             if (from.UserId == userId)
             {
-                return Result.Ok(SettlementStatus.Pending);
+                bool isOwnerPayingAPlainName = userId == groupOwnerUserId && to.UserId is null;
+                return Result.Ok(isOwnerPayingAPlainName ? SettlementStatus.Confirmed : SettlementStatus.Pending);
             }
 
             if (userId == groupOwnerUserId && to.UserId is null)
@@ -250,6 +263,21 @@ namespace Kvit.Domain.Entities
             if (RecordedByUserId != userId && groupOwnerUserId != userId)
             {
                 return Result.Forbid($"Only the person who recorded payment {Id} or the owner of its group can do this.", ResultCodes.SETTLEMENT_NOT_ALLOWED);
+            }
+
+            return Result.Ok();
+        }
+
+        private Result CheckBothSidesCurrent(GroupRoster roster)
+        {
+            if (!roster.FindCurrent(FromMemberId).IsSuccess)
+            {
+                return MemberNotCurrent<Settlement>(FromMemberId);
+            }
+
+            if (!roster.FindCurrent(ToMemberId).IsSuccess)
+            {
+                return MemberNotCurrent<Settlement>(ToMemberId);
             }
 
             return Result.Ok();

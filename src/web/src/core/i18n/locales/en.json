@@ -367,6 +367,24 @@
     "kvitHint": "Nobody owes anything.",
     "recordAnother": "Record another payment"
   },
+  "settlements": {
+    "markPaid": "Mark paid",
+    "iPaidName": "I paid {{name}}",
+    "namePaidMe": "{{name}} paid me",
+    "fromPaidTo": "{{from}} paid {{to}}",
+    "waitsUntil": "Waits until {{name}} confirms. You can cancel until then.",
+    "countsRightAway": "Counts right away.",
+    "iPaid": "I paid",
+    "someonePaidMe": "Someone paid me",
+    "whoPaid": "Who paid",
+    "person": "Person",
+    "payments": "Payments",
+    "deleted": "Payment deleted",
+    "restored": "Payment restored",
+    "confirm": "Confirm",
+    "reject": "Reject",
+    "cancel": "Cancel"
+  },
   "categories": {
     "food": "Food & drinks",
     "groceries": "Groceries",

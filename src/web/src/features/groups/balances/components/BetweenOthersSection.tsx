@@ -1,17 +1,20 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Language } from '@/core/i18n/language'
+import type { PaymentToRecord } from '@/features/settlements/record/paymentToRecord'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
 import { formatMoney } from '@/shared/utils/formatMoney'
 import { balancesSectionHeadingLook } from '../balancesLooks'
 import type { BetweenOthersView } from '../balancesView'
+import { MarkPaidButton } from './MarkPaidButton'
 
 interface BetweenOthersSectionProps {
   items: readonly BetweenOthersView[]
   language: Language
+  onMarkPaid: (payment: PaymentToRecord) => void
 }
 
-export function BetweenOthersSection({ items, language }: BetweenOthersSectionProps) {
+export function BetweenOthersSection({ items, language, onMarkPaid }: BetweenOthersSectionProps) {
   const { t } = useTranslation()
   const headingId = useId()
 
@@ -40,6 +43,18 @@ export function BetweenOthersSection({ items, language }: BetweenOthersSectionPr
                 )}
               </p>
             </div>
+            {item.canMarkPaid && (
+              <MarkPaidButton
+                onClick={() =>
+                  onMarkPaid({
+                    payer: item.payer,
+                    receiver: item.receiver,
+                    amountMinor: item.amountMinor,
+                    currency: item.currency,
+                  })
+                }
+              />
+            )}
           </li>
         ))}
       </ul>

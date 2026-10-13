@@ -52,11 +52,18 @@ namespace Kvit.Application.Queries.Balances
 
         private static CurrencyBalancesResponse CurrencyBalancesResponseOf(Currency currency, IReadOnlyList<MemberBalance> balances, IReadOnlyList<BalanceMemberDto> members)
         {
-            List<MemberBalanceRow> rows = [.. balances.Zip(members, (balance, member) => new MemberBalanceRow(
-                balance.MemberId,
-                member.Name,
-                balance.Balance.MinorUnits,
-                member.IsCurrent))];
+            if (balances.Count != members.Count)
+            {
+                throw new InvalidOperationException($"The {currency} balances have {balances.Count} rows but the group has {members.Count} counted members.");
+            }
+
+            Dictionary<Guid, BalanceMemberDto> membersById = members.ToDictionary(member => member.MemberId);
+            List<MemberBalanceRow> rows = [.. balances.Select(balance =>
+            {
+                BalanceMemberDto member = membersById.GetValueOrDefault(balance.MemberId)
+                    ?? throw new InvalidOperationException($"The {currency} balance of member {balance.MemberId} has no matching counted member in the group.");
+                return new MemberBalanceRow(balance.MemberId, member.Name, balance.Balance.MinorUnits, member.IsCurrent);
+            })];
             List<PaymentRow> payments = [.. DebtSimplifier.Simplify(balances).Select(payment => new PaymentRow(
                 payment.FromMemberId,
                 payment.ToMemberId,

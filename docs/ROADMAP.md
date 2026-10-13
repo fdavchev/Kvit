@@ -137,14 +137,16 @@ Put the skeleton online early, so the hosting traps show up before there are fea
 Moved forward from Phase 11 because the Render wake-up (about 22 s) made the app look stuck.
 - [x] **Done 2026-10-09 (VERIFIED by automated test, frontend 4481).** TanStack Query cache saved to IndexedDB (24 hours, version string), `me` included, one-person rule (log-out, 401 or another person wipes the saved copy), screens show at once while `/api/me` is re-checked once per app open
 - [x] **Done 2026-10-09 (VERIFIED by automated test).** "Updating…" note (EN + MK) above the bottom tab bar, a 3-second limit on reading the saved copy, one "server may be waking up" message for 502/503/504 and no answer
-- [ ] **Filip:** real-browser and phone check (see STATUS), then commit, push, open the pull request, see CI go green, merge into `main`
+- [x] **Merged (PR #11).** Filip: real-browser and phone check, commit, push, merge
 
 ## Phase 9: Balances + settle up · `feat/09-settle-up`
-- [ ] Balances per currency; "who pays whom"
-- [ ] Pass `Balances.Calculate` every member the group has ever had, **including removed and left members** (`removed_at` set), in joining order; otherwise it throws by design (see `reports/2026-09-29-phase-03-money-core.md`, follow-up)
-- [ ] Settlements: record, confirm, reject, cancel, delete; owner acts for plain names
-- [ ] Zero-balance rules for leave / remove / delete group
-- [ ] Screens 11, 12; "Needs you" items for pending payments
+- [x] **Done 2026-10-13 (VERIFIED by automated test).** Balances per currency; "who pays whom"
+- [x] **Done 2026-10-13 (VERIFIED by automated test).** `Balances.Calculate` gets every member the group has ever had, including removed and left members
+- [x] **Done 2026-10-13 (VERIFIED by automated test and live run).** Settlements: record, confirm, reject, cancel, delete, Undo; owner acts for plain names
+- [x] **Done 2026-10-13 (VERIFIED by automated test).** Zero-balance rules for leave / remove / delete group
+- [x] **Done 2026-10-13 (VERIFIED by live run, local, 360 px).** Screens 11, 12; "Needs you" items for pending payments
+- [x] **Code review done 2026-10-13:** 3 fixes made, the rest in BACKLOG. Report: `reports/2026-10-13-phase-09-settle-up.md`; guide: `guides/phase-09-settle-up.md`
+- [ ] **Filip:** commit, push, open the pull request, see CI go green, merge into `main` (CI applies the `Settlements` migration on Neon)
 
 ## Phase 10: Finishing groups · `feat/10-finish-groups`
 - [ ] Closing: start, confirm, object (with reason), cancel on any change, lazy 24-hour finish
