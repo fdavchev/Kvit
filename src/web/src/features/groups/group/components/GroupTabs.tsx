@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { routes } from '@/core/router/routes'
 
-export type GroupTab = 'expenses' | 'activity'
+export type GroupTab = 'expenses' | 'balances' | 'activity'
 
 interface GroupTabsProps {
   groupId: string
@@ -16,6 +16,7 @@ export function GroupTabs({ groupId, currentTab }: GroupTabsProps) {
   const { t } = useTranslation()
   const tabs: readonly { tab: GroupTab; to: string; label: string }[] = [
     { tab: 'expenses', to: routes.group(groupId), label: t('expenses.title') },
+    { tab: 'balances', to: routes.groupBalances(groupId), label: t('balances.title') },
     { tab: 'activity', to: routes.groupActivity(groupId), label: t('activity.title') },
   ]
 

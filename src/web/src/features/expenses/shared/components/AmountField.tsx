@@ -1,13 +1,14 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Currency } from '@/shared/utils/formatMoney'
+import { cn } from '@/shared/utils/cn'
 import { parseMoneyInput } from '@/shared/utils/parseMoneyInput'
 
 interface AmountFieldProps {
   amountText: string
   currency: Currency
   onAmountTextChange: (amountText: string) => void
-  onCurrencyChange: (currency: Currency) => void
+  onCurrencyChange?: (currency: Currency) => void
 }
 
 const otherCurrency: Record<Currency, Currency> = { MKD: 'EUR', EUR: 'MKD' }
@@ -32,16 +33,23 @@ export function AmountField({ amountText, currency, onAmountTextChange, onCurren
         value={amountText}
         aria-invalid={isAmountInvalid}
         onChange={(event) => onAmountTextChange(event.target.value)}
-        className="-mx-0.5 w-full min-w-0 flex-1 rounded-[14px] border-2 border-transparent bg-transparent py-0.5 text-right text-5xl font-extrabold tracking-[-0.02em] text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-offset-0 aria-invalid:border-destructive"
+        className={cn(
+          '-mx-0.5 w-full min-w-0 flex-1 rounded-[14px] border-2 border-transparent bg-transparent py-0.5 text-5xl font-extrabold tracking-[-0.02em] text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-offset-0 aria-invalid:border-destructive',
+          onCurrencyChange === undefined ? 'pl-3 text-left' : 'text-right',
+        )}
       />
-      <button
-        type="button"
-        aria-label={t('expense.currencyToggle', { currency })}
-        onClick={() => onCurrencyChange(otherCurrency[currency])}
-        className="pressable min-h-11 flex-none rounded-full border border-field-border bg-field px-3 text-lg font-bold text-muted-foreground"
-      >
-        {currency}
-      </button>
+      {onCurrencyChange === undefined ? (
+        <span className="flex-none px-1 text-lg font-bold text-muted-foreground">{currency}</span>
+      ) : (
+        <button
+          type="button"
+          aria-label={t('expense.currencyToggle', { currency })}
+          onClick={() => onCurrencyChange(otherCurrency[currency])}
+          className="pressable min-h-11 flex-none rounded-full border border-field-border bg-field px-3 text-lg font-bold text-muted-foreground"
+        >
+          {currency}
+        </button>
+      )}
     </div>
   )
 }

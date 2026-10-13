@@ -1,0 +1,50 @@
+using Kvit.Domain.Entities;
+using Kvit.Domain.MoneyRules;
+using Microsoft.EntityFrameworkCore;
+
+namespace Kvit.Infrastructure.Persistence
+{
+    public static class BalanceQueries
+    {
+        public static async Task<List<BalanceExpense>> CountedBalanceExpensesOfAsync(this AppDbContext context, Guid groupId, CancellationToken cancellationToken)
+        {
+            List<Expense> expenses = await context.Expenses
+                .AsNoTracking()
+                .Include(expense => expense.Shares)
+                .Where(expense => expense.GroupId == groupId && expense.DeletedAt == null)
+                .ToListAsync(cancellationToken);
+
+            return [.. expenses.Select(BalanceExpenseOf)];
+        }
+
+        public static async Task<List<BalanceSettlement>> CountedBalanceSettlementsOfAsync(this AppDbContext context, Guid groupId, CancellationToken cancellationToken)
+        {
+            List<Settlement> settlements = await context.Settlements
+                .AsNoTracking()
+                .Where(settlement => settlement.GroupId == groupId && settlement.DeletedAt == null)
+                .ToListAsync(cancellationToken);
+
+            return [.. settlements.Select(BalanceSettlementOf)];
+        }
+
+        private static BalanceExpense BalanceExpenseOf(Expense expense)
+        {
+            List<SplitShare> shares = [.. expense.Shares.Select(share => new SplitShare(
+                share.MemberId,
+                share.InputValue,
+                Money.Create(share.ShareMinor, expense.Currency).Value))];
+
+            return new BalanceExpense(expense.PaidByMemberId, Money.Create(expense.AmountMinor, expense.Currency).Value, shares, expense.DeletedAt is not null);
+        }
+
+        private static BalanceSettlement BalanceSettlementOf(Settlement settlement)
+        {
+            return new BalanceSettlement(
+                settlement.FromMemberId,
+                settlement.ToMemberId,
+                Money.Create(settlement.AmountMinor, settlement.Currency).Value,
+                settlement.Status,
+                settlement.DeletedAt is not null);
+        }
+    }
+}

@@ -12,13 +12,17 @@ import {
   editCases,
   editedEventOf,
   editedEventWithoutCurrencyOf,
+  markoPaidFilipEventData,
   numberEvents,
   sentenceCases,
+  settlementEventOf,
+  settlementEventTypes,
   type ActivityEventJson,
 } from '@/test/activityTestData'
 import {
   activityRowOf,
   activityTab,
+  balancesTab,
   expensesTab,
   renderGroupApp,
   sentenceElement,
@@ -137,7 +141,7 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
   })
 
   describe('the pill switch', () => {
-    it.each(languages)('shows two links, Expenses and then Activity, under the Members and Settings links (%s)', async (language) => {
+    it.each(languages)('shows three links, Expenses, Balances and then Activity, under the Members and Settings links (%s)', async (language) => {
       await renderGroupApp(routes.group(groupId), { language })
       await showsGroupScreen()
 
@@ -146,7 +150,8 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
 
       expect(isBefore(members, expensesTab(language))).toBe(true)
       expect(isBefore(settings, expensesTab(language))).toBe(true)
-      expect(isBefore(expensesTab(language), activityTab(language))).toBe(true)
+      expect(isBefore(expensesTab(language), balancesTab(language))).toBe(true)
+      expect(isBefore(balancesTab(language), activityTab(language))).toBe(true)
     })
 
     it('links Expenses to the group and Activity to its activity address', async () => {
@@ -1191,19 +1196,152 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
     })
   })
 
+  describe('the sentences of the payment events', () => {
+    const settlementFieldsPerType: [string, string[]][] = [
+      ['SettlementRecorded', ['fromName', 'toName', 'amountMinor', 'currency']],
+      ['SettlementConfirmed', ['fromName', 'toName', 'amountMinor', 'currency']],
+      ['SettlementRejected', ['fromName', 'toName', 'amountMinor', 'currency']],
+      ['SettlementCancelled', ['toName', 'amountMinor', 'currency']],
+      ['SettlementDeleted', ['fromName', 'toName', 'amountMinor', 'currency']],
+      ['SettlementRestored', ['fromName', 'toName', 'amountMinor', 'currency']],
+    ]
+    const missingFieldCases: [string, string][] = settlementFieldsPerType.flatMap(([type, fields]) =>
+      fields.map((field): [string, string] => [type, field]),
+    )
+
+    async function expectCrashNaming(
+      consoleError: MockInstance<typeof console.error>,
+      fragments: string[],
+    ): Promise<void> {
+      expect((await screen.findByRole('alert')).textContent).toContain(translated('en', 'errors.generic'))
+      await waitFor(() => {
+        expect(
+          crashErrors(consoleError).some((error) => fragments.every((fragment) => error.message.includes(fragment))),
+        ).toBe(true)
+      })
+    }
+
+    it('writes the English payment sentences the way Filip approved them', async () => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        events: settlementEventTypes.map((type) => settlementEventOf(type)),
+      })
+
+      expect(await screen.findByText('Ana recorded a payment: Marko paid Filip 800 MKD', { normalizer: plainSpaces })).toBeTruthy()
+      expect(screen.getByText('Ana confirmed that Marko paid Filip 800 MKD', { normalizer: plainSpaces })).toBeTruthy()
+      expect(screen.getByText("Ana rejected Marko's payment of 800 MKD to Filip", { normalizer: plainSpaces })).toBeTruthy()
+      expect(screen.getByText('Ana cancelled the payment of 800 MKD to Filip', { normalizer: plainSpaces })).toBeTruthy()
+      expect(screen.getByText('Ana deleted the payment of 800 MKD from Marko to Filip', { normalizer: plainSpaces })).toBeTruthy()
+      expect(screen.getByText('Ana restored the payment of 800 MKD from Marko to Filip', { normalizer: plainSpaces })).toBeTruthy()
+    })
+
+    it('writes the amount of a payment in the currency of the payment, not the currency of the group', async () => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        group: groupOf({ defaultCurrency: 'MKD' }),
+        events: [settlementEventOf('SettlementRecorded', { ...markoPaidFilipEventData, amountMinor: 2000, currency: 'EUR' })],
+      })
+
+      expect(
+        await screen.findByText('Ana recorded a payment: Marko paid Filip €20.00', { normalizer: plainSpaces }),
+      ).toBeTruthy()
+    })
+
+    it('writes the names of the two people from the data of the event, not the name of the person who did it', async () => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        events: [
+          activityEventOf({
+            type: 'SettlementRecorded',
+            actorName: 'Filip',
+            data: { ...markoPaidFilipEventData, toName: 'Grandma' },
+          }),
+        ],
+      })
+
+      expect(
+        await screen.findByText('Filip recorded a payment: Marko paid Grandma 800 MKD', { normalizer: plainSpaces }),
+      ).toBeTruthy()
+    })
+
+    it.each(settlementEventTypes)('shows the %s event without a link, because it is not about one expense', async (type) => {
+      await renderGroupApp(routes.groupActivity(groupId), { events: [settlementEventOf(type)] })
+      const sentence = await screen.findByText(/^Ana /)
+
+      expect(sentence.closest('a')).toBeNull()
+    })
+
+    it('shows one row for each payment event, in the order of the answer', async () => {
+      await renderGroupApp(routes.groupActivity(groupId), {
+        events: [settlementEventOf('SettlementConfirmed'), settlementEventOf('SettlementRecorded')],
+      })
+      const confirmed = 'Ana confirmed that Marko paid Filip 800 MKD'
+      const recorded = 'Ana recorded a payment: Marko paid Filip 800 MKD'
+      await screen.findByText(confirmed, { normalizer: plainSpaces })
+
+      expect(isBefore(sentenceElement(confirmed), sentenceElement(recorded))).toBe(true)
+      expect(activityRowOf(confirmed)).not.toBe(activityRowOf(recorded))
+    })
+
+    it.each(settlementEventTypes)('stops with an error that names the event type when the %s event has no data', async (type) => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      await renderGroupApp(routes.groupActivity(groupId), {
+        events: [activityEventOf({ type, data: null })],
+      })
+
+      await expectCrashNaming(consoleError, [type, 'has no data'])
+    })
+
+    it.each(missingFieldCases)('stops with an error that names the event type and the field when the data of the %s event lacks "%s"', async (type, field) => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const data = Object.fromEntries(Object.entries(markoPaidFilipEventData).filter(([name]) => name !== field))
+      await renderGroupApp(routes.groupActivity(groupId), { events: [settlementEventOf(type, data)] })
+
+      await expectCrashNaming(consoleError, [type, field])
+    })
+
+    it.each([
+      ['amountMinor', '80000'],
+      ['amountMinor', 800.5],
+      ['amountMinor', -80000],
+      ['amountMinor', null],
+      ['currency', 'USD'],
+      ['currency', 'mkd'],
+      ['fromName', 5],
+      ['toName', null],
+    ])('stops with an error that names the event type and the field when "%s" in the data of a payment event is %j', async (field, value) => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      await renderGroupApp(routes.groupActivity(groupId), {
+        events: [settlementEventOf('SettlementConfirmed', { ...markoPaidFilipEventData, [field]: value })],
+      })
+
+      await expectCrashNaming(consoleError, ['SettlementConfirmed', field])
+    })
+
+    it('shows no sentence at all, not even the one before it, when a payment event cannot be written', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      await renderGroupApp(routes.groupActivity(groupId), {
+        events: [
+          activityEventOf({ type: 'GroupCreated', data: { name: 'Greece trip' } }),
+          activityEventOf({ type: 'SettlementRecorded', data: null }),
+        ],
+      })
+
+      await expectCrashNaming(consoleError, ['SettlementRecorded', 'has no data'])
+      expect(screen.queryByText('Ana created the group')).toBeNull()
+    })
+  })
+
   describe('an event that Kvit has no sentence for', () => {
     it('stops with an error that names the event type and shows the generic error instead of skipping the event', async () => {
       const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
       await renderGroupApp(routes.groupActivity(groupId), {
         events: [
           activityEventOf({ type: 'GroupCreated', data: { name: 'Greece trip' } }),
-          activityEventOf({ type: 'SettlementRecorded' }),
+          activityEventOf({ type: 'SomethingNewHappened' }),
         ],
       })
 
       expect((await screen.findByRole('alert')).textContent).toContain(translated('en', 'errors.generic'))
       await waitFor(() => {
-        expect(crashErrors(consoleError).some((error) => error.message.includes('SettlementRecorded'))).toBe(true)
+        expect(crashErrors(consoleError).some((error) => error.message.includes('SomethingNewHappened'))).toBe(true)
       })
       expect(screen.queryByText('Ana created the group')).toBeNull()
     })

@@ -35,4 +35,16 @@ export const endpoints = {
     `/api/groups/${groupId}/expenses/${expenseId}`,
   groupExpenseRestore: (groupId: string, expenseId: string) =>
     `/api/groups/${groupId}/expenses/${expenseId}/restore`,
+  groupBalances: (groupId: string) => `/api/groups/${groupId}/balances`,
+  groupSettlements: (groupId: string) => `/api/groups/${groupId}/settlements`,
+  groupSettlement: (groupId: string, settlementId: string) =>
+    `/api/groups/${groupId}/settlements/${settlementId}`,
+  groupSettlementConfirm: (groupId: string, settlementId: string) =>
+    `/api/groups/${groupId}/settlements/${settlementId}/confirm`,
+  groupSettlementReject: (groupId: string, settlementId: string) =>
+    `/api/groups/${groupId}/settlements/${settlementId}/reject`,
+  groupSettlementCancel: (groupId: string, settlementId: string) =>
+    `/api/groups/${groupId}/settlements/${settlementId}/cancel`,
+  groupSettlementRestore: (groupId: string, settlementId: string) =>
+    `/api/groups/${groupId}/settlements/${settlementId}/restore`,
 } as const

@@ -44,6 +44,7 @@ describe('useClaimName', () => {
     ['the members of the group', ['groups', testGroupId, 'members']],
     ['the group list', ['groups']],
     ['the activity of the group', ['groups', testGroupId, 'activity']],
+    ['the balances of the group', ['groups', testGroupId, 'balances']],
   ])('marks %s as out of date after the change so it is loaded again', async (_name, queryKey) => {
     stubFetch(new Response(null, { status: 204 }))
     const { result, queryClient } = await renderHookWithProviders(() => useClaimName(testGroupId), {
@@ -71,6 +72,7 @@ describe('useClaimName', () => {
     expect(queryClient.getQueryState(['groups', testGroupId])?.isInvalidated).toBe(false)
     expect(queryClient.getQueryState(['groups', testGroupId, 'members'])?.isInvalidated).toBe(false)
     expect(queryClient.getQueryState(['groups', testGroupId, 'activity'])?.isInvalidated).toBe(false)
+    expect(queryClient.getQueryState(['groups', testGroupId, 'balances'])?.isInvalidated).toBe(false)
     expect(queryClient.getQueryState(['groups'])?.isInvalidated).toBe(false)
   })
 

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit: Balances tab, final design (mockup)</title>
+<link rel="stylesheet" href="../2026-10-01-round-3/source/palette.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/base.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/app.css">
+<style>
+  html, body { background: #e9e6e1; color: #222; height: auto; min-height: 100%; overflow: auto; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; padding: 10px 16px 2px; font-size: .9rem; }
+  .bar .grp { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .bar b { margin-right: 4px; }
+  .bar button { border: 1px solid #999; background: #fff; color: #222; border-radius: 8px; padding: 6px 10px; font: inherit; cursor: pointer; width: auto; min-height: 0; display: inline-block; }
+  .bar button[aria-pressed='true'] { background: #222; color: #fff; border-color: #222; }
+  .note2 { max-width: 760px; margin: 6px auto 10px; text-align: center; font-size: .9rem; color: #444; padding: 0 16px; min-height: 3em; }
+  .stage { display: flex; justify-content: center; padding: 0 16px 24px; }
+  .phone { position: relative; width: 360px; height: min(780px, calc(100vh - 150px)); min-height: 420px; overflow: hidden; border-radius: 28px; box-shadow: 0 6px 24px rgba(0,0,0,.25);
+    --bg: var(--orange-200); --ink: var(--orange-950); --ink-soft: var(--orange-900); --primary: var(--orange-deep); --primary-ink: #fff;
+    --card: var(--orange-50); --field-line: var(--orange-line); --pill: #fff; --track: var(--orange-50); --plus: #1d6b2e; --minus: #b71f1f;
+    background: var(--bg); color: var(--ink); }
+  .phone.dark { --bg: var(--dark-bg); --ink: var(--orange-50); --ink-soft: var(--orange-200); --primary: var(--dark-button); --primary-ink: var(--dark-bg);
+    --card: var(--dark-raised); --field-line: var(--dark-line); --pill: #351f1b; --track: var(--dark-raised); --plus: #7fd68f; --minus: #ff9a9a; }
+  .screen { display: block; min-height: 0; box-sizing: border-box; height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 8px 24px 120px; scrollbar-width: thin; scrollbar-color: rgba(128,128,128,.5) transparent; }
+  .back { border: 0; background: transparent; color: var(--ink); font: inherit; font-weight: 600; min-height: 44px; padding: 0; width: auto; display: inline-block; cursor: pointer; }
+  .center { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .emoji { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 22px; font-size: 2.2rem; background: var(--orange-deep); }
+  .h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+  .soft { color: var(--ink-soft); font-size: .9375rem; }
+  .small { font-size: .8125rem; color: var(--ink-soft); }
+  .seg { display: flex; padding: 4px; border-radius: 999px; background: var(--card); gap: 2px; margin: 14px 0 16px; }
+  .seg span { flex: 1; min-height: 44px; display: grid; place-items: center; border-radius: 999px; color: var(--ink-soft); font-weight: 700; }
+  .seg span.on { background: var(--pill); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .phone.dark .seg { box-shadow: inset 0 0 0 1px var(--field-line); }
+  .btn { display: inline-flex; width: auto; flex: none; border: 0; border-radius: 999px; min-height: 44px; padding: 0 16px; white-space: nowrap; font: inherit; font-weight: 700; background: var(--primary); color: var(--primary-ink); cursor: pointer; }
+  .btn.sm { min-height: 40px; padding: 0 14px; font-size: .9rem; }
+  .btn.out { background: transparent; color: var(--ink); border: 1.5px solid var(--field-line); }
+  .btn.wine { background: transparent; color: var(--minus); border: 1.5px solid var(--minus); }
+  .card { background: var(--card); border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .sec { font-size: .8125rem; font-weight: 700; color: var(--ink-soft); margin: 6px 4px 8px; text-transform: uppercase; letter-spacing: .04em; }
+  .row { display: flex; align-items: center; gap: 12px; }
+  .row .g { flex: 1; min-width: 0; }
+  .av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: var(--ink); color: var(--bg); flex: none; }
+  .pos { color: var(--plus); font-weight: 800; white-space: nowrap; } .neg { color: var(--minus); font-weight: 800; white-space: nowrap; }
+  .big { font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; }
+  .pay { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 16px; background: var(--card); margin-bottom: 8px; }
+  .pay .g { flex: 1; min-width: 0; }
+  .t { font-weight: 600; font-size: .95rem; }
+  .kvit { text-align: center; padding: 18px 8px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .link { background: none; border: 0; color: var(--ink); font: inherit; font-weight: 600; text-decoration: underline; padding: 10px 0; cursor: pointer; width: auto; display: inline-block; }
+  .fab { position: absolute; right: 20px; bottom: 24px; width: 60px; height: 60px; border-radius: 20px; cursor: pointer; padding: 0; display: grid; place-items: center; min-height: 60px;
+    font-size: 2rem; line-height: 1; font-weight: 400;
+    background: color-mix(in srgb, var(--primary) 58%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6);
+    border: 1px solid color-mix(in srgb, var(--primary-ink) 30%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(0,0,0,.12), 0 6px 18px rgba(0,0,0,.28); }
+  .fab span { color: var(--ink); font-weight: 500; }
+  .phone:not(.dark) .fab span { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-end; }
+  .scrim.open { display: flex; }
+  .sheet { width: 100%; background: var(--bg); border-radius: 24px 24px 0 0; padding: 18px 24px 26px; display: flex; flex-direction: column; gap: 12px; }
+  .field { display: flex; flex-direction: row; background: var(--pill); color: var(--ink); border: 1.5px solid var(--field-line); border-radius: 14px; padding: 12px 14px; font-size: 1.4rem; font-weight: 800; justify-content: space-between; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--field-line); border-radius: 999px; padding: 8px 14px; font-weight: 600; color: var(--ink); }
+  .chip.on { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+
+  .btn.glass { background: color-mix(in srgb, var(--primary) 55%, transparent); color: var(--ink);
+    -webkit-backdrop-filter: blur(12px) saturate(1.6); backdrop-filter: blur(12px) saturate(1.6);
+    border: 1px solid color-mix(in srgb, var(--primary-ink) 32%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.1), 0 3px 10px rgba(0,0,0,.2); }
+  .phone:not(.dark) .btn.glass { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .btn.glass.wine { background: color-mix(in srgb, var(--minus) 14%, transparent); color: var(--minus); border: 1.5px solid var(--minus); box-shadow: none; text-shadow: none; }
+  .sheet { background: color-mix(in srgb, var(--bg) 70%, transparent) !important; -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5); border-top: 1px solid color-mix(in srgb, var(--ink) 18%, transparent); box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
+  .wait { display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--field-line); padding-top: 10px; }
+  .tag { display: inline-block; font-size: .72rem; font-weight: 700; border-radius: 999px; padding: 2px 8px; background: var(--pill); color: var(--ink); }
+  .linkbtn { background: none; border: 0; color: var(--ink); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; width: auto; display: inline-block; padding: 8px 4px; }
+
+  .btn { align-items: center; justify-content: center; text-align: center; }
+  .btn.sm { min-width: 112px; }
+  .wait .g { flex: 1; min-width: 0; }
+  .phone:not(.dark) .btn.glass { background: color-mix(in srgb, var(--primary) 90%, transparent); color: #fff;
+    border: 1px solid rgba(255,255,255,.4);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -2px 4px rgba(0,0,0,.12), 0 4px 12px rgba(181,74,0,.35); }
+  .phone:not(.dark) .btn.glass.wine { background: color-mix(in srgb, var(--minus) 12%, transparent); color: var(--minus); text-shadow: none;
+    border: 1.5px solid var(--minus); box-shadow: none; }
+  .phone.dark .btn.glass.wine { color: var(--minus); }
+  .phone:not(.dark) .fab { background: color-mix(in srgb, var(--primary) 88%, transparent); border: 1px solid rgba(255,255,255,.4);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -2px 4px rgba(0,0,0,.12), 0 6px 16px rgba(181,74,0,.4); }
+  .phone:not(.dark) .sheet { background: color-mix(in srgb, #fff3e0 86%, transparent) !important; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="grp"><b>Who am I:</b><button data-me="filip">Filip (is owed)</button><button data-me="ana">Ana (owes)</button></div>
+  <div class="grp"><b>Situation:</b><button data-sit="normal">Normal</button><button data-sit="pending">A payment is pending</button><button data-sit="kvit">Everyone's kvit</button></div>
+  <div class="grp"><b>Look:</b><button data-theme="light">Light</button><button data-theme="dark">Dark</button></div>
+</div>
+<p class="note2" id="hint"></p>
+<div class="stage" id="stage"></div>
+<script>
+var S = { me: 'filip', sit: 'normal', dark: true, pay: null, sheetFor: null };
+var HINT = {
+  normal: 'Greece trip, MKD: Filip is owed 1,500, Ana owes 700, Marko owes 800. Tap Mark paid, then Save. Everything is clickable: try Confirm, Reject and Cancel.',
+  pending: 'Marko says he paid Filip 800 and Ana says she paid Filip 700. Filip answers in Needs you. Ana sees her own payment waiting inside the balance card, with Cancel; Mark paid comes back if she cancels.',
+  kvit: 'All balances are 0 and nothing is pending. Phase 10 adds the "close the group?" banner here later.'
+};
+var BASE = [['Filip', 1500], ['Ana', -700], ['Marko', -800]];
+function resetPay() {
+  var st = S.sit === 'pending' ? 'pending' : S.sit === 'kvit' ? 'confirmed' : 'open';
+  S.pay = [{ from: 'Marko', to: 'Filip', amt: 800, st: st }, { from: 'Ana', to: 'Filip', amt: 700, st: st }];
+}
+function meName() { return S.me === 'filip' ? 'Filip' : 'Ana'; }
+function balances() {
+  return BASE.map(function (b) {
+    var v = b[1];
+    S.pay.forEach(function (p) { if (p.st === 'confirmed') { if (p.from === b[0]) v += p.amt; if (p.to === b[0]) v -= p.amt; } });
+    return [b[0], v];
+  });
+}
+function myBal() { return balances().filter(function (b) { return b[0] === meName(); })[0][1]; }
+function live() { return S.pay.filter(function (p) { return p.st !== 'confirmed'; }); }
+function mine(p) { return p.from === meName() || p.to === meName(); }
+function av(n) { return '<span class="av">' + n[0] + '</span>'; }
+function money(v) { return Math.abs(v).toLocaleString('en-US') + ' MKD'; }
+function amt(v) { return '<span class="' + (v > 0 ? 'pos' : v < 0 ? 'neg' : '') + '">' + (v > 0 ? '+' : v < 0 ? '−' : '') + money(v) + '</span>'; }
+function nameList(list) {
+  if (list.length === 1) return list[0];
+  if (list.length === 2) return list[0] + ' and ' + list[1];
+  return list[0] + ', ' + list[1] + ' and ' + (list.length - 2) + ' more';
+}
+function owedLine() {
+  var n = meName(), l = live(), pays = l.filter(function (p) { return p.from === n; }), gets = l.filter(function (p) { return p.to === n; });
+  if (pays.length) return 'You owe ' + nameList(pays.map(function (p) { return p.to; }));
+  if (gets.length) return nameList(gets.map(function (p) { return p.from; })) + (gets.length === 1 ? ' owes you' : ' owe you');
+  return 'All even';
+}
+function head() {
+  return '<div class="center" style="padding-bottom:2px"><button class="back" style="align-self:flex-start">‹ Back</button><span class="emoji">🏖️</span><div class="h1">Greece trip</div><div class="soft">3 people · MKD</div></div>';
+}
+function tabs() { return '<div class="seg"><span>Expenses</span><span class="on">Balances</span><span>Activity</span></div>'; }
+function needsYou() {
+  var cards = S.pay.map(function (p, i) { return [p, i]; }).filter(function (x) { return x[0].st === 'pending' && x[0].to === meName(); });
+  if (!cards.length) return '';
+  var h = '<div class="sec">Needs you</div>';
+  cards.forEach(function (x) {
+    var p = x[0];
+    h += '<div class="card"><div class="row">' + av(p.from) + '<div class="g"><div class="t" style="font-weight:700">' + p.from + ' says ' + (p.from === 'Marko' ? 'he' : 'she') + ' paid you ' + money(p.amt) + '</div><div class="small">' + (p.from === 'Marko' ? '2 h ago' : 'Yesterday') + '</div></div></div><div class="row"><button class="btn glass wine sm" style="flex:1 1 0" data-act="reject" data-i="' + x[1] + '">Reject</button><button class="btn glass sm" style="flex:1 1 0" data-act="confirm" data-i="' + x[1] + '">Confirm</button></div></div>';
+  });
+  return h;
+}
+function balanceCard() {
+  var b = myBal(), h = '<div class="card" style="gap:10px"><div style="text-align:center"><div class="small">Your balance</div><div class="big">' + (b === 0 ? '0 MKD' : amt(b)) + '</div><div class="small">' + owedLine() + '</div></div>';
+  S.pay.forEach(function (p, i) {
+    if (!mine(p) || p.st === 'confirmed') return;
+    var iPay = p.from === meName(), other = iPay ? p.to : p.from;
+    if (p.st === 'open') {
+      h += '<div class="wait">' + av(other) + '<div class="g"><div class="t" style="font-weight:700">' + (iPay ? 'You pay ' + other : other + ' pays you') + '</div><div class="small">' + money(p.amt) + '</div></div><button class="btn glass sm" data-sheet="' + i + '">Mark paid</button></div>';
+    } else if (p.st === 'pending' && iPay) {
+      h += '<div class="wait">' + av(other) + '<div class="g"><div class="t" style="font-weight:700">You paid ' + other + ' ' + money(p.amt) + '</div><div class="small">Waiting for ' + other + ' to confirm</div></div><button class="linkbtn" data-act="cancel" data-i="' + i + '">Cancel</button></div>';
+    }
+  });
+  return h + '</div>';
+}
+function payRow(p) {
+  return '<div class="pay">' + av(p.from) + '<div class="g"><div class="t">' + p.from + ' pays ' + p.to + '</div><div class="small">' + money(p.amt) + (p.st === 'pending' ? ' · <span class="tag">waiting</span>' : '') + '</div></div></div>';
+}
+function screen() {
+  var h = head() + tabs() + needsYou() + balanceCard();
+  var others = live().filter(function (p) { return !mine(p); });
+  if (!live().length) return h + '<div class="kvit"><div style="font-weight:800;font-size:1.2rem">Everyone is kvit 🎉</div><div class="soft">Nobody owes anything.</div></div><div style="text-align:center"><button class="link" data-sheet="other">Record another payment</button></div>';
+  if (others.length) h += '<div class="sec">Between others</div>' + others.map(payRow).join('');
+  h += '<div class="small" style="margin:2px 4px 12px">Simplified: fewer payments, same totals.</div>';
+  h += '<div class="sec">Everyone</div><div class="card" style="gap:12px">' + balances().map(function (x) { return '<div class="row">' + av(x[0]) + '<div class="g">' + x[0] + '</div>' + amt(x[1]) + '</div>'; }).join('') + '</div>';
+  return h + '<div style="text-align:center"><button class="link" data-sheet="other">Record another payment</button></div>';
+}
+function sheetHtml() {
+  return '<div class="scrim"><div class="sheet"><div style="font-weight:800;font-size:1.15rem" id="st">Record a payment</div><div class="chips" id="who"></div><div class="field"><span id="sa">800</span><span>MKD</span></div><div class="small" id="sn"></div><button class="btn glass" style="justify-content:center" data-act="save">Save</button><button class="link" data-act="close">Cancel</button></div></div>';
+}
+function render(keepScroll) {
+  var old = document.querySelector('.screen'), top = old ? old.scrollTop : 0;
+  document.getElementById('hint').textContent = HINT[S.sit];
+  document.getElementById('stage').innerHTML = '<div class="phone' + (S.dark ? ' dark' : '') + '"><div class="screen">' + screen() + '</div><button class="fab" aria-label="Add"><span>+</span></button>' + sheetHtml() + '</div>';
+  if (keepScroll) document.querySelector('.screen').scrollTop = top;
+  document.querySelectorAll('[data-me]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.me === S.me); });
+  document.querySelectorAll('[data-sit]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.sit === S.sit); });
+  document.querySelectorAll('[data-theme]').forEach(function (b) { b.setAttribute('aria-pressed', (b.dataset.theme === 'dark') === S.dark); });
+}
+function openSheet(btn) {
+  var ph = btn.closest('.phone'), sc = ph.querySelector('.scrim');
+  if (btn.dataset.sheet === 'other') {
+    S.sheetFor = null;
+    ph.querySelector('#st').textContent = 'Record another payment';
+    ph.querySelector('#who').innerHTML = '<span class="chip on">I paid</span><span class="chip">Someone paid me</span><span class="chip">Ana</span><span class="chip">Marko</span>';
+    ph.querySelector('#sa').textContent = '0';
+    ph.querySelector('#sn').textContent = 'Pick the direction and the person, then type the amount.';
+  } else {
+    var p = S.pay[Number(btn.dataset.sheet)], iAmPayer = p.from === meName();
+    S.sheetFor = Number(btn.dataset.sheet);
+    ph.querySelector('#st').textContent = iAmPayer ? 'I paid ' + p.to : p.from + ' paid me';
+    ph.querySelector('#who').innerHTML = '<span class="chip on">' + (iAmPayer ? 'I paid' : 'Someone paid me') + '</span><span class="chip">' + (iAmPayer ? p.to : p.from) + '</span>';
+    ph.querySelector('#sa').textContent = p.amt.toLocaleString('en-US');
+    ph.querySelector('#sn').textContent = iAmPayer ? 'Waits until ' + p.to + ' confirms. You can cancel until then.' : 'Counts right away, because you are the one receiving.';
+  }
+  sc.classList.add('open');
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-me],[data-sit],[data-theme],[data-sheet],[data-act]');
+  if (!b) return;
+  if (b.dataset.me) { S.me = b.dataset.me; render(); }
+  else if (b.dataset.sit) { S.sit = b.dataset.sit; resetPay(); render(); }
+  else if (b.dataset.theme) { S.dark = b.dataset.theme === 'dark'; render(true); }
+  else if (b.dataset.sheet) { openSheet(b); }
+  else if (b.dataset.act === 'close') { b.closest('.scrim').classList.remove('open'); }
+  else if (b.dataset.act === 'save') {
+    if (S.sheetFor !== null) { var p = S.pay[S.sheetFor]; p.st = p.from === meName() ? 'pending' : 'confirmed'; }
+    S.sheetFor = null; render(true);
+  } else if (b.dataset.act === 'confirm') { S.pay[Number(b.dataset.i)].st = 'confirmed'; render(true); }
+  else if (b.dataset.act === 'reject' || b.dataset.act === 'cancel') { S.pay[Number(b.dataset.i)].st = 'open'; render(true); }
+});
+(function () {
+  var q = new URLSearchParams(location.hash.slice(1));
+  if (q.get('me')) S.me = q.get('me');
+  if (q.get('sit')) S.sit = q.get('sit');
+  if (q.get('theme')) S.dark = q.get('theme') === 'dark';
+  resetPay();
+  render();
+  if (q.get('scroll') === 'end') { var sc = document.querySelector('.screen'); sc.scrollTop = sc.scrollHeight; }
+  if (q.get('sheet')) { var bt = document.querySelector('[data-sheet]'); if (bt) openSheet(bt); }
+})();
+</script>
+</body>
+</html>

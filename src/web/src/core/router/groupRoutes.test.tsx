@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useApiHealth } from '@/features/auth/welcome/hooks/useApiHealth'
 import { activityPath } from '@/test/activityTestData'
+import { balancesPath, noExpensesYetBalances, settlementsPath } from '@/test/balancesTestData'
 import { testCategories } from '@/test/expenseTestData'
 import { categoriesPath, expensesPath } from '@/test/expenseTestHelpers'
 import { stubGoogleSignIn } from '@/test/googleTestHelpers'
@@ -35,6 +36,7 @@ const groupRoutePaths = [
   routes.recentlyDeletedGroups,
   routes.group(testGroup.id),
   routes.groupActivity(testGroup.id),
+  routes.groupBalances(testGroup.id),
   routes.groupSettings(testGroup.id),
 ]
 
@@ -51,6 +53,7 @@ const noBarRoutePaths = [
   routes.newBill,
   routes.group(testGroup.id),
   routes.groupActivity(testGroup.id),
+  routes.groupBalances(testGroup.id),
   routes.groupSettings(testGroup.id),
   routes.changePassword,
 ]
@@ -64,6 +67,8 @@ function stubSignedInPerson() {
     [`GET ${expensesPath}`]: jsonAnswer({ expenses: [] }),
     [`GET ${categoriesPath}`]: jsonAnswer({ categories: testCategories }),
     [`GET ${activityPath}`]: jsonAnswer({ events: [] }),
+    [`GET ${balancesPath}`]: jsonAnswer(noExpensesYetBalances),
+    [`GET ${settlementsPath}`]: jsonAnswer({ settlements: [] }),
   })
 }
 

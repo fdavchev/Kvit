@@ -12,7 +12,9 @@ import { testGroupId } from './groupTestData'
 import {
   anaMember,
   anaUserId,
+  filipMember,
   grandmaMember,
+  markoMember,
   petarMember,
   petarUserId,
 } from './memberTestData'
@@ -98,6 +100,40 @@ export const expenseAddedEvent: ActivityEventJson = activityEventOf({
   expenseId: dinnerExpenseId,
   data: { title: 'Dinner', amountMinor: 240000, currency: 'MKD' },
 })
+
+export interface SettlementEventData {
+  amountMinor: number
+  currency: string
+  fromMemberId: string
+  toMemberId: string
+  fromName: string
+  toName: string
+}
+
+export const markoPaidFilipEventData: SettlementEventData = {
+  amountMinor: 80000,
+  currency: 'MKD',
+  fromMemberId: markoMember.id,
+  toMemberId: filipMember.id,
+  fromName: 'Marko',
+  toName: 'Filip',
+}
+
+export const settlementEventTypes = [
+  'SettlementRecorded',
+  'SettlementConfirmed',
+  'SettlementRejected',
+  'SettlementCancelled',
+  'SettlementDeleted',
+  'SettlementRestored',
+] as const
+
+export function settlementEventOf(
+  type: string,
+  data: Record<string, unknown> | null = { ...markoPaidFilipEventData },
+): ActivityEventJson {
+  return activityEventOf({ type, data })
+}
 
 export const sentenceCases: SentenceCase[] = [
   {
@@ -288,6 +324,52 @@ export const sentenceCases: SentenceCase[] = [
     event: activityEventOf({ type: 'ExpenseRestored', expenseId: taxiExpenseId }),
     key: 'activity.expenseRestored',
     params: () => ({ name: 'Ana' }),
+  },
+  {
+    name: 'SettlementRecorded',
+    event: settlementEventOf('SettlementRecorded'),
+    key: 'activity.settlementRecorded',
+    params: (language) => ({ name: 'Ana', from: 'Marko', to: 'Filip', amount: money(80000, 'MKD', language) }),
+  },
+  {
+    name: 'SettlementRecorded in euros',
+    event: settlementEventOf('SettlementRecorded', {
+      ...markoPaidFilipEventData,
+      amountMinor: 2000,
+      currency: 'EUR',
+    }),
+    key: 'activity.settlementRecorded',
+    params: (language) => ({ name: 'Ana', from: 'Marko', to: 'Filip', amount: money(2000, 'EUR', language) }),
+  },
+  {
+    name: 'SettlementConfirmed',
+    event: settlementEventOf('SettlementConfirmed'),
+    key: 'activity.settlementConfirmed',
+    params: (language) => ({ name: 'Ana', from: 'Marko', to: 'Filip', amount: money(80000, 'MKD', language) }),
+  },
+  {
+    name: 'SettlementRejected',
+    event: settlementEventOf('SettlementRejected'),
+    key: 'activity.settlementRejected',
+    params: (language) => ({ name: 'Ana', from: 'Marko', to: 'Filip', amount: money(80000, 'MKD', language) }),
+  },
+  {
+    name: 'SettlementCancelled',
+    event: settlementEventOf('SettlementCancelled'),
+    key: 'activity.settlementCancelled',
+    params: (language) => ({ name: 'Ana', to: 'Filip', amount: money(80000, 'MKD', language) }),
+  },
+  {
+    name: 'SettlementDeleted',
+    event: settlementEventOf('SettlementDeleted'),
+    key: 'activity.settlementDeleted',
+    params: (language) => ({ name: 'Ana', from: 'Marko', to: 'Filip', amount: money(80000, 'MKD', language) }),
+  },
+  {
+    name: 'SettlementRestored',
+    event: settlementEventOf('SettlementRestored'),
+    key: 'activity.settlementRestored',
+    params: (language) => ({ name: 'Ana', from: 'Marko', to: 'Filip', amount: money(80000, 'MKD', language) }),
   },
 ]
 

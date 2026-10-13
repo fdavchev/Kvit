@@ -176,7 +176,7 @@ One row per person in the split. The rows of an expense always add up **exactly*
 | `client_request_id` | uuid null, unique | "Marko paid me" can be queued offline in Release 3 |
 
 **Status rules (from DECISIONS):**
-- Recorded by the **payer** ("I paid Ana") → `Pending` until the receiver confirms or rejects. The payer can cancel while it's pending.
+- Recorded by the **payer** ("I paid Ana") → `Pending` until the receiver confirms or rejects. The payer can cancel while it's pending. **Exception (Filip, 2026-10-11):** when the payer is the group's **owner** and the receiver is a plain name ("I paid Grandma"), it is `Confirmed` at once, because the owner is the only person who could confirm for a plain name.
 - Recorded by the **receiver** ("Marko paid me") → `Confirmed` straight away.
 - A **plain-name** payer or receiver: the **owner** acts for them (records, confirms, rejects).
 

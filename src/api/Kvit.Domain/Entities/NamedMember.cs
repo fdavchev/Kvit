@@ -6,7 +6,7 @@ namespace Kvit.Domain.Entities
 
         public required string DisplayName { get; init; }
 
-        public bool IsInAnyExpense { get; init; }
+        public bool IsInAnyExpenseOrSettlement { get; init; }
 
         public string? PictureUrl { get; init; }
     }

@@ -64,6 +64,7 @@ namespace Kvit.Api.Tests.Persistence
         [InlineData("SettlementRejected")]
         [InlineData("SettlementCancelled")]
         [InlineData("SettlementDeleted")]
+        [InlineData("SettlementRestored")]
         [InlineData("ClosingStarted")]
         [InlineData("ClosingConfirmed")]
         [InlineData("ClosingObjected")]

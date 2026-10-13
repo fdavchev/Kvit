@@ -4,6 +4,7 @@ using Kvit.Domain.Results;
 using Kvit.Domain.Services.Groups;
 using Kvit.Domain.Tests.Entities;
 using Kvit.Domain.Tests.Fakes;
+using Kvit.Domain.Tests.MoneyRules;
 using Kvit.Domain.Tests.Results;
 using Xunit;
 
@@ -13,6 +14,7 @@ namespace Kvit.Domain.Tests.Services.Groups
     {
         private readonly FakeGroupRepository _groups = new();
         private readonly FakeGroupMemberRepository _members = new();
+        private readonly FakeGroupMoneyRepository _money = new();
         private readonly FakeActivityEventRepository _activityEvents = new();
         private readonly RemoveMember _removeMember;
         private readonly Group _group = GroupTestData.NewGroup();
@@ -29,7 +31,7 @@ namespace Kvit.Domain.Tests.Services.Groups
             _members.Seed(_ownerRow);
             _members.Seed(_accountRow, "Ana Petrova");
             _members.Seed(_plainNameRow);
-            _removeMember = new RemoveMember(_groups, _members, _activityEvents, new FixedTimeProvider(GroupTestData.Moment));
+            _removeMember = new RemoveMember(_groups, _members, _money, _activityEvents,new FixedTimeProvider(GroupTestData.Moment));
         }
 
         [Fact]
@@ -158,6 +160,86 @@ namespace Kvit.Domain.Tests.Services.Groups
 
             ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_IS_OWNER);
             AssertNothingChanged();
+        }
+
+        [Fact]
+        public async Task Execute_AMemberWhoIsSettledUpAfterAConfirmedPayment_Succeeds()
+        {
+            _money.AnswerWith(GroupMoneyTestData.Settled(AllRowIds(), _ownerRow.Id, _accountRow.Id));
+
+            Result result = await ExecuteAsync(GroupTestData.OwnerId, _accountRow.Id);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(MemberEndKind.Removed, _accountRow.EndKind);
+            Assert.Single(_activityEvents.Added);
+        }
+
+        [Fact]
+        public async Task Execute_AnAccountWhoOwesMoney_FailsWith400MemberBalanceNotZeroAndChangesNothing()
+        {
+            _money.AnswerWith(GroupMoneyTestData.Owing(AllRowIds(), _ownerRow.Id, _accountRow.Id));
+
+            Result result = await ExecuteAsync(GroupTestData.OwnerId, _accountRow.Id);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_BALANCE_NOT_ZERO);
+            AssertNothingChanged();
+        }
+
+        [Fact]
+        public async Task Execute_APlainNameWhoIsOwedMoney_FailsWith400MemberBalanceNotZeroAndChangesNothing()
+        {
+            _money.AnswerWith(GroupMoneyTestData.Owing(AllRowIds(), _plainNameRow.Id, _accountRow.Id));
+
+            Result result = await ExecuteAsync(GroupTestData.OwnerId, _plainNameRow.Id);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_BALANCE_NOT_ZERO);
+            AssertNothingChanged();
+        }
+
+        [Fact]
+        public async Task Execute_AMemberWithAPaymentWaitingForAnAnswer_FailsWith400MemberHasPendingPaymentAndChangesNothing()
+        {
+            _money.AnswerWith(GroupMoneyTestData.PendingPayment(AllRowIds(), _accountRow.Id, _ownerRow.Id));
+
+            Result result = await ExecuteAsync(GroupTestData.OwnerId, _accountRow.Id);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_HAS_PENDING_PAYMENT);
+            AssertNothingChanged();
+        }
+
+        [Fact]
+        public async Task Execute_AMemberWhoseOnlyOpenMoneyBelongsToOthers_Succeeds()
+        {
+            _money.AnswerWith(GroupMoneyTestData.Owing(AllRowIds(), _ownerRow.Id, _accountRow.Id));
+
+            Result result = await ExecuteAsync(GroupTestData.OwnerId, _plainNameRow.Id);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(MemberEndKind.Removed, _plainNameRow.EndKind);
+        }
+
+        [Fact]
+        public async Task Execute_TheOwnerRemovingThemselvesWhileMoneyIsOpen_FailsWith400MemberIsOwnerBeforeTheMoneyIsChecked()
+        {
+            _money.AnswerWith(GroupMoneyTestData.Owing(AllRowIds(), _ownerRow.Id, _accountRow.Id));
+
+            Result result = await ExecuteAsync(GroupTestData.OwnerId, _ownerRow.Id);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_IS_OWNER);
+            Assert.Empty(_money.RequestedGroupIds);
+        }
+
+        [Fact]
+        public async Task Execute_AMemberWhoCanBeRemoved_AsksForTheMoneyOfThisGroupOnly()
+        {
+            await ExecuteAsync(GroupTestData.OwnerId, _accountRow.Id);
+
+            Assert.Equal([_group.Id], _money.RequestedGroupIds);
+        }
+
+        private Guid[] AllRowIds()
+        {
+            return [_ownerRow.Id, _accountRow.Id, _plainNameRow.Id];
         }
 
         private Task<Result> ExecuteAsync(Guid userId, Guid memberId)

@@ -8,6 +8,8 @@ import type { ExpenseListRow } from '@/core/services/expenses/expensesService'
 import { GroupLoadError } from '@/features/groups/shared/components/GroupLoadError'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitLoading } from '@/shared/components/KvitLoading'
+import { kvitGlassButtonLook } from '@/shared/components/kvitGlassLooks'
+import { cn } from '@/shared/utils/cn'
 import { addDays, formatExpenseDay, todayInTimeZone } from '@/shared/utils/formatDate'
 import { categoryOf } from '../../shared/expenseCategories'
 import { useCategories } from '../../shared/hooks/useCategories'
@@ -101,7 +103,10 @@ export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps)
           <Link
             to={routes.groupExpenseNew(groupId)}
             aria-label={t('expense.addTitle')}
-            className="pressable pointer-events-auto grid size-15 place-items-center rounded-[20px] bg-primary text-[2rem] leading-none text-primary-foreground shadow-[0_4px_14px_rgb(0_0_0/30%)] hover:bg-primary-hover"
+            className={cn(
+              'pressable pointer-events-auto grid size-15 place-items-center rounded-[20px] text-[2rem] leading-none',
+              kvitGlassButtonLook,
+            )}
           >
             <span aria-hidden="true">+</span>
           </Link>

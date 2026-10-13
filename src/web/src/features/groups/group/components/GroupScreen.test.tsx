@@ -5,7 +5,7 @@ import type { Group } from '@/core/services/groups/groupsService'
 import { languages, type Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import { stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
-import { expensesTab, activityTab } from '@/test/activityTestHelpers'
+import { expensesTab, balancesTab, activityTab } from '@/test/activityTestHelpers'
 import { dinnerRow, testCategories } from '@/test/expenseTestData'
 import { categoriesPath, expensesPath, isBefore, startsWith } from '@/test/expenseTestHelpers'
 import { expectDisabledWhilePending, typeInto } from '@/test/formTestHelpers'
@@ -430,6 +430,7 @@ describe('GroupScreen', () => {
         ['the Members chip', screen.getByRole('link', { name: translated(language, 'members.title') })],
         ['the Group settings chip', screen.getByRole('link', { name: translated(language, 'group.settings') })],
         ['the Expenses tab', expensesTab(language)],
+        ['the Balances tab', balancesTab(language)],
         ['the Activity tab', activityTab(language)],
         ['the receipt emoji', screen.getByText(receiptEmoji)],
         ['the title line', emptyTitle(language)],

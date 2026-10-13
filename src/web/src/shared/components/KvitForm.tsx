@@ -6,6 +6,7 @@ interface KvitFormProps {
   submitLabel: string
   isPending: boolean
   canSubmit?: boolean
+  submitClassName?: string
   errorMessage: string | null
   onSubmit: () => void
   children: ReactNode
@@ -16,6 +17,7 @@ export function KvitForm({
   submitLabel,
   isPending,
   canSubmit = true,
+  submitClassName,
   errorMessage,
   onSubmit,
   children,
@@ -31,7 +33,7 @@ export function KvitForm({
       <div className="flex flex-col gap-[18px]">{children}</div>
       <div className="flex flex-col gap-3">
         {errorMessage !== null && <KvitInlineError message={errorMessage} />}
-        <KvitButton type="submit" disabled={isPending || !canSubmit}>
+        <KvitButton type="submit" className={submitClassName} disabled={isPending || !canSubmit}>
           {submitLabel}
         </KvitButton>
         {footer}

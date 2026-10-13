@@ -1,5 +1,6 @@
 using Kvit.Domain.Entities;
 using Kvit.Domain.Interfaces;
+using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 
 namespace Kvit.Domain.Services.Groups
@@ -7,6 +8,7 @@ namespace Kvit.Domain.Services.Groups
     public sealed class RemoveMember(
         IGroupRepository _groups,
         IGroupMemberRepository _members,
+        IGroupMoneyRepository _money,
         IActivityEventRepository _activityEvents,
         TimeProvider _timeProvider)
     {
@@ -23,6 +25,19 @@ namespace Kvit.Domain.Services.Groups
             if (!target.IsSuccess)
             {
                 return target;
+            }
+
+            Result canBeRemoved = target.Value.Member.CheckCanBeRemoved(found.Value.OwnerUserId);
+            if (!canBeRemoved.IsSuccess)
+            {
+                return canBeRemoved;
+            }
+
+            GroupMoney money = await _money.MoneyOfAsync(groupId, cancellationToken);
+            Result settled = money.CheckMemberSettled(memberId);
+            if (!settled.IsSuccess)
+            {
+                return settled;
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();

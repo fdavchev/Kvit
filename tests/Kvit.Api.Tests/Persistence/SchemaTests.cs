@@ -31,6 +31,7 @@ namespace Kvit.Api.Tests.Persistence
                 "groups",
                 "role_claims",
                 "roles",
+                "settlements",
                 "usage_events",
                 "user_claims",
                 "user_logins",

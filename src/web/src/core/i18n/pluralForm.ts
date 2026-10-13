@@ -13,6 +13,12 @@ export function pluralForm(count: number, language: Language): PluralForm {
   return count % 10 === 1 && count % 100 !== 11 ? 'one' : 'other'
 }
 
-export function countedText(t: TFunction, key: string, count: number, language: Language): string {
-  return t(`${key}_${pluralForm(count, language)}`, { replace: { count } })
+export function countedText(
+  t: TFunction,
+  key: string,
+  count: number,
+  language: Language,
+  values: Record<string, string> = {},
+): string {
+  return t(`${key}_${pluralForm(count, language)}`, { replace: { ...values, count } })
 }

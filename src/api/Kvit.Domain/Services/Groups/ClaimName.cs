@@ -33,9 +33,9 @@ namespace Kvit.Domain.Services.Groups
                 return canClaim;
             }
 
-            if (ownRow.IsInAnyExpense)
+            if (ownRow.IsInAnyExpenseOrSettlement)
             {
-                return Result.Failure($"Member {ownRow.Member.Id} already has expenses recorded under it, so it cannot claim another name.", ResultCodes.MEMBER_CANNOT_CLAIM);
+                return Result.Failure($"Member {ownRow.Member.Id} already has expenses or payments recorded under it, so it cannot claim another name.", ResultCodes.MEMBER_CANNOT_CLAIM);
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();
