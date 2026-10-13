@@ -62,6 +62,14 @@ namespace Kvit.Domain.Results
         public const string GROUP_RESTORE_EXPIRED = "GROUP_RESTORE_EXPIRED";
         public const string GROUP_BALANCES_NOT_ZERO = "GROUP_BALANCES_NOT_ZERO";
         public const string GROUP_HAS_PENDING_PAYMENT = "GROUP_HAS_PENDING_PAYMENT";
+        public const string GROUP_NOT_KVIT = "GROUP_NOT_KVIT";
+        public const string GROUP_NOT_OPEN = "GROUP_NOT_OPEN";
+        public const string GROUP_NOT_CLOSING = "GROUP_NOT_CLOSING";
+        public const string GROUP_NOT_FINISHED = "GROUP_NOT_FINISHED";
+        public const string GROUP_IS_ONE_BILL = "GROUP_IS_ONE_BILL";
+        public const string CLOSING_OWNER_CANNOT_ANSWER = "CLOSING_OWNER_CANNOT_ANSWER";
+        public const string CLOSING_REASON_TOO_LONG = "CLOSING_REASON_TOO_LONG";
+        public const string CLOSING_ALREADY_ANSWERED = "CLOSING_ALREADY_ANSWERED";
         public const string MEMBER_NAME_INVALID = "MEMBER_NAME_INVALID";
         public const string MEMBER_NAME_TAKEN = "MEMBER_NAME_TAKEN";
         public const string MEMBER_NOT_FOUND = "MEMBER_NOT_FOUND";

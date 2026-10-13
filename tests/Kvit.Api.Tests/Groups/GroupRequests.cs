@@ -17,6 +17,24 @@ namespace Kvit.Api.Tests.Groups
 
         public static readonly Regex TokenFormat = new("^[A-Za-z0-9_-]{43}$");
         public static readonly string[] MemberFieldNames = ["claimedName", "displayName", "id", "isNameOnly", "isOwner", "isYou", "name", "pictureUrl", "userId"];
+        public static readonly string[] GroupFieldNames =
+        [
+            "canStartClosing",
+            "closingConfirmedBy",
+            "closingEndsAt",
+            "closingStartedAt",
+            "closingWaitingFor",
+            "defaultCurrency",
+            "emoji",
+            "id",
+            "inviteToken",
+            "isOwner",
+            "kind",
+            "memberCount",
+            "name",
+            "ownerUserId",
+            "status",
+        ];
 
         public static string PathOf(Guid groupId)
         {

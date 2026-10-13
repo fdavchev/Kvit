@@ -10,7 +10,7 @@ namespace Kvit.Api.Tests.Groups
     public class GetGroupTests(GroupsApp _app) : IClassFixture<GroupsApp>
     {
         [Fact]
-        public async Task Get_Owner_AnswersExactlyTheTenGroupFields()
+        public async Task Get_Owner_AnswersExactlyTheFifteenGroupFields()
         {
             SignedInUser owner = await _app.SignUpAsync();
             Guid groupId = await GroupRows.InsertGroupWithOwnerAsync(_app, owner.UserId);
@@ -20,8 +20,7 @@ namespace Kvit.Api.Tests.Groups
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             JsonElement body = await AuthRequests.ReadJsonAsync(response);
             string[] propertyNames = [.. body.EnumerateObject().Select(property => property.Name).Order(StringComparer.Ordinal)];
-            string[] expectedNames = ["defaultCurrency", "emoji", "id", "inviteToken", "isOwner", "kind", "memberCount", "name", "ownerUserId", "status"];
-            Assert.Equal(expectedNames, propertyNames);
+            Assert.Equal(GroupRequests.GroupFieldNames, propertyNames);
         }
 
         [Fact]

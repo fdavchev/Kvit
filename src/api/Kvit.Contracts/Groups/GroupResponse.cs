@@ -13,5 +13,10 @@ namespace Kvit.Contracts.Groups
         Guid OwnerUserId,
         bool IsOwner,
         int MemberCount,
-        string InviteToken);
+        string InviteToken,
+        DateTimeOffset? ClosingStartedAt,
+        DateTimeOffset? ClosingEndsAt,
+        IReadOnlyList<ClosingMemberRow> ClosingConfirmedBy,
+        IReadOnlyList<ClosingMemberRow> ClosingWaitingFor,
+        bool CanStartClosing);
 }

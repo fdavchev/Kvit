@@ -41,6 +41,17 @@ namespace Kvit.Domain.MoneyRules
             return Result.Ok();
         }
 
+        public Result CheckEveryoneKvit()
+        {
+            Result settled = CheckEveryoneSettled();
+            if (!settled.IsSuccess)
+            {
+                return Result.Failure($"Not everyone in this group is kvit: {settled.Error}", ResultCodes.GROUP_NOT_KVIT);
+            }
+
+            return Result.Ok();
+        }
+
         private static long BalanceOf(IReadOnlyList<MemberBalance> balances, Guid memberId)
         {
             MemberBalance balance = balances.SingleOrDefault(candidate => candidate.MemberId == memberId)

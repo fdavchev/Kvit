@@ -215,6 +215,43 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Kvit.Domain.Entities.ClosingResponse", b =>
+                {
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTimeOffset>("RespondedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("responded_at");
+
+                    b.Property<string>("Response")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("response");
+
+                    b.HasKey("GroupId", "MemberId")
+                        .HasName("pk_closing_responses");
+
+                    b.HasIndex("MemberId")
+                        .HasDatabaseName("ix_closing_responses_member_id");
+
+                    b.ToTable("closing_responses", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_closing_responses_reason_length", "char_length(reason) BETWEEN 1 AND 200");
+
+                            t.HasCheckConstraint("ck_closing_responses_response", "response IN ('Confirmed', 'Objected')");
+                        });
+                });
+
             modelBuilder.Entity("Kvit.Domain.Entities.ExchangeRate", b =>
                 {
                     b.Property<DateOnly>("RateDate")
@@ -1020,6 +1057,23 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_activity_events_groups_group_id");
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.ClosingResponse", b =>
+                {
+                    b.HasOne("Kvit.Domain.Entities.Group", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_closing_responses_groups_group_id");
+
+                    b.HasOne("Kvit.Domain.Entities.GroupMember", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_closing_responses_group_members_member_id");
                 });
 
             modelBuilder.Entity("Kvit.Domain.Entities.Expense", b =>

@@ -7,6 +7,7 @@ namespace Kvit.Domain.Entities
     public class Group
     {
         public const int DeletedGroupRestoreDays = 30;
+        public const int ClosingFinishHours = 24;
         public const string OneBillDefaultEmoji = "\U0001F9FE";
 
         private Group()
@@ -75,6 +76,16 @@ namespace Kvit.Domain.Entities
             return deletedAt.AddDays(DeletedGroupRestoreDays);
         }
 
+        public static DateTimeOffset? ClosingEndsAtOf(DateTimeOffset? closingStartedAt)
+        {
+            return closingStartedAt?.AddHours(ClosingFinishHours);
+        }
+
+        public static GroupStatus EffectiveStatusOf(GroupStatus status, DateTimeOffset? closingStartedAt, DateTimeOffset now)
+        {
+            return ClosingRanOutAt(status, closingStartedAt, now) is null ? status : GroupStatus.Finished;
+        }
+
         public Result CheckOwner(Guid userId)
         {
             if (OwnerUserId != userId)
@@ -83,6 +94,104 @@ namespace Kvit.Domain.Entities
             }
 
             return Result.Ok();
+        }
+
+        public GroupStatus EffectiveStatusAt(DateTimeOffset now)
+        {
+            return EffectiveStatusOf(Status, ClosingStartedAt, now);
+        }
+
+        public Result CheckCanStartClosing(Guid userId, DateTimeOffset now)
+        {
+            Result owner = CheckOwner(userId);
+            if (!owner.IsSuccess)
+            {
+                return owner;
+            }
+
+            if (Kind == GroupKind.OneBill)
+            {
+                return Result.Failure($"Group {Id} is a one bill, which finishes by itself once everyone is kvit.", ResultCodes.GROUP_IS_ONE_BILL);
+            }
+
+            GroupStatus status = EffectiveStatusAt(now);
+            if (status != GroupStatus.Open)
+            {
+                return Result.Failure($"Group {Id} is {status}, so a closing cannot be started.", ResultCodes.GROUP_NOT_OPEN);
+            }
+
+            return Result.Ok();
+        }
+
+        public Result CheckCanAnswerClosing(Guid userId, DateTimeOffset now)
+        {
+            if (OwnerUserId == userId)
+            {
+                return Result.Failure($"The owner of group {Id} started the closing and cannot confirm or object to it.", ResultCodes.CLOSING_OWNER_CANNOT_ANSWER);
+            }
+
+            GroupStatus status = EffectiveStatusAt(now);
+            if (status != GroupStatus.Closing)
+            {
+                return Result.Failure($"Group {Id} is {status}, not being closed, so there is nothing to answer.", ResultCodes.GROUP_NOT_CLOSING);
+            }
+
+            return Result.Ok();
+        }
+
+        public Result CheckCanUnlock(Guid userId, DateTimeOffset now)
+        {
+            Result owner = CheckOwner(userId);
+            if (!owner.IsSuccess)
+            {
+                return owner;
+            }
+
+            GroupStatus status = EffectiveStatusAt(now);
+            if (status != GroupStatus.Finished)
+            {
+                return Result.Failure($"Group {Id} is {status}, not finished, so it cannot be unlocked.", ResultCodes.GROUP_NOT_FINISHED);
+            }
+
+            return Result.Ok();
+        }
+
+        public void StartClosing(DateTimeOffset startedAt)
+        {
+            Status = GroupStatus.Closing;
+            ClosingStartedAt = startedAt;
+            FinishedAt = null;
+        }
+
+        public void Finish(DateTimeOffset finishedAt)
+        {
+            Status = GroupStatus.Finished;
+            FinishedAt = finishedAt;
+        }
+
+        public DateTimeOffset? FinishIfClosingRanOut(DateTimeOffset now)
+        {
+            if (ClosingRanOutAt(Status, ClosingStartedAt, now) is not DateTimeOffset ranOutAt)
+            {
+                return null;
+            }
+
+            Finish(ranOutAt);
+
+            return ranOutAt;
+        }
+
+        public void CancelClosing()
+        {
+            Status = GroupStatus.Open;
+            ClosingStartedAt = null;
+        }
+
+        public void Unlock()
+        {
+            Status = GroupStatus.Open;
+            ClosingStartedAt = null;
+            FinishedAt = null;
         }
 
         public Result<GroupChanges> Update(string name, string emoji, string currency)
@@ -173,6 +282,16 @@ namespace Kvit.Domain.Entities
             DeletedByUserId = null;
 
             return Result.Ok();
+        }
+
+        private static DateTimeOffset? ClosingRanOutAt(GroupStatus status, DateTimeOffset? closingStartedAt, DateTimeOffset now)
+        {
+            if (status == GroupStatus.Closing && ClosingEndsAtOf(closingStartedAt) is DateTimeOffset endsAt && endsAt <= now)
+            {
+                return endsAt;
+            }
+
+            return null;
         }
 
         private static Result<Group> New(GroupKind kind, string name, string emoji, string currency, Guid ownerUserId, string inviteToken, DateTimeOffset createdAt)

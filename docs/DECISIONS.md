@@ -1,5 +1,21 @@
 # Decisions
 
+## 2026-10-13: Phase 10 (finishing groups), in progress
+Filip's answers (2026-10-13), on top of "Finishing a group" (2026-09-25):
+- **Only money cancels a closing.** While a group is Closing, the owner changing an expense or a payment cancels the closing. Renaming, the emoji, the currency and adding a plain name do not. Members can only Confirm or Object. Rejected: every change cancels (the owner would restart closing for a cosmetic fix); refusing even rename and emoji.
+- **Joining is refused** through the invite link while Closing ("being closed, try later") and when Finished. A person who is already a member just opens the group. Rejected: a join that cancels the closing; allowing joins in any state.
+- **A Finished group** can still be left by its members and deleted (with Undo) by the owner. Everyone is kvit there, so no money problem. Rejected: only delete; neither.
+- **One bill finishes at once** when it becomes kvit, with no Undo toast; the owner can Unlock. Rejected: an Undo toast.
+- **Step 1 (backend closing) choices:**
+  - New code `GROUP_NOT_KVIT` for a start that is refused because of money or a pending payment (the older balance codes say "deleted"). The owner answering gets `CLOSING_OWNER_CANNOT_ANSWER` even when the group is not Closing (who-may-act before state).
+  - **A closing that runs out writes `GroupFinished`**, under the owner's name, timed at the end of the 24 hours (`finished_at` too). Rejected: no event; naming whoever's request saved it.
+  - **Responses are cleared on Object and on Unlock**, not on Start; a Finished group keeps its rows.
+  - **A member who confirmed may still object** (not covered by a test; Filip may want it the other way).
+  - Fields on the group: `closingConfirmedBy` whenever the status is not Open, `closingWaitingFor` only while Closing, `closingStartedAt` / `closingEndsAt` whenever a start time is stored. Both lists are `{id, name}`.
+  - The 24-hour finish runs right after the membership check in start, confirm, object and unlock; GET never writes. `FinishExpiredClosing` is the shared service Step 2 reuses.
+  - Known until Step 3: the Activity tab stops on the new event types (no sentences yet).
+- **Plan order:** Step 1 closing (start, confirm, object, unlock, lazy 24 h); Step 2 guards in every write command and One bill auto-finish; Step 3 screen 17 and read-only screens; Step 4 live check and close-out.
+
 ## 2026-10-10: Phase 9 (balances + settle up), in progress
 Filip's answers (2026-10-09/10): a **pending payment also blocks** leave, remove and delete group (not only a non-zero balance); **overpaying is allowed** (no cap, a partial amount too); **reject has no reason field**.
 - **Step 1, balances:** `GET /api/groups/{groupId}/balances` returns, per currency (MKD before EUR, only currencies a counted row uses), every member the group ever had in joining order (`isCurrent` false once `removed_at` is set), their balance in minor units, the simplified payments, and `isEveryoneKvit`. Any current member may read it. Rows left behind by "That's me" (`SetAside`) currently show as extra 0 rows; hiding them is not decided yet.

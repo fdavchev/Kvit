@@ -50,6 +50,13 @@ namespace Kvit.Domain.Entities
             return _rows.SingleOrDefault(row => row.Member.UserId == userId && row.Member.RemovedAt is null);
         }
 
+        public IReadOnlyList<NamedMember> ClosingConfirmers(Guid ownerUserId)
+        {
+            return InJoiningOrder(
+                _rows.Where(row => row.Member.RemovedAt is null && row.Member.UserId is Guid userId && userId != ownerUserId),
+                row => row.Member.Id);
+        }
+
         public NamedMember? LatestEndedRowOf(Guid userId, MemberEndKind endKind)
         {
             return _rows
