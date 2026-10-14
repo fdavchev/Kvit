@@ -3,7 +3,6 @@ using Kvit.Application.Persistence;
 using Kvit.Application.Queries.Expenses;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Expenses;
-using Kvit.Contracts.Persistence;
 using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.ExchangeRates;
@@ -16,7 +15,7 @@ namespace Kvit.Application.Commands.Expenses
         IDispatcher _dispatcher,
         GetCurrentExchangeRate _getCurrentExchangeRate,
         AddExpense _addExpense,
-        IUnitOfWork _unitOfWork) : ICommandHandler<AddExpenseCommand, ExpenseDetailResponse>
+        GroupWriteTransaction _groupWrite) : ICommandHandler<AddExpenseCommand, ExpenseDetailResponse>
     {
         public async Task<Result<ExpenseDetailResponse>> Handle(AddExpenseCommand command, CancellationToken cancellationToken)
         {
@@ -32,7 +31,9 @@ namespace Kvit.Application.Commands.Expenses
                 return rate.ToFailure<ExpenseDetailResponse>();
             }
 
-            Result<Guid> added = await _unitOfWork.RunInTransactionOnceMoreIfClientRequestIdWasTakenAsync(
+            Result<Guid> added = await _groupWrite.RunOnceMoreIfClientRequestIdWasTakenAsync(
+                command.GroupId,
+                userId.Value,
                 () => _addExpense.Execute(command.GroupId, userId.Value, command.ClientRequestId, command.Input, rate.Value, cancellationToken),
                 cancellationToken);
             if (!added.IsSuccess)

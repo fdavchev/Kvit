@@ -75,6 +75,11 @@ namespace Kvit.Domain.Entities
             return activityEvent;
         }
 
+        public static ActivityEvent ClosingCancelled(Guid groupId, Guid actorUserId, DateTimeOffset createdAt)
+        {
+            return New(groupId, actorUserId, ActivityEventType.ClosingCancelled, createdAt);
+        }
+
         public static ActivityEvent GroupFinished(Guid groupId, Guid actorUserId, DateTimeOffset createdAt)
         {
             return New(groupId, actorUserId, ActivityEventType.GroupFinished, createdAt);

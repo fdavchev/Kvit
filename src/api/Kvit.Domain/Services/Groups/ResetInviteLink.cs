@@ -20,6 +20,12 @@ namespace Kvit.Domain.Services.Groups
 
             Group group = found.Value;
             DateTimeOffset now = _timeProvider.GetUtcNow();
+            Result changeable = group.CheckCanBeChangedBy(userId, now);
+            if (!changeable.IsSuccess)
+            {
+                return changeable.ToFailure<string>();
+            }
+
             group.ResetInvite(_inviteTokenGenerator.NewToken(), now);
             _activityEvents.Add(ActivityEvent.InviteLinkReset(groupId, userId, now));
 

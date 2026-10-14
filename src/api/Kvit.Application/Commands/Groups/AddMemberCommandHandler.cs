@@ -3,7 +3,6 @@ using Kvit.Application.Persistence;
 using Kvit.Application.Queries.Groups;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Groups;
-using Kvit.Contracts.Persistence;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Groups;
 
@@ -13,7 +12,7 @@ namespace Kvit.Application.Commands.Groups
         ICurrentUserProvider _currentUserProvider,
         IDispatcher _dispatcher,
         AddMember _addMember,
-        IUnitOfWork _unitOfWork) : ICommandHandler<AddMemberCommand, GroupMemberRow>
+        GroupWriteTransaction _groupWrite) : ICommandHandler<AddMemberCommand, GroupMemberRow>
     {
         public async Task<Result<GroupMemberRow>> Handle(AddMemberCommand command, CancellationToken cancellationToken)
         {
@@ -23,7 +22,7 @@ namespace Kvit.Application.Commands.Groups
                 return userId.ToFailure<GroupMemberRow>();
             }
 
-            Result<Guid> added = await _unitOfWork.RunInTransactionAsync(() => _addMember.Execute(command.GroupId, userId.Value, command.Name, cancellationToken), cancellationToken);
+            Result<Guid> added = await _groupWrite.RunAsync(command.GroupId, userId.Value, () => _addMember.Execute(command.GroupId, userId.Value, command.Name, cancellationToken), cancellationToken);
             if (!added.IsSuccess)
             {
                 return added.ToFailure<GroupMemberRow>();

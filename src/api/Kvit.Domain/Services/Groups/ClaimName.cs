@@ -18,6 +18,13 @@ namespace Kvit.Domain.Services.Groups
                 return found;
             }
 
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            Result changeable = found.Value.CheckCanBeChangedBy(userId, now);
+            if (!changeable.IsSuccess)
+            {
+                return changeable;
+            }
+
             GroupRoster roster = await _members.RosterOfAsync(groupId, cancellationToken);
             Result<NamedMember> target = roster.FindCurrentPlainName(memberId);
             if (!target.IsSuccess)
@@ -38,7 +45,6 @@ namespace Kvit.Domain.Services.Groups
                 return Result.Failure($"Member {ownRow.Member.Id} already has expenses or payments recorded under it, so it cannot claim another name.", ResultCodes.MEMBER_CANNOT_CLAIM);
             }
 
-            DateTimeOffset now = _timeProvider.GetUtcNow();
             ownRow.Member.SetAside(now);
             await _members.SaveAsync(cancellationToken);
             target.Value.Member.Claim(userId, now);

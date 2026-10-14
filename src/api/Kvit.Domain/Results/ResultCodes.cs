@@ -67,6 +67,8 @@ namespace Kvit.Domain.Results
         public const string GROUP_NOT_CLOSING = "GROUP_NOT_CLOSING";
         public const string GROUP_NOT_FINISHED = "GROUP_NOT_FINISHED";
         public const string GROUP_IS_ONE_BILL = "GROUP_IS_ONE_BILL";
+        public const string GROUP_FINISHED = "GROUP_FINISHED";
+        public const string GROUP_CLOSING = "GROUP_CLOSING";
         public const string CLOSING_OWNER_CANNOT_ANSWER = "CLOSING_OWNER_CANNOT_ANSWER";
         public const string CLOSING_REASON_TOO_LONG = "CLOSING_REASON_TOO_LONG";
         public const string CLOSING_ALREADY_ANSWERED = "CLOSING_ALREADY_ANSWERED";

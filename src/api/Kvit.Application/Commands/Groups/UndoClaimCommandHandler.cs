@@ -1,7 +1,6 @@
 using Kvit.Application.Dispatching;
 using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
-using Kvit.Contracts.Persistence;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Groups;
 
@@ -10,7 +9,7 @@ namespace Kvit.Application.Commands.Groups
     public sealed class UndoClaimCommandHandler(
         ICurrentUserProvider _currentUserProvider,
         UndoClaim _undoClaim,
-        IUnitOfWork _unitOfWork) : ICommandHandler<UndoClaimCommand>
+        GroupWriteTransaction _groupWrite) : ICommandHandler<UndoClaimCommand>
     {
         public async Task<Result> Handle(UndoClaimCommand command, CancellationToken cancellationToken)
         {
@@ -20,7 +19,7 @@ namespace Kvit.Application.Commands.Groups
                 return userId;
             }
 
-            return await _unitOfWork.RunInTransactionAsync(() => _undoClaim.Execute(command.GroupId, userId.Value, command.MemberId, cancellationToken), cancellationToken);
+            return await _groupWrite.RunAsync(command.GroupId, userId.Value, () => _undoClaim.Execute(command.GroupId, userId.Value, command.MemberId, cancellationToken), cancellationToken);
         }
     }
 }

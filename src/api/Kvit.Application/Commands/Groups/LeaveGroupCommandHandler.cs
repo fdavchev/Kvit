@@ -1,7 +1,6 @@
 using Kvit.Application.Dispatching;
 using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
-using Kvit.Contracts.Persistence;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Groups;
 
@@ -10,7 +9,7 @@ namespace Kvit.Application.Commands.Groups
     public sealed class LeaveGroupCommandHandler(
         ICurrentUserProvider _currentUserProvider,
         LeaveGroup _leaveGroup,
-        IUnitOfWork _unitOfWork) : ICommandHandler<LeaveGroupCommand>
+        GroupWriteTransaction _groupWrite) : ICommandHandler<LeaveGroupCommand>
     {
         public async Task<Result> Handle(LeaveGroupCommand command, CancellationToken cancellationToken)
         {
@@ -20,7 +19,7 @@ namespace Kvit.Application.Commands.Groups
                 return userId;
             }
 
-            return await _unitOfWork.RunInTransactionAsync(() => _leaveGroup.Execute(command.GroupId, userId.Value, cancellationToken), cancellationToken);
+            return await _groupWrite.RunAsync(command.GroupId, userId.Value, () => _leaveGroup.Execute(command.GroupId, userId.Value, cancellationToken), cancellationToken);
         }
     }
 }

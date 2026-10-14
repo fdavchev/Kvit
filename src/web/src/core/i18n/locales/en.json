@@ -56,6 +56,8 @@
     "GROUP_NOT_CLOSING": "This group is no longer being closed.",
     "GROUP_NOT_FINISHED": "Only a finished group can be unlocked.",
     "GROUP_IS_ONE_BILL": "A One bill finishes by itself once everyone is kvit.",
+    "GROUP_FINISHED": "This group is finished, so nothing in it can be changed. Only the owner can unlock it.",
+    "GROUP_CLOSING": "This group is being closed right now, so nothing in it can be changed. Try again later.",
     "CLOSING_OWNER_CANNOT_ANSWER": "You started closing this group. Only the other members confirm or object.",
     "CLOSING_REASON_TOO_LONG": "The reason can have at most 200 characters.",
     "CLOSING_ALREADY_ANSWERED": "You have already confirmed.",

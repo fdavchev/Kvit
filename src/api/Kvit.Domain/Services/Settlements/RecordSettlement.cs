@@ -2,6 +2,7 @@ using Kvit.Domain.Entities;
 using Kvit.Domain.Interfaces;
 using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
+using Kvit.Domain.Services.Groups;
 using Kvit.Domain.Settlements;
 
 namespace Kvit.Domain.Services.Settlements
@@ -12,6 +13,8 @@ namespace Kvit.Domain.Services.Settlements
         ISettlementRepository _settlements,
         IActivityEventRepository _activityEvents,
         IUsageEventRepository _usageEvents,
+        CancelClosingOnChange _cancelClosingOnChange,
+        FinishPaidOneBill _finishPaidOneBill,
         TimeProvider _timeProvider)
     {
         public async Task<Result<Guid>> Execute(Guid groupId, Guid userId, Guid clientRequestId, SettlementInput input, CancellationToken cancellationToken)
@@ -30,12 +33,19 @@ namespace Kvit.Domain.Services.Settlements
                     : Settlement.ClientRequestIdUsed<Guid>(clientRequestId);
             }
 
+            Group group = found.Value;
             DateTimeOffset now = _timeProvider.GetUtcNow();
             GroupRoster roster = await _members.RosterOfAsync(groupId, cancellationToken);
-            Result<Settlement> created = Settlement.Create(groupId, input, roster, userId, found.Value.OwnerUserId, clientRequestId, now);
+            Result<Settlement> created = Settlement.Create(groupId, input, roster, userId, group.OwnerUserId, clientRequestId, now);
             if (!created.IsSuccess)
             {
                 return created.ToFailure<Guid>();
+            }
+
+            Result changeable = await _cancelClosingOnChange.Execute(group, userId, cancellationToken);
+            if (!changeable.IsSuccess)
+            {
+                return changeable.ToFailure<Guid>();
             }
 
             Settlement settlement = created.Value;
@@ -45,6 +55,8 @@ namespace Kvit.Domain.Services.Settlements
             {
                 _usageEvents.Add(UsageEvent.SettlementConfirmed(userId, now));
             }
+
+            await _finishPaidOneBill.Execute(group, userId, cancellationToken);
 
             return Result.Ok(settlement.Id);
         }

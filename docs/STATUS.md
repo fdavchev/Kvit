@@ -1,26 +1,26 @@
 # Status: Kvit
 
-_Last updated: 2026-10-13 (Phase 9 finished and checked, waiting for Filip's commit, push and merge; Phase 10 is next)_
+_Last updated: 2026-10-14 (Phase 10, Steps 1 and 2 done; Step 3 tests written, code not yet)_
 
 ## Where we stopped
-- Branch: `feat/09-settle-up`, last commit `9e281c2` (Step 4a, the Balances tab).
-- Uncommitted: all of Phase 9 Step 4b (payment actions, the Payments list, the glass look, the plain-name rule) plus the three code-review fixes, the report, the guide and the doc updates. Everything is staged and nothing is committed.
-- Last thing done: the code review of the whole phase, three fixes (Delete/Restore need both people to be current members, members list refresh, balances rows matched by id), and the report and guide.
+- Branch: `feat/10-finish-groups`, last commit `8abf824 Add closing a group: start, confirm, object, unlock and the 24-hour finish.` (Step 1).
+- Staged, not committed: Step 2 (guards in every write command, `GROUP_FINISHED` / `GROUP_CLOSING`, One bill auto-finish, `GroupWriteTransaction`), the Step 2 tests, the closing mockup, DECISIONS and BACKLOG notes, this file.
+- Not staged on purpose: the Step 3 frontend tests (red until the coder runs): `src/web/src/**/closing*`, `*Closing*.test.*`, `*ReadOnly.test.*`, `writesAfterClosing.test.tsx`, `src/test/closingTest*.ts`, plus the edits to `groupTestData.ts` and `approvedTexts.test.ts`. They would fail CI if pushed now.
+- Last thing done: Filip picked banner style C (a bottom bar that stays until answered); the tester wrote the Step 3 tests (148 files, 393 red, as intended).
 
 ## Next step
-Filip: commit (one subject line), push, open the pull request, wait for CI, merge. Then Phase 10 (`feat/10-finish-groups`): read `ROADMAP.md` Phase 10 and `DECISIONS.md`.
+Send Step 3 to the **coder** (ask Filip first; he said "send" for Steps 1 and 2): service + hooks + `ClosingBar` + badge + read-only hiding + activity sentences + join messages + EN/MK texts, and draw the "+" button as a centred shape (it looked off-centre). Make `npm run build` and all frontend tests green (target: the 393 red tests green, the old 5497 still green). Claude's recommendation, awaiting Filip's OK: hide "Leave group" for a member while the group is Closing (the backend refuses it), keep it when Finished.
 
 ## Then
-- After the merge: follow `guides/phase-09-settle-up.md` on the real site (two people, one pending payment).
-- Filip, once on the real site: one real EUR expense on Render (the first call to the real NBRM) and a real Google picture in a circle.
-- Phase 10 closes groups; Phase 11 is the dashboard and Release 1.
+- Step 4: live check in headless Chrome at 360 px (light/dark, EN/MK) with two accounts: start, confirm, object, owner edit cancels, unlock, One bill finishing; code review; report in `docs/reports/`; guide in `docs/guides/`; ROADMAP ticks; DECISIONS log moves into the report.
+- Phase 10 PR text is drafted in the chat history (title "Phase 10: Finishing groups"); tick the checklist as steps land.
+- Phase 11 (dashboard): closing bar as a popup (BACKLOG).
 
 ## Blockers and open questions
-- Nothing blocks the next step.
-- Filip to decide: whether `START-HERE-PROMPT.md` stays in the public repository.
-- BACKLOG: the Phase 9 review leftovers (same-moment answers, partial-debt rows, retry after delete, settlements list limit), the owner Cancel for a plain-name payer, animations, API error handler, joining without an account (top "must do").
+- Filip: the Macedonian drafts for the closing texts (`src/test/closingTestData.ts`, plus the Step 1 and 2 error texts in `mk.json`) are not read by him.
+- Filip: apply the Step 1 migration locally (`dotnet ef database update --project src/api/Kvit.Infrastructure --startup-project src/api/Kvit.Api --no-build`) if not done yet; no migration in Step 2.
+- Until Step 3 is built, the Activity tab stops on closing events: do not close a group in the app yet.
 
 ## Verification state
-- VERIFIED by automated test (2026-10-13): backend build 0 warnings, `dotnet test` 2790/2790; `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 5457/5457 (one JoinScreen test is occasionally flaky under load).
-- VERIFIED by live run (2026-10-13, headless Chrome, 360 px, local stack): the Balances tab in light, dark and Macedonian; the sheets; the Payments list with Delete and Undo; the pending flow with two accounts (Mark paid, Cancel, Reject, Confirm).
-- NOT VERIFIED: the review fixes in a browser, a real phone keyboard, Safari, screen readers, real Render and Neon, the `Settlements` migration on Neon (CI applies it at the merge), a line-by-line read of the Macedonian texts by Filip.
+- VERIFIED by automated test (2026-10-14, after Step 2): backend build 0 warnings; `dotnet test Kvit.slnx` 3326/3326; `npm run lint` 0 warnings; `npm run build` OK; `npm test` 5497/5497 (without the Step 3 tests).
+- NOT VERIFIED: any live run of closing; the Step 3 code (does not exist yet); Macedonian wording; real Render and Neon.

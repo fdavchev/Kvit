@@ -28,7 +28,7 @@ namespace Kvit.Domain.Tests.Services.Groups
             _members.Seed(MemberTestData.Account(_group.Id, GroupTestData.MemberId, "Ana"));
             _members.Seed(_removedAccount, "Marko Petrov");
             _members.Seed(_removedPlainName);
-            _letBackIn = new LetBackIn(_groups, _members, _activityEvents, new FixedTimeProvider(GroupTestData.Moment));
+            _letBackIn = new LetBackIn(_groups, _members, _activityEvents, new CancelClosingOnChange(new FakeClosingResponseRepository(), _activityEvents, new FixedTimeProvider(GroupTestData.Moment)), new FixedTimeProvider(GroupTestData.Moment));
         }
 
         [Theory]

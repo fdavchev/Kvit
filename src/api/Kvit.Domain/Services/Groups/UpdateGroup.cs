@@ -24,13 +24,19 @@ namespace Kvit.Domain.Services.Groups
                 return owner;
             }
 
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            Result changeable = group.CheckCanBeChangedBy(userId, now);
+            if (!changeable.IsSuccess)
+            {
+                return changeable;
+            }
+
             Result<GroupChanges> changes = group.Update(name, emoji, currency);
             if (!changes.IsSuccess)
             {
                 return changes;
             }
 
-            DateTimeOffset now = _timeProvider.GetUtcNow();
             if (changes.Value.Name is FieldChange nameChange)
             {
                 _activityEvents.Add(ActivityEvent.GroupRenamed(group.Id, userId, nameChange, now));

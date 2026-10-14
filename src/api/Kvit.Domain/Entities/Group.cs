@@ -101,6 +101,26 @@ namespace Kvit.Domain.Entities
             return EffectiveStatusOf(Status, ClosingStartedAt, now);
         }
 
+        public Result CheckCanBeChangedBy(Guid userId, DateTimeOffset now)
+        {
+            if (EffectiveStatusAt(now) == GroupStatus.Finished)
+            {
+                return Result.Failure($"Group {Id} is finished, so nothing in it can change until its owner unlocks it.", ResultCodes.GROUP_FINISHED);
+            }
+
+            return CheckNotFrozenFor(userId, now);
+        }
+
+        public Result CheckNotFrozenFor(Guid userId, DateTimeOffset now)
+        {
+            if (EffectiveStatusAt(now) == GroupStatus.Closing && userId != OwnerUserId)
+            {
+                return Result.Failure($"Group {Id} is being closed, so only its owner can change it until the closing ends.", ResultCodes.GROUP_CLOSING);
+            }
+
+            return Result.Ok();
+        }
+
         public Result CheckCanStartClosing(Guid userId, DateTimeOffset now)
         {
             Result owner = CheckOwner(userId);

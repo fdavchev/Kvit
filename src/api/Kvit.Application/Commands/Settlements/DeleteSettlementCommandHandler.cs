@@ -1,7 +1,6 @@
 using Kvit.Application.Dispatching;
 using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
-using Kvit.Contracts.Persistence;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Settlements;
 
@@ -10,7 +9,7 @@ namespace Kvit.Application.Commands.Settlements
     public sealed class DeleteSettlementCommandHandler(
         ICurrentUserProvider _currentUserProvider,
         DeleteSettlement _deleteSettlement,
-        IUnitOfWork _unitOfWork) : ICommandHandler<DeleteSettlementCommand>
+        GroupWriteTransaction _groupWrite) : ICommandHandler<DeleteSettlementCommand>
     {
         public async Task<Result> Handle(DeleteSettlementCommand command, CancellationToken cancellationToken)
         {
@@ -20,7 +19,7 @@ namespace Kvit.Application.Commands.Settlements
                 return userId;
             }
 
-            return await _unitOfWork.RunInTransactionAsync(() => _deleteSettlement.Execute(command.GroupId, userId.Value, command.SettlementId, cancellationToken), cancellationToken);
+            return await _groupWrite.RunAsync(command.GroupId, userId.Value, () => _deleteSettlement.Execute(command.GroupId, userId.Value, command.SettlementId, cancellationToken), cancellationToken);
         }
     }
 }

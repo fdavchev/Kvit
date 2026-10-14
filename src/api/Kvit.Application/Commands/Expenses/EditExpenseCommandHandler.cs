@@ -1,7 +1,6 @@
 using Kvit.Application.Dispatching;
 using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
-using Kvit.Contracts.Persistence;
 using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Interfaces;
 using Kvit.Domain.MoneyRules;
@@ -16,7 +15,7 @@ namespace Kvit.Application.Commands.Expenses
         IExpenseRepository _expenses,
         GetCurrentExchangeRate _getCurrentExchangeRate,
         EditExpense _editExpense,
-        IUnitOfWork _unitOfWork) : ICommandHandler<EditExpenseCommand>
+        GroupWriteTransaction _groupWrite) : ICommandHandler<EditExpenseCommand>
     {
         public async Task<Result> Handle(EditExpenseCommand command, CancellationToken cancellationToken)
         {
@@ -39,7 +38,9 @@ namespace Kvit.Application.Commands.Expenses
                 currentRate = rate.Value;
             }
 
-            return await _unitOfWork.RunInTransactionAsync(
+            return await _groupWrite.RunAsync(
+                command.GroupId,
+                userId.Value,
                 () => _editExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, command.Input, currentRate, cancellationToken),
                 cancellationToken);
         }
