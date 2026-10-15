@@ -9,7 +9,7 @@ const toasterStyle: CSSProperties & Record<`--${string}`, string> = {
   '--border-radius': 'var(--radius)',
 }
 
-const bottomOffset = { bottom: 'var(--toast-offset-bottom)' }
+const bottomOffset = { bottom: 'calc(var(--toast-offset-bottom) + var(--toast-lift, 0px))' }
 
 const actionButtonStyle: CSSProperties = {
   height: 'auto',
