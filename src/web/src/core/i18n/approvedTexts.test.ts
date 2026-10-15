@@ -290,6 +290,7 @@ const expenseNamespaces = /^(expenses|expense|categories)\./
 const timeNamespace = /^time\./
 const step5Namespaces = /^(activity|oneBill|newGroup)\./
 const phase9DraftActivityKeys = /^activity\.settlement/
+const phase10DraftActivityKeys = /^activity\.(closing|groupFinished|groupReopened)/
 const phase7NewGroupKeys: string[] = approvedPhase7Texts
   .map(([key]) => key)
   .filter((key) => key.startsWith('newGroup.'))
@@ -485,6 +486,7 @@ describe('the approved Phase 8 Step 5 texts', () => {
       .map(([path]) => path)
       .filter((path) => step5Namespaces.test(path))
       .filter((path) => !phase9DraftActivityKeys.test(path))
+      .filter((path) => !phase10DraftActivityKeys.test(path))
       .sort()
     const keysListedAbove = [
       ...phase7NewGroupKeys,

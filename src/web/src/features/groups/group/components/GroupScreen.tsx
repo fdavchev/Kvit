@@ -2,16 +2,23 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useMatch } from 'react-router'
 import { routes } from '@/core/router/routes'
+import type { Group } from '@/core/services/groups/groupsService'
+import { AddExpenseButton } from '@/features/expenses/list/components/AddExpenseButton'
 import { GroupExpenses } from '@/features/expenses/list/components/GroupExpenses'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { kvitChipLook } from '@/shared/components/kvitChipLook'
+import { cn } from '@/shared/utils/cn'
 import { GroupActivity } from '../../activity/components/GroupActivity'
 import { GroupBalances } from '../../balances/components/GroupBalances'
+import { ClosingBar } from '../../closing/components/ClosingBar'
+import { GroupStatusBadge } from '../../closing/components/GroupStatusBadge'
+import { useClosingBar } from '../../closing/hooks/useClosingBar'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
 import { GroupSizeLine } from '../../shared/components/GroupSizeLine'
+import { canChangeGroup } from '../../shared/groupAccess'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
 import { useGroup } from '../hooks/useGroup'
 import { useInviteLinkActions } from '../useInviteLinkActions'
@@ -20,14 +27,11 @@ import { AddPeopleButtons } from './AddPeopleButtons'
 import { GroupTabs, type GroupTab } from './GroupTabs'
 
 export function GroupScreen() {
-  const { t } = useTranslation()
   const groupId = useGroupIdParam()
   const isActivityTab: boolean = useMatch(routes.groupActivity(':groupId')) !== null
   const isBalancesTab: boolean = useMatch(routes.groupBalances(':groupId')) !== null
   const tab: GroupTab = currentTabOf(isActivityTab, isBalancesTab)
   const groupQuery = useGroup(groupId)
-  const inviteLinkActions = useInviteLinkActions()
-  const [isAddingName, setIsAddingName] = useState<boolean>(false)
 
   function renderContent() {
     if (groupQuery.isPending) {
@@ -41,36 +45,66 @@ export function GroupScreen() {
         />
       )
     }
-    const group = groupQuery.data
-    const isOneBill: boolean = group.kind === 'OneBill'
-    const showsAddPeopleButtons: boolean = group.memberCount === 1 && !isOneBill
-    return (
-      <>
-        <div className="flex flex-col items-center gap-2.5 pt-2 pb-4 text-center">
-          <KvitEmojiTile emoji={group.emoji} size="large" />
+    return <GroupContent group={groupQuery.data} tab={tab} />
+  }
+
+  return (
+    <KvitScreen>
+      <div className="flex min-h-12">
+        <KvitBackButton to={routes.groups} />
+      </div>
+      {renderContent()}
+    </KvitScreen>
+  )
+}
+
+interface GroupContentProps {
+  group: Group
+  tab: GroupTab
+}
+
+function GroupContent({ group, tab }: GroupContentProps) {
+  const { t } = useTranslation()
+  const inviteLinkActions = useInviteLinkActions()
+  const closingBar = useClosingBar(group)
+  const [isAddingName, setIsAddingName] = useState<boolean>(false)
+  const canChange: boolean = canChangeGroup(group)
+  const isOneBill: boolean = group.kind === 'OneBill'
+  const showsAddPeopleButtons: boolean = group.memberCount === 1 && !isOneBill && canChange
+  const showsAddExpense: boolean = tab === 'expenses' && canChange
+  const hasBar: boolean = closingBar !== null
+
+  return (
+    <>
+      <div className="flex flex-col items-center gap-2.5 pt-2 pb-4 text-center">
+        <KvitEmojiTile emoji={group.emoji} size="large" />
+        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
           <h1 className="text-[1.75rem] leading-[1.15] font-extrabold tracking-[-0.02em] text-balance">
             {group.name}
           </h1>
-          <GroupSizeLine memberCount={group.memberCount} currency={group.defaultCurrency} />
+          <GroupStatusBadge status={group.status} />
         </div>
-        <div className="flex flex-wrap justify-center gap-2 pb-4">
-          <Link to={routes.groupMembers(group.id)} className={kvitChipLook}>
-            {t('members.title')}
-          </Link>
-          <Link to={routes.groupSettings(group.id)} className={kvitChipLook}>
-            {t('group.settings')}
-          </Link>
-          {isOneBill && (
-            <button
-              type="button"
-              className={kvitChipLook}
-              onClick={() => void inviteLinkActions.share(group.inviteToken)}
-            >
-              {t('group.shareLink')}
-            </button>
-          )}
-        </div>
-        <GroupTabs groupId={group.id} currentTab={tab} />
+        <GroupSizeLine memberCount={group.memberCount} currency={group.defaultCurrency} />
+      </div>
+      <div className="flex flex-wrap justify-center gap-2 pb-4">
+        <Link to={routes.groupMembers(group.id)} className={kvitChipLook}>
+          {t('members.title')}
+        </Link>
+        <Link to={routes.groupSettings(group.id)} className={kvitChipLook}>
+          {t('group.settings')}
+        </Link>
+        {isOneBill && (
+          <button
+            type="button"
+            className={kvitChipLook}
+            onClick={() => void inviteLinkActions.share(group.inviteToken)}
+          >
+            {t('group.shareLink')}
+          </button>
+        )}
+      </div>
+      <GroupTabs groupId={group.id} currentTab={tab} />
+      <div className={cn('flex flex-col', hasBar && 'pb-3')}>
         {tab === 'expenses' && (
           <GroupExpenses
             groupId={group.id}
@@ -84,22 +118,28 @@ export function GroupScreen() {
             }
           />
         )}
-        {tab === 'balances' && <GroupBalances groupId={group.id} defaultCurrency={group.defaultCurrency} />}
-        {tab === 'activity' && <GroupActivity groupId={group.id} />}
-        {isAddingName && (
-          <AddNameSheet groupId={group.id} onClose={() => setIsAddingName(false)} />
+        {tab === 'balances' && (
+          <GroupBalances groupId={group.id} defaultCurrency={group.defaultCurrency} canChangePayments={canChange} />
         )}
-      </>
-    )
-  }
-
-  return (
-    <KvitScreen>
-      <div className="flex min-h-12">
-        <KvitBackButton to={routes.groups} />
+        {tab === 'activity' && <GroupActivity groupId={group.id} />}
       </div>
-      {renderContent()}
-    </KvitScreen>
+      <div
+        className={cn(
+          'pointer-events-none sticky z-10 mt-auto flex flex-col items-end gap-3 pt-3',
+          hasBar ? '-mx-3 bottom-[max(12px,env(safe-area-inset-bottom))]' : 'bottom-[max(24px,env(safe-area-inset-bottom))]',
+        )}
+      >
+        {showsAddExpense && (
+          <div className={hasBar ? 'px-3' : undefined}>
+            <AddExpenseButton groupId={group.id} />
+          </div>
+        )}
+        <ClosingBar group={group} view={closingBar} />
+      </div>
+      {isAddingName && (
+        <AddNameSheet groupId={group.id} onClose={() => setIsAddingName(false)} />
+      )}
+    </>
   )
 }
 

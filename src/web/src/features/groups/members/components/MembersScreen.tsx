@@ -17,6 +17,7 @@ import { AddNameSheet } from '../../group/components/AddNameSheet'
 import { useGroup } from '../../group/hooks/useGroup'
 import { LeaveGroupSection } from '../../settings/components/LeaveGroupSection'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
+import { canChangeGroup, canLeaveGroup } from '../../shared/groupAccess'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
 import { useClaimName } from '../hooks/useClaimName'
 import { useLetBackIn } from '../hooks/useLetBackIn'
@@ -65,6 +66,7 @@ export function MembersScreen() {
   }
 
   function renderMembers(group: Group, groupMembers: GroupMembers) {
+    const canChange: boolean = canChangeGroup(group)
     return (
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
@@ -74,31 +76,33 @@ export function MembersScreen() {
                 key={member.id}
                 member={member}
                 showsTakenName={group.isOwner}
-                canClaim={groupMembers.canClaimNames && member.isNameOnly}
+                canClaim={canChange && groupMembers.canClaimNames && member.isNameOnly}
                 isClaimPending={claimName.isPending}
-                hasOptions={group.isOwner && !member.isOwner}
+                hasOptions={canChange && group.isOwner && !member.isOwner}
                 onClaim={() => claim(member)}
                 onOpenOptions={() => setOptionsMember(member)}
               />
             ))}
           </ul>
-          <button
-            type="button"
-            onClick={() => setIsAddingName(true)}
-            className="pressable inline-flex min-h-11 items-center self-start rounded-xl px-3.5 text-[0.9375rem] font-semibold text-link hover:underline"
-          >
-            {t('members.addNameLink')}
-          </button>
+          {canChange && (
+            <button
+              type="button"
+              onClick={() => setIsAddingName(true)}
+              className="pressable inline-flex min-h-11 items-center self-start rounded-xl px-3.5 text-[0.9375rem] font-semibold text-link hover:underline"
+            >
+              {t('members.addNameLink')}
+            </button>
+          )}
         </div>
-        <InviteLinkCard group={group} />
-        {group.isOwner && groupMembers.removed.length > 0 && (
+        <InviteLinkCard group={group} canResetLink={canChange && group.isOwner} />
+        {canChange && group.isOwner && groupMembers.removed.length > 0 && (
           <RemovedMembers
             removed={groupMembers.removed}
             pendingMemberId={letBackIn.isPending ? letBackIn.variables : null}
             onLetBackIn={letBackInNow}
           />
         )}
-        {!group.isOwner && <LeaveGroupSection group={group} />}
+        {canLeaveGroup(group) && <LeaveGroupSection group={group} />}
         {isAddingName && (
           <AddNameSheet groupId={group.id} onClose={() => setIsAddingName(false)} />
         )}

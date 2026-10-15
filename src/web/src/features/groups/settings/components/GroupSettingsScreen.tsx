@@ -6,6 +6,7 @@ import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 import { useGroup } from '../../group/hooks/useGroup'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
+import { canLeaveGroup } from '../../shared/groupAccess'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
 import { LeaveGroupSection } from './LeaveGroupSection'
 import { OwnerGroupSettings } from './OwnerGroupSettings'
@@ -32,9 +33,11 @@ export function GroupSettingsScreen() {
       <>
         <KvitScreenTitle>{t('groupSettings.title')}</KvitScreenTitle>
         {group.isOwner && <OwnerGroupSettings group={group} />}
-        <div className={group.isOwner ? 'pt-8' : 'pt-2'}>
-          <LeaveGroupSection group={group} />
-        </div>
+        {(group.isOwner || canLeaveGroup(group)) && (
+          <div className={group.isOwner ? 'pt-8' : 'pt-2'}>
+            <LeaveGroupSection group={group} />
+          </div>
+        )}
       </>
     )
   }

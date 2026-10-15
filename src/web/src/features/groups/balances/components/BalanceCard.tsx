@@ -18,6 +18,7 @@ interface BalanceCardProps {
   title: string
   card: BalanceCardView
   language: Language
+  canChangePayments: boolean
   onMarkPaid: (payment: PaymentToRecord) => void
 }
 
@@ -26,7 +27,7 @@ interface RowTexts {
   detail: string
 }
 
-export function BalanceCard({ groupId, title, card, language, onMarkPaid }: BalanceCardProps) {
+export function BalanceCard({ groupId, title, card, language, canChangePayments, onMarkPaid }: BalanceCardProps) {
   const { t } = useTranslation()
   const headingId = useId()
 
@@ -74,6 +75,7 @@ export function BalanceCard({ groupId, title, card, language, onMarkPaid }: Bala
                   receiver={row.other}
                   title={texts.title}
                   detail={texts.detail}
+                  canCancel={canChangePayments}
                 />
               )
             }
@@ -88,7 +90,7 @@ export function BalanceCard({ groupId, title, card, language, onMarkPaid }: Bala
                   <p className="font-bold break-words">{texts.title}</p>
                   <p className="text-[0.8125rem] text-muted-foreground">{texts.detail}</p>
                 </div>
-                <MarkPaidButton onClick={() => onMarkPaid(row.payment)} />
+                {canChangePayments && <MarkPaidButton onClick={() => onMarkPaid(row.payment)} />}
               </li>
             )
           })}

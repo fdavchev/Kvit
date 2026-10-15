@@ -3,11 +3,13 @@ import { endpoints } from '@/core/api/endpoints'
 import {
   readCount,
   readDate,
+  readDateOrNull,
   readList,
   readObject,
   readOneOf,
   readText,
   readYesNo,
+  type Fields,
 } from '@/core/services/readFields'
 import type { Currency } from '@/shared/utils/formatMoney'
 
@@ -37,6 +39,11 @@ export interface GroupList {
   recentlyDeleted: DeletedGroupListRow[]
 }
 
+export interface ClosingPerson {
+  id: string
+  name: string
+}
+
 export interface Group {
   id: string
   kind: GroupKind
@@ -48,6 +55,11 @@ export interface Group {
   isOwner: boolean
   memberCount: number
   inviteToken: string
+  closingStartedAt: string | null
+  closingEndsAt: string | null
+  closingConfirmedBy: ClosingPerson[]
+  closingWaitingFor: ClosingPerson[]
+  canStartClosing: boolean
 }
 
 export interface GroupInput {
@@ -82,6 +94,22 @@ export async function restoreGroup(groupId: string): Promise<void> {
 
 export async function leaveGroup(groupId: string): Promise<void> {
   await apiRequest(endpoints.groupLeave(groupId), { method: 'POST' })
+}
+
+export async function startClosing(groupId: string): Promise<void> {
+  await apiRequest(endpoints.groupClosing(groupId), { method: 'POST' })
+}
+
+export async function confirmClosing(groupId: string): Promise<void> {
+  await apiRequest(endpoints.groupClosingConfirm(groupId), { method: 'POST' })
+}
+
+export async function objectToClosing(groupId: string, reason?: string): Promise<void> {
+  await apiRequest(endpoints.groupClosingObject(groupId), jsonRequest('POST', { reason: reason ?? null }))
+}
+
+export async function unlockGroup(groupId: string): Promise<void> {
+  await apiRequest(endpoints.groupUnlock(groupId), { method: 'POST' })
 }
 
 export async function addMember(groupId: string, name: string): Promise<void> {
@@ -139,5 +167,21 @@ function parseGroup(body: unknown): Group {
     isOwner: readYesNo(fields, 'isOwner', what),
     memberCount: readCount(fields, 'memberCount', what),
     inviteToken: readText(fields, 'inviteToken', what),
+    closingStartedAt: readDateOrNull(fields, 'closingStartedAt', what),
+    closingEndsAt: readDateOrNull(fields, 'closingEndsAt', what),
+    closingConfirmedBy: readClosingPeople(fields, 'closingConfirmedBy', what),
+    closingWaitingFor: readClosingPeople(fields, 'closingWaitingFor', what),
+    canStartClosing: readYesNo(fields, 'canStartClosing', what),
   }
+}
+
+function readClosingPeople(fields: Fields, name: string, what: string): ClosingPerson[] {
+  const personWhat = `a person in "${name}" of ${what}`
+  return readList(fields, name, what).map((row) => {
+    const person = readObject(row, personWhat)
+    return {
+      id: readText(person, 'id', personWhat),
+      name: readText(person, 'name', personWhat),
+    }
+  })
 }

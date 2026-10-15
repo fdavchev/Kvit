@@ -345,7 +345,14 @@
     "settlementRejected": "{{name}} rejected {{from}}'s payment of {{amount}} to {{to}}",
     "settlementCancelled": "{{name}} cancelled the payment of {{amount}} to {{to}}",
     "settlementDeleted": "{{name}} deleted the payment of {{amount}} from {{from}} to {{to}}",
-    "settlementRestored": "{{name}} restored the payment of {{amount}} from {{from}} to {{to}}"
+    "settlementRestored": "{{name}} restored the payment of {{amount}} from {{from}} to {{to}}",
+    "closingStarted": "{{name}} started closing the group",
+    "closingConfirmed": "{{name}} confirmed the closing",
+    "closingObjected": "{{name}} objected to the closing",
+    "closingObjectedWithReason": "{{name}} objected to the closing: “{{reason}}”",
+    "closingCancelled": "{{name}} cancelled the closing",
+    "groupFinished": "The group finished",
+    "groupReopened": "{{name}} unlocked the group"
   },
   "balances": {
     "title": "Balances",
@@ -376,6 +383,29 @@
     "kvitTitle": "Everyone is kvit 🎉",
     "kvitHint": "Nobody owes anything.",
     "recordAnother": "Record another payment"
+  },
+  "closing": {
+    "readyTitle": "Everyone's kvit – close the group?",
+    "checkBalances": "All balances are 0",
+    "checkPayments": "No payment is waiting",
+    "start": "Close the group",
+    "waitingTitle": "Closing · waiting for others",
+    "personConfirmed": "{{name}} confirmed",
+    "personWaiting": "{{name}} has not answered",
+    "endsOn": "Finishes by itself on {{day}}.",
+    "changeCancels": "Changing an expense or a payment cancels it.",
+    "prompt": "{{name}} wants to close “{{group}}”",
+    "object": "Object",
+    "youConfirmed": "You confirmed",
+    "waitingFor": "Waiting for {{names}}",
+    "objectTitle": "Object to closing",
+    "reasonLabel": "Reason (optional)",
+    "send": "Send",
+    "objected": "Closing cancelled. The group is open again.",
+    "unlock": "Unlock for changes",
+    "unlocked": "Group unlocked.",
+    "badgeClosing": "Closing",
+    "badgeFinished": "Finished"
   },
   "settlements": {
     "markPaid": "Mark paid",

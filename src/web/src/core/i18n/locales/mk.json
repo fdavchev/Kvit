@@ -345,7 +345,14 @@
     "settlementRejected": "{{name}} го одби плаќањето од {{amount}} од {{from}} на {{to}}",
     "settlementCancelled": "{{name}} го откажа плаќањето од {{amount}} на {{to}}",
     "settlementDeleted": "{{name}} го избриша плаќањето од {{amount}} од {{from}} на {{to}}",
-    "settlementRestored": "{{name}} го врати плаќањето од {{amount}} од {{from}} на {{to}}"
+    "settlementRestored": "{{name}} го врати плаќањето од {{amount}} од {{from}} на {{to}}",
+    "closingStarted": "{{name}} започна да ја затвора групата",
+    "closingConfirmed": "{{name}} го потврди затворањето",
+    "closingObjected": "{{name}} приговори на затворањето",
+    "closingObjectedWithReason": "{{name}} приговори на затворањето: „{{reason}}“",
+    "closingCancelled": "{{name}} го откажа затворањето",
+    "groupFinished": "Групата заврши",
+    "groupReopened": "{{name}} ја отклучи групата"
   },
   "balances": {
     "title": "Салда",
@@ -376,6 +383,29 @@
     "kvitTitle": "Сите се квит 🎉",
     "kvitHint": "Никој никому не должи.",
     "recordAnother": "Запиши друго плаќање"
+  },
+  "closing": {
+    "readyTitle": "Сите се квит – да ја затвориме групата?",
+    "checkBalances": "Сите салда се 0",
+    "checkPayments": "Ниедно плаќање не чека",
+    "start": "Затвори ја групата",
+    "waitingTitle": "Се затвора · чека на другите",
+    "personConfirmed": "{{name}} потврди",
+    "personWaiting": "{{name}} уште не одговори",
+    "endsOn": "Завршува автоматски на {{day}}.",
+    "changeCancels": "Ако се промени трошок или плаќање, затворањето се откажува.",
+    "prompt": "{{name}} сака да ја затвори групата „{{group}}“",
+    "object": "Приговори",
+    "youConfirmed": "Ти потврди",
+    "waitingFor": "Се чека {{names}}",
+    "objectTitle": "Приговор на затворањето",
+    "reasonLabel": "Причина (по желба)",
+    "send": "Испрати",
+    "objected": "Затворањето е откажано. Групата повторно е отворена.",
+    "unlock": "Отклучи за промени",
+    "unlocked": "Групата е отклучена.",
+    "badgeClosing": "Се затвора",
+    "badgeFinished": "Завршена"
   },
   "settlements": {
     "markPaid": "Означи платено",

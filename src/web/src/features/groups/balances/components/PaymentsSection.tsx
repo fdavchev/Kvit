@@ -13,9 +13,10 @@ interface PaymentsSectionProps {
   language: Language
   timeZone: string
   now: Date
+  canDelete: boolean
 }
 
-export function PaymentsSection({ groupId, payments, language, timeZone, now }: PaymentsSectionProps) {
+export function PaymentsSection({ groupId, payments, language, timeZone, now, canDelete }: PaymentsSectionProps) {
   const { t } = useTranslation()
   const headingId = useId()
   const today = todayInTimeZone(timeZone, now)
@@ -33,7 +34,13 @@ export function PaymentsSection({ groupId, payments, language, timeZone, now }: 
       </h2>
       <ul className="mb-3.5 flex flex-col gap-2">
         {payments.map((payment) => (
-          <PaymentRow key={payment.settlementId} groupId={groupId} payment={payment} detail={detailOf(payment)} />
+          <PaymentRow
+            key={payment.settlementId}
+            groupId={groupId}
+            payment={payment}
+            detail={detailOf(payment)}
+            canDelete={canDelete && payment.canDelete}
+          />
         ))}
       </ul>
     </section>

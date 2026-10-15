@@ -8,8 +8,10 @@ import { useLanguage } from '@/core/i18n/useLanguage'
 import { routes } from '@/core/router/routes'
 import type { ExpenseDetail } from '@/core/services/expenses/expensesService'
 import type { GroupMember } from '@/core/services/groups/membersService'
+import { useGroup } from '@/features/groups/group/hooks/useGroup'
 import { useMembers } from '@/features/groups/members/hooks/useMembers'
 import { GroupLoadError } from '@/features/groups/shared/components/GroupLoadError'
+import { canChangeGroup } from '@/features/groups/shared/groupAccess'
 import { useGroupIdParam } from '@/features/groups/shared/useGroupIdParam'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
@@ -43,6 +45,7 @@ export function ExpenseDetailScreen() {
   const groupId = useGroupIdParam()
   const expenseId = useExpenseIdParam()
   const me = useSignedInMe()
+  const groupQuery = useGroup(groupId)
   const expenseQuery = useExpense(groupId, expenseId)
   const membersQuery = useMembers(groupId)
   const categoriesQuery = useCategories()
@@ -83,6 +86,9 @@ export function ExpenseDetailScreen() {
         <ExpenseLoadError error={expenseQuery.error} onRetry={() => void expenseQuery.refetch()} />
       )
     }
+    if (groupQuery.isError) {
+      return <GroupLoadError error={groupQuery.error} onRetry={() => void groupQuery.refetch()} />
+    }
     if (membersQuery.isError) {
       return <GroupLoadError error={membersQuery.error} onRetry={() => void membersQuery.refetch()} />
     }
@@ -94,7 +100,7 @@ export function ExpenseDetailScreen() {
         />
       )
     }
-    if (expenseQuery.isPending || membersQuery.isPending || categoriesQuery.isPending) {
+    if (expenseQuery.isPending || groupQuery.isPending || membersQuery.isPending || categoriesQuery.isPending) {
       return <KvitLoading />
     }
     const expense = expenseQuery.data
@@ -136,7 +142,7 @@ export function ExpenseDetailScreen() {
           timeZone={me.timeZone}
           language={language}
         />
-        {expense.canEdit && (
+        {expense.canEdit && canChangeGroup(groupQuery.data) && (
           <div className="flex flex-col gap-2.5 pt-6">
             <KvitLinkButton to={routes.groupExpenseEdit(groupId, expense.id)} variant="secondary">
               {t('expense.edit')}

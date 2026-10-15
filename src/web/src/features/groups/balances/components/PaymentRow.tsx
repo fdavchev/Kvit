@@ -14,9 +14,10 @@ interface PaymentRowProps {
   groupId: string
   payment: ConfirmedPaymentView
   detail: string
+  canDelete: boolean
 }
 
-export function PaymentRow({ groupId, payment, detail }: PaymentRowProps) {
+export function PaymentRow({ groupId, payment, detail, canDelete }: PaymentRowProps) {
   const { t } = useTranslation()
   const deleteSettlement = useDeleteSettlement(groupId, payment.settlementId)
   const restoreSettlement = useRestoreSettlement(groupId)
@@ -57,7 +58,7 @@ export function PaymentRow({ groupId, payment, detail }: PaymentRowProps) {
         </p>
         <p className="text-[0.8125rem] text-muted-foreground">{detail}</p>
       </div>
-      {payment.canDelete && (
+      {canDelete && (
         <KvitButton
           variant="smallLink"
           className={cn(balancesTextButtonLook, 'text-danger')}

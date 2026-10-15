@@ -11,9 +11,10 @@ import { useUndoResetInviteLink } from '../hooks/useUndoResetInviteLink'
 
 interface InviteLinkCardProps {
   group: Group
+  canResetLink: boolean
 }
 
-export function InviteLinkCard({ group }: InviteLinkCardProps) {
+export function InviteLinkCard({ group, canResetLink }: InviteLinkCardProps) {
   const { t } = useTranslation()
   const inviteLinkActions = useInviteLinkActions()
   const resetLink = useResetInviteLink(group.id)
@@ -64,7 +65,7 @@ export function InviteLinkCard({ group }: InviteLinkCardProps) {
             {t('members.invite.copy')}
           </KvitButton>
         </div>
-        {group.isOwner && (
+        {canResetLink && (
           <KvitButton
             variant="danger"
             className="min-h-11"

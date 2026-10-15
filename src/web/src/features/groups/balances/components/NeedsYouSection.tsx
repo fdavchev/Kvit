@@ -13,9 +13,10 @@ interface NeedsYouSectionProps {
   language: Language
   timeZone: string
   now: Date
+  canAnswer: boolean
 }
 
-export function NeedsYouSection({ groupId, items, language, timeZone, now }: NeedsYouSectionProps) {
+export function NeedsYouSection({ groupId, items, language, timeZone, now, canAnswer }: NeedsYouSectionProps) {
   const { t } = useTranslation()
   const headingId = useId()
 
@@ -39,6 +40,7 @@ export function NeedsYouSection({ groupId, items, language, timeZone, now }: Nee
             item={item}
             sentence={sentenceOf(item)}
             howLongAgo={formatHowLongAgo(item.createdAt, now, timeZone, language, t)}
+            canAnswer={canAnswer}
           />
         ))}
       </ul>

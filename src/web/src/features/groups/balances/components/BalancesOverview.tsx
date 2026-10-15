@@ -21,11 +21,19 @@ interface BalancesOverviewProps {
   members: readonly GroupMember[]
   defaultCurrency: Currency
   timeZone: string
+  canChangePayments: boolean
 }
 
 type OpenSheet = { kind: 'markPaid'; payment: PaymentToRecord } | { kind: 'recordAnother' } | null
 
-export function BalancesOverview({ groupId, view, members, defaultCurrency, timeZone }: BalancesOverviewProps) {
+export function BalancesOverview({
+  groupId,
+  view,
+  members,
+  defaultCurrency,
+  timeZone,
+  canChangePayments,
+}: BalancesOverviewProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
@@ -42,9 +50,16 @@ export function BalancesOverview({ groupId, view, members, defaultCurrency, time
   const paymentsAndRecordButton = (
     <>
       {view.payments.length > 0 && (
-        <PaymentsSection groupId={groupId} payments={view.payments} language={language} timeZone={timeZone} now={now} />
+        <PaymentsSection
+          groupId={groupId}
+          payments={view.payments}
+          language={language}
+          timeZone={timeZone}
+          now={now}
+          canDelete={canChangePayments}
+        />
       )}
-      {view.hasOtherMembers && (
+      {view.hasOtherMembers && canChangePayments && (
         <div className="flex justify-center">
           <KvitButton
             variant="underlinedLink"
@@ -73,7 +88,12 @@ export function BalancesOverview({ groupId, view, members, defaultCurrency, time
     return (
       <>
         {view.betweenOthers.length > 0 && (
-          <BetweenOthersSection items={view.betweenOthers} language={language} onMarkPaid={markPaid} />
+          <BetweenOthersSection
+            items={view.betweenOthers}
+            language={language}
+            canMarkPaid={canChangePayments}
+            onMarkPaid={markPaid}
+          />
         )}
         {view.hasSuggestedPayments && (
           <p className="mx-1 mt-0.5 mb-3 text-[0.8125rem] text-muted-foreground">{t('balances.simplified')}</p>
@@ -87,7 +107,14 @@ export function BalancesOverview({ groupId, view, members, defaultCurrency, time
   return (
     <div className="flex flex-col pb-6">
       {view.needsYou.length > 0 && (
-        <NeedsYouSection groupId={groupId} items={view.needsYou} language={language} timeZone={timeZone} now={now} />
+        <NeedsYouSection
+          groupId={groupId}
+          items={view.needsYou}
+          language={language}
+          timeZone={timeZone}
+          now={now}
+          canAnswer={canChangePayments}
+        />
       )}
       {view.cards.map((card) => (
         <BalanceCard
@@ -96,6 +123,7 @@ export function BalancesOverview({ groupId, view, members, defaultCurrency, time
           title={cardTitle(card.currency)}
           card={card}
           language={language}
+          canChangePayments={canChangePayments}
           onMarkPaid={markPaid}
         />
       ))}

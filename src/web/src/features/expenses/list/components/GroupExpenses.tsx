@@ -8,8 +8,6 @@ import type { ExpenseListRow } from '@/core/services/expenses/expensesService'
 import { GroupLoadError } from '@/features/groups/shared/components/GroupLoadError'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitLoading } from '@/shared/components/KvitLoading'
-import { kvitGlassButtonLook } from '@/shared/components/kvitGlassLooks'
-import { cn } from '@/shared/utils/cn'
 import { addDays, formatExpenseDay, todayInTimeZone } from '@/shared/utils/formatDate'
 import { categoryOf } from '../../shared/expenseCategories'
 import { useCategories } from '../../shared/hooks/useCategories'
@@ -87,7 +85,7 @@ export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps)
   }
 
   return (
-    <div className="flex flex-col pb-24">
+    <div className="flex flex-col">
       {renderList()}
       <div className="flex justify-center pt-3">
         <Link
@@ -97,20 +95,6 @@ export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps)
           {t('groups.recentlyDeletedLink')}
           <span aria-hidden="true">›</span>
         </Link>
-      </div>
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10">
-        <div className="mx-auto flex w-full max-w-md justify-end px-6 pb-[max(24px,env(safe-area-inset-bottom))]">
-          <Link
-            to={routes.groupExpenseNew(groupId)}
-            aria-label={t('expense.addTitle')}
-            className={cn(
-              'pressable pointer-events-auto grid size-15 place-items-center rounded-[20px] text-[2rem] leading-none',
-              kvitGlassButtonLook,
-            )}
-          >
-            <span aria-hidden="true">+</span>
-          </Link>
-        </div>
       </div>
     </div>
   )

@@ -13,9 +13,17 @@ interface WaitingPaymentRowProps {
   receiver: ExpensePerson
   title: string
   detail: string
+  canCancel: boolean
 }
 
-export function WaitingPaymentRow({ groupId, settlementId, receiver, title, detail }: WaitingPaymentRowProps) {
+export function WaitingPaymentRow({
+  groupId,
+  settlementId,
+  receiver,
+  title,
+  detail,
+  canCancel,
+}: WaitingPaymentRowProps) {
   const { t } = useTranslation()
   const cancelSettlement = useCancelSettlement(groupId, settlementId)
 
@@ -27,14 +35,16 @@ export function WaitingPaymentRow({ groupId, settlementId, receiver, title, deta
           <p className="font-bold break-words">{title}</p>
           <p className="text-[0.8125rem] text-muted-foreground">{detail}</p>
         </div>
-        <KvitButton
-          variant="underlinedLink"
-          className={balancesTextButtonLook}
-          disabled={cancelSettlement.isPending}
-          onClick={() => cancelSettlement.mutate()}
-        >
-          {t('settlements.cancel')}
-        </KvitButton>
+        {canCancel && (
+          <KvitButton
+            variant="underlinedLink"
+            className={balancesTextButtonLook}
+            disabled={cancelSettlement.isPending}
+            onClick={() => cancelSettlement.mutate()}
+          >
+            {t('settlements.cancel')}
+          </KvitButton>
+        )}
       </div>
       {cancelSettlement.isError && <KvitInlineError message={t(errorMessageKey(cancelSettlement.error))} />}
     </li>
