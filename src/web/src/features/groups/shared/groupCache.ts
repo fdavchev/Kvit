@@ -23,6 +23,13 @@ export async function forgetGroup(queryClient: QueryClient, groupId: string): Pr
   await queryClient.invalidateQueries({ queryKey: groupsQueryKey, exact: true })
 }
 
+export async function refreshGroupAndList(queryClient: QueryClient, groupId: string): Promise<void> {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: groupQueryKey(groupId), exact: true }),
+    queryClient.invalidateQueries({ queryKey: groupsQueryKey, exact: true }),
+  ])
+}
+
 export async function refreshWholeGroup(queryClient: QueryClient, groupId: string): Promise<void> {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: groupsQueryKey, exact: true }),

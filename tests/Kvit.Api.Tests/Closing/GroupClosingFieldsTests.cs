@@ -26,7 +26,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task Get_ClosingGroup_AnswersTheStartTimeFromTheClock()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
             DateTimeOffset startedAt = _app.Clock.GetUtcNow();
 
             await ClosingSteps.StartAsync(group.Owner, group.GroupId);

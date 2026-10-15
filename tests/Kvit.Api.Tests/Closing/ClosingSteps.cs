@@ -13,10 +13,19 @@ namespace Kvit.Api.Tests.Closing
     {
         public static readonly TimeSpan ClosingWindow = TimeSpan.FromHours(24);
         public static readonly TimeSpan OneMinute = TimeSpan.FromMinutes(1);
+        public const int ExpensesInTheSetup = 1;
+
+        public static async Task<SettlementGroup> CreateGroupWithAnExpenseAsync(ExpensesApp app)
+        {
+            SettlementGroup group = await SettlementSteps.CreateGroupAsync(app);
+            await AddCountedExpenseAsync(app, group.GroupId, group.Owner, group.OwnerRowId);
+
+            return group;
+        }
 
         public static async Task<SettlementGroup> CreateClosingGroupAsync(ExpensesApp app)
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(app);
+            SettlementGroup group = await CreateGroupWithAnExpenseAsync(app);
             await StartAsync(group.Owner, group.GroupId);
 
             return group;
@@ -41,7 +50,15 @@ namespace Kvit.Api.Tests.Closing
                 await GroupRows.InsertMemberAsync(app, groupId, null, plainName, owner.UserId);
             }
 
+            await AddCountedExpenseAsync(app, groupId, owner, ownerRowId);
+
             return new LoneOwnerGroup(groupId, owner, ownerRowId);
+        }
+
+        public static async Task AddCountedExpenseAsync(ExpensesApp app, Guid groupId, SignedInUser owner, Guid ownerRowId)
+        {
+            Guid expenseId = await ExpenseRows.InsertExpenseAsync(app, groupId, ownerRowId, owner.UserId);
+            await ExpenseRows.InsertShareAsync(app, expenseId, ownerRowId, shareMinor: ExpenseRows.DefaultAmountMinor);
         }
 
         public static async Task<Guid> CreateEmptyOneBillAsync(ExpensesApp app, SignedInUser owner)

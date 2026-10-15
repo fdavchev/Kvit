@@ -1,5 +1,6 @@
 using System.Net;
 using Kvit.Domain.Entities;
+using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Groups;
 using Kvit.Domain.Tests.Entities;
@@ -21,6 +22,7 @@ namespace Kvit.Domain.Tests.Services.Groups
         public async Task Execute_OwnerWhenEveryoneIsKvit_StartsTheClosingNowAndWritesOneClosingStartedEvent()
         {
             Group group = SeedGroupWithMember(GroupTestData.NewGroup());
+            AnswerWithOneExpenseNobodyOwes();
 
             Result result = await ExecuteAsync(group, GroupTestData.OwnerId);
 
@@ -42,6 +44,7 @@ namespace Kvit.Domain.Tests.Services.Groups
             _groups.Seed(group, GroupTestData.OwnerId);
             _members.Seed(MemberTestData.Account(group.Id, GroupTestData.OwnerId, "Filip"));
             _members.Seed(MemberTestData.PlainName(group.Id, "Grandma"));
+            AnswerWithOneExpenseNobodyOwes();
 
             Result result = await ExecuteAsync(group, GroupTestData.OwnerId);
 
@@ -60,6 +63,7 @@ namespace Kvit.Domain.Tests.Services.Groups
             _groups.Seed(group, GroupTestData.OwnerId);
             _members.Seed(MemberTestData.Account(group.Id, GroupTestData.OwnerId, "Filip"));
             _members.Seed(MemberTestData.Left(group.Id, GroupTestData.MemberId, "Ana"));
+            AnswerWithOneExpenseNobodyOwes();
 
             await ExecuteAsync(group, GroupTestData.OwnerId);
 
@@ -145,7 +149,7 @@ namespace Kvit.Domain.Tests.Services.Groups
         {
             Group group = SeedGroupWithMember(GroupTestData.NewGroup());
             Guid[] rowIds = [MoneyTestData.Filip, MoneyTestData.Ana];
-            _money.AnswerWith(GroupMoneyTestData.PendingPayment(rowIds, rowIds[1], rowIds[0]));
+            _money.AnswerWith(GroupMoneyTestData.PendingPaymentAfterOneExpenseNobodyOwes(rowIds, rowIds[0], rowIds[1], rowIds[0]));
 
             Result result = await ExecuteAsync(group, GroupTestData.OwnerId);
 
@@ -165,6 +169,137 @@ namespace Kvit.Domain.Tests.Services.Groups
             Assert.True(result.IsSuccess);
             Assert.Equal(GroupStatus.Closing, group.Status);
             Assert.Equal([group.Id], _money.RequestedGroupIds);
+        }
+
+        [Fact]
+        public async Task Execute_GroupWithNoExpenseAtAll_FailsWith400GroupNoExpensesAndWritesNothing()
+        {
+            Group group = SeedGroupWithMember(GroupTestData.NewGroup());
+
+            Result result = await ExecuteAsync(group, GroupTestData.OwnerId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.GROUP_NO_EXPENSES);
+            Assert.Equal(GroupStatus.Open, group.Status);
+            Assert.Null(group.ClosingStartedAt);
+            Assert.Null(group.FinishedAt);
+            Assert.Empty(_activityEvents.Added);
+        }
+
+        [Fact]
+        public async Task Execute_OwnerWithOnlyPlainNamesAndNoExpense_FailsWith400GroupNoExpensesInsteadOfFinishingAtOnce()
+        {
+            Group group = GroupTestData.NewGroup();
+            _groups.Seed(group, GroupTestData.OwnerId);
+            _members.Seed(MemberTestData.Account(group.Id, GroupTestData.OwnerId, "Filip"));
+            _members.Seed(MemberTestData.PlainName(group.Id, "Grandma"));
+
+            Result result = await ExecuteAsync(group, GroupTestData.OwnerId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.GROUP_NO_EXPENSES);
+            Assert.Equal(GroupStatus.Open, group.Status);
+            Assert.Empty(_activityEvents.Added);
+        }
+
+        [Fact]
+        public async Task Execute_WhenTheOnlyExpenseWasDeleted_FailsWith400GroupNoExpenses()
+        {
+            Group group = SeedGroupWithMember(GroupTestData.NewGroup());
+            _money.AnswerWith(GroupMoneyTestData.OnlyADeletedExpense([MoneyTestData.Filip, MoneyTestData.Ana], MoneyTestData.Filip));
+
+            Result result = await ExecuteAsync(group, GroupTestData.OwnerId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.GROUP_NO_EXPENSES);
+            Assert.Equal(GroupStatus.Open, group.Status);
+            Assert.Empty(_activityEvents.Added);
+        }
+
+        [Fact]
+        public async Task Execute_WhenOneExpenseWasDeletedButAnotherStillCounts_StartsTheClosing()
+        {
+            Group group = SeedGroupWithMember(GroupTestData.NewGroup());
+            Guid[] rowIds = [MoneyTestData.Filip, MoneyTestData.Ana];
+            _money.AnswerWith(GroupMoneyTestData.OneDeletedAndOneCountedExpense(rowIds, rowIds[0], rowIds[1]));
+
+            Result result = await ExecuteAsync(group, GroupTestData.OwnerId);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(GroupStatus.Closing, group.Status);
+        }
+
+        [Fact]
+        public async Task Execute_WhenOnlyConfirmedPaymentsExist_FailsWith400GroupNoExpensesBecauseAPaymentIsNotAnExpense()
+        {
+            Group group = SeedGroupWithMember(GroupTestData.NewGroup());
+            Guid[] rowIds = [MoneyTestData.Filip, MoneyTestData.Ana];
+            _money.AnswerWith(GroupMoneyTestData.OnlyConfirmedPaymentsBothWays(rowIds, rowIds[0], rowIds[1]));
+
+            Result result = await ExecuteAsync(group, GroupTestData.OwnerId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.GROUP_NO_EXPENSES);
+            Assert.Equal(GroupStatus.Open, group.Status);
+        }
+
+        [Fact]
+        public async Task Execute_WhenThereIsNoExpenseAndAPaymentIsPending_FailsWith400GroupNoExpensesBeforeGroupNotKvit()
+        {
+            Group group = SeedGroupWithMember(GroupTestData.NewGroup());
+            Guid[] rowIds = [MoneyTestData.Filip, MoneyTestData.Ana];
+            _money.AnswerWith(GroupMoneyTestData.PendingPayment(rowIds, rowIds[1], rowIds[0]));
+
+            Result result = await ExecuteAsync(group, GroupTestData.OwnerId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.GROUP_NO_EXPENSES);
+        }
+
+        [Fact]
+        public async Task Execute_WhenThereIsNoExpenseAndAConfirmedPaymentLeavesABalance_FailsWith400GroupNoExpensesBeforeGroupNotKvit()
+        {
+            Group group = SeedGroupWithMember(GroupTestData.NewGroup());
+            Guid[] rowIds = [MoneyTestData.Filip, MoneyTestData.Ana];
+            BalanceSettlement unexplainedPayment = GroupMoneyTestData.Settlement(rowIds[1], rowIds[0], MoneyTestData.Steps(500, Currency.MKD), SettlementStatus.Confirmed);
+            _money.AnswerWith(new GroupMoney(rowIds, [], [unexplainedPayment]));
+
+            Result result = await ExecuteAsync(group, GroupTestData.OwnerId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.GROUP_NO_EXPENSES);
+        }
+
+        [Fact]
+        public async Task Execute_MemberWhoIsNotTheOwnerOfAGroupWithNoExpense_FailsWith403BeforeTheExpensesAreLookedFor()
+        {
+            Group group = SeedGroupWithMember(GroupTestData.NewGroup());
+
+            Result result = await ExecuteAsync(group, GroupTestData.MemberId);
+
+            ResultAssert.Failed(result, HttpStatusCode.Forbidden, ResultCodes.GROUP_NOT_OWNER);
+            Assert.Empty(_money.RequestedGroupIds);
+        }
+
+        [Fact]
+        public async Task Execute_ClosingGroupWithNoExpense_FailsWith400GroupNotOpenBeforeTheExpensesAreLookedFor()
+        {
+            Group group = SeedGroupWithMember(GroupTestData.NewClosingGroup(GroupTestData.Moment.AddHours(-1)));
+
+            Result result = await ExecuteAsync(group, GroupTestData.OwnerId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.GROUP_NOT_OPEN);
+            Assert.Empty(_money.RequestedGroupIds);
+        }
+
+        [Fact]
+        public async Task Execute_OneBillWithNoExpense_FailsWith400GroupIsOneBillBeforeTheExpensesAreLookedFor()
+        {
+            Group group = SeedGroupWithMember(Group.CreateOneBill("Dinner", Group.OneBillDefaultEmoji, GroupTestData.ValidCurrency, GroupTestData.OwnerId, GroupTestData.InviteToken, GroupTestData.Moment).Value);
+
+            Result result = await ExecuteAsync(group, GroupTestData.OwnerId);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.GROUP_IS_ONE_BILL);
+            Assert.Empty(_money.RequestedGroupIds);
+        }
+
+        private void AnswerWithOneExpenseNobodyOwes()
+        {
+            _money.AnswerWith(GroupMoneyTestData.OneExpenseNobodyOwes([MoneyTestData.Filip, MoneyTestData.Ana], MoneyTestData.Filip));
         }
 
         private Group SeedGroupWithMember(Group group)

@@ -52,6 +52,7 @@
     "GROUP_BALANCES_NOT_ZERO": "Settle up first. A group can be deleted only when everyone's balance is 0.",
     "GROUP_HAS_PENDING_PAYMENT": "A payment in this group is still waiting for an answer. It must be confirmed, rejected or cancelled first.",
     "GROUP_NOT_KVIT": "Not everyone is kvit yet. Settle every balance and answer every waiting payment first.",
+    "GROUP_NO_EXPENSES": "Add an expense first. A group with nothing in it can just be deleted.",
     "GROUP_NOT_OPEN": "This group is already being closed or is finished.",
     "GROUP_NOT_CLOSING": "This group is no longer being closed.",
     "GROUP_NOT_FINISHED": "Only a finished group can be unlocked.",
@@ -405,7 +406,8 @@
     "unlock": "Unlock for changes",
     "unlocked": "Group unlocked.",
     "badgeClosing": "Closing",
-    "badgeFinished": "Finished"
+    "badgeFinished": "Finished",
+    "settingsFrozen": "The group is being closed. Nothing can be changed."
   },
   "settlements": {
     "markPaid": "Mark paid",

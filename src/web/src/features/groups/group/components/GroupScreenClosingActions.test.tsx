@@ -30,7 +30,7 @@ import {
   type LiveGroupState,
 } from '@/test/closingTestHelpers'
 import { macedonianOf } from '@/test/englishTextKeys'
-import { groupPath, freezeTime, unfreezeTime } from '@/test/expenseTestHelpers'
+import { groupPath, freezeTime, plainSpaces, unfreezeTime } from '@/test/expenseTestHelpers'
 import { saveButton, waitForSheetToClose } from '@/test/expenseFormTestHelpers'
 import { expectDisabledWhilePending } from '@/test/formTestHelpers'
 import { testGroup } from '@/test/groupTestData'
@@ -63,6 +63,13 @@ function changesGroupTo(live: LiveGroupState, next: typeof openGroup): AnswerFac
   return () => {
     live.group = next
     return new Response(null, { status: 204 })
+  }
+}
+
+function refusesAndChangesGroupTo(live: LiveGroupState, next: typeof openGroup, errorCode: string): AnswerFactory {
+  return () => {
+    live.group = next
+    return problemAnswer(400, errorCode)()
   }
 }
 
@@ -200,7 +207,6 @@ describe('the actions of the closing bar', () => {
       [400, 'GROUP_NOT_KVIT'],
       [403, 'GROUP_NOT_OWNER'],
       [400, 'GROUP_IS_ONE_BILL'],
-      [400, 'GROUP_FINISHED'],
     ])('shows the translated text of %i %s inside the bar, leaves the button usable and shows no toast', async (status, code) => {
       vi.spyOn(console, 'error').mockImplementation(() => {})
       await renderLive(ownerView(readyToCloseGroup), { [`POST ${closingPath}`]: problemAnswer(status, code) })
@@ -211,6 +217,26 @@ describe('the actions of the closing bar', () => {
       expect((await within(bar).findByRole('alert')).textContent).toContain(translated('en', `errors.${code}`))
       expect(buttonIn(bar, closingTexts.start.en).matches(':disabled')).toBe(false)
       expect(vi.mocked(toast.error)).not.toHaveBeenCalled()
+    })
+
+    it('shows the translated text of 400 GROUP_FINISHED as a toast and takes the ready bar away when the group was finished in the meantime', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const live: LiveGroupState = { group: readyToCloseGroup }
+      await renderGroupApp(
+        routes.group(groupId),
+        liveOptions(ownerView(readyToCloseGroup), live, {
+          [`POST ${closingPath}`]: refusesAndChangesGroupTo(live, finishedGroup, 'GROUP_FINISHED'),
+        }),
+      )
+      const bar = await findBarTitled(closingTexts.readyTitle)
+
+      fireEvent.click(buttonIn(bar, closingTexts.start.en))
+
+      await waitFor(() => {
+        expect(screen.queryByText(closingTexts.readyTitle.en)).toBeNull()
+      })
+      expect(vi.mocked(toast.error)).toHaveBeenCalledTimes(1)
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith(translated('en', 'errors.GROUP_FINISHED'))
     })
 
     it('shows the network text inside the bar when the server cannot be reached', async () => {
@@ -325,9 +351,7 @@ describe('the actions of the closing bar', () => {
 
     it.each([
       [400, 'CLOSING_ALREADY_ANSWERED'],
-      [400, 'GROUP_NOT_CLOSING'],
       [403, 'CLOSING_OWNER_CANNOT_ANSWER'],
-      [400, 'GROUP_FINISHED'],
     ])('shows the translated text of %i %s inside the bar and shows no toast', async (status, code) => {
       vi.spyOn(console, 'error').mockImplementation(() => {})
       await renderLive(anaView(closingGroup), { [`POST ${closingConfirmPath}`]: problemAnswer(status, code) })
@@ -337,6 +361,29 @@ describe('the actions of the closing bar', () => {
 
       expect((await within(bar).findByRole('alert')).textContent).toContain(translated('en', `errors.${code}`))
       expect(vi.mocked(toast.error)).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      ['GROUP_NOT_CLOSING', memberOpenGroup],
+      ['GROUP_FINISHED', memberFinishedGroup],
+    ])('shows the translated text of 400 %s as a toast and takes the prompt bar away when the group changed in the meantime', async (code, nextGroup) => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const live: LiveGroupState = { group: memberClosingGroup }
+      await renderGroupApp(
+        routes.group(groupId),
+        liveOptions(anaView(closingGroup), live, {
+          [`POST ${closingConfirmPath}`]: refusesAndChangesGroupTo(live, nextGroup, code),
+        }),
+      )
+      const bar = await findBarTitled(closingTexts.prompt, 'en', promptParams)
+
+      fireEvent.click(confirmButton(bar))
+
+      await waitFor(() => {
+        expect(screen.queryByText(textOf('en', closingTexts.prompt, promptParams), { normalizer: plainSpaces })).toBeNull()
+      })
+      expect(vi.mocked(toast.error)).toHaveBeenCalledTimes(1)
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith(translated('en', `errors.${code}`))
     })
 
     it('shows the error in Macedonian for a person who uses Macedonian', async () => {
@@ -661,7 +708,6 @@ describe('the actions of the closing bar', () => {
     })
 
     it.each([
-      [400, 'GROUP_NOT_FINISHED'],
       [403, 'GROUP_NOT_OWNER'],
     ])('shows the translated text of %i %s inside the bar and shows no toast', async (status, code) => {
       vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -672,6 +718,26 @@ describe('the actions of the closing bar', () => {
 
       expect((await within(bar).findByRole('alert')).textContent).toContain(translated('en', `errors.${code}`))
       expect(vi.mocked(toast.error)).not.toHaveBeenCalled()
+    })
+
+    it('shows the translated text of 400 GROUP_NOT_FINISHED as a toast and takes the finished bar away when the group was unlocked in the meantime', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const live: LiveGroupState = { group: finishedGroup }
+      await renderGroupApp(
+        routes.group(groupId),
+        liveOptions(ownerView(finishedGroup), live, {
+          [`POST ${unlockPath}`]: refusesAndChangesGroupTo(live, openGroup, 'GROUP_NOT_FINISHED'),
+        }),
+      )
+      const bar = await findClosingBar(finishedBarText.en)
+
+      fireEvent.click(buttonIn(bar, closingTexts.unlock.en))
+
+      await waitFor(() => {
+        expect(screen.queryByText(finishedBarText.en)).toBeNull()
+      })
+      expect(vi.mocked(toast.error)).toHaveBeenCalledTimes(1)
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith(translated('en', 'errors.GROUP_NOT_FINISHED'))
     })
   })
 

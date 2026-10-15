@@ -12,7 +12,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task Start_WritesOneClosingStartedEventByTheOwner()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
 
             await ClosingSteps.StartAsync(group.Owner, group.GroupId);
 
@@ -61,7 +61,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task Activity_AfterAnObjectionAndANewStart_ShowsTheWholeStoryNewestFirstWithTheActors()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
             _app.Clock.Advance(ClosingSteps.OneMinute);
             await ClosingSteps.StartAsync(group.Owner, group.GroupId);
             _app.Clock.Advance(ClosingSteps.OneMinute);
@@ -131,7 +131,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task ClosingActions_WriteNoUsageEvents()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
             Guid[] everyone = [group.Owner.UserId, group.Member.UserId, group.Third.UserId];
             int usageEventsBefore = await ClosingRows.CountUsageEventsOfAsync(_app, everyone);
 

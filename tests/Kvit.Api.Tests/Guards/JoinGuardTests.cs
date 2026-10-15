@@ -62,7 +62,7 @@ namespace Kvit.Api.Tests.Guards
         [Fact]
         public async Task Join_ByAPersonWhoLeftBeforeTheGroupFinished_Answers400GroupFinished()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
             string inviteToken = (await GroupRows.GroupValueAsync(_app, group.GroupId, "invite_token"))!;
             await GuardSteps.AssertNoContentAsync(GroupRequests.LeaveAsync(group.Member.Client, group.GroupId));
             await ClosingSteps.StartAsync(group.Owner, group.GroupId);

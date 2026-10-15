@@ -12,7 +12,7 @@ export function GroupStatusBadge({ status }: GroupStatusBadgeProps) {
     return null
   }
   return (
-    <span className="rounded-full bg-pill px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-foreground">
+    <span className="rounded-full bg-pill px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-foreground dark:border dark:border-field-border">
       {t(status === 'Closing' ? 'closing.badgeClosing' : 'closing.badgeFinished')}
     </span>
   )

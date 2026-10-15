@@ -39,6 +39,7 @@ namespace Kvit.Api.Tests.Closing
         public async Task Start_OwnerWhoseOnlyOtherAccountMemberIsGone_FinishesTheGroupAtOnce(string endKind)
         {
             GroupSetup setup = await _app.CreateGroupWithMemberAsync();
+            await ClosingSteps.AddCountedExpenseAsync(_app, setup.GroupId, setup.Owner, setup.OwnerRowId);
             await GroupRows.EndMembershipAsync(_app, setup.GroupId, setup.Member.UserId, endKind);
 
             await ClosingSteps.StartAsync(setup.Owner, setup.GroupId);

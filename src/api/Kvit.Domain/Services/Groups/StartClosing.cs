@@ -31,6 +31,12 @@ namespace Kvit.Domain.Services.Groups
             }
 
             GroupMoney money = await _money.MoneyOfAsync(groupId, cancellationToken);
+            Result hasExpense = money.CheckHasCountedExpense();
+            if (!hasExpense.IsSuccess)
+            {
+                return hasExpense;
+            }
+
             Result kvit = money.CheckEveryoneKvit();
             if (!kvit.IsSuccess)
             {

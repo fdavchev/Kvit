@@ -15,7 +15,13 @@ import { savedQueryCacheMaxAge } from './savedQueryCache'
 
 const wrongPasswordAtLogInCode = 'AUTH_INVALID_CREDENTIALS'
 const mustChangePasswordCode = 'AUTH_MUST_CHANGE_PASSWORD'
-const groupStateChangedCodes = ['GROUP_CLOSING', 'GROUP_FINISHED']
+export const groupStateChangedCodes: readonly string[] = [
+  'GROUP_CLOSING',
+  'GROUP_FINISHED',
+  'GROUP_NOT_CLOSING',
+  'GROUP_NOT_OPEN',
+  'GROUP_NOT_FINISHED',
+]
 const maxQueryRetries = 3
 
 export function createQueryClient(persister: Persister): QueryClient {
@@ -74,8 +80,12 @@ function updateMeAfterFailure(queryClient: QueryClient, error: Error): void {
   }
 }
 
+export function isGroupStateChangedError(error: unknown): boolean {
+  return error instanceof ApiError && error.errorCode !== null && groupStateChangedCodes.includes(error.errorCode)
+}
+
 function refreshGroupsAfterStateRefusal(queryClient: QueryClient, error: Error): void {
-  if (error instanceof ApiError && error.errorCode !== null && groupStateChangedCodes.includes(error.errorCode)) {
+  if (isGroupStateChangedError(error)) {
     void queryClient.invalidateQueries({ queryKey: groupsQueryKey })
   }
 }

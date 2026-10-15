@@ -63,6 +63,7 @@ namespace Kvit.Domain.Results
         public const string GROUP_BALANCES_NOT_ZERO = "GROUP_BALANCES_NOT_ZERO";
         public const string GROUP_HAS_PENDING_PAYMENT = "GROUP_HAS_PENDING_PAYMENT";
         public const string GROUP_NOT_KVIT = "GROUP_NOT_KVIT";
+        public const string GROUP_NO_EXPENSES = "GROUP_NO_EXPENSES";
         public const string GROUP_NOT_OPEN = "GROUP_NOT_OPEN";
         public const string GROUP_NOT_CLOSING = "GROUP_NOT_CLOSING";
         public const string GROUP_NOT_FINISHED = "GROUP_NOT_FINISHED";

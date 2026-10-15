@@ -31,6 +31,7 @@ const leavePath = `${groupPath}/leave`
 const openOwnerGroup = groupOf({ memberCount: 5 })
 const memberFinishedGroup: Group = { ...finishedGroup, isOwner: false }
 const memberClosingGroup: Group = { ...closingGroup, isOwner: false }
+const memberOpenGroup: Group = { ...openOwnerGroup, isOwner: false }
 
 interface RenderOptions {
   language?: Language
@@ -68,6 +69,10 @@ function unlockButton(language: Language = 'en'): HTMLElement | null {
   return screen.queryByRole('button', { name: closingTexts.unlock[language] })
 }
 
+function frozenLine(language: Language = 'en'): HTMLElement | null {
+  return screen.queryByText(closingTexts.settingsFrozen[language])
+}
+
 function leaveButton(language: Language = 'en'): HTMLButtonElement | null {
   return screen.queryByRole<HTMLButtonElement>('button', { name: translated(language, 'groupSettings.leave') })
 }
@@ -97,6 +102,12 @@ describe('the group settings when the group is read-only', () => {
       expect(saveButton()).not.toBeNull()
       expect(deleteButton()).not.toBeNull()
       expect(unlockButton()).toBeNull()
+    })
+
+    it('does not see the line that nothing can be changed while the group is being closed, because the owner can still change the name', async () => {
+      await renderSettings({ group: closingGroup })
+
+      expect(frozenLine()).toBeNull()
     })
 
     it('has no Save, but Delete group and Unlock for changes when the group is finished', async () => {
@@ -193,6 +204,36 @@ describe('the group settings when the group is read-only', () => {
       expect(leaveButton()).toBeNull()
       expect(saveButton()).toBeNull()
       expect(unlockButton()).toBeNull()
+    })
+
+    it.each(languages)('says that the group is being closed and nothing can be changed, instead of showing only the title (%s)', async (language) => {
+      await renderSettings({ group: memberClosingGroup }, { language })
+
+      expect(frozenLine(language)).not.toBeNull()
+    })
+
+    it('shows the line under the title and no button at all', async () => {
+      await renderSettings({ group: memberClosingGroup })
+
+      const title = screen.getByRole('heading', { level: 1, name: translated('en', 'groupSettings.title') })
+      const line = frozenLine()
+      expect(line).not.toBeNull()
+      expect(Boolean(title.compareDocumentPosition(line as HTMLElement) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
+      expect(screen.queryAllByRole('button')).toEqual([])
+    })
+
+    it('shows no such line when the group is open, because the member can still leave', async () => {
+      await renderSettings({ group: memberOpenGroup })
+
+      expect(frozenLine()).toBeNull()
+      expect(leaveButton()).not.toBeNull()
+    })
+
+    it('shows no such line when the group is finished, because the member can still leave', async () => {
+      await renderSettings({ group: memberFinishedGroup })
+
+      expect(frozenLine()).toBeNull()
+      expect(leaveButton()).not.toBeNull()
     })
 
     it('has neither Save nor Unlock for changes, and keeps Leave group enabled, when the group is finished', async () => {

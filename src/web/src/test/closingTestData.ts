@@ -164,6 +164,11 @@ export const closingTexts = {
     en: 'Finished',
     mk: 'Завршена',
   },
+  settingsFrozen: {
+    key: 'closing.settingsFrozen',
+    en: 'The group is being closed. Nothing can be changed.',
+    mk: 'Групата се затвора. Ништо не може да се менува.',
+  },
 } satisfies Record<string, ClosingText>
 
 export const finishedBarText: ClosingText = {

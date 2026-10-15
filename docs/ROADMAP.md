@@ -149,10 +149,12 @@ Moved forward from Phase 11 because the Render wake-up (about 22 s) made the app
 - [ ] **Filip:** commit, push, open the pull request, see CI go green, merge into `main` (CI applies the `Settlements` migration on Neon)
 
 ## Phase 10: Finishing groups · `feat/10-finish-groups`
-- [ ] Closing: start, confirm, object (with reason), cancel on any change, lazy 24-hour finish
-- [ ] One bill finishes by itself; owner unlocks a Finished group
-- [ ] Read-only and "frozen while closing" checks in every command
-- [ ] Screen 17 banners
+- [x] **Done 2026-10-15 (VERIFIED by automated test and live run).** Closing: start, confirm, object (with reason), cancel on a money or member change by the owner, lazy 24-hour finish (a group needs at least one expense to close)
+- [x] **Done 2026-10-15 (VERIFIED by automated test and live run).** One bill finishes by itself; owner unlocks a Finished group
+- [x] **Done 2026-10-15 (VERIFIED by automated test and live run).** Read-only and "frozen while closing" checks in every command
+- [x] **Done 2026-10-15 (VERIFIED by automated test and live run; the last toast fix by automated test only).** Screen 17: the bottom bar in five states, badge, Object sheet, read-only screens. Report: `reports/2026-10-15-phase-10-finish-groups.md`; guide: `guides/phase-10-finish-groups.md`
+- [x] **Code review done 2026-10-15:** no correctness bugs; cleanup items in BACKLOG
+- [ ] **Filip:** commit, push, see CI go green, merge into `main` (CI applies the `ClosingResponses` migration on Neon)
 
 ## Phase 11: Dashboard + Release 1 · `feat/11-dashboard`
 - [ ] Dashboard (Filip decides the layout that day), recent activity, "+" to the last-used group

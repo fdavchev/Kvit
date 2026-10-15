@@ -38,7 +38,7 @@ namespace Kvit.Api.Tests.Guards
             HttpResponseMessage response = await ExpenseRequests.AddAsync(group.Third.Client, group.GroupId, GuardSteps.MemberExpenseInput(group));
 
             await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, ResultCodes.GROUP_CLOSING);
-            Assert.Equal(0, await ExpenseRows.CountExpensesAsync(_app, group.GroupId));
+            Assert.Equal(ClosingSteps.ExpensesInTheSetup, await ExpenseRows.CountExpensesAsync(_app, group.GroupId));
         }
 
         [Fact]

@@ -78,7 +78,7 @@ namespace Kvit.Application.Queries.Groups
 
             GroupMoney money = await _context.GroupMoneyOfAsync(group.Id, cancellationToken);
 
-            return money.CheckEveryoneKvit().IsSuccess;
+            return money.CheckHasCountedExpense().IsSuccess && money.CheckEveryoneKvit().IsSuccess;
         }
 
         private IQueryable<Guid> ConfirmedMemberIdsOf(Guid groupId)

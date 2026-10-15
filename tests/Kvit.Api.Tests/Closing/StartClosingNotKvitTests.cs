@@ -81,7 +81,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task Start_WhenAPaymentIsPendingAndEveryBalanceIsZero_Answers400GroupNotKvitAndWritesNothing()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
             await ZeroBalanceScenario.BojanPaysAnaWithStatusAsync(group, ZeroBalanceScenario.PendingStatus);
             string before = await ZeroBalanceScenario.SnapshotAsync(_app, group.GroupId);
 
@@ -95,7 +95,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task Start_WhenAPendingPaymentBelongsToAPlainName_Answers400GroupNotKvit()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
             await SettlementSteps.PendingMarkoToBojanByTheOwnerAsync(group);
 
             HttpResponseMessage response = await ClosingRequests.StartAsync(group.Owner.Client, group.GroupId);
@@ -106,7 +106,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task Start_WhenAPendingPaymentIsBetweenTwoOtherPeopleInEur_Answers400GroupNotKvit()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
             await SettlementSteps.RecordAsync(group.Third, group.GroupId, group.ThirdRowId, group.MemberRowId, ZeroBalanceScenario.ShareMinor, ExpenseInputs.Eur);
 
             HttpResponseMessage response = await ClosingRequests.StartAsync(group.Owner.Client, group.GroupId);

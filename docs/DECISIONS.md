@@ -1,35 +1,13 @@
 # Decisions
 
-## 2026-10-13: Phase 10 (finishing groups), in progress
-Filip's answers (2026-10-13), on top of "Finishing a group" (2026-09-25):
-- **Only money cancels a closing.** While a group is Closing, the owner changing an expense or a payment cancels the closing. Renaming, the emoji, the currency and adding a plain name do not. Members can only Confirm or Object. Rejected: every change cancels (the owner would restart closing for a cosmetic fix); refusing even rename and emoji.
-- **Joining is refused** through the invite link while Closing ("being closed, try later") and when Finished. A person who is already a member just opens the group. Rejected: a join that cancels the closing; allowing joins in any state.
-- **A Finished group** can still be left by its members and deleted (with Undo) by the owner. Everyone is kvit there, so no money problem. Rejected: only delete; neither.
-- **One bill finishes at once** when it becomes kvit, with no Undo toast; the owner can Unlock. Rejected: an Undo toast.
-- **Step 1 (backend closing) choices:**
-  - New code `GROUP_NOT_KVIT` for a start that is refused because of money or a pending payment (the older balance codes say "deleted"). The owner answering gets `CLOSING_OWNER_CANNOT_ANSWER` even when the group is not Closing (who-may-act before state).
-  - **A closing that runs out writes `GroupFinished`**, under the owner's name, timed at the end of the 24 hours (`finished_at` too). Rejected: no event; naming whoever's request saved it.
-  - **Responses are cleared on Object and on Unlock**, not on Start; a Finished group keeps its rows.
-  - **A member who confirmed may still object** (not covered by a test; Filip may want it the other way).
-  - Fields on the group: `closingConfirmedBy` whenever the status is not Open, `closingWaitingFor` only while Closing, `closingStartedAt` / `closingEndsAt` whenever a start time is stored. Both lists are `{id, name}`.
-  - The 24-hour finish runs right after the membership check in start, confirm, object and unlock; GET never writes. `FinishExpiredClosing` is the shared service Step 2 reuses.
-  - Known until Step 3: the Activity tab stops on the new event types (no sentences yet).
-- **Step 2 (guards and One bill) choices:**
-  - New codes `GROUP_FINISHED` (read-only) and `GROUP_CLOSING` (frozen), both 400. Check order in every write: not a member 404, who-may-act 403, then the state. Payment errors such as `SETTLEMENT_NOT_PENDING` come before the state; for expenses, groups and members the state comes before input validation.
-  - **Finished:** every write refused except Unlock, Leave, Delete group, Restore group. **Closing:** members refused (leave and claim too), the owner may act.
-  - **The owner cancels a closing** with any money change (expense or payment) and with remove member, let back in, make owner and undo claim (they change who must confirm). Rename, emoji, currency, add plain name, invite reset/undo, delete/restore group leave it alone. A failed command never cancels. An owner edit that changes nothing also cancels while Closing (the guard runs first).
-  - **The 24-hour finish is saved even when the write is refused:** `GroupWriteTransaction` first commits the finish in its own short transaction, then runs the write. Cost: one extra lookup per group write. Rejected: letting the refused request roll the finish back (the group would stay Closing in the database until a successful write).
-  - **One bill finishes** after a money write when it has at least one counted expense, at least one Confirmed payment, every balance zero and nothing Pending. Normal groups never auto-finish. After Unlock it stays Open until the next money write.
-  - **Join** is refused with `GROUP_CLOSING` / `GROUP_FINISHED` for anyone who is not a current member; a removed person still gets `INVITE_REMOVED` first; the invite preview is unchanged (it does not say Closing or Finished; decide in Step 3 how the joiner learns it).
-  - The owner can never leave (`MEMBER_OWNER_CANNOT_LEAVE` first). The owner may claim a name while Closing without cancelling it.
-- **Step 3 (screen 17) design, Filip 2026-10-14:** mockup `docs/design/2026-10-14-closing/index.html`; Filip picked **style C, a bar floating at the bottom of the group screen**. It stays until the person answers (never auto-dismissed, because Confirm / Object is the only way to answer). The "+" button sits above the bar when both show, and the list gets bottom padding so the bar never hides the last row. Filip wants it as a popup like the Undo toast in Phase 11 (BACKLOG). Rejected: A (card on top), B (pinned strip). No Cancel button for the owner: fixing money or members cancels the closing. Members see no "+" while Closing; nobody sees "+" or any change button in a Finished group.
-- **Step 3 (screens) choices:**
-  - **Leave group is hidden for a member while Closing** (Filip, 2026-10-15); it stays when Finished.
-  - The "+" add-expense button is drawn as an SVG (centred by geometry) and now lives in a sticky dock at the end of the screen, above the closing bar when both show, instead of `position: fixed`. The dock takes its own room, so the bar never hides the last row. To check live at 360 px, including the phone's bottom inset.
-  - A refused write (`GROUP_CLOSING` / `GROUP_FINISHED`) refreshes every `['groups', ...]` query that is on screen (the global mutation error handler does not know which group failed).
-  - New text `closing.endsOn` ("Finishes by itself on {{day}}."), the Macedonian is a draft. The mockup's extra explanation lines were left out (they would need new unapproved Macedonian).
-  - Left visible on purpose, small follow-ups: the "Recently deleted" link and Restore buttons in Closing/Finished (the server refuses them), Share/Copy invite link in a Finished group, add/edit expense screens reached by URL.
-- **Plan order:** Step 1 closing (start, confirm, object, unlock, lazy 24 h); Step 2 guards in every write command and One bill auto-finish; Step 3 screen 17 and read-only screens; Step 4 live check and close-out.
+## 2026-10-15: Phase 10 (finishing groups): done, the rules that stay
+The whole Phase 10 decision log (Filip's answers, the Step 1 to 3 choices, the live-check fixes, rejected alternatives) moved word for word to the end of `reports/2026-10-15-phase-10-finish-groups.md`, section "Decisions and rejected alternatives". What stays true:
+- **Closing:** the owner starts it when every balance is 0, nothing is pending and the group has at least one counted expense (a One bill never closes by hand). Every member with an account except the owner confirms or objects (optional reason, 200 characters). Everyone confirmed, or 24 hours with no objection (applied lazily on the next write, GET never writes), means Finished; an objection returns the group to Open. Only the owner can Unlock a Finished group.
+- **Frozen and read-only:** a Finished group refuses every write except Unlock, Leave, Delete group and Restore group; while Closing, members can only Confirm or Object (no leave, claim or join). The owner's money changes and member changes (remove, let back in, make owner, undo claim) cancel a closing; rename, emoji, currency, add plain name and invite reset do not. Check order: not a member 404, who-may-act 403, then the state (`GROUP_FINISHED` / `GROUP_CLOSING`).
+- **Joining:** refused for non-members while Closing or Finished; a current member just opens the group.
+- **One bill** finishes by itself after a money write when it has a counted expense, a Confirmed payment, all balances 0 and nothing Pending; normal groups never auto-finish.
+- **Screen 17:** a floating bottom bar that stays until answered, in five states; the "+" sits above it. In Phase 11 Filip wants it as a popup like the Undo toast (BACKLOG).
+- **Looks:** text contrast at least 4.5:1 everywhere, also on the glass buttons in dark mode (measured live); the danger glass look uses cream text in dark mode.
 
 ## 2026-10-10: Phase 9 (balances + settle up), in progress
 Filip's answers (2026-10-09/10): a **pending payment also blocks** leave, remove and delete group (not only a non-zero balance); **overpaying is allowed** (no cap, a partial amount too); **reject has no reason field**.

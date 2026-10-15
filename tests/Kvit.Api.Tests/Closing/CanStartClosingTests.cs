@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Kvit.Api.Tests.Expenses;
 using Kvit.Api.Tests.Groups;
+using Kvit.Api.Tests.Persistence;
 using Kvit.Api.Tests.Settlements;
 using Xunit;
 
@@ -11,7 +12,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task CanStartClosing_OwnerOfAnOpenGroupWhereEveryoneIsKvit_IsTrue()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
 
             Assert.True(await CanStartAsync(group.Owner, group.GroupId));
         }
@@ -27,7 +28,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task CanStartClosing_AMemberWhoIsNotTheOwner_IsFalseEvenWhenEveryoneIsKvit()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
 
             Assert.False(await CanStartAsync(group.Member, group.GroupId));
         }
@@ -49,7 +50,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task CanStartClosing_WhenAPaymentIsPendingAndEveryBalanceIsZero_IsFalse()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
             await ZeroBalanceScenario.BojanPaysAnaWithStatusAsync(group, ZeroBalanceScenario.PendingStatus);
 
             Assert.False(await CanStartAsync(group.Owner, group.GroupId));
@@ -58,7 +59,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task CanStartClosing_WhenThePendingPaymentWasRejected_IsTrue()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
             await ZeroBalanceScenario.BojanPaysAnaWithStatusAsync(group, ZeroBalanceScenario.RejectedStatus);
 
             Assert.True(await CanStartAsync(group.Owner, group.GroupId));
@@ -78,8 +79,74 @@ namespace Kvit.Api.Tests.Closing
         {
             SignedInUser owner = await _app.SignUpAsync();
             Guid groupId = await ClosingSteps.CreateEmptyOneBillAsync(_app, owner);
+            Guid ownerRowId = await GroupRows.CurrentMemberIdAsync(_app, groupId, owner.UserId);
+            await ClosingSteps.AddCountedExpenseAsync(_app, groupId, owner, ownerRowId);
 
             Assert.False(await CanStartAsync(owner, groupId));
+        }
+
+        [Fact]
+        public async Task CanStartClosing_ABrandNewGroupWithNoExpense_IsFalse()
+        {
+            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+
+            Assert.False(await CanStartAsync(group.Owner, group.GroupId));
+        }
+
+        [Fact]
+        public async Task CanStartClosing_AnOwnerAloneInAGroupWithNoExpense_IsFalse()
+        {
+            SignedInUser owner = await _app.SignUpAsync();
+            Guid groupId = await _app.CreateGroupAsync(owner);
+
+            Assert.False(await CanStartAsync(owner, groupId));
+        }
+
+        [Fact]
+        public async Task CanStartClosing_WhenTheOnlyExpenseWasDeleted_IsFalseUntilItIsRestored()
+        {
+            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            Guid expenseId = await AddKvitExpenseThroughTheApiAsync(group);
+            bool withTheExpense = await CanStartAsync(group.Owner, group.GroupId);
+            await SettlementSteps.AssertNoContentAsync(await ExpenseRequests.DeleteAsync(group.Owner.Client, group.GroupId, expenseId));
+            bool afterDeleting = await CanStartAsync(group.Owner, group.GroupId);
+            await SettlementSteps.AssertNoContentAsync(await ExpenseRequests.RestoreAsync(group.Owner.Client, group.GroupId, expenseId));
+
+            bool afterRestoring = await CanStartAsync(group.Owner, group.GroupId);
+
+            Assert.True(withTheExpense);
+            Assert.False(afterDeleting);
+            Assert.True(afterRestoring);
+        }
+
+        [Fact]
+        public async Task CanStartClosing_WhenOneOfTwoExpensesWasDeleted_IsStillTrue()
+        {
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
+            Guid secondExpenseId = await AddKvitExpenseThroughTheApiAsync(group);
+            await SettlementSteps.AssertNoContentAsync(await ExpenseRequests.DeleteAsync(group.Owner.Client, group.GroupId, secondExpenseId));
+
+            Assert.True(await CanStartAsync(group.Owner, group.GroupId));
+        }
+
+        [Fact]
+        public async Task CanStartClosing_WhenOnlyPaymentsExistAndEveryBalanceIsZero_IsFalseBecauseAPaymentIsNotAnExpense()
+        {
+            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            await SettlementSteps.RecordAsync(group.Owner, group.GroupId, group.MemberRowId, group.OwnerRowId);
+            await SettlementSteps.RecordAsync(group.Member, group.GroupId, group.OwnerRowId, group.MemberRowId);
+            await SettlementSteps.AssertAllBalancesZeroAsync(group.Owner, group.GroupId);
+
+            Assert.False(await CanStartAsync(group.Owner, group.GroupId));
+        }
+
+        [Fact]
+        public async Task CanStartClosing_AnExpenseOfAnotherGroupDoesNotCount()
+        {
+            SettlementGroup emptyGroup = await SettlementSteps.CreateGroupAsync(_app);
+            await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
+
+            Assert.False(await CanStartAsync(emptyGroup.Owner, emptyGroup.GroupId));
         }
 
         [Fact]
@@ -123,6 +190,13 @@ namespace Kvit.Api.Tests.Closing
             await ClosingSteps.UnlockAsync(group.Owner, group.GroupId);
 
             Assert.True(await CanStartAsync(group.Owner, group.GroupId));
+        }
+
+        private async Task<Guid> AddKvitExpenseThroughTheApiAsync(SettlementGroup group)
+        {
+            ExpenseInput input = ExpenseInputs.Equal(ExpenseInputs.OneThousandMkd, ExpenseInputs.Mkd, group.OwnerRowId, group.OwnerRowId);
+
+            return await _app.AddExpenseAsync(group.Owner, group.GroupId, input);
         }
 
         private static async Task<bool> CanStartAsync(SignedInUser viewer, Guid groupId)

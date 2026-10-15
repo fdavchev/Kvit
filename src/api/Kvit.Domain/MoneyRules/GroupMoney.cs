@@ -52,12 +52,26 @@ namespace Kvit.Domain.MoneyRules
             return Result.Ok();
         }
 
+        public Result CheckHasCountedExpense()
+        {
+            if (!HasCountedExpense())
+            {
+                return Result.Failure("This group has no expense that counts yet.", ResultCodes.GROUP_NO_EXPENSES);
+            }
+
+            return Result.Ok();
+        }
+
         public bool IsPaidOff()
         {
-            bool hasCountedExpense = Expenses.Any(expense => !expense.IsDeleted);
             bool hasConfirmedPayment = Settlements.Any(settlement => !settlement.IsDeleted && settlement.Status == SettlementStatus.Confirmed);
 
-            return hasCountedExpense && hasConfirmedPayment && CheckEveryoneSettled().IsSuccess;
+            return HasCountedExpense() && hasConfirmedPayment && CheckEveryoneSettled().IsSuccess;
+        }
+
+        private bool HasCountedExpense()
+        {
+            return Expenses.Any(expense => !expense.IsDeleted);
         }
 
         private static long BalanceOf(IReadOnlyList<MemberBalance> balances, Guid memberId)

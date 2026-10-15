@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { errorMessageKey } from '@/core/api/errors'
+import { isGroupStateChangedError } from '@/core/api/queryClient'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
 import type { Language } from '@/core/i18n/language'
 import { useLanguage } from '@/core/i18n/useLanguage'
@@ -13,6 +14,7 @@ import { formatExpenseDay, todayInTimeZone } from '@/shared/utils/formatDate'
 import type { ClosingBarView } from '../closingBarView'
 import { useConfirmClosing } from '../hooks/useConfirmClosing'
 import { useStartClosing } from '../hooks/useStartClosing'
+import { useToastWhenGroupStateChanged } from '../hooks/useToastWhenGroupStateChanged'
 import { ClosingBarFrame } from './ClosingBarFrame'
 import { ClosingCheckLine } from './ClosingCheckLine'
 import { ObjectSheet } from './ObjectSheet'
@@ -24,6 +26,7 @@ interface ClosingBarProps {
 }
 
 const barButtonLook = 'min-h-11 rounded-full px-4 text-base'
+const barOutlineButtonLook = 'border-field-border bg-transparent dark:border-muted-foreground/60'
 const noteLook = 'text-[0.8125rem] text-pretty text-muted-foreground'
 
 export function ClosingBar({ group, view }: ClosingBarProps) {
@@ -72,7 +75,7 @@ export function ClosingBar({ group, view }: ClosingBarProps) {
           <ClosingBarFrame title={t('closing.youConfirmed')} icon="✓">
             <p className="text-[0.9375rem]">{t('closing.waitingFor', { names: view.waitingNames.join(', ') })}</p>
             <p className={noteLook}>{endsOnText(view.endsAt)}</p>
-            <KvitButton type="button" variant="secondary" className={barButtonLook} onClick={() => setIsObjecting(true)}>
+            <KvitButton type="button" className={cn(barButtonLook, kvitGlassDangerButtonLook)} onClick={() => setIsObjecting(true)}>
               {t('closing.object')}
             </KvitButton>
           </ClosingBarFrame>
@@ -80,7 +83,7 @@ export function ClosingBar({ group, view }: ClosingBarProps) {
       case 'finished':
         return (
           <ClosingBarFrame title={t('groups.finishedReadOnly')} icon="🔒">
-            {view.canUnlock && <UnlockGroupButton groupId={group.id} className={barButtonLook} />}
+            {view.canUnlock && <UnlockGroupButton groupId={group.id} className={cn(barButtonLook, barOutlineButtonLook)} />}
           </ClosingBarFrame>
         )
     }
@@ -101,6 +104,7 @@ interface ReadyBarProps {
 function ReadyBar({ groupId }: ReadyBarProps) {
   const { t } = useTranslation()
   const startClosing = useStartClosing(groupId)
+  const toastWhenGroupStateChanged = useToastWhenGroupStateChanged()
 
   return (
     <ClosingBarFrame title={t('closing.readyTitle')} icon="🎉">
@@ -112,11 +116,13 @@ function ReadyBar({ groupId }: ReadyBarProps) {
         type="button"
         className={cn(barButtonLook, kvitGlassButtonLook)}
         disabled={startClosing.isPending}
-        onClick={() => startClosing.mutate()}
+        onClick={() => startClosing.mutate(undefined, { onError: toastWhenGroupStateChanged })}
       >
         {t('closing.start')}
       </KvitButton>
-      {startClosing.isError && <KvitInlineError message={t(errorMessageKey(startClosing.error))} />}
+      {startClosing.isError && !isGroupStateChangedError(startClosing.error) && (
+        <KvitInlineError message={t(errorMessageKey(startClosing.error))} />
+      )}
     </ClosingBarFrame>
   )
 }
@@ -131,6 +137,7 @@ interface PromptBarProps {
 function PromptBar({ groupId, title, endsOn, onObject }: PromptBarProps) {
   const { t } = useTranslation()
   const confirmClosing = useConfirmClosing(groupId)
+  const toastWhenGroupStateChanged = useToastWhenGroupStateChanged()
 
   return (
     <ClosingBarFrame title={title}>
@@ -140,7 +147,7 @@ function PromptBar({ groupId, title, endsOn, onObject }: PromptBarProps) {
           type="button"
           className={cn(barButtonLook, kvitGlassButtonLook, 'flex-1')}
           disabled={confirmClosing.isPending}
-          onClick={() => confirmClosing.mutate()}
+          onClick={() => confirmClosing.mutate(undefined, { onError: toastWhenGroupStateChanged })}
         >
           {t('settlements.confirm')}
         </KvitButton>
@@ -153,7 +160,9 @@ function PromptBar({ groupId, title, endsOn, onObject }: PromptBarProps) {
           {t('closing.object')}
         </KvitButton>
       </div>
-      {confirmClosing.isError && <KvitInlineError message={t(errorMessageKey(confirmClosing.error))} />}
+      {confirmClosing.isError && !isGroupStateChangedError(confirmClosing.error) && (
+        <KvitInlineError message={t(errorMessageKey(confirmClosing.error))} />
+      )}
     </ClosingBarFrame>
   )
 }

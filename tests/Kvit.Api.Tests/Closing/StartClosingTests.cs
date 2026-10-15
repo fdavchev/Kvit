@@ -11,7 +11,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task Start_ByTheOwnerWhenEveryoneIsKvit_Answers204WithNoBody()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
 
             HttpResponseMessage response = await ClosingRequests.StartAsync(group.Owner.Client, group.GroupId);
 
@@ -21,7 +21,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task Start_ByTheOwner_SetsClosingWithTheClockTimeAndLeavesFinishedAtEmpty()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
 
             await ClosingSteps.StartAsync(group.Owner, group.GroupId);
 
@@ -33,7 +33,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task Start_ByTheOwner_StoresNoResponseYetAndNoGroupFinishedEvent()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
 
             await ClosingSteps.StartAsync(group.Owner, group.GroupId);
 
@@ -45,6 +45,7 @@ namespace Kvit.Api.Tests.Closing
         public async Task Start_OwnerWithOneMemberWhoHasAnAccount_WaitsForThatMemberInsteadOfFinishing()
         {
             GroupSetup setup = await _app.CreateGroupWithMemberAsync();
+            await ClosingSteps.AddCountedExpenseAsync(_app, setup.GroupId, setup.Owner, setup.OwnerRowId);
 
             await ClosingSteps.StartAsync(setup.Owner, setup.GroupId);
 
@@ -83,7 +84,7 @@ namespace Kvit.Api.Tests.Closing
         [InlineData(ZeroBalanceScenario.CancelledStatus)]
         public async Task Start_WhenTheOnlyPaymentWasRejectedOrCancelled_Answers204BecauseNothingIsPendingAnyMore(string status)
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
             await ZeroBalanceScenario.BojanPaysAnaWithStatusAsync(group, status);
 
             HttpResponseMessage response = await ClosingRequests.StartAsync(group.Owner.Client, group.GroupId);
@@ -94,7 +95,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task Start_WhenAnExpenseWasDeletedAgain_Answers204()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
             Guid expenseId = await ZeroBalanceScenario.BojanOwesAnaAsync(_app, group);
             await SettlementSteps.AssertNoContentAsync(await ExpenseRequests.DeleteAsync(group.Owner.Client, group.GroupId, expenseId));
 
@@ -106,7 +107,7 @@ namespace Kvit.Api.Tests.Closing
         [Fact]
         public async Task Start_ChangesOnlyTheStatusAndTheClosingTime()
         {
-            SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
+            SettlementGroup group = await ClosingSteps.CreateGroupWithAnExpenseAsync(_app);
             string nameBefore = (await GroupRows.GroupValueAsync(_app, group.GroupId, "name"))!;
             string tokenBefore = (await GroupRows.GroupValueAsync(_app, group.GroupId, "invite_token"))!;
             int membersBefore = await GroupRows.CountMembersAsync(_app, group.GroupId);

@@ -32,9 +32,8 @@ export function GroupsScreen() {
     const { groups, finishedGroups } = groupsQuery.data
     return (
       <>
-        {groups.length === 0 ? (
-          <KvitEmpty message={t('groups.empty')} />
-        ) : (
+        {groups.length === 0 && finishedGroups.length === 0 && <KvitEmpty message={t('groups.empty')} />}
+        {groups.length > 0 && (
           <div className="flex flex-col gap-2.5">
             {groups.map((group) => (
               <GroupListItem

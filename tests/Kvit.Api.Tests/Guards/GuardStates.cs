@@ -27,6 +27,7 @@ namespace Kvit.Api.Tests.Guards
                 return;
             }
 
+            await ClosingSteps.AddCountedExpenseAsync(app, group.GroupId, group.Owner, group.OwnerRowId);
             await ClosingSteps.StartAsync(group.Owner, group.GroupId);
             if (!write.HasNoMemberToConfirmBeforeTheWrite)
             {

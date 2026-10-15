@@ -177,6 +177,43 @@ describe('GroupsScreen', () => {
     expect(screen.queryByText(translated('en', 'groups.empty'))).toBeNull()
   })
 
+  it.each(languages)('does not show the empty text when the only group is a finished one (%s)', async (language) => {
+    stubGroupList(jsonAnswer(groupListOf({ groups: [], finishedGroups: [summerFinishedRow] })))
+    await renderGroups(language)
+    await screen.findByRole('button', { name: new RegExp(`^${translated(language, 'groups.finished')}`) })
+
+    expect(screen.queryByText(translated(language, 'groups.empty'))).toBeNull()
+  })
+
+  it('shows the Finished row with its count, the New group link and the Recently deleted link when the only group is a finished one', async () => {
+    stubGroupList(jsonAnswer(groupListOf({ groups: [], finishedGroups: [summerFinishedRow] })))
+    await renderGroups()
+    await screen.findByRole('button', { name: new RegExp(`^${translated('en', 'groups.finished')}`) })
+
+    expect(finishedToggle().textContent).toContain('1')
+    expect(newGroupLink()).toBeTruthy()
+    expect(recentlyDeletedLink()).toBeTruthy()
+  })
+
+  it('shows the finished group as a read-only link when the Finished row is pressed and there are no open groups', async () => {
+    stubGroupList(jsonAnswer(groupListOf({ groups: [], finishedGroups: [summerFinishedRow] })))
+    await renderGroups()
+    await screen.findByRole('button', { name: new RegExp(`^${translated('en', 'groups.finished')}`) })
+
+    fireEvent.click(finishedToggle())
+
+    expect(rowLink(summerFinishedRow.name).getAttribute('href')).toBe(routes.group(summerFinishedRow.id))
+    expect(screen.getByText(translated('en', 'groups.finishedReadOnly'))).toBeTruthy()
+    expect(screen.queryByText(translated('en', 'groups.empty'))).toBeNull()
+  })
+
+  it('still shows the empty text when the only groups are recently deleted ones', async () => {
+    stubGroupList(jsonAnswer(groupListOf({ groups: [], finishedGroups: [], recentlyDeleted: [dinnerDeletedRow] })))
+    await renderGroups()
+
+    expect(await screen.findByText(translated('en', 'groups.empty'))).toBeTruthy()
+  })
+
   it('has no Finished row when there are no finished groups', async () => {
     stubGroupList(jsonAnswer(openGroupsList))
     await renderGroups()

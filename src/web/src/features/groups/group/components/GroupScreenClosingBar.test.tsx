@@ -48,6 +48,7 @@ import { groupOf, testGroup } from '@/test/groupTestData'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import { stubDeviceColorScheme } from '@/test/themeTestHelpers'
 import { shownToastTexts } from '@/test/toastTestHelpers'
+import { translated } from '@/test/translated'
 import { routeObjects } from '@/core/router/router'
 
 vi.mock('sonner', async () => (await import('@/test/sonnerMock')).sonnerMock)
@@ -174,6 +175,15 @@ describe('the closing bar on the group screen', () => {
       expect(screen.queryByText(closingTexts.readyTitle.en)).toBeNull()
       expect(screen.queryByRole('button', { name: closingTexts.start.en })).toBeNull()
       expect(screen.queryByRole('button', { name: 'Confirm' })).toBeNull()
+    })
+
+    it('shows nothing to the owner of a brand-new group with no expense, because the server says canStartClosing is false', async () => {
+      await renderGroupApp(routes.group(groupId), { ...ownerView(openGroup), expenses: [] })
+      await showsGroupScreen()
+      await screen.findByText(translated('en', 'expenses.emptyTitle'))
+
+      expect(screen.queryByText(closingTexts.readyTitle.en)).toBeNull()
+      expect(screen.queryByRole('button', { name: closingTexts.start.en })).toBeNull()
     })
 
     it('shows nothing to a member who is not the owner, even if the answer says canStartClosing', async () => {

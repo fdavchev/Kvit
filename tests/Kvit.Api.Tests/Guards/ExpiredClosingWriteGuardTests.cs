@@ -28,7 +28,7 @@ namespace Kvit.Api.Tests.Guards
             HttpResponseMessage response = await ExpenseRequests.AddAsync(group.Member.Client, group.GroupId, GuardSteps.MemberExpenseInput(group));
 
             await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, ResultCodes.GROUP_FINISHED);
-            Assert.Equal(0, await ExpenseRows.CountExpensesAsync(_app, group.GroupId));
+            Assert.Equal(ClosingSteps.ExpensesInTheSetup, await ExpenseRows.CountExpensesAsync(_app, group.GroupId));
             await AssertFinishedAtTheEndOfTheWindowAsync(group, startedAt);
         }
 
@@ -42,7 +42,7 @@ namespace Kvit.Api.Tests.Guards
             HttpResponseMessage response = await ExpenseRequests.AddAsync(group.Owner.Client, group.GroupId, GuardSteps.OwnerExpenseInput(group));
 
             await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, ResultCodes.GROUP_FINISHED);
-            Assert.Equal(0, await ExpenseRows.CountExpensesAsync(_app, group.GroupId));
+            Assert.Equal(ClosingSteps.ExpensesInTheSetup, await ExpenseRows.CountExpensesAsync(_app, group.GroupId));
             Assert.Equal(0, await GroupRows.CountEventsOfTypeAsync(_app, group.GroupId, "ClosingCancelled"));
             await AssertFinishedAtTheEndOfTheWindowAsync(group, startedAt);
         }
