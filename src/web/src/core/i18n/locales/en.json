@@ -511,6 +511,13 @@
     "message": "This page doesn't exist or has moved.",
     "goHome": "Go to the dashboard"
   },
+  "wakingUp": {
+    "title": "Waking up the server…",
+    "hint": "This takes about a minute the first time."
+  },
+  "toasts": {
+    "region": "Notifications"
+  },
   "time": {
     "justNow": "just now",
     "minutes_one": "{{count}} minute ago",

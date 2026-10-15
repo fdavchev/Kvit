@@ -24,6 +24,7 @@ import {
   amountLeftText,
   currencyToggle,
   dateField,
+  dismissSheetByTappingBackdrop,
   doneButton,
   expectAmountMarkedInvalid,
   expectAmountNotMarkedInvalid,
@@ -81,6 +82,7 @@ import {
   ownerViewMembers,
   petarMember,
 } from '@/test/memberTestData'
+import { colorTokenOfClasses, contrastBetween, type ThemeName } from '@/test/indexCssColors'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import {
   jsonAnswer,
@@ -1658,16 +1660,19 @@ describe('AddExpenseScreen', () => {
 
   describe('the Split sheet edits', () => {
     it.each([
-      ['splitExact', 'expense.splitExact'],
-      ['splitPercentage', 'expense.splitPercentage'],
-      ['splitShares', 'expense.splitShares'],
-    ] as const)('shows the type name in the Split row instead of equally and everyone after the %s tab was used', async (tab, key) => {
-      await renderReadyAdd()
+      ['splitExact', 'expense.splitExact', '1500'],
+      ['splitPercentage', 'expense.splitPercentage', '50'],
+      ['splitShares', 'expense.splitShares', null],
+    ] as const)('shows the type name in the Split row instead of equally and everyone after the %s tab was confirmed with Done', async (tab, key, filipsValue) => {
+      await renderReadyAdd({ members: twoMembers })
       typeAmount('3000')
       const sheet = await openSheet('split')
 
       fireEvent.click(splitTab(sheet, tab))
-      fireEvent.keyDown(sheet, { key: 'Escape' })
+      if (filipsValue !== null) {
+        typeInPerson(sheet, 'Filip', filipsValue)
+      }
+      fireEvent.click(doneButton(sheet))
       await waitForSheetToClose()
 
       const text = formRow('split').textContent ?? ''
@@ -1773,13 +1778,13 @@ describe('AddExpenseScreen', () => {
       expect(isDisabled(doneButton(sheet))).toBe(true)
     })
 
-    it('applies a change at once: Escape closes the sheet and keeps a person who was taken out', async () => {
+    it('applies a change when Done is pressed: the sheet closes and keeps a person who was taken out', async () => {
       await renderReadyAdd()
       typeAmount('3000')
       const sheet = await openSheet('split')
       fireEvent.click(personButton(sheet, 'Marko'))
 
-      fireEvent.keyDown(sheet, { key: 'Escape' })
+      fireEvent.click(doneButton(sheet))
       await waitForSheetToClose()
 
       expect(formRow('split').textContent).not.toContain('Marko')
@@ -1787,7 +1792,7 @@ describe('AddExpenseScreen', () => {
       expect(personButton(again, 'Marko').getAttribute('aria-pressed')).toBe('false')
     })
 
-    it('closes with Escape even while Done is disabled, and keeps the half-finished Exact split in the draft', async () => {
+    it('closes with Escape even while Done is disabled, and drops the half-finished Exact split', async () => {
       await renderReadyAdd()
       typeAmount('3000')
       const sheet = await openSheet('split')
@@ -1799,8 +1804,145 @@ describe('AddExpenseScreen', () => {
       await waitForSheetToClose()
 
       const again = await openSheet('split')
-      expect(splitTab(again, 'splitExact').getAttribute('aria-selected')).toBe('true')
-      expect(within(personGroup(again, 'Filip')).getByRole<HTMLInputElement>('textbox').value).toBe('480')
+      expect(splitTab(again, 'splitEqual').getAttribute('aria-selected')).toBe('true')
+      expect(splitTab(again, 'splitExact').getAttribute('aria-selected')).toBe('false')
+    })
+
+    it('drops a person who was taken out when the sheet is dismissed without Done', async () => {
+      await renderReadyAdd()
+      typeAmount('3000')
+      const sheet = await openSheet('split')
+      fireEvent.click(personButton(sheet, 'Marko'))
+
+      fireEvent.keyDown(sheet, { key: 'Escape' })
+      await waitForSheetToClose()
+
+      const again = await openSheet('split')
+      expect(personButton(again, 'Marko').getAttribute('aria-pressed')).toBe('true')
+    })
+  })
+
+  describe('dismissing the Split sheet without pressing Done', () => {
+    const dismissals = [
+      ['Escape', () => fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })],
+      ['a tap on the backdrop', dismissSheetByTappingBackdrop],
+    ] as const
+
+    describe.each(dismissals)('with %s', (_name, dismiss) => {
+      it.each(['splitExact', 'splitPercentage', 'splitShares'] as const)(
+        'leaves the Split row at equally and everyone and Save enabled after the %s tab was opened',
+        async (tab) => {
+          await renderReadyAdd()
+          typeAmount('3000')
+          const sheet = await openSheet('split')
+
+          fireEvent.click(splitTab(sheet, tab))
+          dismiss()
+          await waitForSheetToClose()
+
+          const text = formRow('split').textContent ?? ''
+          expect(text).toContain(translated('en', 'expense.equally'))
+          expect(text).toContain(translated('en', 'expense.everyone'))
+          expect(isDisabled(saveButton())).toBe(false)
+        },
+      )
+
+      it('shows the Equal tab again with everybody in when the sheet is opened again', async () => {
+        await renderReadyAdd()
+        typeAmount('3000')
+        const sheet = await openSheet('split')
+        fireEvent.click(splitTab(sheet, 'splitExact'))
+        dismiss()
+        await waitForSheetToClose()
+
+        const again = await openSheet('split')
+
+        expect(splitTab(again, 'splitEqual').getAttribute('aria-selected')).toBe('true')
+        expect(splitTab(again, 'splitExact').getAttribute('aria-selected')).toBe('false')
+        expect(personButton(again, 'Marko').getAttribute('aria-pressed')).toBe('true')
+      })
+
+      it('sends an Equal split when the expense is saved after the dismissed tab switch', async () => {
+        const { fetchMock } = await renderReadyAdd()
+        typeAmount('3000')
+        const sheet = await openSheet('split')
+        fireEvent.click(splitTab(sheet, 'splitPercentage'))
+        dismiss()
+        await waitForSheetToClose()
+
+        fireEvent.click(saveButton())
+        await waitFor(() => {
+          expect(requestCount(fetchMock, 'POST', expensesPath)).toBe(1)
+        })
+
+        expect(sentBody(fetchMock, 'POST', expensesPath).splitType).toBe('Equal')
+      })
+    })
+
+    it('writes the new split to the form only when Done is pressed', async () => {
+      await renderReadyAdd()
+      typeAmount('3000')
+      const sheet = await openSheet('split')
+
+      fireEvent.click(splitTab(sheet, 'splitShares'))
+      fireEvent.click(doneButton(sheet))
+      await waitForSheetToClose()
+
+      const text = formRow('split').textContent ?? ''
+      expect(text).toContain(translated('en', 'expense.splitShares'))
+      expect(text).not.toContain(translated('en', 'expense.equally'))
+    })
+  })
+
+  describe('the edge colours of the boxes inside the sheets', () => {
+    const minimumEdgeContrast = 3
+    const themes: readonly ThemeName[] = ['light', 'dark']
+
+    async function boxOfExactTab(): Promise<{ sheet: HTMLElement; box: HTMLElement }> {
+      await renderReadyAdd()
+      typeAmount('3000')
+      const sheet = await openSheet('split')
+      fireEvent.click(splitTab(sheet, 'splitExact'))
+      return { sheet, box: within(personGroup(sheet, 'Filip')).getByRole('textbox') }
+    }
+
+    async function boxOfPercentageTab(): Promise<{ sheet: HTMLElement; box: HTMLElement }> {
+      await renderReadyAdd()
+      typeAmount('3000')
+      const sheet = await openSheet('split')
+      fireEvent.click(splitTab(sheet, 'splitPercentage'))
+      return { sheet, box: within(personGroup(sheet, 'Filip')).getByRole('textbox') }
+    }
+
+    async function boxOfDateSheet(): Promise<{ sheet: HTMLElement; box: HTMLElement }> {
+      await renderReadyAdd()
+      const sheet = await openSheet('date')
+      return { sheet, box: dateField(sheet) }
+    }
+
+    function expectEdgeStandsOut(sheet: HTMLElement, box: HTMLElement, theme: ThemeName): void {
+      const borderToken = colorTokenOfClasses(Array.from(box.classList), 'border', theme)
+      const fillToken = colorTokenOfClasses(Array.from(box.classList), 'bg', theme)
+      const surfaceToken = colorTokenOfClasses(Array.from(sheet.classList), 'bg', theme)
+      if (borderToken === null || fillToken === null || surfaceToken === null) {
+        throw new Error(
+          `Expected a border, a fill and a sheet surface colour in ${theme} mode, found border=${borderToken}, fill=${fillToken}, surface=${surfaceToken}: "${box.className}"`,
+        )
+      }
+      expect(contrastBetween(borderToken, surfaceToken, theme), `border-${borderToken} on the sheet (${surfaceToken})`).toBeGreaterThanOrEqual(minimumEdgeContrast)
+      expect(contrastBetween(borderToken, fillToken, theme), `border-${borderToken} on the box fill (${fillToken})`).toBeGreaterThanOrEqual(minimumEdgeContrast)
+    }
+
+    describe.each([
+      ['the Exact box', boxOfExactTab],
+      ['the % box', boxOfPercentageTab],
+      ['the date box', boxOfDateSheet],
+    ] as const)('%s', (_name, open) => {
+      it.each(themes)('has an edge of at least 3:1 against the sheet and against its own fill in %s mode', async (theme) => {
+        const { sheet, box } = await open()
+
+        expectEdgeStandsOut(sheet, box, theme)
+      })
     })
   })
 
@@ -1949,7 +2091,7 @@ describe('AddExpenseScreen', () => {
     it('fills the box nobody typed in again when the amount is changed after the sheet was closed', async () => {
       const sheet = await openSheetOnTab('splitExact', '1800')
       typeInPerson(sheet, 'Filip', '700')
-      fireEvent.keyDown(sheet, { key: 'Escape' })
+      fireEvent.click(doneButton(sheet))
       await waitForSheetToClose()
 
       typeAmount('2000')
@@ -1958,30 +2100,6 @@ describe('AddExpenseScreen', () => {
       expect(personBoxValue(again, 'Filip')).toBe('700')
       expect(personBoxValue(again, 'Ana')).toBe('1300')
       expect(isDisabled(doneButton(again))).toBe(false)
-    })
-
-    it('keeps a box that was typed in when the amount is changed after the sheet was closed', async () => {
-      const sheet = await openSheetOnTab('splitExact', '1800')
-      typeInPerson(sheet, 'Filip', '700')
-      typeInPerson(sheet, 'Ana', '500')
-      fireEvent.keyDown(sheet, { key: 'Escape' })
-      await waitForSheetToClose()
-
-      typeAmount('2000')
-
-      const again = await openSheet('split')
-      expect(personBoxValue(again, 'Filip')).toBe('700')
-      expect(personBoxValue(again, 'Ana')).toBe('500')
-    })
-
-    it.each(['splitExact', 'splitPercentage'] as const)('fills nobody with three people on the %s tab', async (tab) => {
-      const sheet = await openSheetOnTab(tab, '1800', { members: threeMembers })
-
-      typeInPerson(sheet, 'Filip', '25')
-
-      expect(personBoxValue(sheet, 'Filip')).toBe('25')
-      expect(personBoxValue(sheet, 'Ana')).toBe('')
-      expect(personBoxValue(sheet, 'Marko')).toBe('')
     })
 
     it('fills nobody on the Equal tab, where a typed amount is an extra', async () => {
@@ -2051,7 +2169,7 @@ describe('AddExpenseScreen', () => {
       const first = await openSheet('split')
       fireEvent.click(within(personGroup(first, 'Marko')).getByRole('button', { name: translated('en', 'expense.extra') }))
       typeInPerson(first, 'Marko', '600')
-      fireEvent.keyDown(first, { key: 'Escape' })
+      fireEvent.click(doneButton(first))
       await waitForSheetToClose()
 
       fireEvent.click(currencyToggle('MKD'))
@@ -2062,12 +2180,12 @@ describe('AddExpenseScreen', () => {
     })
 
     it('clears the typed Exact amounts', async () => {
-      await renderReadyAdd()
+      await renderReadyAdd({ members: twoMembers })
       typeAmount('3000')
       const first = await openSheet('split')
       fireEvent.click(splitTab(first, 'splitExact'))
-      typeInPerson(first, 'Filip', '480')
-      fireEvent.keyDown(first, { key: 'Escape' })
+      typeInPerson(first, 'Filip', '1500')
+      fireEvent.click(doneButton(first))
       await waitForSheetToClose()
 
       fireEvent.click(currencyToggle('MKD'))
@@ -2082,7 +2200,7 @@ describe('AddExpenseScreen', () => {
         const sheet = await openSheet('split')
         fireEvent.click(within(personGroup(sheet, 'Marko')).getByRole('button', { name: translated('en', 'expense.extra') }))
         typeInPerson(sheet, 'Marko', '600')
-        fireEvent.keyDown(sheet, { key: 'Escape' })
+        fireEvent.click(doneButton(sheet))
         await waitForSheetToClose()
         fireEvent.click(currencyToggle('MKD'))
       })

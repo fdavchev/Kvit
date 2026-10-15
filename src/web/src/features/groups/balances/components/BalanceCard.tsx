@@ -8,7 +8,7 @@ import { KvitAvatar } from '@/shared/components/KvitAvatar'
 import { cn } from '@/shared/utils/cn'
 import { formatMoney } from '@/shared/utils/formatMoney'
 import { formatSignedMoney } from '@/shared/utils/formatSignedMoney'
-import { amountLookOf, balancesCardLook } from '../balancesLooks'
+import { amountLookOf, balancesCardLook, balancesRowLook, balancesRowTextLook } from '../balancesLooks'
 import type { BalanceCardRow, BalanceCardView, OwedLine } from '../balancesView'
 import { MarkPaidButton } from './MarkPaidButton'
 import { WaitingPaymentRow } from './WaitingPaymentRow'
@@ -80,13 +80,13 @@ export function BalanceCard({ groupId, title, card, language, canChangePayments,
               )
             }
             return (
-              <li key={row.key} className="flex items-center gap-3 border-t border-field-border pt-2.5">
+              <li key={row.key} className={cn(balancesRowLook, 'gap-3 border-t border-field-border pt-2.5')}>
                 <KvitAvatar
                   name={row.other.name}
                   pictureUrl={row.other.pictureUrl}
                   colorIndex={row.other.colorIndex}
                 />
-                <div className="flex min-w-0 flex-1 flex-col">
+                <div className={balancesRowTextLook}>
                   <p className="font-bold break-words">{texts.title}</p>
                   <p className="text-[0.8125rem] text-muted-foreground">{texts.detail}</p>
                 </div>

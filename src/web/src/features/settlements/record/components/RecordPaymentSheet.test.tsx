@@ -2,10 +2,12 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GroupMember } from '@/core/services/groups/membersService'
 import { settlementsPath } from '@/test/balancesTestData'
-import { isDisabled, saveButton, sentBody, typeAmount } from '@/test/expenseFormTestHelpers'
+import { amountField, isDisabled, saveButton, sentBody, typeAmount } from '@/test/expenseFormTestHelpers'
 import { freezeTime, unfreezeTime } from '@/test/expenseTestHelpers'
 import { testGroupId } from '@/test/groupTestData'
 import { anaMember, filipMember, grandmaMember, markoMember } from '@/test/memberTestData'
+import { colorTokenOfClasses, type ThemeName } from '@/test/indexCssColors'
+import { expectPlaceholderLegibleOn } from '@/test/placeholderTestHelpers'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { jsonAnswer, requestCount, stubFetchByRequest } from '@/test/requestTestHelpers'
 import { pendingPaymentOf } from '@/test/settlementActionsTestData'
@@ -101,6 +103,30 @@ describe('the Record another payment sheet when exactly one other person is in t
       fromMemberId: filipMember.id,
       toMemberId: anaMember.id,
     })
+  })
+})
+
+describe('the amount placeholder of the Record another payment sheet', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    freezeTime()
+  })
+
+  afterEach(() => {
+    unfreezeTime()
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it.each<ThemeName>(['light', 'dark'])('has at least 4.5:1 contrast on the surface of the sheet in %s mode', async (theme) => {
+    const { sheet } = await renderOpenSheet([filipMember, anaMember])
+
+    const surfaceToken = colorTokenOfClasses(Array.from(sheet.classList), 'bg', theme)
+
+    if (surfaceToken === null) {
+      throw new Error(`The sheet has no background colour class in ${theme} mode: "${sheet.className}"`)
+    }
+    expectPlaceholderLegibleOn(amountField(), [surfaceToken])
   })
 })
 

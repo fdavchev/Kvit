@@ -4,8 +4,9 @@ import { errorMessageKey } from '@/core/api/errors'
 import { useMe } from '@/core/auth/useMe'
 import { useRecordActive } from '@/features/home/hooks/useRecordActive'
 import { KvitError } from '@/shared/components/KvitError'
-import { KvitLoading } from '@/shared/components/KvitLoading'
+import { KvitScreen } from '@/shared/components/KvitScreen'
 import { routes } from './routes'
+import { WakingUp } from './WakingUp'
 
 export function RequireAuth() {
   const { t } = useTranslation()
@@ -14,15 +15,17 @@ export function RequireAuth() {
 
   const me = meQuery.data
   if (me === undefined) {
-    if (meQuery.isError) {
+    if (meQuery.isError && !meQuery.isFetching) {
       return (
-        <KvitError
-          message={t(errorMessageKey(meQuery.error))}
-          onRetry={() => void meQuery.refetch()}
-        />
+        <KvitScreen className="items-center justify-center">
+          <KvitError
+            message={t(errorMessageKey(meQuery.error))}
+            onRetry={() => void meQuery.refetch()}
+          />
+        </KvitScreen>
       )
     }
-    return <KvitLoading />
+    return <WakingUp />
   }
   if (me === null) {
     return <Navigate to={routes.welcome} replace />

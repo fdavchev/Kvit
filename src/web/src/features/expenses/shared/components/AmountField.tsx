@@ -34,7 +34,7 @@ export function AmountField({ amountText, currency, onAmountTextChange, onCurren
         aria-invalid={isAmountInvalid}
         onChange={(event) => onAmountTextChange(event.target.value)}
         className={cn(
-          '-mx-0.5 w-full min-w-0 flex-1 rounded-[14px] border-2 border-transparent bg-transparent py-0.5 text-5xl font-extrabold tracking-[-0.02em] text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-offset-0 aria-invalid:border-destructive',
+          '-mx-0.5 w-full min-w-0 flex-1 rounded-[14px] border-2 border-transparent bg-transparent py-0.5 text-5xl font-extrabold tracking-[-0.02em] text-foreground placeholder:text-muted-foreground focus-visible:outline-offset-0 aria-invalid:border-destructive',
           onCurrencyChange === undefined ? 'pl-3 text-left' : 'text-right',
         )}
       />

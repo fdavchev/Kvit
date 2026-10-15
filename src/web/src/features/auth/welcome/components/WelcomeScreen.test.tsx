@@ -138,6 +138,15 @@ describe('WelcomeScreen', () => {
     expect(haveAccount.compareDocumentPosition(privacy)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
   })
 
+  it.each(languages)('gives the Privacy link a tap area at least 44 px high, with min-h-11 and not min-h-10 (%s)', async (language) => {
+    await renderWelcome({ language })
+
+    const privacy = screen.getByRole('link', { name: translated(language, 'common.privacy') })
+
+    expect(Array.from(privacy.classList)).toContain('min-h-11')
+    expect(Array.from(privacy.classList)).not.toContain('min-h-10')
+  })
+
   it('opens the privacy screen and tells it to come back here when the Privacy link is pressed', async () => {
     const { router } = await renderWelcome()
 

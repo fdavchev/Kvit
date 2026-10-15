@@ -74,6 +74,18 @@ export async function waitForSheetToClose(): Promise<void> {
   })
 }
 
+export function dismissSheetByTappingBackdrop(): void {
+  const backdrop = document.querySelector<HTMLElement>('[role="presentation"][data-open]')
+  if (backdrop === null) {
+    throw new Error('Found no open sheet backdrop to tap')
+  }
+  fireEvent.pointerDown(backdrop)
+  fireEvent.mouseDown(backdrop)
+  fireEvent.pointerUp(backdrop)
+  fireEvent.mouseUp(backdrop)
+  fireEvent.click(backdrop)
+}
+
 export function personButton(sheet: HTMLElement, name: string): HTMLElement {
   return within(sheet).getByRole('button', { name: startsWith(name) })
 }

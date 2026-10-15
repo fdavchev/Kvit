@@ -28,7 +28,7 @@ interface SplitSheetProps {
   amountMinor: number
   currency: Currency
   language: Language
-  onChange: (draft: SplitDraft) => void
+  onDone: (draft: SplitDraft) => void
   onClose: () => void
 }
 
@@ -40,12 +40,12 @@ const splitTabKeys: Record<SplitType, string> = {
 }
 
 const smallFieldLook =
-  'min-h-11 min-w-11 w-24 rounded-[10px] border border-field-border bg-field px-2.5 text-right font-semibold text-field-foreground focus:border-field-border-focus focus-visible:outline-offset-0'
+  'min-h-11 min-w-11 w-24 rounded-[10px] border border-field-border-raised bg-field px-2.5 text-right font-semibold text-field-foreground focus:border-field-border-focus focus-visible:outline-offset-0'
 
 const stepButtonLook = 'pressable grid min-h-11 min-w-11 place-items-center rounded-full'
 
 const stepCircleLook =
-  'grid size-9 place-items-center rounded-full border border-field-border bg-field text-lg text-field-foreground'
+  'grid size-9 place-items-center rounded-full border border-field-border-raised bg-field text-lg text-field-foreground'
 
 export function SplitSheet({
   people,
@@ -53,22 +53,28 @@ export function SplitSheet({
   amountMinor,
   currency,
   language,
-  onChange,
+  onDone,
   onClose,
 }: SplitSheetProps) {
   const { t } = useTranslation()
   const sheet = useKvitSheet()
+  const [sheetDraft, setSheetDraft] = useState<SplitDraft>(draft)
   const [openedExtras, setOpenedExtras] = useState<readonly string[]>([])
-  const progress = splitProgress(draft, amountMinor, currency)
+  const progress = splitProgress(sheetDraft, amountMinor, currency)
   const moneyInputMode = currency === 'EUR' ? 'decimal' : 'numeric'
 
   function switchTab(splitType: SplitType): void {
     setOpenedExtras([])
-    onChange(withSplitType(draft, splitType))
+    setSheetDraft(withSplitType(sheetDraft, splitType))
   }
 
   function typeValue(memberId: string, typedValue: string): void {
-    onChange(withTypedValueAutoFilled(draft, memberId, typedValue, amountMinor, currency))
+    setSheetDraft(withTypedValueAutoFilled(sheetDraft, memberId, typedValue, amountMinor, currency))
+  }
+
+  function applyAndClose(): void {
+    onDone(sheetDraft)
+    sheet.close()
   }
 
   function renderPersonName(person: ExpensePerson) {
@@ -88,7 +94,7 @@ export function SplitSheet({
         <button
           type="button"
           aria-pressed={draftPerson.isIn}
-          onClick={() => onChange(withPersonIn(draft, draftPerson.memberId, !draftPerson.isIn))}
+          onClick={() => setSheetDraft(withPersonIn(sheetDraft, draftPerson.memberId, !draftPerson.isIn))}
           className="pressable flex min-h-11 min-w-11 flex-1 items-center gap-3 rounded-xl text-left"
         >
           {renderPersonName(person)}
@@ -111,7 +117,7 @@ export function SplitSheet({
               onClick={() => setOpenedExtras([...openedExtras, draftPerson.memberId])}
               className="pressable flex min-h-11 min-w-11 flex-none items-center rounded-full"
             >
-              <span className="grid min-h-9 place-items-center rounded-full border border-field-border bg-field px-2.5 text-[0.875rem] font-medium text-muted-foreground">
+              <span className="grid min-h-9 place-items-center rounded-full border border-field-border-raised bg-field px-2.5 text-[0.875rem] font-medium text-muted-foreground">
                 {t('expense.extra')}
               </span>
             </button>
@@ -121,7 +127,7 @@ export function SplitSheet({
   }
 
   function renderTypedRow(draftPerson: SplitDraftPerson, person: ExpensePerson) {
-    const isPercentage: boolean = draft.splitType === 'Percentage'
+    const isPercentage: boolean = sheetDraft.splitType === 'Percentage'
     return (
       <>
         {renderPersonName(person)}
@@ -173,7 +179,7 @@ export function SplitSheet({
 
   function renderRow(draftPerson: SplitDraftPerson) {
     const person = personOf(people, draftPerson.memberId)
-    switch (draft.splitType) {
+    switch (sheetDraft.splitType) {
       case 'Equal':
         return renderEqualRow(draftPerson, person)
       case 'Exact':
@@ -185,7 +191,7 @@ export function SplitSheet({
   }
 
   const shownPeople =
-    draft.splitType === 'Equal' ? draft.people : draft.people.filter((person) => person.isIn)
+    sheetDraft.splitType === 'Equal' ? sheetDraft.people : sheetDraft.people.filter((person) => person.isIn)
 
   return (
     <KvitSheet title={t('expense.split')} onClose={onClose} actionsRef={sheet.actionsRef}>
@@ -195,7 +201,7 @@ export function SplitSheet({
             key={splitType}
             type="button"
             role="tab"
-            aria-selected={draft.splitType === splitType}
+            aria-selected={sheetDraft.splitType === splitType}
             onClick={() => switchTab(splitType)}
             className="pressable min-h-11 flex-1 rounded-full font-bold text-muted-foreground aria-selected:bg-pill aria-selected:text-foreground aria-selected:shadow-[0_1px_3px_var(--track-shadow)]"
           >
@@ -216,7 +222,7 @@ export function SplitSheet({
         ))}
       </div>
       <SplitProgressText progress={progress} currency={currency} language={language} />
-      <KvitButton disabled={progress.kind !== 'ok'} onClick={sheet.close}>
+      <KvitButton disabled={progress.kind !== 'ok'} onClick={applyAndClose}>
         {t('expense.done')}
       </KvitButton>
     </KvitSheet>

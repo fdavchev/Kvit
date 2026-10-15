@@ -7,7 +7,7 @@ import { KvitAvatar } from '@/shared/components/KvitAvatar'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { showUndoToast } from '@/shared/toasts/showUndoToast'
 import { cn } from '@/shared/utils/cn'
-import { balancesTextButtonLook } from '../balancesLooks'
+import { balancesRowLook, balancesRowTextLook, balancesTextButtonLook } from '../balancesLooks'
 import type { ConfirmedPaymentView } from '../balancesView'
 
 interface PaymentRowProps {
@@ -50,9 +50,9 @@ export function PaymentRow({ groupId, payment, detail, canDelete }: PaymentRowPr
   }
 
   return (
-    <li className="flex items-center gap-2.5 rounded-2xl bg-card px-3 py-2.5 text-card-foreground">
+    <li className={cn(balancesRowLook, 'gap-2.5 rounded-2xl bg-card px-3 py-2.5 text-card-foreground')}>
       <KvitAvatar name={payment.payer.name} pictureUrl={payment.payer.pictureUrl} colorIndex={payment.payer.colorIndex} />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className={balancesRowTextLook}>
         <p className="text-[0.9375rem] font-semibold break-words">
           {t('settlements.fromPaidTo', { from: payment.payer.name, to: payment.receiver.name })}
         </p>

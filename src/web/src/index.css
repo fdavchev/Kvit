@@ -30,7 +30,7 @@
   --color-brand-950: #3d2610;
   --color-brand-line: #9c6f47;
   --color-night: #351f1b;
-  --color-night-field: color-mix(in srgb, var(--color-night) 78%, black);
+  --color-night-field: color-mix(in srgb, var(--color-night) 78%, #000000);
   --color-night-raised: color-mix(
     in srgb,
     var(--color-night) 82%,
@@ -39,6 +39,11 @@
   --color-night-line: color-mix(
     in srgb,
     var(--color-night) 45%,
+    var(--color-brand-400)
+  );
+  --color-night-raised-line: color-mix(
+    in srgb,
+    var(--color-night) 25%,
     var(--color-brand-400)
   );
 }
@@ -72,6 +77,7 @@
   --color-field: var(--field);
   --color-field-foreground: var(--field-foreground);
   --color-field-border: var(--field-border);
+  --color-field-border-raised: var(--field-border-raised);
   --color-field-border-focus: var(--field-border-focus);
   --color-track: var(--track);
   --color-track-active: var(--track-active);
@@ -126,6 +132,7 @@
   --field: #ffffff;
   --field-foreground: var(--color-brand-950);
   --field-border: var(--color-brand-line);
+  --field-border-raised: var(--color-brand-line);
   --field-border-focus: var(--color-brand-950);
   --track: var(--color-brand-50);
   --track-active: #ffffff;
@@ -198,6 +205,7 @@
     --field: var(--color-night-field);
     --field-foreground: var(--color-brand-50);
     --field-border: var(--color-night-line);
+    --field-border-raised: var(--color-night-raised-line);
     --field-border-focus: var(--color-brand-400);
     --track: var(--color-night-field);
     --track-active: var(--color-night-raised);

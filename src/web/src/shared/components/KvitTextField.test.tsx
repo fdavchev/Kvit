@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import type { ComponentProps } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { descriptionOf, fieldLabelled } from '@/test/formTestHelpers'
+import { expectPlaceholderLegibleOn, placeholderTokenOf } from '@/test/placeholderTestHelpers'
 import { KvitTextField } from './KvitTextField'
 
 const label = 'Email address'
@@ -98,5 +99,19 @@ describe('KvitTextField', () => {
     renderField()
 
     expect(fieldLabelled(label).getAttribute('aria-invalid')).not.toBe('true')
+  })
+
+  describe('the placeholder', () => {
+    it.each(['light', 'dark'] as const)('is not left to the browser default grey and not faded with an opacity in %s mode', (theme) => {
+      renderField({ placeholder: 'Marko' })
+
+      expect(() => placeholderTokenOf(fieldLabelled(label), theme)).not.toThrow()
+    })
+
+    it('has at least 4.5:1 contrast on the field colour, in light and in dark mode', () => {
+      renderField({ placeholder: 'Marko' })
+
+      expectPlaceholderLegibleOn(fieldLabelled(label), ['field'])
+    })
   })
 })
