@@ -39,7 +39,7 @@ namespace Kvit.Api.Tests.Settlements
         {
             SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
             Guid clientRequestId = Guid.CreateVersion7();
-            await using SettlementInsertGate gate = await SettlementInsertGate.CloseAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "settlements");
 
             Task<HttpResponseMessage> first = SettlementRequests.RecordAsync(group.Owner.Client, group.GroupId, group.MemberRowId, group.OwnerRowId, 30_000, ExpenseInputs.Mkd, clientRequestId);
             await gate.WaitUntilRequestsAreHeldAsync(1);
@@ -59,7 +59,7 @@ namespace Kvit.Api.Tests.Settlements
         {
             SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
             Guid clientRequestId = Guid.CreateVersion7();
-            await using SettlementInsertGate gate = await SettlementInsertGate.CloseAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "settlements");
 
             Task<HttpResponseMessage> first = SettlementRequests.RecordAsync(group.Owner.Client, group.GroupId, group.MemberRowId, group.OwnerRowId, 30_000, ExpenseInputs.Mkd, clientRequestId);
             await gate.WaitUntilRequestsAreHeldAsync(1);
@@ -79,7 +79,7 @@ namespace Kvit.Api.Tests.Settlements
         {
             SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
             Guid clientRequestId = Guid.CreateVersion7();
-            await using SettlementInsertGate gate = await SettlementInsertGate.CloseAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "settlements");
 
             Task<HttpResponseMessage> first = SettlementRequests.RecordAsync(group.Member.Client, group.GroupId, group.MemberRowId, group.OwnerRowId, 30_000, ExpenseInputs.Mkd, clientRequestId);
             await gate.WaitUntilRequestsAreHeldAsync(1);
@@ -99,7 +99,7 @@ namespace Kvit.Api.Tests.Settlements
         {
             SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
             Guid clientRequestId = Guid.CreateVersion7();
-            await using SettlementInsertGate gate = await SettlementInsertGate.CloseAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "settlements");
 
             Task<HttpResponseMessage> first = SettlementRequests.RecordAsync(group.Owner.Client, group.GroupId, group.MemberRowId, group.OwnerRowId, 30_000, ExpenseInputs.Mkd, clientRequestId);
             await gate.WaitUntilRequestsAreHeldAsync(1);

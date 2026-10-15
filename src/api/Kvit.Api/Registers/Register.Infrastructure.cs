@@ -3,6 +3,7 @@ using Kvit.Contracts.Auth;
 using Kvit.Contracts.Persistence;
 using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Interfaces;
+using Kvit.Domain.UsageEvents;
 using Kvit.Infrastructure.Auth;
 using Kvit.Infrastructure.ExchangeRates;
 using Kvit.Infrastructure.Groups;
@@ -27,6 +28,7 @@ namespace Kvit.Api.Registers
             services.AddScoped<PasswordResetService>();
             services.AddSingleton<IInviteTokenGenerator, InviteTokenGenerator>();
             services.AddSingleton<ExchangeRateRefreshGate>();
+            services.AddSingleton<ActiveDayMemory>();
             services.AddHttpClient<IExchangeRateSource, NbrmExchangeRateSource>((serviceProvider, client) =>
             {
                 client.BaseAddress = NbrmSetting.ReadBaseUrl(serviceProvider.GetRequiredService<IConfiguration>());

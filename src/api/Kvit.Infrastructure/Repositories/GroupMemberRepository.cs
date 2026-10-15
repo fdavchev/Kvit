@@ -22,7 +22,7 @@ namespace Kvit.Infrastructure.Repositories
 
         public Task SaveAsync(CancellationToken cancellationToken)
         {
-            return _context.SaveChangesOrReportTakenClientRequestIdAsync(cancellationToken);
+            return _context.SaveChangesOrReportDuplicateAsync(cancellationToken);
         }
     }
 }

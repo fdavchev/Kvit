@@ -10,7 +10,7 @@ namespace Kvit.Domain.MoneyRules
         public Result CheckMemberSettled(Guid memberId)
         {
             BalanceSummary summary = Balances.Calculate(MemberIdsInJoiningOrder, Expenses, Settlements);
-            bool isBalanceZero = summary.ByCurrency.Values.All(balances => BalanceOf(balances, memberId) == 0);
+            bool isBalanceZero = summary.ByCurrency.Values.All(balances => BalanceOf(balances, memberId).MinorUnits == 0);
             if (!isBalanceZero)
             {
                 return Result.Failure($"Member {memberId} still owes or is owed money in this group.", ResultCodes.MEMBER_BALANCE_NOT_ZERO);
@@ -52,6 +52,16 @@ namespace Kvit.Domain.MoneyRules
             return Result.Ok();
         }
 
+        public IReadOnlyList<Money> NonZeroBalancesOf(Guid memberId)
+        {
+            BalanceSummary summary = Balances.Calculate(MemberIdsInJoiningOrder, Expenses, Settlements);
+
+            return [.. summary.ByCurrency
+                .OrderBy(currencyBalances => currencyBalances.Key)
+                .Select(currencyBalances => BalanceOf(currencyBalances.Value, memberId))
+                .Where(balance => balance.MinorUnits != 0)];
+        }
+
         public Result CheckHasCountedExpense()
         {
             if (!HasCountedExpense())
@@ -74,12 +84,12 @@ namespace Kvit.Domain.MoneyRules
             return Expenses.Any(expense => !expense.IsDeleted);
         }
 
-        private static long BalanceOf(IReadOnlyList<MemberBalance> balances, Guid memberId)
+        private static Money BalanceOf(IReadOnlyList<MemberBalance> balances, Guid memberId)
         {
             MemberBalance balance = balances.SingleOrDefault(candidate => candidate.MemberId == memberId)
                 ?? throw new InvalidOperationException($"Member {memberId} is not in the group's member list, so its balance can't be checked.");
 
-            return balance.Balance.MinorUnits;
+            return balance.Balance;
         }
 
         private IEnumerable<BalanceSettlement> PendingSettlements()

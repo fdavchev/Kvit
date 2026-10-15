@@ -157,21 +157,29 @@ Moved forward from Phase 11 because the Render wake-up (about 22 s) made the app
 - [ ] **Filip:** commit, push, see CI go green, merge into `main` (CI applies the `ClosingResponses` migration on Neon)
 
 ## Phase 11: Dashboard + Release 1 · `feat/11-dashboard`
-- [ ] Dashboard (Filip decides the layout that day), recent activity, "+" to the last-used group
+- [ ] Dashboard layout (Filip picks from the mockup `design/2026-10-15-dashboard/`), "Needs you" across groups answered on Home, recent activity, "+" to the group last added to
 - [x] Saved data shown instantly: moved to Phase 8b
 - [ ] `Active` usage event (once per user per day)
+- [ ] Closing bar as a popup that stays until answered
+- [ ] Phase 10 leftovers from BACKLOG
 - [ ] Full pass at 360 px in EN and MK, light and dark; every text translated
 - [ ] Deploy; **Filip** and friends use it on something real
 - **Done when:** all tests pass and Filip says Release 1 works for him.
 
+## Phase 12: Animations + touch-ups · `feat/12-polish`
+- [ ] The glass-look redesign on every popup, and the animation pass with Filip's 2026-10-09 picks (BACKLOG)
+- [ ] Dark mode surface colours: Filip dislikes the `color-mix` ones (`--color-night-field`, `--color-night-raised`, `--color-night-line`) and wants them reconsidered (2026-10-15)
+- [ ] The desktop layout and the other small look items from BACKLOG
+- Moved here from Phase 11 on 2026-10-15 (Filip: "it's big").
+
 ---
 
 # Release 2: "budget" (phases get detailed when Release 1 is done)
-- Phase 12: personal spending + custom categories
-- Phase 13: income, once and repeating (lazy)
-- Phase 14: budget share per group, budget currency, limits, monthly summary
-- Phase 15: possible duplicates, group totals per category, group spending plan
+- Phase 13: personal spending + custom categories
+- Phase 14: income, once and repeating (lazy)
+- Phase 15: budget share per group, budget currency, limits, monthly summary
+- Phase 16: possible duplicates, group totals per category, group spending plan
 
 # Release 3: "polish"
-- Phase 16: the outbox (queue while the server wakes, "All up to date ✓", failed items with Retry / Discard)
-- Phase 17: admin statistics page
+- Phase 17: the outbox (queue while the server wakes, "All up to date ✓", failed items with Retry / Discard)
+- Phase 18: admin statistics page

@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit: dashboard (mockup)</title>
+<link rel="stylesheet" href="../2026-10-01-round-3/source/palette.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/base.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/app.css">
+<style>
+  html, body { background: #e9e6e1; color: #222; height: auto; min-height: 100%; overflow: auto; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; padding: 10px 16px 2px; font-size: .9rem; }
+  .bar .grp { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .bar button { border: 1px solid #999; background: #fff; color: #222; border-radius: 8px; padding: 6px 10px; font: inherit; cursor: pointer; width: auto; min-height: 0; display: inline-block; }
+  .bar button[aria-pressed='true'] { background: #222; color: #fff; border-color: #222; }
+  .note2 { max-width: 760px; margin: 6px auto 10px; text-align: center; font-size: .9rem; color: #444; padding: 0 16px; min-height: 3em; }
+  .stage { display: flex; justify-content: center; padding: 0 16px 24px; }
+  .phone { position: relative; width: 360px; height: min(780px, calc(100vh - 230px)); min-height: 460px; overflow: hidden; border-radius: 28px; box-shadow: 0 6px 24px rgba(0,0,0,.25);
+    --bg: var(--orange-200); --ink: var(--orange-950); --ink-soft: var(--orange-900); --primary: var(--orange-deep); --primary-ink: #fff;
+    --card: var(--orange-50); --field-line: var(--orange-line); --pill: #fff; --plus: #1d6b2e; --minus: #b71f1f;
+    background: var(--bg); color: var(--ink); }
+  .phone.dark { --bg: var(--dark-bg); --ink: var(--orange-50); --ink-soft: var(--orange-200); --primary: var(--dark-button); --primary-ink: var(--dark-bg);
+    --card: var(--dark-raised); --field-line: var(--dark-line); --pill: #351f1b; --plus: #7fd68f; --minus: #ff9a9a; }
+  .screen { display: block; min-height: 0; box-sizing: border-box; height: 100%; overflow-y: auto; padding: 14px 20px 150px; }
+  .hello { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .hello .h1 { flex: 1; font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+  .av { width: 44px; height: 44px; border-radius: 50%; background: var(--orange-deep); color: #fff; display: grid; place-items: center; font-weight: 800; }
+  .h2 { font-size: .8125rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); margin: 18px 0 8px; }
+  .soft { color: var(--ink-soft); font-size: .9375rem; }
+  .small { font-size: .8125rem; color: var(--ink-soft); }
+  .t { font-weight: 700; }
+  .pos { color: var(--plus); font-weight: 800; }
+  .neg { color: var(--minus); font-weight: 800; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 999px; min-height: 44px; padding: 0 16px; white-space: nowrap; font: inherit; font-weight: 700; background: var(--primary); color: var(--primary-ink); cursor: pointer; width: auto; }
+  .btn.out { background: transparent; color: var(--ink); border: 1.5px solid var(--field-line); }
+  .btn.wine { background: transparent; color: var(--minus); border: 1.5px solid var(--minus); }
+  .btn.sm { min-height: 44px; padding: 0 14px; }
+  .btn.full { width: 100%; }
+  .card { background: var(--card); border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+  .need { border: 1.5px solid var(--primary); }
+  .actions { display: flex; gap: 8px; }
+  .actions .btn { flex: 1; }
+  .row { display: flex; align-items: center; gap: 12px; min-height: 56px; }
+  .row .g { flex: 1; min-width: 0; }
+  .row .nm { font-weight: 700; overflow-wrap: anywhere; }
+  .tile { flex: none; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font-size: 1.4rem; background: var(--orange-deep); }
+  .amts { text-align: right; flex: none; line-height: 1.25; }
+  .chip { display: inline-block; border-radius: 999px; padding: 4px 10px; font-size: .8125rem; font-weight: 800; background: var(--pill); }
+  .tot2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tot2 > div { background: var(--card); border-radius: 20px; padding: 12px 14px; }
+  .tot2 .lbl { font-size: .8125rem; color: var(--ink-soft); font-weight: 700; }
+  .big { background: var(--primary); color: var(--primary-ink); border-radius: 24px; padding: 18px 18px 16px; margin-bottom: 12px; }
+  .big .lbl { font-size: .8125rem; font-weight: 700; opacity: .9; }
+  .big .num { font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+  .big .sub { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; font-weight: 700; font-size: .9375rem; }
+  .tint > div:first-child { background: #d9efd6; }
+  .tint > div:last-child { background: #f7d8d3; }
+  .phone.dark .tint > div:first-child { background: #1f4a2a; }
+  .phone.dark .tint > div:last-child { background: #55222a; }
+  .phone.dark .tint .lbl { color: var(--orange-50); }
+  .tint .lbl { color: #3d2610; }
+  .big.sm { border-radius: 18px; padding: 10px 14px 10px; margin-bottom: 10px; }
+  .big.sm .num { font-size: 1.25rem; }
+  .big.sm .sub { margin-top: 2px; font-size: .8125rem; }
+  .strip { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1.5px solid var(--primary); border-radius: 18px; padding: 8px 8px 8px 14px; margin-bottom: 8px; }
+  .strip .g { flex: 1; min-width: 0; font-size: .875rem; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gc { background: var(--card); border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .gc .nm { font-weight: 700; overflow-wrap: anywhere; line-height: 1.2; }
+  .pinned { display: flex; align-items: center; gap: 10px; background: var(--primary); color: var(--primary-ink); border-radius: 20px; padding: 12px 16px; margin-bottom: 12px; font-weight: 800; cursor: pointer; }
+  .pinned .n { background: var(--primary-ink); color: var(--primary); border-radius: 999px; min-width: 28px; height: 28px; display: grid; place-items: center; }
+  .act { display: flex; gap: 10px; padding: 9px 0; border-top: 1px solid var(--field-line); font-size: .9rem; }
+  .act:first-of-type { border-top: 0; }
+  .act .when { margin-left: auto; flex: none; color: var(--ink-soft); font-size: .8125rem; }
+  .empty { text-align: center; padding: 28px 8px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .fab { position: absolute; right: 20px; bottom: 92px; width: 60px; height: 60px; border-radius: 20px; display: grid; place-items: center; font-size: 2rem; background: var(--primary); color: var(--primary-ink); z-index: 3; }
+  .fab { overflow: visible; }
+  .fab .arr { position: absolute; top: -8px; right: -8px; width: 28px; height: 28px; border-radius: 50%; background: var(--card); color: var(--ink); border: 1.5px solid var(--field-line); display: grid; place-items: center; font-size: .8rem; line-height: 1; }
+  .fabmenu { position: absolute; right: 20px; bottom: 160px; z-index: 7; background: var(--card); border: 1.5px solid var(--field-line); border-radius: 20px; padding: 6px; display: flex; flex-direction: column; min-width: 230px; box-shadow: 0 8px 22px rgba(0,0,0,.32); }
+  .fabmenu div { min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 14px; font-weight: 700; cursor: pointer; }
+  .fabmenu div:first-child { background: var(--primary); color: var(--primary-ink); }
+  .tabs { position: absolute; left: 16px; right: 16px; bottom: 14px; z-index: 3; background: var(--card); border-radius: 999px; padding: 5px; display: flex; gap: 2px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+  .tabs span { flex: 1; min-height: 46px; display: grid; place-items: center; border-radius: 999px; font-weight: 700; color: var(--ink-soft); font-size: .875rem; }
+  .tabs span.on { background: var(--pill); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .toast { position: absolute; left: 20px; right: 20px; bottom: 96px; z-index: 9; background: var(--ink); color: var(--bg); border-radius: 14px; padding: 12px 16px; font-weight: 600; display: none; }
+  .toast.on { display: block; }
+  .pop { position: absolute; left: 12px; right: 12px; bottom: 82px; z-index: 6; background: var(--card); border: 1.5px solid var(--primary); border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 8px 22px rgba(0,0,0,.32); }
+  .pop2 { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--card); border-radius: 24px 24px 0 0; padding: 10px 18px 90px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 -6px 22px rgba(0,0,0,.3); }
+  .pop2 .grab { width: 40px; height: 4px; border-radius: 2px; background: var(--field-line); margin: 0 auto 4px; }
+  .check { display: flex; gap: 8px; align-items: center; font-size: .9rem; }
+  .check i { font-style: normal; color: var(--plus); font-weight: 800; }
+  .back { font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+  .center { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .emoji { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 22px; font-size: 2.2rem; background: var(--orange-deep); }
+  .seg { display: flex; padding: 4px; border-radius: 999px; background: var(--card); gap: 2px; margin: 14px 0 16px; }
+  .seg span { flex: 1; min-height: 44px; display: grid; place-items: center; border-radius: 999px; color: var(--ink-soft); font-weight: 700; }
+  .seg span.on { background: var(--pill); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="grp"><b>Screen:</b><button data-screen="home">Home</button><button data-screen="group">Group + closing popup</button></div>
+  <div class="grp"><b>Look:</b><button data-theme="light">Light</button><button data-theme="dark">Dark</button></div>
+  <div class="grp"><b>Language:</b><button data-lang="en">EN</button><button data-lang="mk">MK (draft)</button></div>
+</div>
+<div class="bar" id="homeBar">
+  <div class="grp"><b>Home layout:</b><button data-layout="A">A: Needs you first</button><button data-layout="B">B: Balance on top</button><button data-layout="C">C: Group cards</button></div>
+  <div class="grp"><b>Recent activity:</b><button data-act-mode="others">Others only</button><button data-act-mode="all">Everyone</button></div>
+  <div class="grp"><b>Data:</b><button data-data="normal">Normal</button><button data-data="quiet">Nothing needs me</button><button data-data="new">New user, no groups</button></div>
+</div>
+<div class="bar" id="groupBar">
+  <div class="grp"><b>Closing popup:</b><button data-pop="P1">P1: card above the tab bar</button><button data-pop="P2">P2: sheet from the bottom</button></div>
+  <div class="grp"><b>I am:</b><button data-who="member">Ana (must answer)</button><button data-who="waiting">Filip (owner, waiting)</button><button data-who="ready">Filip (owner, can close)</button></div>
+</div>
+<p class="note2" id="hint"></p>
+<div class="stage" id="stage"></div>
+<script>
+var S = { screen: 'home', layout: 'C', actMode: 'all', data: 'normal', dark: false, lang: 'en', pop: 'P1', who: 'member', open: false, toast: '', gone: {}, sheet: false, expand: false };
+var T = {
+  en: {
+    hi: 'Hi, Filip', needs: 'Needs you', owed: 'You are owed', owe: 'You owe', groups: 'Your groups', recent: 'Recent activity',
+    pay: 'Marko says he paid you 600 MKD', payIn: 'Greece trip', close: 'Ana wants to close Flat', closeIn: 'Everyone is kvit',
+    confirm: 'Confirm', reject: 'Reject', object: 'Object', kvit: 'kvit', home: 'Home', groupsTab: 'Groups', settings: 'Settings',
+    nothing: 'Nothing needs you right now ✓', things: function (n) { return n === 1 ? 'thing needs you' : 'things need you'; },
+    noGroups: 'No groups yet', noGroupsHint: 'Make a group or a one-time bill, then add your first expense.', newGroup: 'New group',
+    seeGroup: 'Open group', ago: ['2 h', '5 h', 'yesterday', 'yesterday'],
+    long: 'Birthday-celebration-weekend-Ohrid', one: 'One bill',
+    a1: 'Ana added Taxi 900 MKD', a2: 'Marko recorded a payment of 600 MKD', a3: 'You added Dinner 1,200 MKD', a4: 'Dime joined',
+    mn: ['MKD', ''], toastConfirm: 'Confirmed', toastReject: 'Rejected', toastObj: 'Closing cancelled. The group is open again.',
+    gName: 'Greece trip', popTitle: 'Filip wants to close “Greece trip”', popSub: 'Everyone is kvit. Nothing can be changed until you answer.',
+    waitT: 'Closing · waiting for others', waitA: 'Ana has not answered', waitD: 'Dime has not answered', waitS: 'Finishes by itself tomorrow at 20:10.',
+    readyT: '🎉 Everyone’s kvit – close the group?', closeBtn: 'Close the group', ok1: 'All balances are 0', ok2: 'No payment is waiting', yourBal: 'Your balance:',
+    tabs: ['Expenses', 'Balances', 'Activity'], who: 'Who answered', ana: 'Ana: no answer yet', dime: 'Dime: confirmed',
+    objTitle: 'Object to closing', objSub: 'The closing is cancelled and the group stays open.', objReason: 'Reason (optional, up to 200 characters)', send: 'Send objection', cancel: 'Cancel',
+    groupsBack: '‹ Groups',
+    fabAdd: 'Add to Greece trip', fabOne: 'New One bill', fabGroup: 'New group', fabOther: 'Another group…', toastFab: 'Opens Add expense in Greece trip (2 taps)'
+  },
+  mk: {
+    hi: 'Здраво, Филип', needs: 'Те чека тебе', owed: 'Ти должат', owe: 'Должиш', groups: 'Твоите групи', recent: 'Скорашна активност',
+    pay: 'Марко вели дека ти платил 600 ден.', payIn: 'Грција', close: 'Ана сака да го затвори Станот', closeIn: 'Сите се квит',
+    confirm: 'Потврди', reject: 'Одбиј', object: 'Приговори', kvit: 'квит', home: 'Дома', groupsTab: 'Групи', settings: 'Поставки',
+    nothing: 'Моментално ништо не те чека ✓', things: function (n) { return n === 1 ? 'нешто те чека' : 'нешта те чекаат'; },
+    noGroups: 'Сè уште нема групи', noGroupsHint: 'Направи група или една сметка, па додај го првиот трошок.', newGroup: 'Нова група',
+    seeGroup: 'Отвори група', ago: ['пред 2 ч.', 'пред 5 ч.', 'вчера', 'вчера'],
+    long: 'Роденденска-прослава-викенд-Охрид', one: 'Една сметка',
+    a1: 'Ана додаде Такси 900 ден.', a2: 'Марко запиша плаќање од 600 ден.', a3: 'Ти додаде Вечера 1.200 ден.', a4: 'Диме се придружи',
+    mn: ['ден.', ''], toastConfirm: 'Потврдено', toastReject: 'Одбиено', toastObj: 'Затворањето е откажано. Групата е пак отворена.',
+    gName: 'Грција', popTitle: 'Филип сака да ја затвори „Грција“', popSub: 'Сите се квит. Ништо не може да се менува додека не одговориш.',
+    waitT: 'Се затвора · чека на другите', waitA: 'Ана не одговорила', waitD: 'Диме не одговорил', waitS: 'Завршува само утре во 20:10.',
+    readyT: '🎉 Сите се квит – да ја затвориме групата?', closeBtn: 'Затвори ја групата', ok1: 'Сите салда се 0', ok2: 'Нема плаќање што чека', yourBal: 'Твое салдо:',
+    tabs: ['Трошоци', 'Салда', 'Активност'], who: 'Кој одговорил', ana: 'Ана: уште нема одговор', dime: 'Диме: потврдил',
+    objTitle: 'Приговор на затворањето', objSub: 'Затворањето се откажува и групата останува отворена.', objReason: 'Причина (по желба, до 200 знаци)', send: 'Испрати приговор', cancel: 'Откажи',
+    groupsBack: '‹ Групи',
+    fabAdd: 'Додај во Грција', fabOne: 'Нова една сметка', fabGroup: 'Нова група', fabOther: 'Друга група…', toastFab: 'Отвора Додај трошок во Грција (2 допири)'
+  }
+};
+var HINT = {
+  A: 'A: the things you must answer come first, as cards with their buttons. Then the totals, then your groups, then activity.',
+  B: 'B: one big balance card on top (what is the state of my money?), then your answers as thin strips with small buttons, then groups, then activity.',
+  C: 'C (Filip’s pick, the “+” opens a short list): two boxes, “You are owed” (green tint) and “You owe” (red tint), one pinned bar for everything that needs you (the number only in the circle), groups as a grid of cards, activity of everyone.',
+  group: 'The closing popup replaces the bar at the bottom of the group. It stays until answered (no timer). The + button sits above it, like today. Try Confirm / Object. Switch between P1 and P2.'
+};
+function el(s) { return document.getElementById(s); }
+function tx() { return T[S.lang]; }
+function money(n, cur) { var t = tx(); if (cur === 'EUR') return (n < 0 ? '−' : '') + '€' + Math.abs(n).toFixed(2); return (n < 0 ? '−' : '') + Math.abs(n).toLocaleString('en-US').replace(/,/g, S.lang === 'mk' ? '.' : ',') + ' ' + t.mn[0]; }
+function tileOf(e) { return '<div class="tile">' + e + '</div>'; }
+function bal(g) {
+  var t = tx();
+  if (!g.b.length) return '<span class="chip">' + t.kvit + '</span>';
+  return g.b.map(function (x) { return '<div class="' + (x[0] > 0 ? 'pos' : 'neg') + '">' + (x[0] > 0 ? '+' : '') + money(x[0], x[1]) + '</div>'; }).join('');
+}
+function groups() {
+  var t = tx();
+  if (S.data === 'new') return [];
+  return [
+    { n: t.gName, e: '🏖️', b: [[1850, 'MKD'], [20, 'EUR']] },
+    { n: S.lang === 'mk' ? 'Станот' : 'Flat', e: '🏠', b: [[-600, 'MKD']] },
+    { n: t.long, e: '🎂', b: [] },
+    { n: t.one + ' · ' + (S.lang === 'mk' ? 'Вечера' : 'Dinner'), e: '🍕', b: [] }
+  ];
+}
+function needsList() {
+  var t = tx(), out = [];
+  if (S.data !== 'normal') return out;
+  if (!S.gone.pay) out.push({ id: 'pay', title: t.pay, sub: t.payIn, kind: 'pay' });
+  if (!S.gone.close) out.push({ id: 'close', title: t.close, sub: t.closeIn, kind: 'close' });
+  return out;
+}
+function needCard(n) {
+  var t = tx();
+  var b = n.kind === 'pay'
+    ? '<button class="btn wine" data-do="reject:' + n.id + '">' + t.reject + '</button><button class="btn" data-do="ok:' + n.id + '">' + t.confirm + '</button>'
+    : '<button class="btn wine" data-do="obj:' + n.id + '">' + t.object + '</button><button class="btn" data-do="ok:' + n.id + '">' + t.confirm + '</button>';
+  return '<div class="card need"><div><div class="t">' + n.title + '</div><div class="small">' + n.sub + '</div></div><div class="actions">' + b + '</div></div>';
+}
+function needStrip(n) {
+  var t = tx();
+  var b = n.kind === 'pay'
+    ? '<button class="btn sm wine" data-do="reject:' + n.id + '">' + t.reject + '</button><button class="btn sm" data-do="ok:' + n.id + '">' + t.confirm + '</button>'
+    : '<button class="btn sm wine" data-do="obj:' + n.id + '">' + t.object + '</button><button class="btn sm" data-do="ok:' + n.id + '">' + t.confirm + '</button>';
+  return '<div class="strip"><div class="g">' + n.title + '<div class="small">' + n.sub + '</div></div>' + b + '</div>';
+}
+function totals() { if (S.data === 'new') return ''; return { owed: [[1850, 'MKD'], [20, 'EUR']], owe: [[600, 'MKD']] }; }
+function activity() {
+  var t = tx(), rows = [
+    [t.a1, 'Greece trip', 0, true], [t.a2, 'Greece trip', 1, true], [t.a3, S.lang === 'mk' ? 'Станот' : 'Flat', 2, false], [t.a4, t.long, 3, true]
+  ].filter(function (r) { return S.actMode === 'all' || r[3]; });
+  rows = rows.slice(0, 5);
+  if (S.data === 'new') return '';
+  return rows.map(function (r) {
+    return '<div class="act"><div><div>' + r[0] + '</div><div class="small">' + (r[1] === 'Greece trip' ? t.gName : r[1]) + '</div></div><div class="when">' + t.ago[r[2]] + '</div></div>';
+  }).join('');
+}
+function groupRows() {
+  return groups().map(function (g) {
+    return '<div class="row card" style="margin-bottom:8px;padding:8px 14px">' + tileOf(g.e) + '<div class="g"><div class="nm">' + g.n + '</div></div><div class="amts">' + bal(g) + '</div></div>';
+  }).join('');
+}
+function emptyHome() {
+  var t = tx();
+  return '<div class="empty"><div style="font-size:2.4rem">👋</div><div class="t" style="font-size:1.2rem">' + t.noGroups + '</div><div class="soft">' + t.noGroupsHint + '</div><button class="btn">' + t.newGroup + '</button></div>';
+}
+function tabs() { var t = tx(); return '<div class="tabs"><span class="on">' + t.home + '</span><span>' + t.groupsTab + '</span><span>' + t.settings + '</span></div>'; }
+function homeBody() {
+  var t = tx(), needs = needsList(), tot = totals(), h = '';
+  h += '<div class="hello"><div class="h1">' + t.hi + '</div><div class="av">F</div></div>';
+  if (S.data === 'new') return h + emptyHome();
+  var quiet = needs.length === 0 ? '<div class="card" style="flex-direction:row;align-items:center"><span>' + t.nothing + '</span></div>' : '';
+  var totTwo = '<div class="tot2"><div><div class="lbl">' + t.owed + '</div>' + tot.owed.map(function (x) { return '<div class="pos">' + money(x[0], x[1]) + '</div>'; }).join('') + '</div>' +
+    '<div><div class="lbl">' + t.owe + '</div>' + tot.owe.map(function (x) { return '<div class="neg">' + money(x[0], x[1]) + '</div>'; }).join('') + '</div></div>';
+  if (S.layout === 'A') {
+    h += '<div class="h2" style="margin-top:4px">' + t.needs + '</div>' + (needs.map(needCard).join('') || quiet) + totTwo +
+      '<div class="h2">' + t.groups + '</div>' + groupRows() + '<div class="h2">' + t.recent + '</div>' + activity();
+  } else if (S.layout === 'B') {
+    h += '<div class="big"><div class="lbl">' + t.owed + '</div><div class="num">' + money(1850, 'MKD') + ' · ' + money(20, 'EUR') + '</div>' +
+      '<div class="sub"><span>' + t.owe + '</span><span>' + money(600, 'MKD') + '</span></div></div>' +
+      (needs.length ? '<div class="h2" style="margin-top:4px">' + t.needs + '</div>' + needs.map(needStrip).join('') : quiet) +
+      '<div class="h2">' + t.groups + '</div>' + groupRows() + '<div class="h2">' + t.recent + '</div>' + activity();
+  } else {
+    var pin = needs.length ? '<div class="pinned" data-do="expand"><span class="n">' + needs.length + '</span><span style="flex:1">' + t.things(needs.length) + '</span><span>' + (S.expand ? '▴' : '▾') + '</span></div>' + (S.expand ? needs.map(needCard).join('') : '') : quiet;
+    h += totTwo.replace('<div class="tot2">', '<div class="tot2 tint" style="margin-bottom:12px">') + pin +
+      '<div class="h2" style="margin-top:4px">' + t.groups + '</div><div class="grid">' + groups().map(function (g) {
+        return '<div class="gc">' + tileOf(g.e) + '<div class="nm">' + g.n + '</div><div>' + bal(g) + '</div></div>';
+      }).join('') + '</div><div class="h2">' + t.recent + '</div>' + activity();
+  }
+  return h;
+}
+function groupBody() {
+  var t = tx(), w = S.who;
+  var h = '<div class="back">' + t.groupsBack + '</div><div class="center"><div class="emoji">🏖️</div><div class="t" style="font-size:1.6rem;font-weight:800">' + t.gName + '</div><div class="soft">' + t.yourBal + ' <b>0 ' + t.mn[0] + '</b></div></div>' +
+    '<div class="seg"><span>' + t.tabs[0] + '</span><span class="on">' + t.tabs[1] + '</span><span>' + t.tabs[2] + '</span></div>' +
+    '<div class="card"><div class="t">' + (S.lang === 'mk' ? 'Сите се квит 🎉' : 'Everyone is kvit 🎉') + '</div></div>';
+  return h;
+}
+function popup() {
+  var t = tx(), w = S.who, body = '', title = '';
+  if (S.open) return '';
+  if (w === 'member') {
+    title = '<div class="t">' + t.popTitle + '</div><div class="small">' + t.popSub + '</div>';
+    body = '<div class="actions"><button class="btn" data-do="gconfirm">' + t.confirm + '</button><button class="btn wine" data-do="gobject">' + t.object + '</button></div>';
+  } else if (w === 'waiting') {
+    title = '<div class="t">' + t.waitT + '</div>';
+    body = '<div class="check"><i>…</i> ' + t.waitA + '</div><div class="check"><i>…</i> ' + t.waitD + '</div><div class="small">' + t.waitS + '</div>';
+  } else {
+    title = '<div class="t">' + t.readyT + '</div><div class="check"><i>✓</i> ' + t.ok1 + '</div><div class="check"><i>✓</i> ' + t.ok2 + '</div>';
+    body = '<button class="btn full" data-do="gstart">' + t.closeBtn + '</button>';
+  }
+  if (S.pop === 'P1') return '<div class="pop">' + title + body + '</div>';
+  var more = w === 'member' ? '<div class="check"><i>…</i> ' + t.ana + '</div><div class="check"><i>✓</i> ' + t.dime + '</div>' : '';
+  return '<div class="pop2"><div class="grab"></div>' + title + more + body + '</div>';
+}
+function render() {
+  var t = tx(), cls = S.dark ? 'phone dark' : 'phone';
+  var screen = S.screen === 'home' ? homeBody() : groupBody();
+  var fab = S.screen === 'home' ? (S.data === 'new' ? '' : '<div class="fab" data-do="fabmenu">' + (S.fabMenu ? '×' : '+') + '</div>' + (S.fabMenu ? '<div class="fabmenu"><div data-do="fabadd">＋ ' + t.fabAdd + '</div><div data-do="fabone">🧾 ' + t.fabOne + '</div><div data-do="fabgroup">👥 ' + t.fabGroup + '</div><div data-do="fabother">⋯ ' + t.fabOther + '</div></div>' : '')) : (S.who === 'member' ? '' : '<div class="fab" style="bottom:' + (S.pop === 'P1' ? 250 : 92) + 'px">+</div>');
+  var pop = S.screen === 'group' ? popup() : '';
+  var sheet = S.sheet ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:8;display:flex;align-items:flex-end"><div style="width:100%;background:var(--bg);border-radius:24px 24px 0 0;padding:18px 22px 26px;display:flex;flex-direction:column;gap:12px"><div class="t" style="font-size:1.2rem">' + t.objTitle + '</div><div class="small">' + t.objSub + '</div><div style="background:var(--pill);border:1.5px solid var(--field-line);border-radius:14px;padding:12px 14px;min-height:64px" class="small">' + t.objReason + '</div><div class="actions"><button class="btn out" data-do="closesheet">' + t.cancel + '</button><button class="btn wine" data-do="send">' + t.send + '</button></div></div></div>' : '';
+  el('stage').innerHTML = '<div class="' + cls + '"><div class="screen">' + screen + '</div>' + pop + fab + tabs() + sheet + '<div class="toast' + (S.toast ? ' on' : '') + '">' + S.toast + '</div></div>';
+  el('hint').textContent = S.screen === 'home' ? HINT[S.layout] : HINT.group;
+  el('homeBar').style.display = S.screen === 'home' ? '' : 'none';
+  el('groupBar').style.display = S.screen === 'group' ? '' : 'none';
+  function mark(sel, key, val, eq) { document.querySelectorAll(sel).forEach(function (x) { x.setAttribute('aria-pressed', eq ? eq(x) : x.dataset[key] === val); }); }
+  mark('[data-screen]', 'screen', S.screen); mark('[data-layout]', 'layout', S.layout); mark('[data-act-mode]', 'actMode', S.actMode);
+  mark('[data-data]', 'data', S.data); mark('[data-lang]', 'lang', S.lang); mark('[data-pop]', 'pop', S.pop); mark('[data-who]', 'who', S.who);
+  mark('[data-theme]', 'theme', '', function (x) { return (x.dataset.theme === 'dark') === S.dark; });
+}
+function say(m) { S.toast = m; render(); setTimeout(function () { S.toast = ''; render(); }, 2200); }
+document.addEventListener('click', function (e) {
+  var t = e.target.closest('button, [data-do]'); if (!t) return;
+  var d = t.dataset;
+  if (d.screen) S.screen = d.screen;
+  if (d.layout) S.layout = d.layout;
+  if (d.actMode) S.actMode = d.actMode;
+  if (d.data) { S.data = d.data; S.gone = {}; }
+  if (d.lang) S.lang = d.lang;
+  if (d.pop) S.pop = d.pop;
+  if (d.who) { S.who = d.who; S.open = false; }
+  if (d.theme) S.dark = d.theme === 'dark';
+  var a = d.do;
+  if (a) {
+    var p = a.split(':');
+    if (p[0] === 'ok') { S.gone[p[1]] = true; render(); return say(tx().toastConfirm); }
+    if (p[0] === 'reject') { S.gone[p[1]] = true; render(); return say(tx().toastReject); }
+    if (p[0] === 'obj') { S.sheet = true; S.objId = p[1]; }
+    if (p[0] === 'expand') S.expand = !S.expand;
+    if (p[0] === 'fabmenu') S.fabMenu = !S.fabMenu;
+    if (p[0].indexOf('fab') === 0 && p[0] !== 'fabmenu') { S.fabMenu = false; render(); return say(tx().toastFab); }
+    if (p[0] === 'gobject') S.sheet = true;
+    if (p[0] === 'closesheet') S.sheet = false;
+    if (p[0] === 'send') { S.sheet = false; if (S.objId) S.gone[S.objId] = true; S.objId = null; if (S.screen === 'group') S.open = true; render(); return say(tx().toastObj); }
+    if (p[0] === 'gconfirm') { S.open = true; render(); return say(tx().toastConfirm); }
+    if (p[0] === 'gstart') { S.who = 'waiting'; }
+  }
+  render();
+});
+render();
+</script>
+</body>
+</html>

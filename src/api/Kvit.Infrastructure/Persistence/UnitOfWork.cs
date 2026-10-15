@@ -11,7 +11,7 @@ namespace Kvit.Infrastructure.Persistence
 
         public async Task CommitAsync(CancellationToken cancellationToken)
         {
-            await _context.SaveChangesOrReportTakenClientRequestIdAsync(cancellationToken);
+            await _context.SaveChangesOrReportDuplicateAsync(cancellationToken);
             await _context.Database.CommitTransactionAsync(cancellationToken);
         }
 

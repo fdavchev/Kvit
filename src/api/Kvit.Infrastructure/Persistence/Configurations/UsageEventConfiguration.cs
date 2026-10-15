@@ -7,6 +7,8 @@ namespace Kvit.Infrastructure.Persistence.Configurations
 {
     public class UsageEventConfiguration : IEntityTypeConfiguration<UsageEvent>
     {
+        public const string ActiveDayIndexName = "ix_usage_events_user_id_occurred_on";
+
         public void Configure(EntityTypeBuilder<UsageEvent> builder)
         {
             builder.ToTable("usage_events", table => table.HasCheckConstraint("ck_usage_events_type", EnumCheck.OneOf<UsageEventType>("type")));
@@ -21,6 +23,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
             builder.HasIndex(usageEvent => usageEvent.UserId);
 
             builder.HasIndex(usageEvent => new { usageEvent.UserId, usageEvent.OccurredOn })
+                .HasDatabaseName(ActiveDayIndexName)
                 .IsUnique()
                 .HasFilter($"type = '{UsageEventType.Active}'");
         }

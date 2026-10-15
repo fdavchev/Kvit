@@ -109,6 +109,11 @@ namespace Kvit.Domain.Entities
             return Result.Failure<T>($"The request id {clientRequestId} was already used for another group or by another person.", ResultCodes.SETTLEMENT_CLIENT_REQUEST_ID_USED);
         }
 
+        public bool CanBeAnsweredBy(GroupRoster roster, Guid userId, Guid groupOwnerUserId)
+        {
+            return CanActFor(roster.RowOf(ToMemberId).Member, userId, groupOwnerUserId);
+        }
+
         public Result Confirm(GroupRoster roster, Guid byUserId, Guid groupOwnerUserId, DateTimeOffset confirmedAt)
         {
             Result allowed = CheckCanActFor(roster.RowOf(ToMemberId).Member, byUserId, groupOwnerUserId, "the receiver");
@@ -246,11 +251,17 @@ namespace Kvit.Domain.Entities
                 ResultCodes.SETTLEMENT_NOT_ALLOWED);
         }
 
-        private Result CheckCanActFor(GroupMember side, Guid userId, Guid groupOwnerUserId, string sideName)
+        private static bool CanActFor(GroupMember side, Guid userId, Guid groupOwnerUserId)
         {
             bool isOwnRow = side.UserId == userId;
             bool isOwnerActingForPlainName = side.UserId is null && userId == groupOwnerUserId;
-            if (!isOwnRow && !isOwnerActingForPlainName)
+
+            return isOwnRow || isOwnerActingForPlainName;
+        }
+
+        private Result CheckCanActFor(GroupMember side, Guid userId, Guid groupOwnerUserId, string sideName)
+        {
+            if (!CanActFor(side, userId, groupOwnerUserId))
             {
                 return Result.Forbid($"Only {sideName} of payment {Id}, or the group's owner when {sideName} has no account, can do this.", ResultCodes.SETTLEMENT_NOT_ALLOWED);
             }
