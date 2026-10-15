@@ -3,10 +3,12 @@ import { useRouteError } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
+import { dashboardPath, fullDashboard } from '@/test/dashboardTestData'
 import {
   renderElementWithProviders,
   renderRoutesWithProviders,
 } from '@/test/renderWithProviders'
+import { jsonAnswer, stubFetchByRequest } from '@/test/requestTestHelpers'
 import { seedMe, testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
 import { HomeScreen } from './HomeScreen'
@@ -23,6 +25,7 @@ async function renderHome(
   language = testMe.language,
   mePictureUrl: string | null = testMe.pictureUrl,
 ) {
+  stubFetchByRequest({ [`GET ${dashboardPath}`]: jsonAnswer(fullDashboard) })
   return renderElementWithProviders(<HomeScreen />, routes.dashboard, {
     language,
     seedCache: seedMe({ ...testMe, displayName, language, pictureUrl: mePictureUrl }),
@@ -47,6 +50,7 @@ function classNamesIn(link: HTMLElement): string[] {
 
 describe('HomeScreen', () => {
   afterEach(() => {
+    vi.unstubAllGlobals()
     vi.restoreAllMocks()
   })
 
@@ -56,12 +60,6 @@ describe('HomeScreen', () => {
     expect(
       screen.getByText(translated(language, 'home.greeting', { name: 'Filip' })),
     ).toBeTruthy()
-  })
-
-  it.each(languages)('shows the placeholder line about groups and balances in %s', async (language) => {
-    await renderHome('Filip', language)
-
-    expect(screen.getByText(translated(language, 'home.placeholder'))).toBeTruthy()
   })
 
   it.each([
@@ -139,11 +137,10 @@ describe('HomeScreen', () => {
       })
     })
 
-    it('keeps the greeting and the placeholder line unchanged', async () => {
+    it('keeps the greeting unchanged', async () => {
       await renderHome('Filip', 'en', pictureUrl)
 
       expect(screen.getByText(translated('en', 'home.greeting', { name: 'Filip' }))).toBeTruthy()
-      expect(screen.getByText(translated('en', 'home.placeholder'))).toBeTruthy()
     })
 
     it('shows the initial inside the same link when the picture fails to load', async () => {
@@ -229,11 +226,10 @@ describe('HomeScreen', () => {
       expect(settingsLink().outerHTML).not.toMatch(/--avatar-\d/)
     })
 
-    it('keeps the greeting and the placeholder line unchanged', async () => {
+    it('keeps the greeting unchanged', async () => {
       await renderHome('Filip', 'en', null)
 
       expect(screen.getByText(translated('en', 'home.greeting', { name: 'Filip' }))).toBeTruthy()
-      expect(screen.getByText(translated('en', 'home.placeholder'))).toBeTruthy()
     })
   })
 

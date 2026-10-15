@@ -52,7 +52,7 @@ Contents from DECISIONS:
 - **Your groups** with your balance in each.
 - **Recent activity** across your groups.
 - A big **"+"** that adds an expense to the **last-used group** (the group you last added an expense to; if none, the group you joined last; if no groups, it opens "New group").
-- **Main action:** add an expense = "+" (**1**) → type the amount → **Save** (**1**) = **2 taps, 1 field**.
+- **Main action (changed 2026-10-15):** add an expense = "+" (**1**) → **Add to <group>** (**1**) → type the amount → **Save** (**1**) = **3 taps, 1 field**. The "+" list has three items: Add to the last-used group (only normal Open groups, never a One bill), New One bill, Another group… (opens the Groups list). A new group is made only in the Groups section; the empty Home also has a New group button.
 
 ## Groups
 

@@ -3,7 +3,7 @@ import type { Persister } from '@tanstack/react-query-persist-client'
 import { keepCacheToOnePerson } from '@/core/auth/keepCacheToOnePerson'
 import { meQueryKey } from '@/core/auth/useMe'
 import type { Me } from '@/core/services/me/meService'
-import { groupsQueryKey } from '@/features/groups/shared/groupCache'
+import { refreshEveryGroup } from '@/features/groups/shared/groupCache'
 import {
   ApiError,
   forbiddenStatus,
@@ -86,6 +86,6 @@ export function isGroupStateChangedError(error: unknown): boolean {
 
 function refreshGroupsAfterStateRefusal(queryClient: QueryClient, error: Error): void {
   if (isGroupStateChangedError(error)) {
-    void queryClient.invalidateQueries({ queryKey: groupsQueryKey })
+    void refreshEveryGroup(queryClient)
   }
 }

@@ -45,6 +45,24 @@ namespace Kvit.Api.Tests.Dashboard
             return group;
         }
 
+        public static async Task<Guid> CreateOneBillWithExpenseAsync(ExpensesApp app, SignedInUser owner)
+        {
+            app.Clock.Advance(ClosingSteps.OneMinute);
+            OneBillInput input = OneBillInput.EqualAmongEveryone(ExpenseInputs.OneThousandMkd, ExpenseInputs.Mkd, "Marko");
+            (Guid groupId, _) = await app.CreateOneBillAsync(owner, input);
+
+            return groupId;
+        }
+
+        public static async Task<Guid> CreateEmptyOneBillJoinedNowAsync(ExpensesApp app, SignedInUser owner)
+        {
+            app.Clock.Advance(ClosingSteps.OneMinute);
+            Guid groupId = await GroupRows.InsertGroupAsync(app, owner.UserId, kind: "OneBill", name: "Bill");
+            await GroupRows.InsertMemberAsync(app, groupId, owner.UserId, GroupRows.OwnerMemberName, owner.UserId, joinedAt: app.Clock.GetUtcNow());
+
+            return groupId;
+        }
+
         public static Task<Guid> OwnerPaysForBothAsync(ExpensesApp app, ExpenseGroup group, string currency = ExpenseInputs.Mkd)
         {
             return AddExpenseLaterAsync(app, group.GroupId, group.Owner, ExpenseInputs.Equal(ExpenseMinor, currency, group.OwnerRowId, group.OwnerRowId, group.MemberRowId));

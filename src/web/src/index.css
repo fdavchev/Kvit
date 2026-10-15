@@ -83,6 +83,8 @@
   --color-danger: var(--danger);
   --color-positive: var(--positive);
   --color-negative: var(--negative);
+  --color-positive-surface: var(--positive-surface);
+  --color-negative-surface: var(--negative-surface);
   --color-danger-fill: var(--danger-fill);
   --color-danger-fill-foreground: var(--danger-fill-foreground);
   --color-tab-active: var(--tab-active);
@@ -140,6 +142,8 @@
   --danger-fill-foreground: #ffffff;
   --positive: #1d6b2e;
   --negative: #b71f1f;
+  --positive-surface: #d9efd6;
+  --negative-surface: #f7d8d3;
   --tab-active: var(--track-active);
   --tab-active-foreground: var(--foreground);
   --category-orange: #bf5900;
@@ -209,6 +213,8 @@
     --danger-fill: #d12828;
     --positive: #7fd68f;
     --negative: #ff9a9a;
+    --positive-surface: #1f4a2a;
+    --negative-surface: #55222a;
     --tab-active: var(--color-brand-700);
     --tab-active-foreground: #ffffff;
   }

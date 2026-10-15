@@ -64,7 +64,7 @@ describe('the New group, One bill and Activity routes followed through the real 
         await screen.findByRole('heading', { level: 1, name: translated('en', 'newGroup.oneBill') }),
       ).toBeTruthy()
       expect(await screen.findByLabelText(translated('en', 'expense.amount'))).toBeTruthy()
-      expect(urlsAsked(fetchMock).sort()).toEqual(['/api/me', categoriesPath].sort())
+      expect(urlsAsked(fetchMock).sort()).toEqual(['/api/me', '/api/me/active', categoriesPath].sort())
     })
 
     it('shows the group screen on its Activity tab at /groups/{id}/activity and asks for the activity of that group', async () => {

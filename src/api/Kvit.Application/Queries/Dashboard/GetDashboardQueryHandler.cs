@@ -140,16 +140,16 @@ namespace Kvit.Application.Queries.Dashboard
 
         private async Task<PlusTargetResponse?> PlusTargetOfAsync(IReadOnlyList<DashboardGroupDto> groups, Guid userId, CancellationToken cancellationToken)
         {
-            List<DashboardGroupDto> openGroups = [.. groups.Where(group => group.Status == GroupStatus.Open)];
-            List<Guid> openGroupIds = [.. openGroups.Select(group => group.Id)];
+            List<DashboardGroupDto> openNormalGroups = [.. groups.Where(group => group.Kind == GroupKind.Group && group.Status == GroupStatus.Open)];
+            List<Guid> openNormalGroupIds = [.. openNormalGroups.Select(group => group.Id)];
             Guid? lastExpenseGroupId = await _context.Expenses
                 .AsNoTracking()
-                .Where(expense => openGroupIds.Contains(expense.GroupId) && expense.CreatedByUserId == userId && expense.DeletedAt == null)
+                .Where(expense => openNormalGroupIds.Contains(expense.GroupId) && expense.CreatedByUserId == userId && expense.DeletedAt == null)
                 .OrderByDescending(expense => expense.CreatedAt)
                 .ThenByDescending(expense => expense.Id)
                 .Select(expense => (Guid?)expense.GroupId)
                 .FirstOrDefaultAsync(cancellationToken);
-            Guid? targetGroupId = lastExpenseGroupId ?? openGroups
+            Guid? targetGroupId = lastExpenseGroupId ?? openNormalGroups
                 .OrderByDescending(group => group.CallerJoinedAt)
                 .ThenByDescending(group => group.CallerMemberId)
                 .Select(group => (Guid?)group.Id)

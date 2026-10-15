@@ -14,6 +14,7 @@ import {
   stubFetchThatNeverAnswers,
 } from '@/test/apiTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
+import { jsonAnswer, noContentAnswer, stubFetchByRequest } from '@/test/requestTestHelpers'
 import { seedMe, testMe } from '@/test/testMe'
 import { RequireAuth } from './RequireAuth'
 import { routes } from './routes'
@@ -191,7 +192,10 @@ describe('RequireAuth', () => {
     })
 
     it('goes to the change-password page when the background /api/me says the password must change', async () => {
-      stubFetch(Response.json(mustChangePasswordMe))
+      stubFetchByRequest({
+        'GET /api/me': jsonAnswer(mustChangePasswordMe),
+        'POST /api/me/active': noContentAnswer(),
+      })
 
       await renderRoutesWithProviders(routeTable, routes.dashboard, {
         seedCache: seedRestoredMe(testMe),

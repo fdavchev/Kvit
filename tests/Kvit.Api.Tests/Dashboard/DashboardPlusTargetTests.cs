@@ -236,6 +236,65 @@ namespace Kvit.Api.Tests.Dashboard
         }
 
         [Fact]
+        public async Task PlusTarget_NewerExpenseInAOneBill_IsIgnoredForAnOlderNormalGroupWithAnExpense()
+        {
+            SignedInUser ana = await _app.SignUpAsync();
+            ExpenseGroup normal = await DashboardSteps.CreateGroupWithNewMemberAsync(_app, ana, "Normal");
+            await DashboardSteps.AddOwnExpenseAsync(_app, normal.GroupId, ana, normal.OwnerRowId);
+            await DashboardSteps.CreateOneBillWithExpenseAsync(_app, ana);
+
+            JsonElement body = await DashboardRequests.ReadAsync(ana);
+
+            Assert.Equal(normal.GroupId, DashboardJson.PlusTargetGroupIdOf(body));
+        }
+
+        [Fact]
+        public async Task PlusTarget_ExpenseOnlyInAOneBill_FallsBackToTheNormalGroupJoinedLast()
+        {
+            SignedInUser ana = await _app.SignUpAsync();
+            ExpenseGroup normal = await DashboardSteps.CreateGroupWithNewMemberAsync(_app, ana, "Normal");
+            await DashboardSteps.CreateOneBillWithExpenseAsync(_app, ana);
+
+            JsonElement body = await DashboardRequests.ReadAsync(ana);
+
+            Assert.Equal(normal.GroupId, DashboardJson.PlusTargetGroupIdOf(body));
+        }
+
+        [Fact]
+        public async Task PlusTarget_NoExpenseYet_JoinFallbackSkipsAOneBillJoinedLater()
+        {
+            SignedInUser ana = await _app.SignUpAsync();
+            ExpenseGroup normal = await DashboardSteps.CreateGroupWithNewMemberAsync(_app, ana, "Normal");
+            await DashboardSteps.CreateEmptyOneBillJoinedNowAsync(_app, ana);
+
+            JsonElement body = await DashboardRequests.ReadAsync(ana);
+
+            Assert.Equal(normal.GroupId, DashboardJson.PlusTargetGroupIdOf(body));
+        }
+
+        [Fact]
+        public async Task PlusTarget_OnlyAOneBillWithAnExpense_IsNull()
+        {
+            SignedInUser ana = await _app.SignUpAsync();
+            await DashboardSteps.CreateOneBillWithExpenseAsync(_app, ana);
+
+            JsonElement body = await DashboardRequests.ReadAsync(ana);
+
+            Assert.Equal(JsonValueKind.Null, body.GetProperty("plusTarget").ValueKind);
+        }
+
+        [Fact]
+        public async Task PlusTarget_OnlyAnEmptyOneBill_IsNull()
+        {
+            SignedInUser ana = await _app.SignUpAsync();
+            await DashboardSteps.CreateEmptyOneBillJoinedNowAsync(_app, ana);
+
+            JsonElement body = await DashboardRequests.ReadAsync(ana);
+
+            Assert.Equal(JsonValueKind.Null, body.GetProperty("plusTarget").ValueKind);
+        }
+
+        [Fact]
         public async Task PlusTarget_OtherPeoplesGroups_NeverAppear()
         {
             SignedInUser ana = await _app.SignUpAsync();

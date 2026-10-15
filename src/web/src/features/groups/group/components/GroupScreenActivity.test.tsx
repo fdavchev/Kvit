@@ -1375,6 +1375,6 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
     await screen.findByRole('link', { name: /Dinner/ })
 
     const urls = fetchMock.mock.calls.map(([url]) => String(url)).sort()
-    expect(urls).toEqual(['/api/me', groupPath, expensesPath, categoriesPath].sort())
+    expect(urls).toEqual(['/api/me', '/api/me/active', groupPath, expensesPath, categoriesPath].sort())
   })
 })

@@ -29,6 +29,7 @@ import { ownerViewMembers } from './memberTestData'
 import { renderRoutesWithProviders } from './renderWithProviders'
 import {
   jsonAnswer,
+  noContentAnswer,
   stubFetchByRequest,
   type AnswerFactory,
 } from './requestTestHelpers'
@@ -57,6 +58,7 @@ export function stubGroupApp(options: GroupAppOptions = {}): Mock<typeof fetch> 
       language,
       timeZone: options.timeZone ?? testMe.timeZone,
     }),
+    'POST /api/me/active': noContentAnswer(),
     [`GET ${groupPath}`]: jsonAnswer(group),
     [`GET ${membersPath}`]: jsonAnswer(options.members ?? ownerViewMembers),
     [`GET ${expensesPath}`]: jsonAnswer({ expenses: options.expenses ?? expenseRows }),

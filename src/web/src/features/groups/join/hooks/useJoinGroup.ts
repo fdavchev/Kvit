@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query'
 import { joinGroup } from '@/core/services/invites/invitesService'
-import { groupsQueryKey } from '../../shared/groupCache'
+import { refreshEveryGroup } from '../../shared/groupCache'
 
 export interface JoinRequest {
   token: string
@@ -12,8 +12,6 @@ export function useJoinGroup(): UseMutationResult<string, Error, JoinRequest> {
 
   return useMutation({
     mutationFn: ({ token, claimMemberId }: JoinRequest) => joinGroup(token, claimMemberId),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: groupsQueryKey })
-    },
+    onSuccess: () => refreshEveryGroup(queryClient),
   })
 }
