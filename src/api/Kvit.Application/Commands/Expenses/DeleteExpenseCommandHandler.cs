@@ -1,7 +1,6 @@
 using Kvit.Application.Dispatching;
 using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
-using Kvit.Contracts.Persistence;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Expenses;
 
@@ -10,7 +9,7 @@ namespace Kvit.Application.Commands.Expenses
     public sealed class DeleteExpenseCommandHandler(
         ICurrentUserProvider _currentUserProvider,
         DeleteExpense _deleteExpense,
-        IUnitOfWork _unitOfWork) : ICommandHandler<DeleteExpenseCommand>
+        GroupWriteTransaction _groupWrite) : ICommandHandler<DeleteExpenseCommand>
     {
         public async Task<Result> Handle(DeleteExpenseCommand command, CancellationToken cancellationToken)
         {
@@ -20,7 +19,7 @@ namespace Kvit.Application.Commands.Expenses
                 return userId;
             }
 
-            return await _unitOfWork.RunInTransactionAsync(() => _deleteExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, cancellationToken), cancellationToken);
+            return await _groupWrite.RunAsync(command.GroupId, userId.Value, () => _deleteExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, cancellationToken), cancellationToken);
         }
     }
 }

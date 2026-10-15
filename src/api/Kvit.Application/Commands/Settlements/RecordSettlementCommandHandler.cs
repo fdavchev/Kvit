@@ -2,7 +2,6 @@ using Kvit.Application.Dispatching;
 using Kvit.Application.Persistence;
 using Kvit.Application.Queries.Settlements;
 using Kvit.Contracts.Auth;
-using Kvit.Contracts.Persistence;
 using Kvit.Contracts.Settlements;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Settlements;
@@ -13,7 +12,7 @@ namespace Kvit.Application.Commands.Settlements
         ICurrentUserProvider _currentUserProvider,
         IDispatcher _dispatcher,
         RecordSettlement _recordSettlement,
-        IUnitOfWork _unitOfWork) : ICommandHandler<RecordSettlementCommand, SettlementResponse>
+        GroupWriteTransaction _groupWrite) : ICommandHandler<RecordSettlementCommand, SettlementResponse>
     {
         public async Task<Result<SettlementResponse>> Handle(RecordSettlementCommand command, CancellationToken cancellationToken)
         {
@@ -23,7 +22,9 @@ namespace Kvit.Application.Commands.Settlements
                 return userId.ToFailure<SettlementResponse>();
             }
 
-            Result<Guid> recorded = await _unitOfWork.RunInTransactionOnceMoreIfClientRequestIdWasTakenAsync(
+            Result<Guid> recorded = await _groupWrite.RunOnceMoreIfClientRequestIdWasTakenAsync(
+                command.GroupId,
+                userId.Value,
                 () => _recordSettlement.Execute(command.GroupId, userId.Value, command.ClientRequestId, command.Input, cancellationToken),
                 cancellationToken);
             if (!recorded.IsSuccess)

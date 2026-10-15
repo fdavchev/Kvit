@@ -6,6 +6,19 @@ namespace Kvit.Infrastructure.Persistence
 {
     public static class BalanceQueries
     {
+        public static async Task<GroupMoney> GroupMoneyOfAsync(this AppDbContext context, Guid groupId, CancellationToken cancellationToken)
+        {
+            List<Guid> memberIds = await context.NamedGroupMembers(groupId)
+                .AsNoTracking()
+                .InJoiningOrder()
+                .Select(named => named.Member.Id)
+                .ToListAsync(cancellationToken);
+            List<BalanceExpense> expenses = await context.CountedBalanceExpensesOfAsync(groupId, cancellationToken);
+            List<BalanceSettlement> settlements = await context.CountedBalanceSettlementsOfAsync(groupId, cancellationToken);
+
+            return new GroupMoney(memberIds, expenses, settlements);
+        }
+
         public static async Task<List<BalanceExpense>> CountedBalanceExpensesOfAsync(this AppDbContext context, Guid groupId, CancellationToken cancellationToken)
         {
             List<Expense> expenses = await context.Expenses

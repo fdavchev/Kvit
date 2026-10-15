@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit: closing banners (mockup)</title>
+<link rel="stylesheet" href="../2026-10-01-round-3/source/palette.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/base.css">
+<link rel="stylesheet" href="../2026-10-01-round-3/source/app.css">
+<style>
+  html, body { background: #e9e6e1; color: #222; height: auto; min-height: 100%; overflow: auto; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; padding: 10px 16px 2px; font-size: .9rem; }
+  .bar .grp { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .bar button { border: 1px solid #999; background: #fff; color: #222; border-radius: 8px; padding: 6px 10px; font: inherit; cursor: pointer; width: auto; min-height: 0; display: inline-block; }
+  .bar button[aria-pressed='true'] { background: #222; color: #fff; border-color: #222; }
+  .note2 { max-width: 760px; margin: 6px auto 10px; text-align: center; font-size: .9rem; color: #444; padding: 0 16px; min-height: 3em; }
+  .stage { display: flex; justify-content: center; padding: 0 16px 24px; }
+  .phone { position: relative; width: 360px; height: min(780px, calc(100vh - 170px)); min-height: 420px; overflow: hidden; border-radius: 28px; box-shadow: 0 6px 24px rgba(0,0,0,.25);
+    --bg: var(--orange-200); --ink: var(--orange-950); --ink-soft: var(--orange-900); --primary: var(--orange-deep); --primary-ink: #fff;
+    --card: var(--orange-50); --field-line: var(--orange-line); --pill: #fff; --plus: #1d6b2e; --minus: #b71f1f;
+    background: var(--bg); color: var(--ink); }
+  .phone.dark { --bg: var(--dark-bg); --ink: var(--orange-50); --ink-soft: var(--orange-200); --primary: var(--dark-button); --primary-ink: var(--dark-bg);
+    --card: var(--dark-raised); --field-line: var(--dark-line); --pill: #351f1b; --plus: #7fd68f; --minus: #ff9a9a; }
+  .screen { display: block; min-height: 0; box-sizing: border-box; height: 100%; overflow-y: auto; padding: 8px 24px 120px; }
+  .back { font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+  .center { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .emoji { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 22px; font-size: 2.2rem; background: var(--orange-deep); }
+  .h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+  .badge { display: inline-block; font-size: .75rem; font-weight: 700; border-radius: 999px; padding: 3px 10px; background: var(--pill); color: var(--ink); }
+  .soft { color: var(--ink-soft); font-size: .9375rem; }
+  .small { font-size: .8125rem; color: var(--ink-soft); }
+  .seg { display: flex; padding: 4px; border-radius: 999px; background: var(--card); gap: 2px; margin: 14px 0 16px; }
+  .seg span { flex: 1; min-height: 44px; display: grid; place-items: center; border-radius: 999px; color: var(--ink-soft); font-weight: 700; }
+  .seg span.on { background: var(--pill); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 999px; min-height: 44px; padding: 0 18px; white-space: nowrap; font: inherit; font-weight: 700; background: var(--primary); color: var(--primary-ink); cursor: pointer; width: auto; }
+  .btn.out { background: transparent; color: var(--ink); border: 1.5px solid var(--field-line); }
+  .btn.wine { background: transparent; color: var(--minus); border: 1.5px solid var(--minus); }
+  .btn.full { width: 100%; }
+  .card { background: var(--card); border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .row .g { flex: 1; min-width: 0; }
+  .t { font-weight: 700; }
+  .actions { display: flex; gap: 8px; }
+  .actions .btn { flex: 1; }
+  .check { display: flex; gap: 8px; align-items: center; font-size: .9rem; }
+  .check i { font-style: normal; color: var(--plus); font-weight: 800; }
+  .wait { color: var(--ink-soft); font-size: .875rem; }
+  .ro { display: flex; gap: 10px; align-items: center; }
+  .banner-top { margin: 0 -24px 12px; border-radius: 0; }
+  .sticky { position: absolute; left: 0; right: 0; top: 0; z-index: 2; background: var(--card); border-bottom: 1px solid var(--field-line); padding: 10px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .bottombar { position: absolute; left: 12px; right: 12px; bottom: 14px; z-index: 2; background: var(--card); border: 1px solid var(--field-line); border-radius: 22px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.28); }
+  .fab { position: absolute; right: 20px; bottom: 24px; width: 60px; height: 60px; border-radius: 20px; display: grid; place-items: center; font-size: 2rem; background: var(--primary); color: var(--primary-ink); }
+  .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-end; z-index: 5; }
+  .scrim.open { display: flex; }
+  .sheet { width: 100%; background: var(--bg); border-radius: 24px 24px 0 0; padding: 18px 24px 26px; display: flex; flex-direction: column; gap: 12px; }
+  .field { background: var(--pill); color: var(--ink); border: 1.5px solid var(--field-line); border-radius: 14px; padding: 12px 14px; min-height: 64px; font-size: 1rem; }
+  .toast { position: absolute; left: 20px; right: 20px; bottom: 20px; z-index: 6; background: var(--ink); color: var(--bg); border-radius: 14px; padding: 12px 16px; font-weight: 600; display: none; }
+  .toast.on { display: block; }
+  .exrow { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--field-line); }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="grp"><b>Banner style:</b><button data-style="A">A: card on top (recommended)</button><button data-style="B">B: pinned strip</button><button data-style="C">C: bottom bar</button></div>
+</div>
+<div class="bar">
+  <div class="grp"><b>I am:</b><button data-me="owner">Filip (owner)</button><button data-me="ana">Ana (member)</button></div>
+  <div class="grp"><b>Group is:</b><button data-st="kvit">Everyone's kvit</button><button data-st="closing">Closing</button><button data-st="finished">Finished</button></div>
+  <div class="grp"><b>Look:</b><button data-theme="light">Light</button><button data-theme="dark">Dark</button></div>
+</div>
+<p class="note2" id="hint"></p>
+<div class="stage" id="stage"></div>
+<script>
+var S = { style: 'A', me: 'owner', st: 'kvit', dark: false, anaConfirmed: false, toast: '', sheet: false };
+var HINT = {
+  kvit: 'Everything is paid. Only the owner sees "Close the group?". Tap Close the group.',
+  closing: 'Filip closed the group at 20:10. Ana and Marko’s accounts must confirm, or it ends by itself after 24 hours. Owner sees who is missing; Ana sees Confirm and Object. The owner cannot cancel: fixing an expense or payment cancels the closing.',
+  finished: 'Read-only. Everyone sees "Finished". Only the owner sees Unlock for changes. All add / pay buttons are gone.'
+};
+function el(s) { return document.getElementById(s); }
+function banner() {
+  var me = S.me, st = S.st, h = '';
+  if (st === 'kvit') {
+    if (me !== 'owner') return '';
+    h = '<div class="t">🎉 Everyone’s kvit – close the group?</div>' +
+      '<div class="check"><i>✓</i> All balances are 0</div><div class="check"><i>✓</i> No payment is waiting</div>' +
+      '<div class="small">Ana and Marko will be asked to confirm. If nobody objects it finishes after 24 hours.</div>' +
+      '<button class="btn full" data-act="start">Close the group</button>';
+  } else if (st === 'closing') {
+    if (me === 'owner') {
+      h = '<div class="t">Closing · waiting for others</div>' +
+        '<div class="check"><i>' + (S.anaConfirmed ? '✓' : '…') + '</i> Ana' + (S.anaConfirmed ? ' confirmed' : ' has not answered') + '</div>' +
+        '<div class="check"><i>…</i> Dime has not answered</div>' +
+        '<div class="small">Finishes by itself tomorrow at 20:10. Changing an expense or a payment cancels it.</div>';
+    } else if (S.anaConfirmed) {
+      h = '<div class="t">You confirmed ✓</div><div class="small">Waiting for Dime. It finishes by itself tomorrow at 20:10. You can still object.</div>' +
+        '<button class="btn out full" data-act="object">Object</button>';
+    } else {
+      h = '<div class="t">Filip wants to close “Greece trip”</div>' +
+        '<div class="small">Everyone is kvit. Nothing can be changed until you answer.</div>' +
+        '<div class="actions"><button class="btn" data-act="confirm">Confirm</button><button class="btn wine" data-act="object">Object</button></div>';
+    }
+  } else {
+    h = '<div class="ro"><span style="font-size:1.4rem">🔒</span><div class="g"><div class="t">Finished · read-only</div><div class="small">Closed on 14 Oct. Everyone can look, nobody can change anything.</div></div></div>' +
+      (me === 'owner' ? '<button class="btn out full" data-act="unlock">Unlock for changes</button>' : '');
+  }
+  return h;
+}
+function render() {
+  var b = banner(), cls = S.dark ? 'phone dark' : 'phone';
+  var top = '', topFlow = '', bottom = '';
+  if (b) {
+    if (S.style === 'A') topFlow = '<div class="card">' + b + '</div>';
+    if (S.style === 'B') top = '<div class="sticky">' + b + '</div>';
+    if (S.style === 'C') bottom = '<div class="bottombar">' + b + '</div>';
+  }
+  var fab = S.st === 'finished' || (S.st === 'closing' && S.me !== 'owner') ? '' : '<div class="fab">+</div>';
+  var badge = S.st === 'closing' ? ' <span class="badge">Closing</span>' : S.st === 'finished' ? ' <span class="badge">Finished</span>' : '';
+  var pad = S.style === 'B' && b ? 'style="padding-top:' + (S.st === 'kvit' ? 188 : S.st === 'closing' ? 150 : 110) + 'px"' : '';
+  el('stage').innerHTML = '<div class="' + cls + '">' + top +
+    '<div class="screen" ' + pad + '><div class="back">‹ Groups</div>' +
+    '<div class="center"><div class="emoji">🏖️</div><div class="h1">Greece trip' + badge + '</div><div class="soft">Your balance: <b>0 MKD</b></div></div>' +
+    '<div class="seg"><span>Expenses</span><span class="on">Balances</span><span>Activity</span></div>' + topFlow +
+    '<div class="card"><div class="t">Everyone is kvit 🎉</div><div class="small">Between others: nothing to pay.</div></div>' +
+    '</div>' + bottom + fab +
+    '<div class="scrim' + (S.sheet ? ' open' : '') + '" id="scrim"><div class="sheet"><div class="t" style="font-size:1.2rem">Object to closing</div>' +
+    '<div class="small">The closing is cancelled and the group stays open, so you can sort it out in person.</div>' +
+    '<div class="field"><span class="small">Reason (optional, up to 200 characters)</span></div>' +
+    '<div class="actions"><button class="btn out" data-act="closesheet">Cancel</button><button class="btn wine" data-act="send">Send objection</button></div></div></div>' +
+    '<div class="toast' + (S.toast ? ' on' : '') + '">' + S.toast + '</div></div>';
+  el('hint').textContent = HINT[S.st];
+  document.querySelectorAll('[data-style]').forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.style === S.style); });
+  document.querySelectorAll('[data-me]').forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.me === S.me); });
+  document.querySelectorAll('[data-st]').forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.st === S.st); });
+  document.querySelectorAll('[data-theme]').forEach(function (x) { x.setAttribute('aria-pressed', (x.dataset.theme === 'dark') === S.dark); });
+}
+function say(t) { S.toast = t; render(); setTimeout(function () { S.toast = ''; render(); }, 2200); }
+document.addEventListener('click', function (e) {
+  var t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.style) S.style = t.dataset.style;
+  if (t.dataset.me) { S.me = t.dataset.me; S.anaConfirmed = false; }
+  if (t.dataset.st) { S.st = t.dataset.st; S.anaConfirmed = false; }
+  if (t.dataset.theme) S.dark = t.dataset.theme === 'dark';
+  var a = t.dataset.act;
+  if (a === 'start') { S.st = 'closing'; S.anaConfirmed = false; }
+  if (a === 'confirm') S.anaConfirmed = true;
+  if (a === 'object') { S.sheet = true; }
+  if (a === 'closesheet') S.sheet = false;
+  if (a === 'send') { S.sheet = false; S.st = 'kvit'; S.me = 'ana'; render(); return say('Closing cancelled. The group is open again.'); }
+  if (a === 'unlock') { S.st = 'kvit'; render(); return say('Group unlocked.'); }
+  render();
+});
+render();
+</script>
+</body>
+</html>

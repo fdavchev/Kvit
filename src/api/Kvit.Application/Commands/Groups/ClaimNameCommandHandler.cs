@@ -1,7 +1,6 @@
 using Kvit.Application.Dispatching;
 using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
-using Kvit.Contracts.Persistence;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Groups;
 
@@ -10,7 +9,7 @@ namespace Kvit.Application.Commands.Groups
     public sealed class ClaimNameCommandHandler(
         ICurrentUserProvider _currentUserProvider,
         ClaimName _claimName,
-        IUnitOfWork _unitOfWork) : ICommandHandler<ClaimNameCommand>
+        GroupWriteTransaction _groupWrite) : ICommandHandler<ClaimNameCommand>
     {
         public async Task<Result> Handle(ClaimNameCommand command, CancellationToken cancellationToken)
         {
@@ -20,7 +19,7 @@ namespace Kvit.Application.Commands.Groups
                 return userId;
             }
 
-            return await _unitOfWork.RunInTransactionAsync(() => _claimName.Execute(command.GroupId, userId.Value, command.MemberId, cancellationToken), cancellationToken);
+            return await _groupWrite.RunAsync(command.GroupId, userId.Value, () => _claimName.Execute(command.GroupId, userId.Value, command.MemberId, cancellationToken), cancellationToken);
         }
     }
 }

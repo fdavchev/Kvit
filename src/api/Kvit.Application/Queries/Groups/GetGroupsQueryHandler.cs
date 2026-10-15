@@ -21,28 +21,34 @@ namespace Kvit.Application.Queries.Groups
                 return Result.Unauthorized<GroupListResponse>(userId.Error, userId.ErrorCode);
             }
 
-            IQueryable<Group> memberGroups = _context.GroupsWithCurrentMember(userId.Value).Where(group => group.DeletedAt == null);
-            List<GroupListRow> openGroups = await GroupListRowsOf(memberGroups.Where(group => group.Status != GroupStatus.Finished)).ToListAsync(cancellationToken);
-            List<GroupListRow> finishedGroups = await GroupListRowsOf(memberGroups.Where(group => group.Status == GroupStatus.Finished)).ToListAsync(cancellationToken);
+            List<GroupListDto> memberGroups = await GroupListDtosOf(userId.Value).ToListAsync(cancellationToken);
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            ILookup<bool, GroupListRow> rowsByIsFinished = memberGroups.ToLookup(
+                group => Group.EffectiveStatusOf(group.Status, group.ClosingStartedAt, now) == GroupStatus.Finished,
+                group => group.Row);
             List<DeletedGroupListRow> recentlyDeleted = await DeletedGroupListRowsOf(userId.Value).ToListAsync(cancellationToken);
 
-            return Result.Ok(new GroupListResponse(openGroups, finishedGroups, recentlyDeleted));
+            return Result.Ok(new GroupListResponse([.. rowsByIsFinished[false]], [.. rowsByIsFinished[true]], recentlyDeleted));
         }
 
-        private IQueryable<GroupListRow> GroupListRowsOf(IQueryable<Group> groups)
+        private IQueryable<GroupListDto> GroupListDtosOf(Guid userId)
         {
             IQueryable<GroupMember> currentMembers = _context.CurrentGroupMembers();
 
-            return groups
+            return _context.GroupsWithCurrentMember(userId)
                 .AsNoTracking()
+                .Where(group => group.DeletedAt == null)
                 .OrderByDescending(group => group.CreatedAt)
-                .Select(group => new GroupListRow(
-                    group.Id,
-                    group.Kind,
-                    group.Name,
-                    group.Emoji,
-                    group.DefaultCurrency,
-                    currentMembers.Count(member => member.GroupId == group.Id)));
+                .Select(group => new GroupListDto(
+                    new GroupListRow(
+                        group.Id,
+                        group.Kind,
+                        group.Name,
+                        group.Emoji,
+                        group.DefaultCurrency,
+                        currentMembers.Count(member => member.GroupId == group.Id)),
+                    group.Status,
+                    group.ClosingStartedAt));
         }
 
         private IQueryable<DeletedGroupListRow> DeletedGroupListRowsOf(Guid ownerUserId)

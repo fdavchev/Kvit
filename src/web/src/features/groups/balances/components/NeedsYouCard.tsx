@@ -14,9 +14,10 @@ interface NeedsYouCardProps {
   item: NeedsYouView
   sentence: string
   howLongAgo: string
+  canAnswer: boolean
 }
 
-export function NeedsYouCard({ groupId, item, sentence, howLongAgo }: NeedsYouCardProps) {
+export function NeedsYouCard({ groupId, item, sentence, howLongAgo, canAnswer }: NeedsYouCardProps) {
   const { t } = useTranslation()
   const answerSettlement = useAnswerSettlement(groupId, item.settlementId)
 
@@ -29,22 +30,24 @@ export function NeedsYouCard({ groupId, item, sentence, howLongAgo }: NeedsYouCa
           <p className="text-[0.8125rem] text-muted-foreground">{howLongAgo}</p>
         </div>
       </div>
-      <div className="flex gap-2.5">
-        <KvitButton
-          className={cn(balancesActionButtonLook, kvitGlassDangerButtonLook, 'flex-1')}
-          disabled={answerSettlement.isPending}
-          onClick={() => answerSettlement.mutate('reject')}
-        >
-          {t('settlements.reject')}
-        </KvitButton>
-        <KvitButton
-          className={cn(balancesActionButtonLook, kvitGlassButtonLook, 'flex-1')}
-          disabled={answerSettlement.isPending}
-          onClick={() => answerSettlement.mutate('confirm')}
-        >
-          {t('settlements.confirm')}
-        </KvitButton>
-      </div>
+      {canAnswer && (
+        <div className="flex gap-2.5">
+          <KvitButton
+            className={cn(balancesActionButtonLook, kvitGlassDangerButtonLook, 'flex-1')}
+            disabled={answerSettlement.isPending}
+            onClick={() => answerSettlement.mutate('reject')}
+          >
+            {t('settlements.reject')}
+          </KvitButton>
+          <KvitButton
+            className={cn(balancesActionButtonLook, kvitGlassButtonLook, 'flex-1')}
+            disabled={answerSettlement.isPending}
+            onClick={() => answerSettlement.mutate('confirm')}
+          >
+            {t('settlements.confirm')}
+          </KvitButton>
+        </div>
+      )}
       {answerSettlement.isError && <KvitInlineError message={t(errorMessageKey(answerSettlement.error))} />}
     </li>
   )

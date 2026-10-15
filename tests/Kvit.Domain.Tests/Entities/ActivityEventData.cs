@@ -16,6 +16,11 @@ namespace Kvit.Domain.Tests.Entities
             return Read(activityEvent).GetProperty("claimedName").GetString();
         }
 
+        public static string? Reason(ActivityEvent activityEvent)
+        {
+            return Read(activityEvent).GetProperty("reason").GetString();
+        }
+
         public static List<string> PropertyNames(ActivityEvent activityEvent)
         {
             return [.. Read(activityEvent).EnumerateObject().Select(property => property.Name)];

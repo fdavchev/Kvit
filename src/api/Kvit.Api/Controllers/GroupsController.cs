@@ -56,6 +56,34 @@ namespace Kvit.Api.Controllers
             return Result(result);
         }
 
+        [HttpPost("{groupId:guid}/closing")]
+        public async Task<ActionResult> StartClosing(Guid groupId, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new StartClosingCommand(groupId), cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("{groupId:guid}/closing/confirm")]
+        public async Task<ActionResult> ConfirmClosing(Guid groupId, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new ConfirmClosingCommand(groupId), cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("{groupId:guid}/closing/object")]
+        public async Task<ActionResult> ObjectToClosing(Guid groupId, ObjectToClosingRequest request, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new ObjectToClosingCommand(groupId, request.Reason), cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("{groupId:guid}/unlock")]
+        public async Task<ActionResult> Unlock(Guid groupId, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new UnlockGroupCommand(groupId), cancellationToken);
+            return Result(result);
+        }
+
         [HttpGet("{groupId:guid}/members")]
         public async Task<ActionResult<GroupMembersResponse>> ListMembers(Guid groupId, CancellationToken cancellationToken)
         {

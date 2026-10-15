@@ -288,4 +288,9 @@ When debugging, prefer the command that produces a number (a grep count, a SQL `
   - **jsdom cannot compute colours:** a test for a red border checks the Tailwind class (`aria-invalid:border-destructive`), not the pixel.
   - **PowerShell and bash quote differently for `psql -c`;** write the SQL in a file or use the quoting of the shell you are in.
 
+- **Finishing groups (Phase 10, 2026-10-15):**
+  - **Every new group write command** uses `GroupWriteTransaction` (not `IUnitOfWork` directly): it first commits the lazy 24-hour finish in its own transaction, so a refused write cannot roll the finish back. The domain service then calls `Group.CheckCanBeChangedBy` (or `CancelClosingOnChange` for money and member-structure changes by the owner) right after the who-may-act check, and money writes in a One bill end with `FinishPaidOneBill`. A new write command that skips these lets a Finished group be changed.
+  - Reads (GET) show the effective status (`Group.EffectiveStatusAt`) and never write. A group is closed only with at least one counted expense.
+  - A frontend write that can make the group bar disappear (closing actions) shows its refusal as a toast when the refusal code is in `groupStateChangedCodes` (`core/api/queryClient.ts`), because the bar that held the inline error unmounts.
+
 New traps found while building get added here, with the date.

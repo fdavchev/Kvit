@@ -2,7 +2,6 @@ using Kvit.Application.Dispatching;
 using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Groups;
-using Kvit.Contracts.Persistence;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Groups;
 
@@ -11,7 +10,7 @@ namespace Kvit.Application.Commands.Groups
     public sealed class UndoInviteResetCommandHandler(
         ICurrentUserProvider _currentUserProvider,
         UndoInviteReset _undoInviteReset,
-        IUnitOfWork _unitOfWork) : ICommandHandler<UndoInviteResetCommand, InviteTokenResponse>
+        GroupWriteTransaction _groupWrite) : ICommandHandler<UndoInviteResetCommand, InviteTokenResponse>
     {
         public async Task<Result<InviteTokenResponse>> Handle(UndoInviteResetCommand command, CancellationToken cancellationToken)
         {
@@ -21,7 +20,7 @@ namespace Kvit.Application.Commands.Groups
                 return userId.ToFailure<InviteTokenResponse>();
             }
 
-            Result<string> inviteToken = await _unitOfWork.RunInTransactionAsync(() => _undoInviteReset.Execute(command.GroupId, userId.Value, cancellationToken), cancellationToken);
+            Result<string> inviteToken = await _groupWrite.RunAsync(command.GroupId, userId.Value, () => _undoInviteReset.Execute(command.GroupId, userId.Value, cancellationToken), cancellationToken);
             if (!inviteToken.IsSuccess)
             {
                 return inviteToken.ToFailure<InviteTokenResponse>();

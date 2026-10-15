@@ -1,6 +1,7 @@
 using Kvit.Domain.Entities;
 using Kvit.Domain.Interfaces;
 using Kvit.Domain.Results;
+using Kvit.Domain.Services.Groups;
 
 namespace Kvit.Domain.Services.Settlements
 {
@@ -9,6 +10,8 @@ namespace Kvit.Domain.Services.Settlements
         IGroupMemberRepository _members,
         ISettlementRepository _settlements,
         IActivityEventRepository _activityEvents,
+        CancelClosingOnChange _cancelClosingOnChange,
+        FinishPaidOneBill _finishPaidOneBill,
         TimeProvider _timeProvider)
     {
         public async Task<Result> Execute(Guid groupId, Guid userId, Guid settlementId, CancellationToken cancellationToken)
@@ -27,13 +30,21 @@ namespace Kvit.Domain.Services.Settlements
 
             Settlement settlement = foundSettlement.Value;
             GroupRoster roster = await _members.RosterOfAsync(groupId, cancellationToken);
-            Result restored = settlement.Restore(roster, userId, found.Value.OwnerUserId);
+            Group group = found.Value;
+            Result restored = settlement.Restore(roster, userId, group.OwnerUserId);
             if (!restored.IsSuccess)
             {
                 return restored;
             }
 
+            Result changeable = await _cancelClosingOnChange.Execute(group, userId, cancellationToken);
+            if (!changeable.IsSuccess)
+            {
+                return changeable;
+            }
+
             _activityEvents.Add(ActivityEvent.SettlementRestored(userId, settlement, roster, _timeProvider.GetUtcNow()));
+            await _finishPaidOneBill.Execute(group, userId, cancellationToken);
 
             return Result.Ok();
         }

@@ -11,9 +11,10 @@ import { BalancesOverview } from './BalancesOverview'
 interface GroupBalancesProps {
   groupId: string
   defaultCurrency: Currency
+  canChangePayments: boolean
 }
 
-export function GroupBalances({ groupId, defaultCurrency }: GroupBalancesProps) {
+export function GroupBalances({ groupId, defaultCurrency, canChangePayments }: GroupBalancesProps) {
   const me = useSignedInMe()
   const balancesQuery = useBalances(groupId)
   const settlementsQuery = useSettlements(groupId)
@@ -39,6 +40,7 @@ export function GroupBalances({ groupId, defaultCurrency }: GroupBalancesProps) 
       members={members}
       defaultCurrency={defaultCurrency}
       timeZone={me.timeZone}
+      canChangePayments={canChangePayments}
     />
   )
 }

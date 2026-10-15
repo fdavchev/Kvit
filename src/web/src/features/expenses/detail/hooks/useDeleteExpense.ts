@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query'
 import { deleteExpense } from '@/core/services/expenses/expensesService'
-import { activityQueryKey } from '@/features/groups/shared/groupCache'
+import { activityQueryKey, refreshGroupAndList } from '@/features/groups/shared/groupCache'
 import { expensesQueryKey } from '../../shared/expenseCache'
 
 export function useDeleteExpense(groupId: string, expenseId: string): UseMutationResult<void, Error, void> {
@@ -12,6 +12,7 @@ export function useDeleteExpense(groupId: string, expenseId: string): UseMutatio
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: expensesQueryKey(groupId), refetchType: 'none' }),
         queryClient.invalidateQueries({ queryKey: activityQueryKey(groupId) }),
+        refreshGroupAndList(queryClient, groupId),
       ])
     },
   })

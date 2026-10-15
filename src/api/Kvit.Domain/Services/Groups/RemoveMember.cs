@@ -10,6 +10,7 @@ namespace Kvit.Domain.Services.Groups
         IGroupMemberRepository _members,
         IGroupMoneyRepository _money,
         IActivityEventRepository _activityEvents,
+        CancelClosingOnChange _cancelClosingOnChange,
         TimeProvider _timeProvider)
     {
         public async Task<Result> Execute(Guid groupId, Guid userId, Guid memberId, CancellationToken cancellationToken)
@@ -18,6 +19,12 @@ namespace Kvit.Domain.Services.Groups
             if (!found.IsSuccess)
             {
                 return found;
+            }
+
+            Result changeable = await _cancelClosingOnChange.Execute(found.Value, userId, cancellationToken);
+            if (!changeable.IsSuccess)
+            {
+                return changeable;
             }
 
             GroupRoster roster = await _members.RosterOfAsync(groupId, cancellationToken);

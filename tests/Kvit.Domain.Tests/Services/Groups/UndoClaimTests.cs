@@ -26,7 +26,7 @@ namespace Kvit.Domain.Tests.Services.Groups
             _groups.Seed(_group, GroupTestData.OwnerId, GroupTestData.MemberId);
             _members.Seed(_ownerRow);
             _members.Seed(_claimedRow, "Ana Petrova");
-            _undoClaim = new UndoClaim(_groups, _members, _activityEvents, new FixedTimeProvider(GroupTestData.Moment));
+            _undoClaim = new UndoClaim(_groups, _members, _activityEvents, new CancelClosingOnChange(new FakeClosingResponseRepository(), _activityEvents, new FixedTimeProvider(GroupTestData.Moment)), new FixedTimeProvider(GroupTestData.Moment));
         }
 
         [Fact]

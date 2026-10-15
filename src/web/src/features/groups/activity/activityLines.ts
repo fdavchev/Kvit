@@ -83,6 +83,13 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
     })
   }
 
+  function closingObjectedSentence(event: ActivityEvent): string {
+    const reason = readTextOrNull(dataOf(event), 'reason', `the data of the ${event.type} event`)
+    return reason === null
+      ? t('activity.closingObjected', { name: event.actorName })
+      : t('activity.closingObjectedWithReason', { name: event.actorName, reason })
+  }
+
   function groupSettingsSentence(event: ActivityEvent, change: ExpenseChange): string {
     const values = { name: event.actorName, old: change.old, new: change.new }
     switch (change.field) {
@@ -184,6 +191,18 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
         return [settlementSentence(event, 'activity.settlementDeleted')]
       case 'SettlementRestored':
         return [settlementSentence(event, 'activity.settlementRestored')]
+      case 'ClosingStarted':
+        return [t('activity.closingStarted', { name })]
+      case 'ClosingConfirmed':
+        return [t('activity.closingConfirmed', { name })]
+      case 'ClosingObjected':
+        return [closingObjectedSentence(event)]
+      case 'ClosingCancelled':
+        return [t('activity.closingCancelled', { name })]
+      case 'GroupFinished':
+        return [t('activity.groupFinished')]
+      case 'GroupReopened':
+        return [t('activity.groupReopened', { name })]
       default:
         throw new Error(`The activity has an event type Kvit has no sentence for: "${event.type}"`)
     }

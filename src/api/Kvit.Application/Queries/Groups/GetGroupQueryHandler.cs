@@ -2,6 +2,7 @@ using Kvit.Application.Dispatching;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Groups;
 using Kvit.Domain.Entities;
+using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,8 @@ namespace Kvit.Application.Queries.Groups
 {
     public sealed class GetGroupQueryHandler(
         ICurrentUserProvider _currentUserProvider,
-        AppDbContext _context) : IQueryHandler<GetGroupQuery, GroupResponse>
+        AppDbContext _context,
+        TimeProvider _timeProvider) : IQueryHandler<GetGroupQuery, GroupResponse>
     {
         public async Task<Result<GroupResponse>> Handle(GetGroupQuery query, CancellationToken cancellationToken)
         {
@@ -20,33 +22,81 @@ namespace Kvit.Application.Queries.Groups
                 return Result.Unauthorized<GroupResponse>(userId.Error, userId.ErrorCode);
             }
 
-            GroupResponse? group = await GroupResponseOf(query.GroupId, userId.Value).SingleOrDefaultAsync(cancellationToken);
-            if (group is null)
+            GroupDetailDto? detail = await GroupDetailDtoOf(query.GroupId, userId.Value).SingleOrDefaultAsync(cancellationToken);
+            if (detail is null)
             {
                 return Group.NotFound<GroupResponse>(query.GroupId);
             }
 
-            return Result.Ok(group);
+            Group group = detail.Group;
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            GroupStatus status = group.EffectiveStatusAt(now);
+            List<ClosingMemberRow> confirmedBy = [];
+            List<ClosingMemberRow> waitingFor = [];
+            if (status != GroupStatus.Open)
+            {
+                GroupRoster roster = new(await _context.NamedGroupMembers(group.Id).AsNoTracking().ToListAsync(cancellationToken));
+                HashSet<Guid> confirmedMemberIds = [.. await ConfirmedMemberIdsOf(group.Id).ToListAsync(cancellationToken)];
+                confirmedBy = [.. roster.InJoiningOrder(confirmedMemberIds, memberId => memberId).Select(memberId => ClosingMemberRowOf(roster.RowOf(memberId)))];
+                if (status == GroupStatus.Closing)
+                {
+                    waitingFor = [.. roster.ClosingConfirmers(group.OwnerUserId)
+                        .Where(row => !confirmedMemberIds.Contains(row.Member.Id))
+                        .Select(ClosingMemberRowOf)];
+                }
+            }
+
+            return Result.Ok(new GroupResponse(
+                group.Id,
+                group.Kind,
+                group.Name,
+                group.Emoji,
+                group.DefaultCurrency,
+                status,
+                group.OwnerUserId,
+                group.OwnerUserId == userId.Value,
+                detail.MemberCount,
+                group.InviteToken,
+                group.ClosingStartedAt,
+                Group.ClosingEndsAtOf(group.ClosingStartedAt),
+                confirmedBy,
+                waitingFor,
+                await CanStartClosingAsync(group, userId.Value, now, cancellationToken)));
         }
 
-        private IQueryable<GroupResponse> GroupResponseOf(Guid groupId, Guid userId)
+        private static ClosingMemberRow ClosingMemberRowOf(NamedMember row)
+        {
+            return new ClosingMemberRow(row.Member.Id, row.DisplayName);
+        }
+
+        private async Task<bool> CanStartClosingAsync(Group group, Guid userId, DateTimeOffset now, CancellationToken cancellationToken)
+        {
+            if (!group.CheckCanStartClosing(userId, now).IsSuccess)
+            {
+                return false;
+            }
+
+            GroupMoney money = await _context.GroupMoneyOfAsync(group.Id, cancellationToken);
+
+            return money.CheckHasCountedExpense().IsSuccess && money.CheckEveryoneKvit().IsSuccess;
+        }
+
+        private IQueryable<Guid> ConfirmedMemberIdsOf(Guid groupId)
+        {
+            return _context.ClosingResponses
+                .AsNoTracking()
+                .Where(response => response.GroupId == groupId && response.Response == ClosingAnswer.Confirmed)
+                .Select(response => response.MemberId);
+        }
+
+        private IQueryable<GroupDetailDto> GroupDetailDtoOf(Guid groupId, Guid userId)
         {
             IQueryable<GroupMember> currentMembers = _context.CurrentGroupMembers();
 
             return _context.GroupsWithCurrentMember(userId)
                 .AsNoTracking()
                 .Where(group => group.Id == groupId && group.DeletedAt == null)
-                .Select(group => new GroupResponse(
-                    group.Id,
-                    group.Kind,
-                    group.Name,
-                    group.Emoji,
-                    group.DefaultCurrency,
-                    group.Status,
-                    group.OwnerUserId,
-                    group.OwnerUserId == userId,
-                    currentMembers.Count(member => member.GroupId == group.Id),
-                    group.InviteToken));
+                .Select(group => new GroupDetailDto(group, currentMembers.Count(member => member.GroupId == group.Id)));
         }
     }
 }

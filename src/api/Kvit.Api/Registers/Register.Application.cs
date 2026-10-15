@@ -1,4 +1,5 @@
 using Kvit.Application.Dispatching;
+using Kvit.Application.Persistence;
 
 namespace Kvit.Api.Registers
 {
@@ -7,6 +8,7 @@ namespace Kvit.Api.Registers
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
             services.AddScoped<IDispatcher, Dispatcher>();
+            services.AddScoped<GroupWriteTransaction>();
 
             services.Scan(scan => scan
                 .FromAssemblyOf<IDispatcher>()

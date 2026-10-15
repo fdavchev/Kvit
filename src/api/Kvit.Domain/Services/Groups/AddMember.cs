@@ -19,6 +19,12 @@ namespace Kvit.Domain.Services.Groups
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();
+            Result changeable = found.Value.CheckCanBeChangedBy(userId, now);
+            if (!changeable.IsSuccess)
+            {
+                return changeable.ToFailure<Guid>();
+            }
+
             Result<GroupMember> created = GroupMember.ForName(groupId, name, userId, now);
             if (!created.IsSuccess)
             {

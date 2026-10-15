@@ -28,6 +28,8 @@ namespace Kvit.Infrastructure.Persistence
 
         public DbSet<Settlement> Settlements => Set<Settlement>();
 
+        public DbSet<ClosingResponse> ClosingResponses => Set<ClosingResponse>();
+
         public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
         protected override void OnModelCreating(ModelBuilder builder)

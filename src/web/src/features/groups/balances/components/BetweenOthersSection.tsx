@@ -11,10 +11,11 @@ import { MarkPaidButton } from './MarkPaidButton'
 interface BetweenOthersSectionProps {
   items: readonly BetweenOthersView[]
   language: Language
+  canMarkPaid: boolean
   onMarkPaid: (payment: PaymentToRecord) => void
 }
 
-export function BetweenOthersSection({ items, language, onMarkPaid }: BetweenOthersSectionProps) {
+export function BetweenOthersSection({ items, language, canMarkPaid, onMarkPaid }: BetweenOthersSectionProps) {
   const { t } = useTranslation()
   const headingId = useId()
 
@@ -43,7 +44,7 @@ export function BetweenOthersSection({ items, language, onMarkPaid }: BetweenOth
                 )}
               </p>
             </div>
-            {item.canMarkPaid && (
+            {canMarkPaid && item.canMarkPaid && (
               <MarkPaidButton
                 onClick={() =>
                   onMarkPaid({

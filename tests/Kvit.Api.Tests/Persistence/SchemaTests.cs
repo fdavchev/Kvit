@@ -23,6 +23,7 @@ namespace Kvit.Api.Tests.Persistence
             [
                 "activity_events",
                 "categories",
+                "closing_responses",
                 "data_protection_keys",
                 "exchange_rates",
                 "expense_shares",

@@ -57,6 +57,39 @@ namespace Kvit.Domain.Entities
             return New(groupId, actorUserId, ActivityEventType.GroupRestored, createdAt);
         }
 
+        public static ActivityEvent ClosingStarted(Guid groupId, Guid actorUserId, DateTimeOffset createdAt)
+        {
+            return New(groupId, actorUserId, ActivityEventType.ClosingStarted, createdAt);
+        }
+
+        public static ActivityEvent ClosingConfirmed(Guid groupId, Guid actorUserId, DateTimeOffset createdAt)
+        {
+            return New(groupId, actorUserId, ActivityEventType.ClosingConfirmed, createdAt);
+        }
+
+        public static ActivityEvent ClosingObjected(Guid groupId, Guid actorUserId, string? reason, DateTimeOffset createdAt)
+        {
+            ActivityEvent activityEvent = New(groupId, actorUserId, ActivityEventType.ClosingObjected, createdAt);
+            activityEvent.Data = JsonSerializer.Serialize(new { reason });
+
+            return activityEvent;
+        }
+
+        public static ActivityEvent ClosingCancelled(Guid groupId, Guid actorUserId, DateTimeOffset createdAt)
+        {
+            return New(groupId, actorUserId, ActivityEventType.ClosingCancelled, createdAt);
+        }
+
+        public static ActivityEvent GroupFinished(Guid groupId, Guid actorUserId, DateTimeOffset createdAt)
+        {
+            return New(groupId, actorUserId, ActivityEventType.GroupFinished, createdAt);
+        }
+
+        public static ActivityEvent GroupReopened(Guid groupId, Guid actorUserId, DateTimeOffset createdAt)
+        {
+            return New(groupId, actorUserId, ActivityEventType.GroupReopened, createdAt);
+        }
+
         public static ActivityEvent InviteLinkReset(Guid groupId, Guid actorUserId, DateTimeOffset createdAt)
         {
             return New(groupId, actorUserId, ActivityEventType.InviteLinkReset, createdAt);

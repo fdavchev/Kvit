@@ -30,6 +30,13 @@ namespace Kvit.Domain.Services.Groups
                 return canLeave;
             }
 
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            Result notFrozen = found.Value.CheckNotFrozenFor(userId, now);
+            if (!notFrozen.IsSuccess)
+            {
+                return notFrozen;
+            }
+
             GroupMoney money = await _money.MoneyOfAsync(groupId, cancellationToken);
             Result settled = money.CheckMemberSettled(ownRow.Member.Id);
             if (!settled.IsSuccess)
@@ -37,7 +44,6 @@ namespace Kvit.Domain.Services.Groups
                 return settled;
             }
 
-            DateTimeOffset now = _timeProvider.GetUtcNow();
             Result left = ownRow.Member.Leave(found.Value.OwnerUserId, now);
             if (!left.IsSuccess)
             {

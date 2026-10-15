@@ -19,6 +19,12 @@ namespace Kvit.Domain.Services.Groups
 
             Group group = found.Value;
             DateTimeOffset now = _timeProvider.GetUtcNow();
+            Result changeable = group.CheckCanBeChangedBy(userId, now);
+            if (!changeable.IsSuccess)
+            {
+                return changeable.ToFailure<string>();
+            }
+
             Result undone = group.UndoInviteReset(now);
             if (!undone.IsSuccess)
             {

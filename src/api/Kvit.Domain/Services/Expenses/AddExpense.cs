@@ -4,6 +4,7 @@ using Kvit.Domain.Expenses;
 using Kvit.Domain.Interfaces;
 using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
+using Kvit.Domain.Services.Groups;
 
 namespace Kvit.Domain.Services.Expenses
 {
@@ -14,6 +15,8 @@ namespace Kvit.Domain.Services.Expenses
         ICategoryRepository _categories,
         IActivityEventRepository _activityEvents,
         IUsageEventRepository _usageEvents,
+        CancelClosingOnChange _cancelClosingOnChange,
+        FinishPaidOneBill _finishPaidOneBill,
         TimeProvider _timeProvider)
     {
         public async Task<Result<Guid>> Execute(Guid groupId, Guid userId, Guid clientRequestId, ExpenseInput input, ExchangeRateSnapshot rate, CancellationToken cancellationToken)
@@ -30,6 +33,13 @@ namespace Kvit.Domain.Services.Expenses
                 return earlier.GroupId == groupId && earlier.CreatedByUserId == userId
                     ? Result.Ok(earlier.Id)
                     : Expense.ClientRequestIdUsed<Guid>(clientRequestId);
+            }
+
+            Group group = found.Value;
+            Result changeable = await _cancelClosingOnChange.Execute(group, userId, cancellationToken);
+            if (!changeable.IsSuccess)
+            {
+                return changeable.ToFailure<Guid>();
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();
@@ -65,6 +75,7 @@ namespace Kvit.Domain.Services.Expenses
             _expenses.Add(expense);
             _activityEvents.Add(ActivityEvent.ExpenseAdded(groupId, userId, expense.Id, expense.Title, expense.AmountMinor, expense.Currency, now));
             _usageEvents.Add(UsageEvent.ExpenseAdded(userId, now));
+            await _finishPaidOneBill.Execute(group, userId, cancellationToken);
 
             return Result.Ok(expense.Id);
         }

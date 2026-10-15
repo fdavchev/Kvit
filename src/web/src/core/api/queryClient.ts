@@ -3,6 +3,7 @@ import type { Persister } from '@tanstack/react-query-persist-client'
 import { keepCacheToOnePerson } from '@/core/auth/keepCacheToOnePerson'
 import { meQueryKey } from '@/core/auth/useMe'
 import type { Me } from '@/core/services/me/meService'
+import { groupsQueryKey } from '@/features/groups/shared/groupCache'
 import {
   ApiError,
   forbiddenStatus,
@@ -14,6 +15,13 @@ import { savedQueryCacheMaxAge } from './savedQueryCache'
 
 const wrongPasswordAtLogInCode = 'AUTH_INVALID_CREDENTIALS'
 const mustChangePasswordCode = 'AUTH_MUST_CHANGE_PASSWORD'
+export const groupStateChangedCodes: readonly string[] = [
+  'GROUP_CLOSING',
+  'GROUP_FINISHED',
+  'GROUP_NOT_CLOSING',
+  'GROUP_NOT_OPEN',
+  'GROUP_NOT_FINISHED',
+]
 const maxQueryRetries = 3
 
 export function createQueryClient(persister: Persister): QueryClient {
@@ -26,6 +34,7 @@ export function createQueryClient(persister: Persister): QueryClient {
     mutationCache: new MutationCache({
       onError: (error) => {
         updateMeAfterFailure(queryClient, error)
+        refreshGroupsAfterStateRefusal(queryClient, error)
       },
     }),
     defaultOptions: {
@@ -68,5 +77,15 @@ function updateMeAfterFailure(queryClient: QueryClient, error: Error): void {
     error.errorCode === mustChangePasswordCode
   ) {
     void queryClient.invalidateQueries({ queryKey: meQueryKey })
+  }
+}
+
+export function isGroupStateChangedError(error: unknown): boolean {
+  return error instanceof ApiError && error.errorCode !== null && groupStateChangedCodes.includes(error.errorCode)
+}
+
+function refreshGroupsAfterStateRefusal(queryClient: QueryClient, error: Error): void {
+  if (isGroupStateChangedError(error)) {
+    void queryClient.invalidateQueries({ queryKey: groupsQueryKey })
   }
 }

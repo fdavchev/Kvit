@@ -34,6 +34,11 @@ export const testGroup: Group = {
   isOwner: true,
   memberCount: 1,
   inviteToken: testInviteToken,
+  closingStartedAt: null,
+  closingEndsAt: null,
+  closingConfirmedBy: [],
+  closingWaitingFor: [],
+  canStartClosing: false,
 }
 
 export const flatGroupRow: GroupListRow = {

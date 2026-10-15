@@ -1,7 +1,6 @@
 using Kvit.Application.Dispatching;
 using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
-using Kvit.Contracts.Persistence;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Groups;
 
@@ -10,7 +9,7 @@ namespace Kvit.Application.Commands.Groups
     public sealed class RemoveMemberCommandHandler(
         ICurrentUserProvider _currentUserProvider,
         RemoveMember _removeMember,
-        IUnitOfWork _unitOfWork) : ICommandHandler<RemoveMemberCommand>
+        GroupWriteTransaction _groupWrite) : ICommandHandler<RemoveMemberCommand>
     {
         public async Task<Result> Handle(RemoveMemberCommand command, CancellationToken cancellationToken)
         {
@@ -20,7 +19,7 @@ namespace Kvit.Application.Commands.Groups
                 return userId;
             }
 
-            return await _unitOfWork.RunInTransactionAsync(() => _removeMember.Execute(command.GroupId, userId.Value, command.MemberId, cancellationToken), cancellationToken);
+            return await _groupWrite.RunAsync(command.GroupId, userId.Value, () => _removeMember.Execute(command.GroupId, userId.Value, command.MemberId, cancellationToken), cancellationToken);
         }
     }
 }

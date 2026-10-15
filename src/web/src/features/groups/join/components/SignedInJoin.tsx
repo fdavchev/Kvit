@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
-import { errorMessageKey } from '@/core/api/errors'
+import { errorMessageKey, hasErrorCode } from '@/core/api/errors'
 import { routes } from '@/core/router/routes'
 import type { InvitePreview } from '@/core/services/invites/invitesService'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitInlineError } from '@/shared/components/KvitInlineError'
 import { kvitChipLook } from '@/shared/components/kvitChipLook'
 import { useJoinGroup } from '../hooks/useJoinGroup'
+import { JoinMessage } from './JoinMessage'
 
 interface SignedInJoinProps {
   token: string
@@ -48,6 +49,9 @@ export function SignedInJoin({ token, preview }: SignedInJoinProps) {
     setIsAskingName(true)
   }
 
+  if (hasErrorCode(joinGroup.error, 'GROUP_CLOSING') || hasErrorCode(joinGroup.error, 'GROUP_FINISHED')) {
+    return <JoinMessage message={t(errorMessageKey(joinGroup.error))} />
+  }
   return (
     <div className={isAskingName ? 'flex flex-col gap-3 pt-5' : 'mt-auto flex flex-col gap-3 pt-8'}>
       {joinGroup.isError && <KvitInlineError message={t(errorMessageKey(joinGroup.error))} />}

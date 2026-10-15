@@ -32,6 +32,12 @@ namespace Kvit.Domain.Services.Groups
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();
+            Result joinable = found.Value.CheckCanBeChangedBy(userId, now);
+            if (!joinable.IsSuccess)
+            {
+                return joinable.ToFailure<Guid>();
+            }
+
             if (claimMemberId is Guid targetId)
             {
                 Result claimed = ClaimAtJoin(roster, groupId, userId, accountName, targetId, now);

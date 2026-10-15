@@ -1,5 +1,14 @@
 # Decisions
 
+## 2026-10-15: Phase 10 (finishing groups): done, the rules that stay
+The whole Phase 10 decision log (Filip's answers, the Step 1 to 3 choices, the live-check fixes, rejected alternatives) moved word for word to the end of `reports/2026-10-15-phase-10-finish-groups.md`, section "Decisions and rejected alternatives". What stays true:
+- **Closing:** the owner starts it when every balance is 0, nothing is pending and the group has at least one counted expense (a One bill never closes by hand). Every member with an account except the owner confirms or objects (optional reason, 200 characters). Everyone confirmed, or 24 hours with no objection (applied lazily on the next write, GET never writes), means Finished; an objection returns the group to Open. Only the owner can Unlock a Finished group.
+- **Frozen and read-only:** a Finished group refuses every write except Unlock, Leave, Delete group and Restore group; while Closing, members can only Confirm or Object (no leave, claim or join). The owner's money changes and member changes (remove, let back in, make owner, undo claim) cancel a closing; rename, emoji, currency, add plain name and invite reset do not. Check order: not a member 404, who-may-act 403, then the state (`GROUP_FINISHED` / `GROUP_CLOSING`).
+- **Joining:** refused for non-members while Closing or Finished; a current member just opens the group.
+- **One bill** finishes by itself after a money write when it has a counted expense, a Confirmed payment, all balances 0 and nothing Pending; normal groups never auto-finish.
+- **Screen 17:** a floating bottom bar that stays until answered, in five states; the "+" sits above it. In Phase 11 Filip wants it as a popup like the Undo toast (BACKLOG).
+- **Looks:** text contrast at least 4.5:1 everywhere, also on the glass buttons in dark mode (measured live); the danger glass look uses cream text in dark mode.
+
 ## 2026-10-10: Phase 9 (balances + settle up), in progress
 Filip's answers (2026-10-09/10): a **pending payment also blocks** leave, remove and delete group (not only a non-zero balance); **overpaying is allowed** (no cap, a partial amount too); **reject has no reason field**.
 - **Step 1, balances:** `GET /api/groups/{groupId}/balances` returns, per currency (MKD before EUR, only currencies a counted row uses), every member the group ever had in joining order (`isCurrent` false once `removed_at` is set), their balance in minor units, the simplified payments, and `isEveryoneKvit`. Any current member may read it. Rows left behind by "That's me" (`SetAside`) currently show as extra 0 rows; hiding them is not decided yet.

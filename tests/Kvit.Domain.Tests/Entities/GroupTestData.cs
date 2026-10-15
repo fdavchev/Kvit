@@ -29,5 +29,21 @@ namespace Kvit.Domain.Tests.Entities
 
             return group;
         }
+
+        public static Group NewClosingGroup(DateTimeOffset closingStartedAt)
+        {
+            Group group = NewGroup();
+            group.StartClosing(closingStartedAt);
+
+            return group;
+        }
+
+        public static Group NewFinishedGroup(DateTimeOffset closingStartedAt, DateTimeOffset finishedAt)
+        {
+            Group group = NewClosingGroup(closingStartedAt);
+            group.Finish(finishedAt);
+
+            return group;
+        }
     }
 }
