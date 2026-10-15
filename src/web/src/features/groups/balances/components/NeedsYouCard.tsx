@@ -4,6 +4,7 @@ import { useAnswerSettlement } from '@/features/settlements/pending/hooks/useAns
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitInlineError } from '@/shared/components/KvitInlineError'
+import { KvitUnbrokenSlashWords } from '@/shared/components/KvitUnbrokenSlashWords'
 import { kvitGlassButtonLook, kvitGlassDangerButtonLook } from '@/shared/components/kvitGlassLooks'
 import { cn } from '@/shared/utils/cn'
 import { balancesActionButtonLook, balancesCardLook } from '../balancesLooks'
@@ -26,7 +27,9 @@ export function NeedsYouCard({ groupId, item, sentence, howLongAgo, canAnswer }:
       <div className="flex items-center gap-3">
         <KvitAvatar name={item.payer.name} pictureUrl={item.payer.pictureUrl} colorIndex={item.payer.colorIndex} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <p className="font-bold break-words">{sentence}</p>
+          <p className="font-bold break-words">
+            <KvitUnbrokenSlashWords text={sentence} />
+          </p>
           <p className="text-[0.8125rem] text-muted-foreground">{howLongAgo}</p>
         </div>
       </div>

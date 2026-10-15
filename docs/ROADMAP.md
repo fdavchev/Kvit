@@ -161,7 +161,7 @@ Moved forward from Phase 11 because the Render wake-up (about 22 s) made the app
 - [x] Saved data shown instantly: moved to Phase 8b
 - [ ] `Active` usage event (once per user per day)
 - [x] **Done 2026-10-15 (VERIFIED by automated test and live run).** Closing bar: already floating and staying until answered; toasts now sit above it
-- [ ] Phase 10 leftovers from BACKLOG
+- [x] **Done 2026-10-15 (VERIFIED by automated test and live run).** Phase 10 leftovers from BACKLOG (except the awaited refetches and a few small items, which are in BACKLOG)
 - [ ] Full pass at 360 px in EN and MK, light and dark; every text translated
 - [ ] Deploy; **Filip** and friends use it on something real
 - **Done when:** all tests pass and Filip says Release 1 works for him.

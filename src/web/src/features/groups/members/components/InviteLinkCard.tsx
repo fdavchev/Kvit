@@ -6,6 +6,7 @@ import type { Group } from '@/core/services/groups/groupsService'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { showUndoToast } from '@/shared/toasts/showUndoToast'
 import { useInviteLinkActions } from '../../group/useInviteLinkActions'
+import { canInviteToGroup } from '../../shared/groupAccess'
 import { useResetInviteLink } from '../hooks/useResetInviteLink'
 import { useUndoResetInviteLink } from '../hooks/useUndoResetInviteLink'
 
@@ -50,21 +51,23 @@ export function InviteLinkCard({ group, canResetLink }: InviteLinkCardProps) {
         <p className="rounded-xl border border-field-border bg-field px-3 py-2.5 text-[0.8125rem] break-all text-field-foreground">
           {shownLink}
         </p>
-        <div className="flex gap-2">
-          <KvitButton
-            className="min-h-12 min-w-0 flex-1 shrink px-3 text-base"
-            onClick={() => void inviteLinkActions.share(group.inviteToken)}
-          >
-            {t('members.invite.share')}
-          </KvitButton>
-          <KvitButton
-            variant="secondary"
-            className="min-h-12 min-w-0 flex-1 shrink bg-field px-3 text-base"
-            onClick={() => void inviteLinkActions.copy(group.inviteToken)}
-          >
-            {t('members.invite.copy')}
-          </KvitButton>
-        </div>
+        {canInviteToGroup(group) && (
+          <div className="flex gap-2">
+            <KvitButton
+              className="min-h-12 min-w-0 flex-1 shrink px-3 text-base"
+              onClick={() => void inviteLinkActions.share(group.inviteToken)}
+            >
+              {t('members.invite.share')}
+            </KvitButton>
+            <KvitButton
+              variant="secondary"
+              className="min-h-12 min-w-0 flex-1 shrink bg-field px-3 text-base"
+              onClick={() => void inviteLinkActions.copy(group.inviteToken)}
+            >
+              {t('members.invite.copy')}
+            </KvitButton>
+          </div>
+        )}
         {canResetLink && (
           <KvitButton
             variant="danger"

@@ -18,7 +18,7 @@ import { GroupStatusBadge } from '../../closing/components/GroupStatusBadge'
 import { useClosingBar } from '../../closing/hooks/useClosingBar'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
 import { GroupSizeLine } from '../../shared/components/GroupSizeLine'
-import { canChangeGroup } from '../../shared/groupAccess'
+import { canChangeGroup, canInviteToGroup } from '../../shared/groupAccess'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
 import { useGroup } from '../hooks/useGroup'
 import { useInviteLinkActions } from '../useInviteLinkActions'
@@ -79,7 +79,7 @@ function GroupContent({ group, tab }: GroupContentProps) {
       <div className="flex flex-col items-center gap-2.5 pt-2 pb-4 text-center">
         <KvitEmojiTile emoji={group.emoji} size="large" />
         <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-          <h1 className="text-[1.75rem] leading-[1.15] font-extrabold tracking-[-0.02em] text-balance">
+          <h1 className="min-w-0 text-[1.75rem] leading-[1.15] font-extrabold tracking-[-0.02em] text-balance wrap-anywhere">
             {group.name}
           </h1>
           <GroupStatusBadge status={group.status} />
@@ -93,7 +93,7 @@ function GroupContent({ group, tab }: GroupContentProps) {
         <Link to={routes.groupSettings(group.id)} className={kvitChipLook}>
           {t('group.settings')}
         </Link>
-        {isOneBill && (
+        {isOneBill && canInviteToGroup(group) && (
           <button
             type="button"
             className={kvitChipLook}

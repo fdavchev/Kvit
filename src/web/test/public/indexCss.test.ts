@@ -51,7 +51,7 @@ const { light, dark } = splitLightAndDark(indexCss)
 
 describe('index.css design tokens', () => {
   it.each([
-    ['--danger', '#b71f1f', '#ff6b64'],
+    ['--danger', '#b71f1f', '#ff8a80'],
     ['--danger-fill', '#b71f1f', '#d12828'],
   ])('sets %s to %s in light mode and %s in dark mode', (name, lightValue, darkValue) => {
     expect(tokenValue(light, name)).toBe(lightValue)

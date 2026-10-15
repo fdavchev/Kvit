@@ -19,9 +19,9 @@ import {
   findNeedsBar,
   liveDashboardAnswer,
   openNeedsBar,
+  paragraphWithText,
   plainTextOf,
   renderHome,
-  textMatching,
   type LiveDashboard,
 } from '@/test/homeTestHelpers'
 import { expectDisabledWhilePending } from '@/test/formTestHelpers'
@@ -131,8 +131,8 @@ describe('the pinned Needs you bar', () => {
     await renderHome()
     await findBar()
 
-    expect(screen.queryByText(textMatching(markoSentence()))).toBeNull()
-    expect(screen.queryByText(textMatching(closingSentence()))).toBeNull()
+    expect(screen.queryByText(paragraphWithText(markoSentence()))).toBeNull()
+    expect(screen.queryByText(paragraphWithText(closingSentence()))).toBeNull()
     expect(screen.queryByRole('button', { name: translated('en', 'settlements.confirm') })).toBeNull()
   })
 
@@ -143,8 +143,8 @@ describe('the pinned Needs you bar', () => {
     openNeedsBar()
 
     expect(findNeedsBar().getAttribute('aria-expanded')).toBe('true')
-    expect(screen.getByText(textMatching(markoSentence()))).toBeTruthy()
-    expect(screen.getByText(textMatching(closingSentence()))).toBeTruthy()
+    expect(screen.getByText(paragraphWithText(markoSentence()))).toBeTruthy()
+    expect(screen.getByText(paragraphWithText(closingSentence()))).toBeTruthy()
   })
 
   it('closes the cards again when tapped a second time', async () => {
@@ -155,7 +155,7 @@ describe('the pinned Needs you bar', () => {
     openNeedsBar()
 
     expect(findNeedsBar().getAttribute('aria-expanded')).toBe('false')
-    expect(screen.queryByText(textMatching(markoSentence()))).toBeNull()
+    expect(screen.queryByText(paragraphWithText(markoSentence()))).toBeNull()
   })
 
   it('shows the cards in the order the server sent them, closing first', async () => {
@@ -215,7 +215,7 @@ describe('a payment card', () => {
   it('opens the group when the text of the card is tapped', async () => {
     const { router } = await renderWithCardsOpen()
 
-    fireEvent.click(screen.getByText(textMatching(markoSentence())))
+    fireEvent.click(screen.getByText(paragraphWithText(markoSentence())))
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe(routes.group(greeceGroupId))
@@ -225,7 +225,7 @@ describe('a payment card', () => {
   it('wraps the text of the card in a link to the group', async () => {
     await renderWithCardsOpen()
 
-    const link = screen.getByText(textMatching(markoSentence())).closest('a')
+    const link = screen.getByText(paragraphWithText(markoSentence())).closest('a')
 
     expect(link?.getAttribute('href')).toBe(routes.group(greeceGroupId))
   })
@@ -299,7 +299,7 @@ describe('answering a payment card from the home screen', () => {
       fireEvent.click(cardButton(cardOf(markoSentence()), translated('en', buttonKey)))
 
       await waitFor(() => {
-        expect(screen.queryByText(textMatching(markoSentence()))).toBeNull()
+        expect(screen.queryByText(paragraphWithText(markoSentence()))).toBeNull()
       })
       expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(2)
     },
@@ -311,9 +311,9 @@ describe('answering a payment card from the home screen', () => {
     fireEvent.click(cardButton(cardOf(markoSentence()), translated('en', 'settlements.confirm')))
 
     await waitFor(() => {
-      expect(screen.queryByText(textMatching(markoSentence()))).toBeNull()
+      expect(screen.queryByText(paragraphWithText(markoSentence()))).toBeNull()
     })
-    expect(screen.getByText(textMatching(closingSentence()))).toBeTruthy()
+    expect(screen.getByText(paragraphWithText(closingSentence()))).toBeTruthy()
     expect(within(findNeedsBar()).getByText('1')).toBeTruthy()
     expect(within(findNeedsBar()).getByText(translated('en', 'home.thingsNeedYou_one'))).toBeTruthy()
   })

@@ -22,7 +22,7 @@ export function ClosingBarFrame({ title, icon, children }: ClosingBarFrameProps)
     >
       <p className="flex items-start gap-2 font-bold text-pretty">
         {icon !== undefined && <span aria-hidden="true">{icon}</span>}
-        <span id={titleId}>{title}</span>
+        <span id={titleId} className="min-w-0 wrap-anywhere">{title}</span>
       </p>
       {children}
     </section>

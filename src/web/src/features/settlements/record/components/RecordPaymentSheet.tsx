@@ -41,6 +41,13 @@ export function RecordPaymentSheet({ groupId, me, members, defaultCurrency, onCl
   const chosen = person === null ? null : chosenPaymentOf(direction, me, person)
   const amountMinor = parseMoneyInput(amountText, currency)
 
+  function chooseDirection(nextDirection: Direction): void {
+    setDirection(nextDirection)
+    if (others.length === 1) {
+      setPersonId(others[0].id)
+    }
+  }
+
   function save(): void {
     if (chosen === null || amountMinor === null) {
       throw new Error(`Save was pressed without a person or with an amount that is not valid: "${amountText}"`)
@@ -81,7 +88,7 @@ export function RecordPaymentSheet({ groupId, me, members, defaultCurrency, onCl
               { value: 'paidMe', label: t('settlements.someonePaidMe') },
             ]}
             value={direction}
-            onChange={setDirection}
+            onChange={chooseDirection}
           />
           <KvitChoiceChips<string>
             label={t('settlements.person')}

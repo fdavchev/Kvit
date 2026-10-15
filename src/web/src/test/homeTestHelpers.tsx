@@ -63,6 +63,11 @@ export function textMatching(text: string): (content: string) => boolean {
   return (content) => plainSpaces(content).trim() === wanted
 }
 
+export function paragraphWithText(text: string): (content: string, element: Element | null) => boolean {
+  const wanted = plainSpaces(text)
+  return (_content, element) => element?.tagName === 'P' && plainTextOf(element) === wanted
+}
+
 export function regionNamed(name: string): HTMLElement {
   return screen.getByRole('region', { name })
 }
@@ -86,7 +91,7 @@ export function openNeedsBar(language: Language = 'en'): void {
 }
 
 export function cardOf(sentence: string): HTMLElement {
-  const textElement = screen.getByText(textMatching(sentence))
+  const textElement = screen.getByText(paragraphWithText(sentence))
   const card = textElement.closest('li')
   if (card === null) {
     throw new Error(`The text "${sentence}" is not inside a list item (the card)`)

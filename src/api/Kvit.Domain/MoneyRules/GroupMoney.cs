@@ -41,8 +41,13 @@ namespace Kvit.Domain.MoneyRules
             return Result.Ok();
         }
 
-        public Result CheckEveryoneKvit()
+        public Result CheckCanStartClosing()
         {
+            if (!HasCountedExpense())
+            {
+                return Result.Failure("This group has no expense that counts yet.", ResultCodes.GROUP_NO_EXPENSES);
+            }
+
             Result settled = CheckEveryoneSettled();
             if (!settled.IsSuccess)
             {
@@ -60,16 +65,6 @@ namespace Kvit.Domain.MoneyRules
                 .OrderBy(currencyBalances => currencyBalances.Key)
                 .Select(currencyBalances => BalanceOf(currencyBalances.Value, memberId))
                 .Where(balance => balance.MinorUnits != 0)];
-        }
-
-        public Result CheckHasCountedExpense()
-        {
-            if (!HasCountedExpense())
-            {
-                return Result.Failure("This group has no expense that counts yet.", ResultCodes.GROUP_NO_EXPENSES);
-            }
-
-            return Result.Ok();
         }
 
         public bool IsPaidOff()

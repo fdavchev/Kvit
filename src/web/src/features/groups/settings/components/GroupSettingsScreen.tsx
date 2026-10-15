@@ -32,7 +32,7 @@ export function GroupSettingsScreen() {
     return (
       <>
         <KvitScreenTitle>{t('groupSettings.title')}</KvitScreenTitle>
-        {!group.isOwner && group.status === 'Closing' && (
+        {!group.isOwner && !canLeaveGroup(group) && (
           <p className="pt-2 text-[0.9375rem] text-pretty text-muted-foreground">{t('closing.settingsFrozen')}</p>
         )}
         {group.isOwner && <OwnerGroupSettings group={group} />}
