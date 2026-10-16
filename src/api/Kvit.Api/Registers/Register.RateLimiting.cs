@@ -12,6 +12,8 @@ namespace Kvit.Api.Registers
         private const int SignUpWindowMinutes = 10;
         private const int InviteRequestsPerWindow = 20;
         private const int InviteWindowMinutes = 10;
+        private const int GuestJoinsPerWindow = 10;
+        private const int GuestJoinWindowMinutes = 10;
 
         public static IServiceCollection AddRateLimits(this IServiceCollection services)
         {
@@ -27,6 +29,9 @@ namespace Kvit.Api.Registers
 
             services.AddSingleton(_ => new SignUpLimitFilter(PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                 FixedWindowPerVisitor(httpContext, SignUpAttemptsPerWindow, TimeSpan.FromMinutes(SignUpWindowMinutes)))));
+
+            services.AddSingleton(_ => new GuestJoinLimitFilter(PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+                FixedWindowPerVisitor(httpContext, GuestJoinsPerWindow, TimeSpan.FromMinutes(GuestJoinWindowMinutes)))));
 
             return services;
         }

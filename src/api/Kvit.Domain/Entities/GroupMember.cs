@@ -153,6 +153,12 @@ namespace Kvit.Domain.Entities
             return Result.Ok(claimerUserId);
         }
 
+        public void TurnIntoPlainName()
+        {
+            UserId = null;
+            ClaimedAt = null;
+        }
+
         private Guid AccountUserId()
         {
             return UserId ?? throw new InvalidOperationException($"Member {Id} of group {GroupId} is a plain name with no account, but this step needs the account.");

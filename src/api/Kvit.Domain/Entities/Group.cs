@@ -263,16 +263,22 @@ namespace Kvit.Domain.Entities
             return Result.Ok();
         }
 
-        public Result TransferOwnership(GroupMember newOwner)
+        public Result TransferOwnership(NamedMember newOwner)
         {
-            if (newOwner.UserId is not Guid newOwnerUserId)
+            GroupMember newOwnerRow = newOwner.Member;
+            if (newOwnerRow.UserId is not Guid newOwnerUserId)
             {
-                return Result.Failure($"Member {newOwner.Id} is a plain name without an account and cannot become the owner.", ResultCodes.MEMBER_NOT_ACCOUNT);
+                return Result.Failure($"Member {newOwnerRow.Id} is a plain name without an account and cannot become the owner.", ResultCodes.MEMBER_NOT_ACCOUNT);
+            }
+
+            if (newOwner.IsGuest)
+            {
+                return Result.Failure($"Member {newOwnerRow.Id} is a guest without a full account and cannot become the owner.", ResultCodes.MEMBER_NOT_ACCOUNT);
             }
 
             if (newOwnerUserId == OwnerUserId)
             {
-                return Result.Failure($"Member {newOwner.Id} is already the owner of group {Id}.", ResultCodes.MEMBER_ALREADY_OWNER);
+                return Result.Failure($"Member {newOwnerRow.Id} is already the owner of group {Id}.", ResultCodes.MEMBER_ALREADY_OWNER);
             }
 
             OwnerUserId = newOwnerUserId;

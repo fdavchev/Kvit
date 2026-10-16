@@ -12,6 +12,7 @@ namespace Kvit.Domain.Tests.Entities
         [Theory]
         [InlineData(SignUpMethod.Email, "Email")]
         [InlineData(SignUpMethod.Google, "Google")]
+        [InlineData(SignUpMethod.Guest, "Guest")]
         public void SignedUp_SetsTypeSignedUpAndTheMethodNameAsDetail(SignUpMethod method, string expectedDetail)
         {
             UsageEvent usageEvent = UsageEvent.SignedUp(UserId, method, SomeMoment);

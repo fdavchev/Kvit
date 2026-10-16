@@ -16,6 +16,7 @@ export interface GroupMember {
   isOwner: boolean
   isYou: boolean
   isNameOnly: boolean
+  isGuest: boolean
   claimedName: string | null
   pictureUrl: string | null
 }
@@ -89,6 +90,7 @@ function parseGroupMember(row: unknown): GroupMember {
     isOwner: readYesNo(fields, 'isOwner', what),
     isYou: readYesNo(fields, 'isYou', what),
     isNameOnly: readYesNo(fields, 'isNameOnly', what),
+    isGuest: readYesNo(fields, 'isGuest', what),
     claimedName: readTextOrNull(fields, 'claimedName', what),
     pictureUrl: readTextOrNull(fields, 'pictureUrl', what),
   }

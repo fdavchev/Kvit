@@ -11,6 +11,7 @@ import {
   anaMember,
   anaPictureUrl,
   bojanRemoved,
+  cvetaGuestMember,
   filipMember,
   filipPictureUrl,
   markoMember,
@@ -67,6 +68,14 @@ describe('getMembers', () => {
     const members = await getMembers(testGroupId)
 
     expect(members.members[0]).toMatchObject({ userId: null, claimedName: null, isNameOnly: true })
+  })
+
+  it('keeps isGuest true for a guest and false for a person with an account', async () => {
+    stubFetch(Response.json({ ...ownerViewMembers, members: [cvetaGuestMember, anaMember], removed: [] }))
+
+    const members = await getMembers(testGroupId)
+
+    expect(members.members.map((member) => member.isGuest)).toEqual([true, false])
   })
 
   it('keeps the claimed name of a person who took a name', async () => {
@@ -197,6 +206,8 @@ describe('getMembers', () => {
     ['isOwner', null],
     ['isYou', 0],
     ['isNameOnly', 'false'],
+    ['isGuest', 'yes'],
+    ['isGuest', null],
     ['claimedName', 3],
     ['claimedName', false],
   ])('throws an error naming "%s" when its value in a member is %j', async (field, value) => {

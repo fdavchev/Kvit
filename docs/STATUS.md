@@ -17,6 +17,7 @@ Filip commits (texts are in the chat), pushes, checks that CI is green, and merg
 ## Blockers and open questions
 - Nothing blocks the next step.
 - Filip to decide: whether `START-HERE-PROMPT.md` stays in the public repository.
+- Filip to decide: whether the light theme gets a lighter peach (options in the top item of `BACKLOG.md`, 2026-10-16).
 
 ## Verification state
 - VERIFIED by automated test (2026-10-16, run by me after the last change): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 3485/3485 (no backend code changed in Phase 12); `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 7508/7508.

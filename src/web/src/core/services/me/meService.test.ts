@@ -36,6 +36,14 @@ describe('getMe', () => {
     expect(me).toMatchObject({ pictureUrl })
   })
 
+  it('keeps a null email and isGuest true for a guest', async () => {
+    stubFetch(Response.json({ ...testMe, email: null, isGuest: true }))
+
+    const me = await getMe()
+
+    expect(me).toMatchObject({ email: null, isGuest: true })
+  })
+
   it('keeps null for an account without a picture', async () => {
     stubFetch(Response.json({ ...testMe, pictureUrl: null }))
 
@@ -104,6 +112,9 @@ describe('getMe', () => {
     ['hasPassword', 'true'],
     ['hasPassword', 1],
     ['hasPassword', null],
+    ['email', {}],
+    ['isGuest', 'true'],
+    ['isGuest', null],
   ])('throws an error naming "%s" when its value is %j', async (field, value) => {
     stubFetch(Response.json({ ...testMe, [field]: value }))
 

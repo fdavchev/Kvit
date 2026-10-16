@@ -84,8 +84,12 @@ namespace Kvit.Domain.Results
         public const string MEMBER_NOT_CLAIMED = "MEMBER_NOT_CLAIMED";
         public const string MEMBER_BALANCE_NOT_ZERO = "MEMBER_BALANCE_NOT_ZERO";
         public const string MEMBER_HAS_PENDING_PAYMENT = "MEMBER_HAS_PENDING_PAYMENT";
+        public const string MEMBER_NOT_GUEST = "MEMBER_NOT_GUEST";
+        public const string GUEST_NOT_ALLOWED = "GUEST_NOT_ALLOWED";
+        public const string GUEST_JOIN_SIGNED_IN = "GUEST_JOIN_SIGNED_IN";
         public const string INVITE_NOT_FOUND = "INVITE_NOT_FOUND";
         public const string INVITE_REMOVED = "INVITE_REMOVED";
         public const string INVITE_NOTHING_TO_UNDO = "INVITE_NOTHING_TO_UNDO";
+        public const string INVITE_GUEST_CHOICE_INVALID = "INVITE_GUEST_CHOICE_INVALID";
     }
 }

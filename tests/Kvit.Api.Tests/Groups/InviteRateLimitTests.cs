@@ -85,14 +85,15 @@ namespace Kvit.Api.Tests.Groups
 
         private async Task<InviteVisitor> SignedInVisitorInAGroupAsync()
         {
-            HttpClient client = _app.CreateClientSending(ProxiedApp.Secret, _app.NewVisitorAddress());
+            string address = _app.NewVisitorAddress();
+            HttpClient client = _app.CreateClientSending(ProxiedApp.Secret, address);
             HttpResponseMessage response = await AuthRequests.RegisterAsync(client, RegistrationForm.Valid());
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Guid userId = (await AuthRequests.ReadJsonAsync(response)).GetProperty("id").GetGuid();
             Guid groupId = await GroupRows.InsertGroupWithOwnerAsync(_app, userId);
             string token = (await GroupRows.GroupValueAsync(_app, groupId, "invite_token"))!;
 
-            return new InviteVisitor(client, token);
+            return new InviteVisitor(client, token, address);
         }
 
         private static Task<HttpResponseMessage> SendPreviewOrJoinAsync(InviteVisitor visitor, int attempt)

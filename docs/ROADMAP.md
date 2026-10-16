@@ -174,6 +174,18 @@ Moved forward from Phase 11 because the Render wake-up (about 22 s) made the app
 - [x] The desktop layout (round-4 hybrid, phone unchanged) and the other small look items from BACKLOG (the "Updating…" label on group pages and the Split sheet pill are left in BACKLOG)
 - Moved here from Phase 11 on 2026-10-15 (Filip: "it's big").
 
+## Phase 12b: Join without an account · `feat/12b-guest-join`
+Release 1 accepted 2026-10-16. Filip put this BACKLOG "must do" before Phase 13. Decisions: `DECISIONS.md`.
+- [ ] Step 0: mockup (join screen B picked) and docs
+- [ ] Step 1: backend, guest accounts and `POST /api/invites/join-as-guest` (migration `GuestAccounts`)
+- [ ] Step 2: backend, guest limits and owner's "Let in again"
+- [ ] Step 3: backend, upgrade a guest to an account (email or Google)
+- [ ] Step 4: frontend, the join screen
+- [ ] Step 5: frontend, Guest badge, limits, Settings card, Log out warning
+- [ ] Step 6: frontend, upgrade screens
+- [ ] Step 7: real-browser pass, all checks, code review, report and guide
+- [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the migration on Neon)
+
 ---
 
 # Release 2: "budget" (phases get detailed when Release 1 is done)

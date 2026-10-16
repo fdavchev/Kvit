@@ -14,7 +14,7 @@ namespace Kvit.Domain.Tests.Entities
             Group group = GroupTestData.NewGroup();
             GroupMember newOwner = MemberTestData.Account(group.Id, GroupTestData.MemberId, "Ana");
 
-            Result result = group.TransferOwnership(newOwner);
+            Result result = group.TransferOwnership(MemberTestData.Named(newOwner));
 
             Assert.True(result.IsSuccess);
             Assert.Equal(GroupTestData.MemberId, group.OwnerUserId);
@@ -26,7 +26,7 @@ namespace Kvit.Domain.Tests.Entities
             Group group = GroupTestData.NewGroup();
             GroupMember claimed = MemberTestData.Claimed(group.Id, GroupTestData.MemberId, "Grandma");
 
-            Result result = group.TransferOwnership(claimed);
+            Result result = group.TransferOwnership(MemberTestData.Named(claimed));
 
             Assert.True(result.IsSuccess);
             Assert.Equal(GroupTestData.MemberId, group.OwnerUserId);
@@ -38,7 +38,31 @@ namespace Kvit.Domain.Tests.Entities
             Group group = GroupTestData.NewGroup();
             GroupMember plainName = MemberTestData.PlainName(group.Id, "Grandma");
 
-            Result result = group.TransferOwnership(plainName);
+            Result result = group.TransferOwnership(MemberTestData.Named(plainName));
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_NOT_ACCOUNT);
+            Assert.Equal(GroupTestData.OwnerId, group.OwnerUserId);
+        }
+
+        [Fact]
+        public void TransferOwnership_ToAGuest_FailsWith400MemberNotAccountAndKeepsTheOwner()
+        {
+            Group group = GroupTestData.NewGroup();
+            NamedMember guest = MemberTestData.NamedGuest(MemberTestData.Account(group.Id, GroupTestData.MemberId, "Ana"));
+
+            Result result = group.TransferOwnership(guest);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_NOT_ACCOUNT);
+            Assert.Equal(GroupTestData.OwnerId, group.OwnerUserId);
+        }
+
+        [Fact]
+        public void TransferOwnership_ToAGuestWhoTookAName_FailsWith400MemberNotAccountAndKeepsTheOwner()
+        {
+            Group group = GroupTestData.NewGroup();
+            NamedMember guest = MemberTestData.NamedGuest(MemberTestData.Claimed(group.Id, GroupTestData.MemberId, "Grandma"));
+
+            Result result = group.TransferOwnership(guest);
 
             ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_NOT_ACCOUNT);
             Assert.Equal(GroupTestData.OwnerId, group.OwnerUserId);
@@ -50,7 +74,7 @@ namespace Kvit.Domain.Tests.Entities
             Group group = GroupTestData.NewGroup();
             GroupMember ownerRow = MemberTestData.Account(group.Id, GroupTestData.OwnerId, "Filip");
 
-            Result result = group.TransferOwnership(ownerRow);
+            Result result = group.TransferOwnership(MemberTestData.Named(ownerRow));
 
             ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_ALREADY_OWNER);
             Assert.Equal(GroupTestData.OwnerId, group.OwnerUserId);
@@ -60,9 +84,9 @@ namespace Kvit.Domain.Tests.Entities
         public void TransferOwnership_BackToTheFormerOwner_Works()
         {
             Group group = GroupTestData.NewGroup();
-            group.TransferOwnership(MemberTestData.Account(group.Id, GroupTestData.MemberId, "Ana"));
+            group.TransferOwnership(MemberTestData.Named(MemberTestData.Account(group.Id, GroupTestData.MemberId, "Ana")));
 
-            Result result = group.TransferOwnership(MemberTestData.Account(group.Id, GroupTestData.OwnerId, "Filip"));
+            Result result = group.TransferOwnership(MemberTestData.Named(MemberTestData.Account(group.Id, GroupTestData.OwnerId, "Filip")));
 
             Assert.True(result.IsSuccess);
             Assert.Equal(GroupTestData.OwnerId, group.OwnerUserId);
@@ -72,7 +96,7 @@ namespace Kvit.Domain.Tests.Entities
         public void TransferOwnership_AfterTheTransfer_OnlyTheNewOwnerPassesTheOwnerCheck()
         {
             Group group = GroupTestData.NewGroup();
-            group.TransferOwnership(MemberTestData.Account(group.Id, GroupTestData.MemberId, "Ana"));
+            group.TransferOwnership(MemberTestData.Named(MemberTestData.Account(group.Id, GroupTestData.MemberId, "Ana")));
 
             Assert.True(group.CheckOwner(GroupTestData.MemberId).IsSuccess);
             ResultAssert.Failed(group.CheckOwner(GroupTestData.OwnerId), HttpStatusCode.Forbidden, ResultCodes.GROUP_NOT_OWNER);

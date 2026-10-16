@@ -30,6 +30,14 @@ namespace Kvit.Application.Persistence
             return await _unitOfWork.RunInTransactionAsync(write, cancellationToken);
         }
 
+        public async Task<TResult> RunForInviteOnceMoreIfMemberChangedMeanwhileAsync<TResult>(string inviteToken, Func<Task<TResult>> write, CancellationToken cancellationToken)
+            where TResult : Result
+        {
+            await SaveFinishOfExpiredClosingAsync(() => _finishExpiredClosing.ExecuteForInviteAsync(inviteToken, cancellationToken), cancellationToken);
+
+            return await _unitOfWork.RunInTransactionOnceMoreIfMemberChangedMeanwhileAsync(write, cancellationToken);
+        }
+
         private async Task SaveFinishOfExpiredClosingAsync(Func<Task> finishExpiredClosing, CancellationToken cancellationToken)
         {
             await _unitOfWork.OpenTransactionAsync(cancellationToken);

@@ -1,3 +1,4 @@
+using Kvit.Domain.Accounts;
 using Kvit.Domain.Entities;
 using Kvit.Domain.Interfaces;
 using Kvit.Domain.Results;
@@ -18,6 +19,15 @@ namespace Kvit.Domain.Services.Groups
                 return found.ToFailure<Guid>();
             }
 
+            GroupRoster roster = await _members.RosterOfAsync(groupId, cancellationToken);
+            NamedMember ownRow = roster.CurrentRowOf(userId)
+                ?? throw new InvalidOperationException($"User {userId} was found as a current member of group {groupId}, but has no current row in it.");
+            Result notGuest = AccountRules.CheckIsNotGuest(ownRow.IsGuest);
+            if (!notGuest.IsSuccess)
+            {
+                return notGuest.ToFailure<Guid>();
+            }
+
             DateTimeOffset now = _timeProvider.GetUtcNow();
             Result changeable = found.Value.CheckCanBeChangedBy(userId, now);
             if (!changeable.IsSuccess)
@@ -32,7 +42,6 @@ namespace Kvit.Domain.Services.Groups
             }
 
             GroupMember member = created.Value;
-            GroupRoster roster = await _members.RosterOfAsync(groupId, cancellationToken);
             Result nameFree = roster.CheckNameFree(member.Name);
             if (!nameFree.IsSuccess)
             {

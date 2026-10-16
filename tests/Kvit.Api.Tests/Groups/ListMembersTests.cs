@@ -23,7 +23,7 @@ namespace Kvit.Api.Tests.Groups
         }
 
         [Fact]
-        public async Task List_MemberRow_AnswersExactlyTheNineFields()
+        public async Task List_MemberRow_AnswersExactlyTheTenFields()
         {
             SignedInUser owner = await _app.SignUpAsync();
             Guid groupId = await _app.CreateGroupAsync(owner);
@@ -62,6 +62,36 @@ namespace Kvit.Api.Tests.Groups
             Assert.False(row.GetProperty("isOwner").GetBoolean());
             Assert.False(row.GetProperty("isYou").GetBoolean());
             Assert.False(row.GetProperty("isNameOnly").GetBoolean());
+        }
+
+        [Fact]
+        public async Task List_AGuestRow_IsGuestWhileAccountAndPlainNameRowsAreNot()
+        {
+            GroupSetup setup = await _app.CreateGroupWithMemberAsync();
+            Guid freeNameRowId = await GroupRows.InsertMemberAsync(_app, setup.GroupId, null, "Marko", setup.Owner.UserId);
+            Guid plainId = await GroupRows.InsertMemberAsync(_app, setup.GroupId, null, "Grandma", setup.Owner.UserId);
+            GuestMember guest = await GuestSteps.TapFreeNameAsync(_app, setup.GroupId, freeNameRowId);
+
+            JsonElement members = (await GroupRequests.ReadMembersAsync(setup.Owner.Client, setup.GroupId)).GetProperty("members");
+
+            Assert.True(GroupRequests.RowWithId(members, guest.RowId).GetProperty("isGuest").GetBoolean());
+            Assert.False(GroupRequests.RowWithId(members, guest.RowId).GetProperty("isNameOnly").GetBoolean());
+            Assert.False(GroupRequests.RowWithId(members, setup.OwnerRowId).GetProperty("isGuest").GetBoolean());
+            Assert.False(GroupRequests.RowWithId(members, setup.MemberRowId).GetProperty("isGuest").GetBoolean());
+            Assert.False(GroupRequests.RowWithId(members, plainId).GetProperty("isGuest").GetBoolean());
+        }
+
+        [Fact]
+        public async Task List_SeenByTheGuest_ShowsTheirOwnRowAsGuestAndYou()
+        {
+            GroupSetup setup = await _app.CreateGroupWithMemberAsync();
+            GuestMember guest = await GuestSteps.JoinWithNewNameAsync(_app, setup.GroupId, "Cvetan");
+
+            JsonElement members = (await GroupRequests.ReadMembersAsync(guest.Client, setup.GroupId)).GetProperty("members");
+
+            JsonElement ownRow = GroupRequests.RowWithId(members, guest.RowId);
+            Assert.True(ownRow.GetProperty("isGuest").GetBoolean());
+            Assert.True(ownRow.GetProperty("isYou").GetBoolean());
         }
 
         [Fact]

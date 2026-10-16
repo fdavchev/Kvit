@@ -48,6 +48,14 @@ namespace Kvit.Domain.Tests.Entities
         }
 
         [Fact]
+        public void GuestLetInAgain_LinksTheMemberAndPutsOnlyTheNameInTheData()
+        {
+            ActivityEvent activityEvent = ActivityEvent.GuestLetInAgain(MemberTestData.GroupId, GroupTestData.OwnerId, MemberRowId, "Ana", GroupTestData.Moment);
+
+            AssertMemberEvent(activityEvent, ActivityEventType.GuestLetInAgain, "Ana", GroupTestData.OwnerId);
+        }
+
+        [Fact]
         public void OwnershipTransferred_LinksTheNewOwnerAndPutsTheirNameInTheData()
         {
             ActivityEvent activityEvent = ActivityEvent.OwnershipTransferred(MemberTestData.GroupId, GroupTestData.OwnerId, MemberRowId, "Ana", GroupTestData.Moment);

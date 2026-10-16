@@ -1,4 +1,5 @@
 using Kvit.Contracts.Persistence;
+using Kvit.Domain.Entities;
 using Kvit.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -12,6 +13,11 @@ namespace Kvit.Infrastructure.Persistence
             try
             {
                 await context.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException exception) when (exception.Entries.Any(entry => entry.Entity is GroupMember))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new MemberChangedMeanwhileException(exception);
             }
             catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, ExpenseConfiguration.ClientRequestIdIndexName, SettlementConfiguration.ClientRequestIdIndexName))
             {
