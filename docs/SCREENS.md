@@ -134,7 +134,7 @@ The speed screen (DECISIONS "Speed details"):
 - **Logged in:** *"You're invited to Greece trip"* (no inviter name, Filip 2026-10-03), the group's emoji, the member names, and one **Join** button (1 tap). No name field; the name comes from the account.
   - **Only if the group has unclaimed plain names:** *"Are you one of these? Marko · Grandma · No, I'm new"* (1 tap).
   - **Total: 1 or 2 taps.**
-- **Not logged in:** the same invite card, then Google (1 tap) or the email sign-up, then **back to this screen**.
+- **Not logged in (changed in Phase 12b, Filip's option B):** the invite card, *"Who are you? Tap your name:"*, one list of the free names (**1 tap joins as a guest**) and an *"I'm new"* row that opens one name field + **Join** (1 field, 1 tap). Under it *"Have an account? Log in"* opens a sheet with Google and Log in with email, then **back to this screen**. Guests: a **Guest** badge on Members, no New group and no One bill, no Add a name; the owner has **Let in again** on a guest's row; Settings shows *"You're a guest"* with **Make an account**, and Log out asks first. Mockup: `docs/design/2026-10-16-phase-12b/guest-join.html`.
 - **Already a member:** the link opens the group.
 - **Old or reset link:** *"This invite link no longer works. Ask for a new one."*
 - **Removed by the owner:** *"You were removed from Greece trip. Ask the owner to let you back in."* (a person who **left** can rejoin with the link).

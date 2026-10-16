@@ -1,5 +1,16 @@
 ﻿# Decisions
 
+## 2026-10-16: Phase 12b (join a group without an account), in progress
+Release 1 is accepted (Filip, 2026-10-16). Filip put the BACKLOG "must do" (join without an account) **before** Phase 13. Branch `feat/12b-guest-join`. Plan: `C:\Users\Davchev\.claude\plans\radiant-toasting-kay.md`.
+- **A guest is a light account:** a normal `users` row with no email and no password (`is_guest = true`), signed in with the same 90-day login cookie. "The phone remembers you" = the cookie. Every group, expense, payment and closing rule works unchanged because a guest has a real user id. *Rejected:* a separate guest-token system (a second auth path through every endpoint); plain-name rows only (a guest could not add expenses or confirm).
+- **Joining:** open the link → tap a free name (**1 tap**) or type a new name (**1 field + 1 tap**). Nothing else. Anyone with the link can tap any free name; the owner can undo a wrong one.
+- **Join screen = option B (Filip):** the heading *"Who are you? Tap your name:"*, then one list of the free names with an *"I'm new"* row that opens the name box. *"Have an account? Log in"* is one small link that opens a sheet with **Google** and **Log in with email**; after logging in the person comes back to the join screen (as in Phase 7) and joins as a normal member. *Rejected:* A (chips and box), C (account first, guest small).
+- **Lost phone or another browser:** the owner taps **Let in again** on the guest's row; the name becomes a free name and the guest taps it on the new phone. *Rejected:* waiting for the owner's Undo claim only; a guest-to-account upgrade as the only way back.
+- **Guest limits:** a guest **cannot create groups and has no One bill**; the New group and One bill buttons are **not shown** to guests (Filip, 2026-10-16: they can see and use the groups they were invited to, and add expenses and payments there). A guest **cannot add plain names**, cannot be made owner (already so for names without an account), deletes and edits only their own expenses (already the rule for everyone). A **Guest** badge shows next to their name.
+- **Upgrade is built in this phase:** Settings shows *"You're a guest. Make an account…"*; a guest adds Google or email + password and keeps all groups and money (same user id).
+- **Log out as a guest:** a warning sheet first (*"After logging out you can't get back in by yourself. Ask the owner to let you in again."*) with Make an account / Log out anyway / Cancel.
+- **Colours:** the guest screens are drawn in the app's own colours. Filip likes a lighter peach for the light theme; that is a separate open decision (top of BACKLOG).
+
 ## 2026-10-16: Phase 12 (animations + touch-ups): done, the rules that stay
 The whole Phase 12 decision log (Filip's answers, the colour, glass and desktop picks, the Step 7 and browser-pass choices, rejected alternatives) moved word for word to the end of `reports/2026-10-16-phase-12-polish.md`, section "Decisions and rejected alternatives". What stays true:
 - **Dark mode uses solid colours,** not `color-mix`: background `#1f1816`, field `#161110`, card/sheet `#2c2220`, line `#72625c`, raised line `#8d7d77`. The selected pill is tan `#d9b48a` with dark text everywhere in dark (bottom bar, left menu, group tabs, Settings switches).
