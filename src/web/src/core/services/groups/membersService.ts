@@ -45,6 +45,10 @@ export async function letBackIn(groupId: string, memberId: string): Promise<void
   await apiRequest(endpoints.groupMemberLetBackIn(groupId, memberId), { method: 'POST' })
 }
 
+export async function letInAgain(groupId: string, memberId: string): Promise<void> {
+  await apiRequest(endpoints.groupMemberLetInAgain(groupId, memberId), { method: 'POST' })
+}
+
 export async function makeOwner(groupId: string, memberId: string): Promise<void> {
   await apiRequest(endpoints.groupOwner(groupId), jsonRequest('POST', { memberId }))
 }

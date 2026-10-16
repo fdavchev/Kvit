@@ -520,21 +520,57 @@ describe('JoinScreen for a visitor without an account', () => {
       expect(screen.queryByText(translated(language, 'join.guest.whoAreYou'))).toBeNull()
     })
 
-    it.each(languages)("shows only the I'm new row in the list (%s)", async (language) => {
+    it.each(languages)("shows the name field and Join at once, with no list and no I'm new row to tap first (%s)", async (language) => {
       await renderWithoutFreeNames({ language })
 
-      expect(listedButtonTexts()).toEqual([translated(language, 'join.guest.imNew')])
+      expect(nameField(language)).toBeTruthy()
+      expect(joinButton(language)).toBeTruthy()
+      expect(screen.queryByRole('list')).toBeNull()
+      expect(screen.queryByRole('button', { name: translated(language, 'join.guest.imNew') })).toBeNull()
     })
 
-    it('joins with a typed name', async () => {
+    it('puts the focus in the name field so the person can type at once', async () => {
+      await renderWithoutFreeNames()
+
+      await waitFor(() => {
+        expect(document.activeElement).toBe(nameField())
+      })
+    })
+
+    it('joins with a typed name after one field and one tap', async () => {
       const { fetchMock } = await renderWithoutFreeNames({ answers: joinedAs() })
 
-      joinWithNewName('Ana')
+      typeInto(translated('en', 'auth.signUp.name'), 'Ana')
+      fireEvent.click(joinButton())
 
       await waitFor(() => {
         expect(guestJoinBodies(fetchMock)).toHaveLength(1)
       })
       expect(guestJoinBodies(fetchMock)[0]).toMatchObject({ name: 'Ana' })
+    })
+
+    it('keeps Have an account? Log in under the name field', async () => {
+      await renderWithoutFreeNames()
+
+      expect(logInButton()).toBeTruthy()
+      expect(nameField().compareDocumentPosition(logInButton()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('opens the name field at once when the last free name was taken a moment earlier', async () => {
+      let previews = 0
+      const previewWithoutNames: InvitePreview = { ...openInvitePreviewWithNames, unclaimedNames: [] }
+      await renderGuestJoin({
+        preview: () => {
+          previews += 1
+          return Response.json(previews === 1 ? { ...openInvitePreviewWithNames, unclaimedNames: [freeNames[0]] } : previewWithoutNames)
+        },
+        answers: refusedWith(404, 'MEMBER_NOT_FOUND'),
+      })
+
+      fireEvent.click(nameButton(freeNames[0].name))
+
+      expect(await screen.findByLabelText(translated('en', 'auth.signUp.name'))).toBeTruthy()
+      expect(screen.queryByRole('button', { name: translated('en', 'join.guest.imNew') })).toBeNull()
     })
   })
 

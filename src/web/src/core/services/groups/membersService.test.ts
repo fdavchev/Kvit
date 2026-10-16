@@ -22,6 +22,7 @@ import {
   claimName,
   getMembers,
   letBackIn,
+  letInAgain,
   makeOwner,
   removeMember,
   resetInviteLink,
@@ -307,6 +308,35 @@ describe('letBackIn', () => {
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({ httpStatus: 400, errorCode: 'MEMBER_NAME_TAKEN' })
+  })
+})
+
+describe('letInAgain', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('sends POST /api/groups/{id}/members/{memberId}/let-in-again with no body and resolves on 204', async () => {
+    const fetchMock = stubFetch(noContent())
+
+    const result = await letInAgain(testGroupId, cvetaGuestMember.id)
+
+    expect(result).toBeUndefined()
+    expect(sentRequest(fetchMock)).toEqual({
+      url: `${membersPath}/${cvetaGuestMember.id}/let-in-again`,
+      method: 'POST',
+      contentType: null,
+      body: undefined,
+    })
+  })
+
+  it('rethrows the ApiError unchanged when the row is not a guest', async () => {
+    stubFetch(problemResponse(400, 'MEMBER_NOT_GUEST'))
+
+    const error = await captureError(letInAgain(testGroupId, memberId))
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ httpStatus: 400, errorCode: 'MEMBER_NOT_GUEST' })
   })
 })
 

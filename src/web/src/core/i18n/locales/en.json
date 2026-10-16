@@ -181,6 +181,7 @@
     "kvit": "kvit",
     "noGroupsTitle": "No groups yet",
     "noGroupsHint": "Make a group or a one-time bill, then add your first expense.",
+    "noGroupsHintGuest": "Open an invite link a friend sent you, then add your first expense.",
     "noOpenGroupsTitle": "No open groups right now",
     "plus": "Add",
     "plusAddTo": "Add to {{group}}",
@@ -194,7 +195,15 @@
     "theme": "Theme",
     "themeSystem": "Same as device",
     "themeLight": "Light",
-    "themeDark": "Dark"
+    "themeDark": "Dark",
+    "guest": {
+      "title": "You're a guest",
+      "body": "Make an account to use Kvit on any phone and to create your own groups.",
+      "makeAccount": "Make an account",
+      "logOutTitle": "Log out as a guest?",
+      "logOutBody": "After logging out you can't get back in by yourself. Ask the group owner to let you in again. Or make an account first.",
+      "logOutAnyway": "Log out anyway"
+    }
   },
   "privacy": {
     "title": "Privacy",
@@ -234,6 +243,7 @@
     "title": "Groups",
     "newButton": "New group",
     "empty": "You have no groups yet. Create one, or open a link a friend sent you.",
+    "emptyGuest": "You have no groups yet. Open a link a friend sent you.",
     "people_one": "{{count}} person",
     "people_other": "{{count}} people",
     "finished": "Finished",
@@ -482,6 +492,7 @@
     "title": "Members",
     "owner": "Owner",
     "you": "You",
+    "guest": "Guest",
     "nameOnly": "Just a name",
     "tookName": "Took the name “{{name}}”",
     "addNameLink": "+ Add a name",
@@ -503,7 +514,10 @@
     "removedTitle": "Removed",
     "letBackIn": "Let back in",
     "backInGroup": "{{name}} is back in the group",
-    "optionsFor": "Options for {{name}}"
+    "optionsFor": "Options for {{name}}",
+    "letInAgain": "Let in again",
+    "letInAgainHint": "Use this when {{name}} lost their phone. The name becomes free to tap on the new one.",
+    "letInAgainDone": "{{name}} can tap their name again"
   },
   "join": {
     "invitedTo": "You're invited to {{name}}",

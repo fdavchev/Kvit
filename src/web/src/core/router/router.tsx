@@ -2,6 +2,7 @@ import { createBrowserRouter, type RouteObject } from 'react-router'
 import { ChangePasswordScreen } from '@/features/auth/changePassword/components/ChangePasswordScreen'
 import { GoogleSignUpScreen } from '@/features/auth/googleSignUp/components/GoogleSignUpScreen'
 import { LogInScreen } from '@/features/auth/logIn/components/LogInScreen'
+import { MakeAccountScreen } from '@/features/auth/makeAccount/components/MakeAccountScreen'
 import { SetPasswordScreen } from '@/features/auth/setPassword/components/SetPasswordScreen'
 import { SignUpScreen } from '@/features/auth/signUp/components/SignUpScreen'
 import { WelcomeScreen } from '@/features/auth/welcome/components/WelcomeScreen'
@@ -23,6 +24,7 @@ import { NotFoundScreen } from '@/features/notFound/components/NotFoundScreen'
 import { PrivacyScreen } from '@/features/privacy/components/PrivacyScreen'
 import { SettingsScreen } from '@/features/settings/components/SettingsScreen'
 import { BottomBarLayout } from './BottomBarLayout'
+import { RequireAccount } from './RequireAccount'
 import { RequireAuth } from './RequireAuth'
 import { RouteError } from './RouteError'
 import { routes } from './routes'
@@ -53,9 +55,16 @@ export const routeObjects: RouteObject[] = [
               { path: routes.settings, element: <SettingsScreen /> },
             ],
           },
-          { path: routes.newGroup, element: <NewGroupChoiceScreen /> },
-          { path: routes.newGroupGroup, element: <NewGroupScreen /> },
-          { path: routes.newBill, element: <OneBillScreen /> },
+          {
+            element: <RequireAccount />,
+            children: [
+              { path: routes.newGroup, element: <NewGroupChoiceScreen /> },
+              { path: routes.newGroupGroup, element: <NewGroupScreen /> },
+              { path: routes.newBill, element: <OneBillScreen /> },
+              { path: routes.changePassword, element: <ChangePasswordScreen /> },
+              { path: routes.setPassword, element: <SetPasswordScreen /> },
+            ],
+          },
           { path: routes.group(groupIdPattern), element: <GroupScreen /> },
           { path: routes.groupActivity(groupIdPattern), element: <GroupScreen /> },
           { path: routes.groupBalances(groupIdPattern), element: <GroupScreen /> },
@@ -74,8 +83,7 @@ export const routeObjects: RouteObject[] = [
             path: routes.groupExpenseEdit(groupIdPattern, expenseIdPattern),
             element: <EditExpenseScreen />,
           },
-          { path: routes.changePassword, element: <ChangePasswordScreen /> },
-          { path: routes.setPassword, element: <SetPasswordScreen /> },
+          { path: routes.makeAccount, element: <MakeAccountScreen /> },
         ],
       },
       { path: '*', element: <NotFoundScreen /> },

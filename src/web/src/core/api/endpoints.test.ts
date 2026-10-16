@@ -41,6 +41,7 @@ describe('endpoints', () => {
   it.each([
     ['groupMember', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/members/a1b2c3d4-0002-4aaa-8bbb-000000000002'],
     ['groupMemberLetBackIn', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/members/a1b2c3d4-0002-4aaa-8bbb-000000000002/let-back-in'],
+    ['groupMemberLetInAgain', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/members/a1b2c3d4-0002-4aaa-8bbb-000000000002/let-in-again'],
     ['groupMemberClaim', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/members/a1b2c3d4-0002-4aaa-8bbb-000000000002/claim'],
     ['groupMemberUndoClaim', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/members/a1b2c3d4-0002-4aaa-8bbb-000000000002/undo-claim'],
   ] as const)('builds the path %s for a group id and a member id as %s', (name, path) => {

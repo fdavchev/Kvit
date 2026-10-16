@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
+import { useIsGuest } from '@/core/auth/useIsGuest'
 import { routes } from '@/core/router/routes'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitError } from '@/shared/components/KvitError'
@@ -17,6 +18,7 @@ import { GroupListItem } from './GroupListItem'
 export function GroupsScreen() {
   const { t } = useTranslation()
   const groupsQuery = useGroups()
+  const isGuest = useIsGuest()
 
   function renderContent() {
     if (groupsQuery.isPending) {
@@ -41,7 +43,9 @@ export function GroupsScreen() {
     const { groups, finishedGroups } = groupsQuery.data
     return (
       <>
-        {groups.length === 0 && finishedGroups.length === 0 && <KvitEmpty message={t('groups.empty')} />}
+        {groups.length === 0 && finishedGroups.length === 0 && (
+          <KvitEmpty message={isGuest ? t('groups.emptyGuest') : t('groups.empty')} />
+        )}
         {groups.length > 0 && (
           <div className="flex flex-col gap-2.5">
             {groups.map((group) => (
@@ -58,9 +62,11 @@ export function GroupsScreen() {
             ))}
           </div>
         )}
-        <div className="pt-4">
-          <KvitLinkButton to={routes.newGroup}>{t('groups.newButton')}</KvitLinkButton>
-        </div>
+        {!isGuest && (
+          <div className="pt-4">
+            <KvitLinkButton to={routes.newGroup}>{t('groups.newButton')}</KvitLinkButton>
+          </div>
+        )}
         {finishedGroups.length > 0 && (
           <div className="pt-5">
             <FinishedGroups groups={finishedGroups} />

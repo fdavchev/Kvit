@@ -29,6 +29,8 @@ export const endpoints = {
   groupMember: (groupId: string, memberId: string) => `/api/groups/${groupId}/members/${memberId}`,
   groupMemberLetBackIn: (groupId: string, memberId: string) =>
     `/api/groups/${groupId}/members/${memberId}/let-back-in`,
+  groupMemberLetInAgain: (groupId: string, memberId: string) =>
+    `/api/groups/${groupId}/members/${memberId}/let-in-again`,
   groupMemberClaim: (groupId: string, memberId: string) =>
     `/api/groups/${groupId}/members/${memberId}/claim`,
   groupMemberUndoClaim: (groupId: string, memberId: string) =>

@@ -7,6 +7,7 @@ import { KvitSheet } from '@/shared/components/KvitSheet'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
 import { showUndoToast } from '@/shared/toasts/showUndoToast'
 import { useLetBackIn } from '../hooks/useLetBackIn'
+import { useLetInAgain } from '../hooks/useLetInAgain'
 import { useMakeOwner } from '../hooks/useMakeOwner'
 import { useRemoveMember } from '../hooks/useRemoveMember'
 import { useUndoClaim } from '../hooks/useUndoClaim'
@@ -23,8 +24,9 @@ export function MemberOptionsSheet({ groupId, member, onClose }: MemberOptionsSh
   const undoClaim = useUndoClaim(groupId)
   const removeMember = useRemoveMember(groupId)
   const letBackIn = useLetBackIn(groupId)
+  const letInAgain = useLetInAgain(groupId)
   const sheet = useKvitSheet()
-  const isPending = makeOwner.isPending || undoClaim.isPending || removeMember.isPending
+  const isPending = makeOwner.isPending || undoClaim.isPending || removeMember.isPending || letInAgain.isPending
 
   function showFailure(error: Error): void {
     console.error('A member action failed', error)
@@ -47,6 +49,16 @@ export function MemberOptionsSheet({ groupId, member, onClose }: MemberOptionsSh
         toast.success(
           t('members.claimUndone', { name: member.displayName, claimed: claimedName }),
         )
+        sheet.close()
+      },
+      onError: showFailure,
+    })
+  }
+
+  function letInAgainNow(): void {
+    letInAgain.mutate(member.id, {
+      onSuccess: () => {
+        toast.success(t('members.letInAgainDone', { name: member.displayName }))
         sheet.close()
       },
       onError: showFailure,
@@ -76,7 +88,22 @@ export function MemberOptionsSheet({ groupId, member, onClose }: MemberOptionsSh
   return (
     <KvitSheet title={member.displayName} onClose={onClose} actionsRef={sheet.actionsRef}>
       <div className="flex flex-col gap-2">
-        {!member.isNameOnly && (
+        {member.isGuest && (
+          <>
+            <KvitButton
+              variant="secondary"
+              className="bg-field"
+              disabled={isPending}
+              onClick={letInAgainNow}
+            >
+              {t('members.letInAgain')}
+            </KvitButton>
+            <p className="px-1 pb-1 text-[0.875rem] text-pretty text-muted-foreground">
+              {t('members.letInAgainHint', { name: member.displayName })}
+            </p>
+          </>
+        )}
+        {!member.isNameOnly && !member.isGuest && (
           <KvitButton
             variant="secondary"
             className="bg-field"

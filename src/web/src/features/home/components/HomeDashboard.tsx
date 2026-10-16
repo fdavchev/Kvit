@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useIsGuest } from '@/core/auth/useIsGuest'
 import { routes } from '@/core/router/routes'
 import type { Dashboard } from '@/core/services/dashboard/dashboardService'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
@@ -21,12 +22,17 @@ interface HomeDashboardProps {
 export function HomeDashboard({ dashboard }: HomeDashboardProps) {
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
+  const isGuest = useIsGuest()
 
   if (dashboard.groups.length === 0 && dashboard.recentActivity.length === 0) {
     return (
       <div className="flex flex-col gap-2 pt-6">
-        <KvitEmpty emoji="👋" title={t('home.noGroupsTitle')} message={t('home.noGroupsHint')} />
-        <KvitLinkButton to={routes.newGroup}>{t('groups.newButton')}</KvitLinkButton>
+        <KvitEmpty
+          emoji="👋"
+          title={t('home.noGroupsTitle')}
+          message={isGuest ? t('home.noGroupsHintGuest') : t('home.noGroupsHint')}
+        />
+        {!isGuest && <KvitLinkButton to={routes.newGroup}>{t('groups.newButton')}</KvitLinkButton>}
       </div>
     )
   }
@@ -35,7 +41,7 @@ export function HomeDashboard({ dashboard }: HomeDashboardProps) {
       <>
         <div className={cn(balancesCardLook, 'flex flex-col gap-2.5')}>
           <p className="font-bold">{t('home.noOpenGroupsTitle')}</p>
-          <KvitLinkButton to={routes.newGroup}>{t('groups.newButton')}</KvitLinkButton>
+          {!isGuest && <KvitLinkButton to={routes.newGroup}>{t('groups.newButton')}</KvitLinkButton>}
         </div>
         <HomeActivity rows={dashboard.recentActivity} />
       </>

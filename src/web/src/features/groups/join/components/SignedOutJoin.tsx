@@ -39,6 +39,8 @@ export function SignedOutJoin({ token, preview, onGoogleCredential }: SignedOutJ
     return <JoinMessage message={t(errorMessageKey(error))} />
   }
 
+  const hasFreeNames: boolean = preview.unclaimedNames.length > 0
+  const showsNameField: boolean = isNewNameOpen || !hasFreeNames
   const typedName: string | null = variables !== undefined && 'name' in variables ? variables.name.trim() : null
   const errorMessage: string | null =
     joinAsGuest.isError && !hasErrorCode(error, 'GUEST_JOIN_SIGNED_IN')
@@ -65,59 +67,61 @@ export function SignedOutJoin({ token, preview, onGoogleCredential }: SignedOutJ
     <div className="flex flex-col gap-3 pt-6">
       {typedName === null && errorMessage !== null && <KvitInlineError message={errorMessage} />}
       <h2 className="text-lg font-bold text-balance">
-        {preview.unclaimedNames.length > 0 ? t('join.guest.whoAreYou') : t('join.guest.whatsYourName')}
+        {hasFreeNames ? t('join.guest.whoAreYou') : t('join.guest.whatsYourName')}
       </h2>
-      <ul
-        ref={listRef}
-        className="flex flex-col divide-y divide-border overflow-hidden rounded-[20px] bg-card text-card-foreground"
-      >
-        {preview.unclaimedNames.map((unclaimed, index) => {
-          const isJoiningAsThis: boolean =
-            isPending && variables !== undefined && 'claimMemberId' in variables && variables.claimMemberId === unclaimed.id
-          return (
-            <li key={unclaimed.id}>
-              <button
-                type="button"
-                className={rowLook}
-                disabled={isPending}
-                onClick={() => join({ claimMemberId: unclaimed.id })}
-              >
-                <KvitAvatar name={unclaimed.name} pictureUrl={null} colorIndex={index} />
-                <span className="min-w-0 flex-1 wrap-anywhere">{unclaimed.name}</span>
-                <span className="grid size-8 flex-none place-items-center text-muted-foreground">
-                  {isJoiningAsThis ? (
-                    <KvitSpinner />
-                  ) : (
-                    <svg {...kvitIconAttributes} className="size-5">
-                      <path d="m9 6 6 6-6 6" />
-                    </svg>
-                  )}
-                </span>
-              </button>
-            </li>
-          )
-        })}
-        <li>
-          <button
-            type="button"
-            aria-expanded={isNewNameOpen}
-            className={rowLook}
-            disabled={isPending}
-            onClick={() => setIsNewNameOpen((isOpen) => !isOpen)}
-          >
-            <span
-              aria-hidden="true"
-              className="grid size-9 flex-none place-items-center rounded-full bg-pill text-foreground"
+      {hasFreeNames && (
+        <ul
+          ref={listRef}
+          className="flex flex-col divide-y divide-border overflow-hidden rounded-[20px] bg-card text-card-foreground"
+        >
+          {preview.unclaimedNames.map((unclaimed, index) => {
+            const isJoiningAsThis: boolean =
+              isPending && variables !== undefined && 'claimMemberId' in variables && variables.claimMemberId === unclaimed.id
+            return (
+              <li key={unclaimed.id}>
+                <button
+                  type="button"
+                  className={rowLook}
+                  disabled={isPending}
+                  onClick={() => join({ claimMemberId: unclaimed.id })}
+                >
+                  <KvitAvatar name={unclaimed.name} pictureUrl={null} colorIndex={index} />
+                  <span className="min-w-0 flex-1 wrap-anywhere">{unclaimed.name}</span>
+                  <span className="grid size-8 flex-none place-items-center text-muted-foreground">
+                    {isJoiningAsThis ? (
+                      <KvitSpinner />
+                    ) : (
+                      <svg {...kvitIconAttributes} className="size-5">
+                        <path d="m9 6 6 6-6 6" />
+                      </svg>
+                    )}
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+          <li>
+            <button
+              type="button"
+              aria-expanded={isNewNameOpen}
+              className={rowLook}
+              disabled={isPending}
+              onClick={() => setIsNewNameOpen((isOpen) => !isOpen)}
             >
-              <svg {...kvitIconAttributes} strokeWidth={2.5} className="size-5">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-            </span>
-            <span className="min-w-0 flex-1 font-bold wrap-anywhere">{t('join.guest.imNew')}</span>
-          </button>
-        </li>
-      </ul>
-      {isNewNameOpen && (
+              <span
+                aria-hidden="true"
+                className="grid size-9 flex-none place-items-center rounded-full bg-pill text-foreground"
+              >
+                <svg {...kvitIconAttributes} strokeWidth={2.5} className="size-5">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </span>
+              <span className="min-w-0 flex-1 font-bold wrap-anywhere">{t('join.guest.imNew')}</span>
+            </button>
+          </li>
+        </ul>
+      )}
+      {showsNameField && (
         <KvitForm
           submitLabel={t('join.join')}
           isPending={isPending}

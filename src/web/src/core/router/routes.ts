@@ -7,6 +7,7 @@ export const routes = {
   changePassword: '/change-password',
   googleSignUp: '/signup/google',
   setPassword: '/settings/set-password',
+  makeAccount: '/settings/make-account',
   privacy: '/privacy',
   groups: '/groups',
   newGroup: '/groups/new',

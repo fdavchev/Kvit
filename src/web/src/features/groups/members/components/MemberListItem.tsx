@@ -52,6 +52,11 @@ export function MemberListItem({
               {t('members.you')}
             </span>
           )}
+          {member.isGuest && (
+            <span className={`${badgeLook} border border-dashed border-muted-foreground text-muted-foreground`}>
+              {t('members.guest')}
+            </span>
+          )}
         </span>
         {subline !== null && (
           <span className="text-[0.8125rem] text-muted-foreground">{subline}</span>

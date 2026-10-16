@@ -722,7 +722,7 @@ describe('JoinScreen', () => {
       await showsInviteCard()
 
       expect(screen.getByText(translated('en', 'join.guest.whatsYourName'))).toBeTruthy()
-      expect(screen.queryByRole('button', { name: translated('en', 'join.join') })).toBeNull()
+      expect(screen.getByLabelText(translated('en', 'auth.signUp.name'))).toBeTruthy()
     })
 
     it('knows the visitor is signed in from asking who is signed in', async () => {
