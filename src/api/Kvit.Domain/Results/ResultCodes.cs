@@ -87,5 +87,6 @@ namespace Kvit.Domain.Results
         public const string INVITE_NOT_FOUND = "INVITE_NOT_FOUND";
         public const string INVITE_REMOVED = "INVITE_REMOVED";
         public const string INVITE_NOTHING_TO_UNDO = "INVITE_NOTHING_TO_UNDO";
+        public const string INVITE_GUEST_CHOICE_INVALID = "INVITE_GUEST_CHOICE_INVALID";
     }
 }

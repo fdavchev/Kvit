@@ -24,5 +24,7 @@ namespace Kvit.Infrastructure.Auth
         public int LockoutCount { get; set; }
 
         public bool MustChangePassword { get; set; }
+
+        public bool IsGuest { get; set; }
     }
 }

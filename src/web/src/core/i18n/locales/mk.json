@@ -76,6 +76,7 @@
     "INVITE_NOT_FOUND": "Овој линк за покана повеќе не работи. Побарај нов.",
     "INVITE_REMOVED": "Те отстранија од оваа група. Побарај од сопственикот да те врати.",
     "INVITE_NOTHING_TO_UNDO": "Нема претходен линк за враќање.",
+    "INVITE_GUEST_CHOICE_INVALID": "Допри го твоето име или впиши ново.",
     "MONEY_CURRENCY_MISMATCH": "Износите се во различни валути.",
     "MONEY_NOT_ON_CURRENCY_STEP": "Денарите немаат децимали. Внеси цел број.",
     "EXPENSE_AMOUNT_NOT_POSITIVE": "Износот мора да е поголем од 0.",

@@ -4,5 +4,6 @@ namespace Kvit.Domain.Entities
     {
         Email,
         Google,
+        Guest,
     }
 }

@@ -27,6 +27,7 @@ namespace Kvit.Infrastructure.Auth
         private const string PasswordAlreadySetMessage = "This account already has a password. Use change password instead.";
         private const string GoogleNoAccountMessage = "No account is linked to this Google account yet.";
         private const string GoogleLoginProvider = "Google";
+        private const string GuestUserNamePrefix = "guest-";
 
         private static readonly Result<MeResponse> EmailTaken = Result.Failure<MeResponse>(EmailTakenMessage, ResultCodes.AUTH_EMAIL_TAKEN);
         private static readonly Result<MeResponse> GoogleEmailTaken = Result.Failure<MeResponse>(
@@ -34,7 +35,7 @@ namespace Kvit.Infrastructure.Auth
 
         public async Task<Result<MeResponse>> CreateAccountAsync(NewAccount account, CancellationToken cancellationToken)
         {
-            AppUser user = NewUser(account.DisplayName, account.Email, account.TimeZone, account.Language);
+            AppUser user = NewAccountUser(account.DisplayName, account.Email, account.TimeZone, account.Language);
 
             IdentityResult created;
             try
@@ -64,7 +65,7 @@ namespace Kvit.Infrastructure.Auth
                 return Result.Ok(MeResponseOf(linkedUser));
             }
 
-            AppUser user = NewUser(account.DisplayName, account.Email, account.TimeZone, account.Language);
+            AppUser user = NewAccountUser(account.DisplayName, account.Email, account.TimeZone, account.Language);
             user.GooglePictureUrl = googlePictureUrl;
 
             IdentityResult created;
@@ -85,6 +86,24 @@ namespace Kvit.Infrastructure.Auth
             UserLoginInfo googleLogin = new(GoogleLoginProvider, googleSubject, GoogleLoginProvider);
             IdentityResultChecks.ThrowIfFailed(await _userManager.AddLoginAsync(user, googleLogin), $"link the Google account to user {user.Id}");
             await RecordSignUpAsync(user, SignUpMethod.Google, cancellationToken);
+
+            return Result.Ok(MeResponseOf(user));
+        }
+
+        public async Task<Result<MeResponse>> CreateGuestAsync(string displayName, string language, string timeZone, CancellationToken cancellationToken)
+        {
+            Result<string> validName = AccountRules.ValidateDisplayName(displayName);
+            if (!validName.IsSuccess)
+            {
+                return validName.ToFailure<MeResponse>();
+            }
+
+            AppUser user = NewUser(validName.Value, timeZone, language);
+            user.UserName = $"{GuestUserNamePrefix}{user.Id:N}";
+            user.IsGuest = true;
+
+            IdentityResultChecks.ThrowIfFailed(await _userManager.CreateAsync(user), $"create the guest {user.Id}");
+            await RecordSignUpAsync(user, SignUpMethod.Guest, cancellationToken);
 
             return Result.Ok(MeResponseOf(user));
         }
@@ -249,12 +268,19 @@ namespace Kvit.Infrastructure.Auth
             return check.Succeeded ? PasswordCheck.Right : PasswordCheck.Wrong;
         }
 
-        private AppUser NewUser(string displayName, string email, string timeZone, string language)
+        private AppUser NewAccountUser(string displayName, string email, string timeZone, string language)
+        {
+            AppUser user = NewUser(displayName, timeZone, language);
+            user.UserName = email;
+            user.Email = email;
+
+            return user;
+        }
+
+        private AppUser NewUser(string displayName, string timeZone, string language)
         {
             return new AppUser
             {
-                UserName = email,
-                Email = email,
                 DisplayName = displayName,
                 Language = language,
                 TimeZone = timeZone,
@@ -309,9 +335,7 @@ namespace Kvit.Infrastructure.Auth
 
         private static MeResponse MeResponseOf(AppUser user)
         {
-            string email = user.Email ?? throw new InvalidOperationException($"User {user.Id} has no email.");
-
-            return new MeResponse(user.Id, user.DisplayName, email, user.Language, user.TimeZone, user.MustChangePassword, user.PasswordHash is not null, user.GooglePictureUrl);
+            return new MeResponse(user.Id, user.DisplayName, user.Email, user.Language, user.TimeZone, user.MustChangePassword, user.PasswordHash is not null, user.GooglePictureUrl, user.IsGuest);
         }
     }
 }

@@ -5,6 +5,7 @@ using Kvit.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Kvit.Api.Registers
 {
@@ -36,6 +37,7 @@ namespace Kvit.Api.Registers
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddSignInManager()
                 .AddClaimsPrincipalFactory<KvitUserClaimsPrincipalFactory>();
+            services.Replace(ServiceDescriptor.Scoped<IUserValidator<AppUser>, KvitUserValidator>());
 
             services.Configure<SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.Zero);
 

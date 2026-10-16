@@ -17,6 +17,9 @@ namespace Kvit.Infrastructure.Persistence.Configurations
                 table.HasCheckConstraint("ck_users_display_name_not_empty", "char_length(display_name) >= 1");
                 table.HasCheckConstraint("ck_users_time_zone_not_empty", "char_length(time_zone) >= 1");
                 table.HasCheckConstraint("ck_users_created_at_set", "created_at > '0002-01-01 00:00:00+00'");
+                table.HasCheckConstraint(
+                    "ck_users_guest_has_no_email_or_password",
+                    "NOT is_guest OR (email IS NULL AND normalized_email IS NULL AND password_hash IS NULL)");
             });
 
             builder.HasIndex(user => user.NormalizedEmail).HasDatabaseName(NormalizedEmailIndexName).IsUnique();
@@ -26,6 +29,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
             builder.Property(user => user.IsTimeZoneManual).HasDefaultValue(false);
             builder.Property(user => user.LockoutCount).HasDefaultValue(0);
             builder.Property(user => user.MustChangePassword).HasDefaultValue(false);
+            builder.Property(user => user.IsGuest).HasDefaultValue(false);
         }
     }
 }

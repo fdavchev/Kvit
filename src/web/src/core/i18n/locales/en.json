@@ -76,6 +76,7 @@
     "INVITE_NOT_FOUND": "This invite link no longer works. Ask for a new one.",
     "INVITE_REMOVED": "You were removed from this group. Ask the owner to let you back in.",
     "INVITE_NOTHING_TO_UNDO": "There is no earlier link to go back to.",
+    "INVITE_GUEST_CHOICE_INVALID": "Tap your name or type a new one.",
     "MONEY_CURRENCY_MISMATCH": "These amounts are in different currencies.",
     "MONEY_NOT_ON_CURRENCY_STEP": "Denars have no decimals. Use a whole number.",
     "EXPENSE_AMOUNT_NOT_POSITIVE": "The amount must be more than 0.",

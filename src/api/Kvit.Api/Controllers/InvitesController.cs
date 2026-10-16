@@ -1,3 +1,4 @@
+using Kvit.Api.RateLimiting;
 using Kvit.Application.Commands.Invites;
 using Kvit.Application.Dispatching;
 using Kvit.Application.Queries.Invites;
@@ -28,6 +29,17 @@ namespace Kvit.Api.Controllers
         {
             JoinGroupCommand command = new(request.Token, request.ClaimMemberId);
             Result<JoinGroupResponse> result = await _dispatcher.Send<JoinGroupCommand, JoinGroupResponse>(command, cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("join-as-guest")]
+        [AllowAnonymous]
+        [EnableRateLimiting("invite")]
+        [ServiceFilter<GuestJoinLimitFilter>]
+        public async Task<ActionResult<JoinGroupResponse>> JoinAsGuest(JoinAsGuestRequest request, CancellationToken cancellationToken)
+        {
+            JoinAsGuestCommand command = new(request.Token, request.ClaimMemberId, request.Name, request.Language, request.TimeZone);
+            Result<JoinGroupResponse> result = await _dispatcher.Send<JoinAsGuestCommand, JoinGroupResponse>(command, cancellationToken);
             return Result(result);
         }
     }

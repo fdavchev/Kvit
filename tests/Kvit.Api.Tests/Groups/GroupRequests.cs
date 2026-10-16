@@ -14,6 +14,9 @@ namespace Kvit.Api.Tests.Groups
         public const string GroupsPath = "/api/groups";
         public const string PreviewPath = "/api/invites/preview";
         public const string JoinPath = "/api/invites/join";
+        public const string JoinAsGuestPath = "/api/invites/join-as-guest";
+        public const string GuestTimeZone = "Europe/Skopje";
+        public const string GuestLanguage = "en";
 
         public static readonly Regex TokenFormat = new("^[A-Za-z0-9_-]{43}$");
         public static readonly string[] MemberFieldNames = ["claimedName", "displayName", "id", "isNameOnly", "isOwner", "isYou", "name", "pictureUrl", "userId"];
@@ -148,6 +151,17 @@ namespace Kvit.Api.Tests.Groups
         public static Task<HttpResponseMessage> JoinAsync(HttpClient client, string token, Guid? claimMemberId = null)
         {
             return client.PostAsJsonAsync(JoinPath, new { token, claimMemberId }, TestContext.Current.CancellationToken);
+        }
+
+        public static Task<HttpResponseMessage> JoinAsGuestAsync(
+            HttpClient client,
+            string token,
+            Guid? claimMemberId = null,
+            string? name = null,
+            string language = GuestLanguage,
+            string timeZone = GuestTimeZone)
+        {
+            return client.PostAsJsonAsync(JoinAsGuestPath, new { token, claimMemberId, name, language, timeZone }, TestContext.Current.CancellationToken);
         }
 
         public static Task<HttpResponseMessage> PostJsonTextAsync(HttpClient client, string path, string json)

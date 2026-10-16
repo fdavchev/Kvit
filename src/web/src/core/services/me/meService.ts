@@ -6,12 +6,13 @@ import { readTextOrNull } from '@/core/services/readFields'
 export interface Me {
   id: string
   displayName: string
-  email: string
+  email: string | null
   language: Language
   timeZone: string
   mustChangePassword: boolean
   hasPassword: boolean
   pictureUrl: string | null
+  isGuest: boolean
 }
 
 type MeFields = Record<string, unknown>
@@ -26,12 +27,13 @@ export function parseMe(body: unknown): Me {
   return {
     id: readText(fields, 'id'),
     displayName: readText(fields, 'displayName'),
-    email: readText(fields, 'email'),
+    email: readTextOrNull(fields, 'email', 'the signed-in person'),
     language: readLanguage(fields),
     timeZone: readText(fields, 'timeZone'),
     mustChangePassword: readYesNo(fields, 'mustChangePassword'),
     hasPassword: readYesNo(fields, 'hasPassword'),
     pictureUrl: readTextOrNull(fields, 'pictureUrl', 'the signed-in person'),
+    isGuest: readYesNo(fields, 'isGuest'),
   }
 }
 
