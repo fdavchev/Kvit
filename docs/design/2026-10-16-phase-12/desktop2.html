@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kvit desktop layouts, round 2</title>
+<style>
+:root{--bg:#1f1816;--side:#161110;--card:#2c2220;--line:#72625c;--text:#fff1dc;--muted:#ffd9a8;--pill:#d9b48a;--pilltext:#1f1816;--pos:#7fd68f;--neg:#ff9a9a}
+*{box-sizing:border-box}
+body{margin:0;padding:1.25rem;font:1rem system-ui,sans-serif;background:#111;color:#eee}
+h1{font-size:1.25rem;margin:0 0 .6rem}.note{font-size:.85rem;color:#ccc;margin:.4rem 0 .8rem;max-width:60rem}
+.bar button{padding:.55rem 1rem;border-radius:999px;border:1px solid #888;background:#222;color:#eee;font-size:.95rem;cursor:pointer;margin:0 .4rem .4rem 0}
+.bar button.on{background:var(--pill);color:var(--pilltext);font-weight:700}
+.frame{container-type:inline-size;background:var(--bg);color:var(--text);border-radius:.75rem;box-shadow:0 0 0 1px #444;margin:.5rem auto 0;min-height:36rem;overflow:hidden}
+.lbl{color:var(--muted);font-size:clamp(.8rem,1.3cqi,.95rem)}
+.big{font-size:clamp(1.4rem,3.2cqi,2.2rem);font-weight:800}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:.9rem;padding:clamp(.7rem,1.6cqi,1.1rem)}
+.nav{padding:.5rem .9rem;border-radius:999px;color:var(--muted);font-weight:700;white-space:nowrap}
+.nav.sel{background:var(--pill);color:var(--pilltext)}
+.row{display:flex;justify-content:space-between;gap:.5rem;padding:.55rem 0;border-bottom:1px solid #ffffff14}
+.row:last-child{border:0}
+.sec{font-weight:700;color:var(--muted);margin:0 0 .5rem}
+.bar2{height:.6rem;border-radius:99px;background:#ffffff18;overflow:hidden;margin:.35rem 0 .7rem}.bar2>i{display:block;height:100%;background:var(--pill)}
+.gl{padding:.7rem .9rem;border-radius:.7rem}.gl.sel{background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
+.plus{background:var(--pill);color:var(--pilltext);border-radius:999px;padding:.55rem 1.1rem;font-weight:800;white-space:nowrap}
+/* A: master-detail */
+.A{display:grid;grid-template-columns:minmax(12rem,22%) minmax(0,1fr) minmax(14rem,28%);min-height:36rem}
+.A>*{padding:clamp(.75rem,1.8cqi,1.25rem)}.A .l{background:var(--side)}.A .r{background:var(--side)}
+.A .top{display:flex;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap}
+@container (max-width:52rem){.A{grid-template-columns:1fr}.A .l,.A .r{display:none}}
+/* B: top nav + dashboard */
+.B .head{display:flex;align-items:center;gap:.5rem;padding:.8rem clamp(.75rem,3cqi,2rem);background:var(--side);flex-wrap:wrap}
+.B .head b{font-size:1.3rem;color:var(--muted);margin-right:auto}
+.B .page{padding:clamp(.75rem,3cqi,2rem);width:min(100%,80rem);margin:0 auto;display:grid;gap:clamp(.6rem,1.6cqi,1.2rem);grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr))}
+.B .wide{grid-column:1/-1}
+/* C: focus column + floating panels */
+.C{display:grid;grid-template-columns:4.5rem 1fr;min-height:36rem}
+.C .rail{background:var(--side);display:flex;flex-direction:column;align-items:center;gap:1rem;padding:1rem 0;font-size:1.4rem}
+.C .rail span{width:3rem;height:3rem;display:grid;place-items:center;border-radius:1rem}.C .rail .sel{background:var(--pill);color:var(--pilltext)}
+.C .work{padding:clamp(.75rem,2.4cqi,2rem);display:grid;gap:clamp(.6rem,1.6cqi,1.2rem);grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-content:start}
+.C .hero{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:clamp(1rem,4cqi,3rem);align-items:flex-end}
+@container (max-width:44rem){.C{grid-template-columns:1fr}.C .rail{flex-direction:row;justify-content:space-around;order:2}.C .work{grid-template-columns:1fr}}
+</style></head><body>
+<h1>Desktop layouts, round 2: three really different ideas</h1>
+<div class="note">Different from the first round: not "sidebar + cards". Fluid (rem, %, container units). Use Phone / Tablet / Laptop / Wide to resize. Budget is shown in each so you see where it will live. Amounts are example data.</div>
+<div class="bar" id="o"><button data-k="A">A: three panes (groups | group | balances)</button><button data-k="B">B: top menu + dashboard of cards</button><button data-k="C">C: slim icon rail + hero numbers</button></div>
+<div class="bar" id="w"><button data-w="26">Phone</button><button data-w="55">Tablet</button><button data-w="85">Laptop</button><button data-w="100">Wide</button></div>
+<div class="note" id="n"></div>
+<div class="frame" id="f"></div>
+<script>
+const groupsList=`<div class="gl sel"><b>Trip to Ohrid</b><div class="lbl">You are owed 1 200 ден.</div></div><div class="gl"><b>Flat</b><div class="lbl">You owe 800 ден.</div></div><div class="gl"><b>Dinner club</b><div class="lbl">All even</div></div><div class="gl"><b>Ski week</b><div class="lbl">You are owed 3 000 ден.</div></div>`;
+const exp=`<div class="row"><span>Dinner · Ana paid</span><b>1 200</b></div><div class="row"><span>Taxi · You paid</span><b>300</b></div><div class="row"><span>Hotel · Marko paid</span><b>6 400</b></div><div class="row"><span>Groceries · Sara paid</span><b>950</b></div>`;
+const bal=`<div class="card" style="margin-bottom:.8rem"><div class="lbl">Your balance</div><div class="big pos">+1 200 ден.</div></div><div class="sec">Who pays whom</div><div class="row"><span>Marko → Ana</span><b>800</b></div><div class="row"><span>Sara → You</span><b>400</b></div><button class="plus" style="border:0;margin-top:.8rem;width:100%">Mark paid</button>`;
+const spend=`<div class="sec">This month's spending (budget, Release 2)</div><div class="row"><span>Food</span><span>8 400 / 12 000</span></div><div class="bar2"><i style="width:70%"></i></div><div class="row"><span>Transport</span><span>2 100 / 4 000</span></div><div class="bar2"><i style="width:52%"></i></div><div class="row"><span>Fun</span><span>5 300 / 5 000</span></div><div class="bar2"><i style="width:100%;background:var(--neg)"></i></div>`;
+const O={
+A:{n:'A: three panes. Left = your groups (and later Budget, Settings as tabs on top), middle = the open group (expenses), right = balances and "Mark paid". Nothing opens a new page for everyday work: you stay in one screen. On a phone it collapses to the one column you have today. Budget would be a tab in the top row.',
+h:()=>`<div class="A"><div class="l"><div class="sec">Your groups</div>${groupsList}</div><div><div class="top"><span class="nav sel">Expenses</span><span class="nav">Balances</span><span class="nav">Activity</span><span class="nav">Budget</span><span style="margin-left:auto" class="plus">＋ Add expense</span></div><div class="sec">Trip to Ohrid</div>${exp}</div><div class="r">${bal}</div></div>`},
+B:{n:'B: a top menu (Home, Groups, Budget, Settings) and a wide dashboard that is a grid of cards: what you owe, what you are owed, needs you, this month\'s spending, groups, recent activity. Cards wrap to fit any width. Budget cards live here later.',
+h:()=>`<div class="B"><div class="head"><b>Kvit</b><span class="nav sel">Home</span><span class="nav">Groups</span><span class="nav">Budget</span><span class="nav">Settings</span><span class="plus">＋ Add</span></div><div class="page"><div class="card"><div class="lbl">You are owed</div><div class="big pos">12 400 ден.</div></div><div class="card"><div class="lbl">You owe</div><div class="big neg">3 200 ден.</div></div><div class="card"><div class="lbl">Needs you</div><div class="big">2</div><div class="lbl">Marko paid you 800 · Confirm</div></div><div class="card wide">${spend}</div><div class="card"><div class="sec">Your groups</div>${groupsList}</div><div class="card"><div class="sec">Recent activity</div><div class="row"><span>Ana added Dinner</span><span class="lbl">2h</span></div><div class="row"><span>Marko paid Ana</span><span class="lbl">5h</span></div><div class="row"><span>Sara joined Flat</span><span class="lbl">1d</span></div></div></div></div>`},
+C:{n:'C: a very slim icon rail, and a calm page with two big numbers first (what you are owed, what you owe) and the one thing to do next. Below, two columns: groups and spending. Least busy and closest to the phone feeling, just roomier.',
+h:()=>`<div class="C"><div class="rail"><span class="sel">⌂</span><span>👥</span><span>📊</span><span>⚙</span></div><div class="work"><div class="hero"><div><div class="lbl">You are owed</div><div class="big pos">12 400 ден.</div></div><div><div class="lbl">You owe</div><div class="big neg">3 200 ден.</div></div><span class="plus" style="margin-left:auto">＋ Add expense</span></div><div class="card"><div class="sec">Your groups</div>${groupsList}</div><div class="card">${spend}</div></div></div>`}
+};
+const f=document.getElementById('f');
+function k(x){f.innerHTML=O[x].h();document.getElementById('n').textContent=O[x].n;document.querySelectorAll('#o button').forEach(b=>b.classList.toggle('on',b.dataset.k===x))}
+function w(x){f.style.width=x+'%';document.querySelectorAll('#w button').forEach(b=>b.classList.toggle('on',b.dataset.w===String(x)))}
+document.querySelectorAll('#o button').forEach(b=>b.onclick=()=>k(b.dataset.k));document.querySelectorAll('#w button').forEach(b=>b.onclick=()=>w(+b.dataset.w));k('A');w(100);
+</script></body></html>

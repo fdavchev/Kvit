@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { KvitDialog } from './KvitDialog'
+import { kvitGlassPanelLook } from './kvitGlassLooks'
 
 const title = 'This account signs in with Google.'
 
@@ -95,5 +96,11 @@ describe('KvitDialog', () => {
     pressOn(find())
 
     expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('uses the shared glass panel look', () => {
+    renderDialog()
+
+    expect(screen.getByRole('dialog').className.split(/\s+/)).toEqual(expect.arrayContaining(kvitGlassPanelLook.split(' ')))
   })
 })

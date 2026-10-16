@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { errorMessageKey } from '@/core/api/errors'
+import { useLanguage } from '@/core/i18n/useLanguage'
 import { groupCurrencies } from '@/core/services/groups/groupsService'
 import type { GroupMember } from '@/core/services/groups/membersService'
 import { KvitChoiceChips } from '@/shared/components/KvitChoiceChips'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
-import type { Currency } from '@/shared/utils/formatMoney'
+import { currencyLabel, type Currency } from '@/shared/utils/formatMoney'
 import { parseMoneyInput } from '@/shared/utils/parseMoneyInput'
 import { useRecordSettlement } from '../hooks/useRecordSettlement'
 import { whenItCountsText } from '../paymentToRecord'
@@ -29,6 +30,7 @@ interface ChosenPayment {
 
 export function RecordPaymentSheet({ groupId, me, members, defaultCurrency, onClose }: RecordPaymentSheetProps) {
   const { t } = useTranslation()
+  const { language } = useLanguage()
   const sheet = useKvitSheet()
   const recordSettlement = useRecordSettlement(groupId)
   const [clientRequestId] = useState<string>(() => crypto.randomUUID())
@@ -100,7 +102,7 @@ export function RecordPaymentSheet({ groupId, me, members, defaultCurrency, onCl
           <KvitChoiceChips<Currency>
             label={t('groupFields.currency')}
             labelClassName="sr-only"
-            options={groupCurrencies.map((code) => ({ value: code, label: code }))}
+            options={groupCurrencies.map((code) => ({ value: code, label: currencyLabel(code, language) }))}
             value={currency}
             onChange={setCurrency}
           />

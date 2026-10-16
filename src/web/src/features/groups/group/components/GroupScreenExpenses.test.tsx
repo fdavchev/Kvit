@@ -48,6 +48,7 @@ import {
   stubFetchByRequest,
   type AnswerFactory,
 } from '@/test/requestTestHelpers'
+import { loadingLook } from '@/test/skeletonTestHelpers'
 import { seedMe, testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
 import { formatMoney } from '@/shared/utils/formatMoney'
@@ -563,6 +564,9 @@ describe('GroupScreen expenses', () => {
       await screen.findByRole('heading', { level: 1, name: testGroup.name })
 
       expect(screen.getByRole('status')).toBeTruthy()
+      const look = loadingLook()
+      expect(look.hasSpinner).toBe(false)
+      expect(look.skeletonCount).toBeGreaterThan(0)
     })
 
     it('shows the translated error with a retry button when the expenses cannot be loaded, and keeps the group header', async () => {

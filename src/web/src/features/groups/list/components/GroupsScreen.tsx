@@ -8,6 +8,7 @@ import { KvitLinkButton } from '@/shared/components/KvitLinkButton'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
+import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
 import { GroupSizeLine } from '../../shared/components/GroupSizeLine'
 import { useGroups } from '../hooks/useGroups'
 import { FinishedGroups } from './FinishedGroups'
@@ -19,7 +20,15 @@ export function GroupsScreen() {
 
   function renderContent() {
     if (groupsQuery.isPending) {
-      return <KvitLoading />
+      return (
+        <KvitLoading>
+          <div className="flex flex-col gap-2.5">
+            <KvitSkeleton className="h-17" />
+            <KvitSkeleton className="h-17" />
+            <KvitSkeleton className="h-17" />
+          </div>
+        </KvitLoading>
+      )
     }
     if (groupsQuery.isError) {
       return (

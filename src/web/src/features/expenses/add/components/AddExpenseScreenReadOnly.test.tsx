@@ -4,7 +4,7 @@ import { languages, type Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import type { Group } from '@/core/services/groups/groupsService'
 import type { GroupMembers } from '@/core/services/groups/membersService'
-import { asMemberOf, closingGroup, finishedGroup } from '@/test/closingTestData'
+import { asMemberOf, closingGroup, closingTexts, finishedGroup } from '@/test/closingTestData'
 import { testCategories } from '@/test/expenseTestData'
 import { categoriesPath, freezeTime, groupPath, membersPath, unfreezeTime } from '@/test/expenseTestHelpers'
 import { groupOf, testGroupId } from '@/test/groupTestData'
@@ -72,6 +72,33 @@ describe('the Add expense screen reached by its address', () => {
 
     expect(await screen.findByText('group page')).toBeTruthy()
     expect(saveButton()).toBeNull()
+  })
+
+  it.each(languages)('tells the owner of a group that is being closed that saving cancels the closing, in %s', async (language) => {
+    await renderAddByUrl(closingGroup, ownerViewMembers, language)
+
+    await screen.findByRole('button', { name: translated(language, 'groupSettings.save') })
+
+    expect(screen.getByText(translated(language, closingTexts.addCancels.key))).toBeTruthy()
+  })
+
+  it('leaves 0.75rem between the closing notice and the amount box below it', async () => {
+    await renderAddByUrl(closingGroup, ownerViewMembers)
+
+    await screen.findByRole('button', { name: translated('en', 'groupSettings.save') })
+
+    expect(screen.getByText(translated('en', closingTexts.addCancels.key)).classList.contains('pb-3')).toBe(true)
+  })
+
+  it.each([
+    ['the owner of an open group', openOwnerGroup, ownerViewMembers],
+    ['a member of an open group', openMemberGroup, anaViewMembers],
+  ])('does not tell %s that saving cancels a closing', async (_name, group, members) => {
+    await renderAddByUrl(group, members)
+
+    await screen.findByRole('button', { name: translated('en', 'groupSettings.save') })
+
+    expect(screen.queryByText(translated('en', closingTexts.addCancels.key))).toBeNull()
   })
 
   it.each(languages)('sends a person to the group screen without a form for a finished group, also in %s', async (language) => {

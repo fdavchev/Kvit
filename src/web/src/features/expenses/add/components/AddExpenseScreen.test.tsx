@@ -7,7 +7,7 @@ import { routes } from '@/core/router/routes'
 import type { Group } from '@/core/services/groups/groupsService'
 import type { GroupMembers } from '@/core/services/groups/membersService'
 import type { Me } from '@/core/services/me/meService'
-import { formatMoney, type Currency } from '@/shared/utils/formatMoney'
+import { currencyLabel, formatMoney, type Currency } from '@/shared/utils/formatMoney'
 import { stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
 import {
   accommodationCategory,
@@ -421,10 +421,36 @@ describe('AddExpenseScreen', () => {
 
       fireEvent.click(currencyToggle('MKD', language))
       expect(currencyToggle('EUR', language)).toBeTruthy()
-      expect(screen.queryByRole('button', { name: translated(language, 'expense.currencyToggle', { currency: 'MKD' }) })).toBeNull()
+      expect(screen.queryByRole('button', { name: translated(language, 'expense.currencyToggle', { currency: currencyLabel('MKD', language) }) })).toBeNull()
 
       fireEvent.click(currencyToggle('EUR', language))
       expect(currencyToggle('MKD', language)).toBeTruthy()
+    })
+
+    it.each([
+      ['en', 'MKD', 'MKD'],
+      ['mk', 'MKD', 'ден.'],
+      ['en', 'EUR', 'EUR'],
+      ['mk', 'EUR', 'EUR'],
+    ] as const)('writes the %s currency label for %s as %s on the chip and in its spoken name', async (language, currency, label) => {
+      await renderReadyAdd({ language, group: groupOf({ memberCount: 5, defaultCurrency: currency }) })
+
+      const chip = currencyToggle(currency, language)
+
+      expect(chip.textContent).toBe(label)
+      expect(chip.getAttribute('aria-label')).toBe(translated(language, 'expense.currencyToggle', { currency: label }))
+    })
+
+    it('still sends the currency code MKD when the Macedonian chip says ден.', async () => {
+      const { fetchMock } = await renderReadyAdd({ language: 'mk' })
+      typeAmount('1200', 'mk')
+
+      fireEvent.click(saveButton('mk'))
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'POST', expensesPath)).toBe(1)
+      })
+      expect(sentBody(fetchMock, 'POST', expensesPath)).toMatchObject({ currency: 'MKD' })
     })
 
     it('sends the amount in cents and the currency EUR after the label was switched', async () => {
@@ -770,12 +796,12 @@ describe('AddExpenseScreen', () => {
     it('shows the picked category as pressed when the sheet is opened again', async () => {
       await renderReadyAdd()
       const sheet = await openSheet('category')
-      fireEvent.click(within(sheet).getByRole('button', { name: /Accommodation/ }))
+      fireEvent.click(within(sheet).getByRole('button', { name: /Stay/ }))
       await waitForSheetToClose()
 
       const again = await openSheet('category')
 
-      expect(within(again).getByRole('button', { name: /Accommodation/ }).getAttribute('aria-pressed')).toBe('true')
+      expect(within(again).getByRole('button', { name: /Stay/ }).getAttribute('aria-pressed')).toBe('true')
       expect(within(again).getByRole('button', { name: /Food/ }).getAttribute('aria-pressed')).toBe('false')
     })
 
@@ -783,7 +809,7 @@ describe('AddExpenseScreen', () => {
       await renderReadyAdd({ language: 'mk' })
       const sheet = await openSheet('category', 'mk')
 
-      fireEvent.click(within(sheet).getByRole('button', { name: /Сместување/ }))
+      fireEvent.click(within(sheet).getByRole('button', { name: /Смештај/ }))
 
       await waitForSheetToClose()
       expect(formRow('category', 'mk').textContent).toContain(categoryName('mk', accommodationCategory))
@@ -2512,7 +2538,7 @@ describe('AddExpenseScreen', () => {
       fireEvent.click(personButton(paidBy, 'Ana'))
       await waitForSheetToClose()
       const category = await openSheet('category')
-      fireEvent.click(within(category).getByRole('button', { name: /Accommodation/ }))
+      fireEvent.click(within(category).getByRole('button', { name: /Stay/ }))
       await waitForSheetToClose()
 
       fireEvent.click(saveButton())

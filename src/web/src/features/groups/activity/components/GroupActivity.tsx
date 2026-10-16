@@ -9,6 +9,8 @@ import { useExpenses } from '@/features/expenses/list/hooks/useExpenses'
 import { useMembers } from '@/features/groups/members/hooks/useMembers'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitLoading } from '@/shared/components/KvitLoading'
+import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
+import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { formatHowLongAgo, todayInTimeZone } from '@/shared/utils/formatDate'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
 import { activityLines } from '../activityLines'
@@ -32,6 +34,7 @@ export function GroupActivity({ groupId }: GroupActivityProps) {
   const membersQuery = useMembers(groupId)
   const expensesQuery = useExpenses(groupId)
   const categoriesQuery = useCategories()
+  const listRef = useListAnimation<HTMLUListElement>()
 
   if (activityQuery.isError) {
     return <GroupLoadError error={activityQuery.error} onRetry={() => void activityQuery.refetch()} />
@@ -51,7 +54,13 @@ export function GroupActivity({ groupId }: GroupActivityProps) {
     expensesQuery.isPending ||
     categoriesQuery.isPending
   ) {
-    return <KvitLoading />
+    return (
+      <KvitLoading>
+        <ActivityRowSkeleton />
+        <ActivityRowSkeleton />
+        <ActivityRowSkeleton />
+      </KvitLoading>
+    )
   }
   if (activityQuery.data.length === 0) {
     return <KvitEmpty message={t('activity.empty')} />
@@ -66,7 +75,7 @@ export function GroupActivity({ groupId }: GroupActivityProps) {
     expenses: expensesQuery.data,
   })
   return (
-    <ul className="flex flex-col pb-6">
+    <ul ref={listRef} className="flex flex-col pb-6">
       {lines.map((line) => {
         const look = actorLookOf(members, line.actorUserId)
         return (
@@ -83,6 +92,18 @@ export function GroupActivity({ groupId }: GroupActivityProps) {
         )
       })}
     </ul>
+  )
+}
+
+function ActivityRowSkeleton() {
+  return (
+    <div className="flex items-start gap-2.5 border-b border-field-border py-2.5">
+      <KvitSkeleton className="size-9 flex-none rounded-full" />
+      <div className="flex flex-1 flex-col gap-2 py-1">
+        <KvitSkeleton className="h-4 w-4/5 rounded-full" />
+        <KvitSkeleton className="h-3 w-1/3 rounded-full" />
+      </div>
+    </div>
   )
 }
 

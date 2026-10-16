@@ -1,68 +1,34 @@
-import { useTranslation } from 'react-i18next'
 import { Outlet } from 'react-router'
 import { useIsRefreshingSavedData } from '@/core/api/useIsRefreshingSavedData'
 import { KvitTabBar } from '@/shared/components/KvitTabBar'
 import { KvitUpdatingNote } from '@/shared/components/KvitUpdatingNote'
-import { kvitIconAttributes } from '@/shared/components/kvitIconAttributes'
-import { routes } from './routes'
-
-const iconLook = 'size-[22px]'
+import { useIsDesktop } from '@/shared/hooks/useIsDesktop'
+import { useMainNavItems } from './useMainNavItems'
 
 export function BottomBarLayout() {
-  const { t } = useTranslation()
+  const items = useMainNavItems()
   const isRefreshingSavedData = useIsRefreshingSavedData()
-
-  const items = [
-    {
-      to: routes.dashboard,
-      label: t('nav.home'),
-      icon: (
-        <svg {...kvitIconAttributes} className={iconLook}>
-          <path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
-        </svg>
-      ),
-    },
-    {
-      to: routes.groups,
-      label: t('nav.groups'),
-      icon: (
-        <svg {...kvitIconAttributes} className={iconLook}>
-          <circle cx="9" cy="8" r="3.2" />
-          <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
-          <circle cx="17" cy="9" r="2.5" />
-          <path d="M16 14.2c2.7 0 5 2.2 5 5.1" />
-        </svg>
-      ),
-    },
-    {
-      to: routes.settings,
-      label: t('nav.settings'),
-      icon: (
-        <svg {...kvitIconAttributes} className={iconLook}>
-          <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />
-          <circle cx="16" cy="7" r="2" />
-          <circle cx="8" cy="17" r="2" />
-        </svg>
-      ),
-    },
-  ]
+  const isDesktop = useIsDesktop()
 
   return (
     <>
-      <Outlet />
       <div
-        data-bottom-bar
-        className="pointer-events-none sticky bottom-0 z-10 mx-auto h-(--bottom-bar-height) w-full max-w-md px-4 pt-2"
+        data-updating-note-slot
+        className="pointer-events-none absolute inset-x-0 top-[max(0.125rem,env(safe-area-inset-top))] z-10 flex justify-center"
       >
-        {isRefreshingSavedData && (
-          <div className="absolute inset-x-0 bottom-full flex justify-center">
-            <KvitUpdatingNote />
-          </div>
-        )}
-        <div className="pointer-events-auto">
-          <KvitTabBar items={items} />
-        </div>
+        {isRefreshingSavedData && <KvitUpdatingNote />}
       </div>
+      <Outlet />
+      {!isDesktop && (
+        <div
+          data-bottom-bar
+          className="pointer-events-none sticky bottom-0 z-10 mx-auto h-(--bottom-bar-height) w-full max-w-md px-4 pt-2"
+        >
+          <div className="pointer-events-auto">
+            <KvitTabBar items={items} />
+          </div>
+        </div>
+      )}
     </>
   )
 }

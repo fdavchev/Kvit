@@ -1,7 +1,8 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { Currency } from '@/shared/utils/formatMoney'
+import { useLanguage } from '@/core/i18n/useLanguage'
 import { cn } from '@/shared/utils/cn'
+import { currencyLabel, type Currency } from '@/shared/utils/formatMoney'
 import { parseMoneyInput } from '@/shared/utils/parseMoneyInput'
 
 interface AmountFieldProps {
@@ -15,7 +16,9 @@ const otherCurrency: Record<Currency, Currency> = { MKD: 'EUR', EUR: 'MKD' }
 
 export function AmountField({ amountText, currency, onAmountTextChange, onCurrencyChange }: AmountFieldProps) {
   const { t } = useTranslation()
+  const { language } = useLanguage()
   const amountId = useId()
+  const shownCurrency = currencyLabel(currency, language)
   const isAmountInvalid = amountText !== '' && parseMoneyInput(amountText, currency) === null
 
   return (
@@ -39,15 +42,15 @@ export function AmountField({ amountText, currency, onAmountTextChange, onCurren
         )}
       />
       {onCurrencyChange === undefined ? (
-        <span className="flex-none px-1 text-lg font-bold text-muted-foreground">{currency}</span>
+        <span className="flex-none px-1 text-lg font-bold text-muted-foreground">{shownCurrency}</span>
       ) : (
         <button
           type="button"
-          aria-label={t('expense.currencyToggle', { currency })}
+          aria-label={t('expense.currencyToggle', { currency: shownCurrency })}
           onClick={() => onCurrencyChange(otherCurrency[currency])}
           className="pressable min-h-11 flex-none rounded-full border border-field-border bg-field px-3 text-lg font-bold text-muted-foreground"
         >
-          {currency}
+          {shownCurrency}
         </button>
       )}
     </div>

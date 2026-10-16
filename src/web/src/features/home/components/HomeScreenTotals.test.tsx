@@ -1,16 +1,17 @@
-import { screen, within } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { languages, type Language } from '@/core/i18n/language'
+import { amountParagraphIn } from '@/test/balancesTestHelpers'
 import { dashboardOf, fullDashboard, newUserDashboard } from '@/test/dashboardTestData'
 import { plainSpaces } from '@/test/expenseTestHelpers'
-import { regionNamed, renderHome, textMatching } from '@/test/homeTestHelpers'
+import { regionNamed, renderHome } from '@/test/homeTestHelpers'
 import { translated } from '@/test/translated'
 import { formatMoney } from '@/shared/utils/formatMoney'
 
 const dashAfterTheLabel = /^[-–—−]$/
 
 function amountIn(region: HTMLElement, amountMinor: number, currency: 'MKD' | 'EUR', language: Language): HTMLElement {
-  return within(region).getByText(textMatching(formatMoney(amountMinor, currency, language)))
+  return amountParagraphIn(region, plainSpaces(formatMoney(amountMinor, currency, language)))
 }
 
 async function findBoxes(language: Language = 'en'): Promise<{ owed: HTMLElement; owe: HTMLElement }> {

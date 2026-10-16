@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useMatch } from 'react-router'
 import { routes } from '@/core/router/routes'
@@ -10,6 +10,9 @@ import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { kvitChipLook } from '@/shared/components/kvitChipLook'
+import { kvitRoundActionLooks } from '@/shared/components/kvitRoundActionLooks'
+import { useIsDesktop } from '@/shared/hooks/useIsDesktop'
+import { useToastsAboveElement } from '@/shared/hooks/useToastsAboveElement'
 import { cn } from '@/shared/utils/cn'
 import { GroupActivity } from '../../activity/components/GroupActivity'
 import { GroupBalances } from '../../balances/components/GroupBalances'
@@ -49,7 +52,7 @@ export function GroupScreen() {
   }
 
   return (
-    <KvitScreen>
+    <KvitScreen width="wide">
       <div className="flex min-h-12">
         <KvitBackButton to={routes.groups} />
       </div>
@@ -67,12 +70,37 @@ function GroupContent({ group, tab }: GroupContentProps) {
   const { t } = useTranslation()
   const inviteLinkActions = useInviteLinkActions()
   const closingBar = useClosingBar(group)
+  const isDesktop = useIsDesktop()
   const [isAddingName, setIsAddingName] = useState<boolean>(false)
+  const [shownTab, setShownTab] = useState<GroupTab>(tab)
+  const [hasSwitchedTab, setHasSwitchedTab] = useState<boolean>(false)
+  if (tab !== shownTab) {
+    setShownTab(tab)
+    setHasSwitchedTab(true)
+  }
   const canChange: boolean = canChangeGroup(group)
   const isOneBill: boolean = group.kind === 'OneBill'
   const showsAddPeopleButtons: boolean = group.memberCount === 1 && !isOneBill && canChange
   const showsAddExpense: boolean = tab === 'expenses' && canChange
+  const showsFloatingAddExpense: boolean = showsAddExpense && !isDesktop
+  const showsInPageAddExpense: boolean = showsAddExpense && isDesktop
   const hasBar: boolean = closingBar !== null
+  const expenses = (
+    <GroupExpenses
+      groupId={group.id}
+      actionsWhenEmpty={
+        showsAddPeopleButtons ? (
+          <AddPeopleButtons
+            onAddName={() => setIsAddingName(true)}
+            onShareLink={() => void inviteLinkActions.share(group.inviteToken)}
+          />
+        ) : null
+      }
+    />
+  )
+  const balances = (
+    <GroupBalances groupId={group.id} defaultCurrency={group.defaultCurrency} canChangePayments={canChange} />
+  )
 
   return (
     <>
@@ -86,7 +114,13 @@ function GroupContent({ group, tab }: GroupContentProps) {
         </div>
         <GroupSizeLine memberCount={group.memberCount} currency={group.defaultCurrency} />
       </div>
-      <div className="flex flex-wrap justify-center gap-2 pb-4">
+      <div className="flex flex-wrap items-center justify-center gap-2 pb-4">
+        {showsInPageAddExpense && (
+          <Link to={routes.groupExpenseNew(group.id)} className={kvitRoundActionLooks.main}>
+            <span aria-hidden="true">＋</span>
+            <span className="wrap-anywhere">{t('expense.addTitle')}</span>
+          </Link>
+        )}
         <Link to={routes.groupMembers(group.id)} className={kvitChipLook}>
           {t('members.title')}
         </Link>
@@ -104,42 +138,57 @@ function GroupContent({ group, tab }: GroupContentProps) {
         )}
       </div>
       <GroupTabs groupId={group.id} currentTab={tab} />
-      <div className={cn('flex flex-col', hasBar && 'pb-3')}>
-        {tab === 'expenses' && (
-          <GroupExpenses
-            groupId={group.id}
-            actionsWhenEmpty={
-              showsAddPeopleButtons ? (
-                <AddPeopleButtons
-                  onAddName={() => setIsAddingName(true)}
-                  onShareLink={() => void inviteLinkActions.share(group.inviteToken)}
-                />
-              ) : null
-            }
-          />
-        )}
-        {tab === 'balances' && (
-          <GroupBalances groupId={group.id} defaultCurrency={group.defaultCurrency} canChangePayments={canChange} />
-        )}
-        {tab === 'activity' && <GroupActivity groupId={group.id} />}
-      </div>
       <div
-        className={cn(
-          'pointer-events-none sticky z-10 mt-auto flex flex-col items-end gap-3 pt-3',
-          hasBar ? '-mx-3 bottom-[max(12px,env(safe-area-inset-bottom))]' : 'bottom-[max(24px,env(safe-area-inset-bottom))]',
-        )}
+        key={tab}
+        data-tab-panel
+        className={cn('flex flex-col', hasBar && 'pb-3', hasSwitchedTab && 'motion-safe:animate-tab-panel-in')}
       >
-        {showsAddExpense && (
-          <div className={hasBar ? 'px-3' : undefined}>
-            <AddExpenseButton groupId={group.id} />
+        {tab === 'expenses' && !isDesktop && expenses}
+        {tab === 'expenses' && isDesktop && (
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,24rem),1fr))] items-start gap-x-[clamp(1.5rem,3vw,3rem)]">
+            <div className="flex min-w-0 flex-col">{expenses}</div>
+            <div className="flex min-w-0 flex-col">{balances}</div>
           </div>
         )}
-        <ClosingBar group={group} view={closingBar} />
+        {tab === 'balances' && balances}
+        {tab === 'activity' && <GroupActivity groupId={group.id} />}
       </div>
+      {(showsFloatingAddExpense || hasBar) && (
+        <FloatingActions hasBar={hasBar}>
+          {showsFloatingAddExpense && (
+            <div className={hasBar ? 'px-3' : undefined}>
+              <AddExpenseButton groupId={group.id} />
+            </div>
+          )}
+          <ClosingBar group={group} view={closingBar} />
+        </FloatingActions>
+      )}
       {isAddingName && (
         <AddNameSheet groupId={group.id} onClose={() => setIsAddingName(false)} />
       )}
     </>
+  )
+}
+
+interface FloatingActionsProps {
+  hasBar: boolean
+  children: ReactNode
+}
+
+function FloatingActions({ hasBar, children }: FloatingActionsProps) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  useToastsAboveElement(rootRef)
+
+  return (
+    <div
+      ref={rootRef}
+      className={cn(
+        'pointer-events-none sticky z-10 mt-auto flex flex-col items-end gap-3 pt-3',
+        hasBar ? '-mx-3 bottom-[max(12px,env(safe-area-inset-bottom))]' : 'bottom-[max(24px,env(safe-area-inset-bottom))]',
+      )}
+    >
+      {children}
+    </div>
   )
 }
 

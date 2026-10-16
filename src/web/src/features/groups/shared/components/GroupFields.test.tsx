@@ -97,12 +97,24 @@ describe('GroupFields', () => {
     expect(onEmojiChange).toHaveBeenCalledExactlyOnceWith(groupEmojis[5])
   })
 
-  it.each(languages)('has the MKD and EUR chips in a group named by the translated label (%s)', async (language) => {
+  it.each([
+    ['en', ['MKD', 'EUR']],
+    ['mk', ['ден.', 'EUR']],
+  ] as const)('has the denar and euro chips in a group named by the translated label, written as the amounts write them (%s)', async (language, labels) => {
     await renderFields({ language })
 
     const chips = within(currencyGroup(language)).getAllByRole('button')
 
-    expect(chips.map((chip) => chip.textContent)).toEqual(['MKD', 'EUR'])
+    expect(chips.map((chip) => chip.textContent)).toEqual(labels)
+  })
+
+  it('still answers the code MKD when the Macedonian ден. chip is pressed', async () => {
+    const onCurrencyChange = vi.fn<(currency: string) => void>()
+    await renderFields({ language: 'mk', currency: 'EUR', onCurrencyChange })
+
+    fireEvent.click(within(currencyGroup('mk')).getByRole('button', { name: 'ден.' }))
+
+    expect(onCurrencyChange).toHaveBeenCalledExactlyOnceWith('MKD')
   })
 
   it.each([

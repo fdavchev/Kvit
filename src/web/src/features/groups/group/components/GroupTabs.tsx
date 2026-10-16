@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { routes } from '@/core/router/routes'
+import { KvitTabPill } from '@/shared/components/KvitTabPill'
 
 export type GroupTab = 'expenses' | 'balances' | 'activity'
 
@@ -10,7 +11,7 @@ interface GroupTabsProps {
 }
 
 const tabLook =
-  'pressable flex min-h-11 flex-1 items-center justify-center rounded-full font-bold text-muted-foreground hover:text-foreground aria-[current=page]:bg-pill aria-[current=page]:text-foreground aria-[current=page]:shadow-[0_1px_3px_var(--track-shadow)]'
+  'pressable relative flex min-h-11 flex-1 items-center justify-center rounded-full font-bold text-muted-foreground hover:text-foreground aria-[current=page]:text-tab-active-foreground'
 
 export function GroupTabs({ groupId, currentTab }: GroupTabsProps) {
   const { t } = useTranslation()
@@ -21,7 +22,12 @@ export function GroupTabs({ groupId, currentTab }: GroupTabsProps) {
   ]
 
   return (
-    <div className="mb-4 flex gap-0.5 rounded-full bg-card p-1 dark:inset-ring dark:inset-ring-field-border">
+    <div className="relative mb-4 flex rounded-full bg-card p-1 lg:w-full lg:max-w-[36rem] lg:self-center dark:inset-ring dark:inset-ring-field-border">
+      <KvitTabPill
+        activeIndex={tabs.findIndex((item) => item.tab === currentTab)}
+        tabCount={tabs.length}
+        className="bg-tab-active shadow-[0_1px_3px_var(--track-shadow)]"
+      />
       {tabs.map((item) => (
         <Link
           key={item.tab}

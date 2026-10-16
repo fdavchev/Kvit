@@ -13,6 +13,8 @@ import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
+import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
+import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { AddNameSheet } from '../../group/components/AddNameSheet'
 import { useGroup } from '../../group/hooks/useGroup'
 import { LeaveGroupSection } from '../../settings/components/LeaveGroupSection'
@@ -36,6 +38,7 @@ export function MembersScreen() {
   const letBackIn = useLetBackIn(groupId)
   const [isAddingName, setIsAddingName] = useState<boolean>(false)
   const [optionsMember, setOptionsMember] = useState<GroupMember | null>(null)
+  const membersListRef = useListAnimation<HTMLUListElement>()
 
   function showFailure(error: Error): void {
     console.error('A member action failed', error)
@@ -69,31 +72,31 @@ export function MembersScreen() {
     const canChange: boolean = canChangeGroup(group)
     return (
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <ul className="flex flex-col gap-2.5">
-            {groupMembers.members.map((member) => (
-              <MemberListItem
-                key={member.id}
-                member={member}
-                showsTakenName={group.isOwner}
-                canClaim={canChange && groupMembers.canClaimNames && member.isNameOnly}
-                isClaimPending={claimName.isPending}
-                hasOptions={canChange && group.isOwner && !member.isOwner}
-                onClaim={() => claim(member)}
-                onOpenOptions={() => setOptionsMember(member)}
-              />
-            ))}
-          </ul>
+        <ul ref={membersListRef} className="flex flex-col gap-2.5">
+          {groupMembers.members.map((member) => (
+            <MemberListItem
+              key={member.id}
+              member={member}
+              showsTakenName={group.isOwner}
+              canClaim={canChange && groupMembers.canClaimNames && member.isNameOnly}
+              isClaimPending={claimName.isPending}
+              hasOptions={canChange && group.isOwner && !member.isOwner}
+              onClaim={() => claim(member)}
+              onOpenOptions={() => setOptionsMember(member)}
+            />
+          ))}
           {canChange && (
-            <button
-              type="button"
-              onClick={() => setIsAddingName(true)}
-              className="pressable inline-flex min-h-11 items-center self-start rounded-xl px-3.5 text-[0.9375rem] font-semibold text-link hover:underline"
-            >
-              {t('members.addNameLink')}
-            </button>
+            <li className="-mt-1.5 flex">
+              <button
+                type="button"
+                onClick={() => setIsAddingName(true)}
+                className="pressable inline-flex min-h-11 items-center rounded-xl px-3.5 text-[0.9375rem] font-semibold text-link hover:underline"
+              >
+                {t('members.addNameLink')}
+              </button>
+            </li>
           )}
-        </div>
+        </ul>
         <InviteLinkCard group={group} canResetLink={canChange && group.isOwner} />
         {canChange && group.isOwner && groupMembers.removed.length > 0 && (
           <RemovedMembers
@@ -125,7 +128,15 @@ export function MembersScreen() {
       return <GroupLoadError error={membersQuery.error} onRetry={retry} />
     }
     if (groupQuery.isPending || membersQuery.isPending) {
-      return <KvitLoading />
+      return (
+        <KvitLoading>
+          <div className="flex flex-col gap-2.5">
+            <KvitSkeleton className="h-14" />
+            <KvitSkeleton className="h-14" />
+            <KvitSkeleton className="h-14" />
+          </div>
+        </KvitLoading>
+      )
     }
     return renderMembers(groupQuery.data, membersQuery.data)
   }

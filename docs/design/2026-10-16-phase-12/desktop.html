@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kvit desktop layout v2</title>
+<style>
+:root{--bg:#1f1816;--side:#161110;--card:#2c2220;--line:#72625c;--text:#fff1dc;--muted:#ffd9a8;--pill:#d9b48a;--pilltext:#1f1816;--pos:#7fd68f;--neg:#ff9a9a}
+*{box-sizing:border-box}
+body{margin:0;padding:1.25rem;font:1rem system-ui,sans-serif;background:#111;color:#eee}
+h1{font-size:1.25rem;margin:0 0 .75rem}
+.bar button{padding:.6rem 1rem;border-radius:999px;border:1px solid #888;background:#222;color:#eee;font-size:.95rem;cursor:pointer;margin:0 .4rem .4rem 0}
+.bar button.on{background:var(--pill);color:var(--pilltext);font-weight:700}
+.note{font-size:.85rem;color:#ccc;margin:.5rem 0}
+.holder{margin-top:.75rem}
+.frame{container-type:inline-size;background:var(--bg);color:var(--text);border-radius:.75rem;box-shadow:0 0 0 1px #444;min-height:36rem;margin:0 auto;transition:width .2s}
+.app{display:grid;grid-template-columns:1fr;grid-template-areas:"main" "nav";min-height:36rem}
+.sidebar{grid-area:nav;background:var(--side);display:flex;justify-content:space-around;padding:.5rem;border-radius:0 0 .75rem .75rem}
+.sidebar .brand{display:none}
+.nav{display:flex;flex-direction:column;align-items:center;gap:.15rem;padding:.5rem .75rem;border-radius:999px;color:var(--muted);font-weight:700;font-size:.75rem}
+.nav .ic{font-size:1.25rem}
+.nav.sel{background:var(--pill);color:var(--pilltext)}
+.main{grid-area:main;padding:clamp(.75rem,3cqi,2rem);display:flex;flex-direction:column;gap:clamp(.75rem,2cqi,1.25rem)}
+.top{display:none}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr));gap:clamp(.5rem,1.5cqi,1rem)}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:.9rem;padding:clamp(.75rem,2cqi,1.25rem)}
+.lbl{color:var(--muted);font-size:clamp(.8rem,1.4cqi,.95rem)}
+.big{font-size:clamp(1.5rem,4cqi,2.4rem);font-weight:800}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.sec{font-weight:700;color:var(--muted);margin:.25rem 0 0}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,16rem),1fr));gap:clamp(.5rem,1.5cqi,1rem)}
+.g{background:var(--card);border:1px solid var(--line);border-radius:.9rem;padding:1rem;display:flex;flex-direction:column;gap:.4rem}
+.g b{font-size:1.05rem}
+.chip{align-self:flex-start;font-size:.75rem;padding:.15rem .6rem;border-radius:999px;background:var(--bg);color:var(--muted)}
+.activity{display:flex;flex-direction:column;gap:.5rem}
+.act{background:var(--card);border-radius:.75rem;padding:.75rem 1rem;font-size:.95rem}
+.needs{background:var(--pill);color:var(--pilltext);border-radius:999px;padding:.6rem 1rem;font-weight:700;display:flex;justify-content:space-between}
+.plus{position:sticky;bottom:1rem;align-self:flex-end;width:3.5rem;height:3.5rem;border-radius:50%;background:var(--pill);color:var(--pilltext);font-size:2rem;display:grid;place-items:center;font-weight:700}
+.content{display:flex;flex-direction:column;gap:inherit}
+.rightcol{display:contents}
+@container (min-width:48rem){
+ .app{grid-template-columns:5.5rem 1fr;grid-template-areas:"nav main"}
+ .sidebar{flex-direction:column;justify-content:flex-start;gap:.5rem;border-radius:.75rem 0 0 .75rem;padding:1rem .5rem}
+ .sidebar .brand{display:block;text-align:center;font-weight:800;color:var(--muted);margin-bottom:1rem}
+ .top{display:flex;justify-content:space-between;align-items:center}
+ .top h2{margin:0;font-size:clamp(1.25rem,2.4cqi,1.75rem)}
+ .plus{position:static;width:auto;height:auto;border-radius:999px;padding:.6rem 1.2rem;font-size:1rem;align-self:auto}
+}
+@container (min-width:72rem){
+ .app{grid-template-columns:12rem 1fr}
+ .sidebar .nav{flex-direction:row;gap:.75rem;font-size:.95rem;border-radius:.75rem;padding:.65rem .9rem;width:100%}
+ .sidebar .brand{text-align:left;padding:0 .9rem;font-size:1.5rem}
+ .body{display:grid;grid-template-columns:minmax(0,2fr) minmax(16rem,1fr);gap:clamp(1rem,2.5cqi,2rem);align-items:start}
+ .rightcol{display:flex;flex-direction:column;gap:.75rem}
+}
+</style></head><body>
+<h1>Desktop layout v2: fluid, no fixed pixels</h1>
+<div class="note">Everything is sized in rem, % and container units. The page below reacts to the width of its box, so use the buttons to try phone, tablet, laptop and wide screens. Resize your browser window too.</div>
+<div class="bar" id="bar"><button data-w="26">Phone</button><button data-w="55">Tablet</button><button data-w="85">Laptop</button><button data-w="100">Wide</button></div>
+<div class="holder"><div class="frame" id="frame">
+<div class="app">
+ <nav class="sidebar"><div class="brand">Kvit</div>
+  <div class="nav sel"><span class="ic">⌂</span>Home</div>
+  <div class="nav"><span class="ic">👥</span>Groups</div>
+  <div class="nav"><span class="ic">⚙</span>Settings</div></nav>
+ <main class="main">
+  <div class="top"><h2>Home</h2><div class="plus" style="position:static">＋ Add</div></div>
+  <div class="needs"><span>Things need you</span><span>2</span></div>
+  <div class="body"><div class="content">
+   <div class="tiles"><div class="tile"><div class="lbl">You are owed</div><div class="big pos">12 400 ден.</div></div>
+   <div class="tile"><div class="lbl">You owe</div><div class="big neg">3 200 ден.</div></div></div>
+   <div class="sec">Your groups</div>
+   <div class="groups">
+    <div class="g"><b>Trip to Ohrid</b><span class="chip">4 people</span><span class="lbl">You are owed 1 200 ден.</span></div>
+    <div class="g"><b>Flat</b><span class="chip">3 people</span><span class="lbl">You owe 800 ден.</span></div>
+    <div class="g"><b>Dinner club</b><span class="chip">6 people</span><span class="lbl">All even</span></div>
+    <div class="g"><b>Ski week</b><span class="chip">5 people</span><span class="lbl">You are owed 3 000 ден.</span></div>
+   </div></div>
+   <div class="rightcol"><div class="sec">Recent activity</div><div class="activity">
+    <div class="act">Ana added Dinner 1 200</div><div class="act">Marko paid Ana</div><div class="act">Sara joined Flat</div><div class="act">You added Taxi 300</div></div></div>
+  </div>
+  <div class="plus">＋</div>
+ </main>
+</div></div></div>
+<script>
+const fr=document.getElementById('frame');
+function set(w){fr.style.width=w+'%';document.querySelectorAll('#bar button').forEach(b=>b.classList.toggle('on',b.dataset.w===String(w)))}
+document.querySelectorAll('#bar button').forEach(b=>b.onclick=()=>set(+b.dataset.w));set(100);
+</script></body></html>

@@ -2,11 +2,12 @@ import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Toaster } from 'sonner'
 import { useTheme } from '@/core/theme/useTheme'
+import { kvitGlassPanelBlur } from '@/shared/components/kvitGlassLooks'
 
 const toasterStyle: CSSProperties & Record<`--${string}`, string> = {
-  '--normal-bg': 'var(--popover)',
+  '--normal-bg': 'var(--glass-panel)',
   '--normal-text': 'var(--popover-foreground)',
-  '--normal-border': 'var(--border)',
+  '--normal-border': 'var(--glass-edge)',
   '--border-radius': 'var(--radius)',
 }
 
@@ -33,7 +34,7 @@ export function KvitToaster() {
       style={toasterStyle}
       offset={bottomOffset}
       mobileOffset={bottomOffset}
-      toastOptions={{ actionButtonStyle }}
+      toastOptions={{ className: kvitGlassPanelBlur, actionButtonStyle }}
       containerAriaLabel={t('toasts.region')}
     />
   )

@@ -7,7 +7,7 @@ import { RecordPaymentSheet } from '@/features/settlements/record/components/Rec
 import type { PaymentToRecord } from '@/features/settlements/record/paymentToRecord'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
-import type { Currency } from '@/shared/utils/formatMoney'
+import { currencyLabel, type Currency } from '@/shared/utils/formatMoney'
 import type { BalancesView } from '../balancesView'
 import { BalanceCard } from './BalanceCard'
 import { BetweenOthersSection } from './BetweenOthersSection'
@@ -44,7 +44,7 @@ export function BalancesOverview({
   }
 
   function cardTitle(currency: Currency): string {
-    return view.cards.length > 1 ? t('balances.yourBalanceIn', { currency }) : t('balances.yourBalance')
+    return view.cards.length > 1 ? t('balances.yourBalanceIn', { currency: currencyLabel(currency, language) }) : t('balances.yourBalance')
   }
 
   const paymentsAndRecordButton = (

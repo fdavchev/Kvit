@@ -65,14 +65,16 @@ describe('index.css design tokens', () => {
     expect(tokenValue(styles, '--destructive')).toBe(value)
   })
 
-  it('gives the selected tab the deep orange #b54a00 in dark mode', () => {
-    const tabDeclarations = [...dark.matchAll(/(--[a-z-]*tab[a-z-]*):\s*([^;]+);/g)]
+  it('gives the selected tab the dusty tan #d9b48a with the dark page colour #1f1816 as its text in dark mode', () => {
+    expect(tokenValue(dark, '--tab-active')).toBe('#d9b48a')
+    expect(tokenValue(dark, '--tab-active-foreground')).toBe('var(--color-night)')
+    expect(tokenValue(indexCss, '--color-night')).toBe('#1f1816')
+  })
 
-    const orangeTabTokens = tabDeclarations.filter(([, , value]) =>
-      ['#b54a00', 'var(--color-brand-700)'].includes(value.trim().toLowerCase()),
-    )
+  it('writes the text of every toast, the Undo toast included, at 0.875rem instead of Sonner\'s 13px', () => {
+    const toastRule = /html \[data-sonner-toast\]\[data-styled='true'\] \{([^}]*)\}/.exec(indexCss)
 
-    expect(orangeTabTokens.length).toBeGreaterThan(0)
+    expect(toastRule?.[1]).toContain('font-size: 0.875rem;')
   })
 
   it('defines --color-brand-700, the orange behind var(--color-brand-700), as #b54a00', () => {

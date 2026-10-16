@@ -40,6 +40,7 @@ import {
   settlementsPath,
 } from '@/test/balancesTestData'
 import {
+  amountParagraphIn,
   expectAmountLook,
   expectRowWithAmountBeneath,
   findBalanceCards,
@@ -65,6 +66,7 @@ import { groupOf, testGroup } from '@/test/groupTestData'
 import { anaMember, anaViewMembers, filipMember, ownerViewMembers } from '@/test/memberTestData'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import { networkFailureAnswer, problemAnswer, requestCount } from '@/test/requestTestHelpers'
+import { loadingLook } from '@/test/skeletonTestHelpers'
 import { stubDeviceColorScheme } from '@/test/themeTestHelpers'
 import { translated } from '@/test/translated'
 
@@ -273,12 +275,15 @@ describe('GroupScreen with the Balances tab', () => {
     it.each([
       ['the balances', balancesPath],
       ['the payments', settlementsPath],
-    ])('shows a loading spinner and no card while %s are being asked', async (_name, path) => {
+    ])('shows pulsing placeholders, not a spinner, and no card while %s are being asked', async (_name, path) => {
       stubGroupAppThatNeverAnswers(path)
       await renderRoutesWithProviders(routeObjects, routes.groupBalances(groupId))
       await showsGroupScreen()
 
       expect(screen.getByRole('status')).toBeTruthy()
+      const look = loadingLook()
+      expect(look.hasSpinner).toBe(false)
+      expect(look.skeletonCount).toBeGreaterThan(0)
       expect(screen.queryAllByRole('region', { name: /^Your balance/ })).toEqual([])
       expect(screen.queryByText(translated('en', 'balances.empty'))).toBeNull()
     })
@@ -376,7 +381,7 @@ describe('GroupScreen with the Balances tab', () => {
       await renderGroupApp(routes.groupBalances(groupId), { balances: greeceTripBalances, ...filipView })
       const card = await findOnlyBalanceCard()
 
-      expectAmountLook(textIn(card, '+1,500 MKD'), 'positive')
+      expectAmountLook(amountParagraphIn(card, '+1,500 MKD'), 'positive')
       expect(textIn(card, 'Marko and Ana owe you')).toBeTruthy()
       const rows = rowsOf(card)
       expect(rows).toHaveLength(2)
@@ -388,7 +393,7 @@ describe('GroupScreen with the Balances tab', () => {
       await renderGroupApp(routes.groupBalances(groupId), { balances: greeceTripBalances, ...anaView })
       const card = await findOnlyBalanceCard()
 
-      expectAmountLook(textIn(card, `${minus}700 MKD`), 'negative')
+      expectAmountLook(amountParagraphIn(card, `${minus}700 MKD`), 'negative')
       expect(textIn(card, 'You owe Filip')).toBeTruthy()
       const rows = rowsOf(card)
       expect(rows).toHaveLength(1)
@@ -399,7 +404,7 @@ describe('GroupScreen with the Balances tab', () => {
       await renderGroupApp(routes.groupBalances(groupId), { balances: markoOwesGrandmaBalances, ...filipView })
       const card = await findOnlyBalanceCard()
 
-      expectAmountLook(textIn(card, '0 MKD'), 'plain')
+      expectAmountLook(amountParagraphIn(card, '0 MKD'), 'plain')
       expect(textIn(card, 'All even')).toBeTruthy()
       expect(rowsOf(card)).toEqual([])
     })
@@ -464,7 +469,7 @@ describe('GroupScreen with the Balances tab', () => {
       })
       const card = await findOnlyBalanceCard()
 
-      expectAmountLook(textIn(card, `${minus}700 MKD`), 'negative')
+      expectAmountLook(amountParagraphIn(card, `${minus}700 MKD`), 'negative')
       expect(textIn(card, 'You owe Filip')).toBeTruthy()
     })
 
@@ -506,7 +511,7 @@ describe('GroupScreen with the Balances tab', () => {
 
       expect(rowsOf(card)).toEqual([])
       expect(textIn(card, 'Marko and Ana owe you')).toBeTruthy()
-      expectAmountLook(textIn(card, '+1,500 MKD'), 'positive')
+      expectAmountLook(amountParagraphIn(card, '+1,500 MKD'), 'positive')
     })
 
     it('does not let a pending payment in euros hide the suggested row of a payment in denars between the same two people', async () => {
@@ -568,14 +573,28 @@ describe('GroupScreen with the Balances tab', () => {
       })
       const [mkdCard, eurCard] = await findBalanceCards()
 
-      expectAmountLook(textIn(mkdCard, '+1,500 MKD'), 'positive')
+      expectAmountLook(amountParagraphIn(mkdCard, '+1,500 MKD'), 'positive')
       expect(textIn(mkdCard, 'Marko and Ana owe you')).toBeTruthy()
       expect(rowsOf(mkdCard)).toHaveLength(2)
-      expectAmountLook(textIn(eurCard, `${minus}€20.00`), 'negative')
+      expectAmountLook(amountParagraphIn(eurCard, `${minus}€20.00`), 'negative')
       expect(textIn(eurCard, 'You owe Ana')).toBeTruthy()
       const eurRows = rowsOf(eurCard)
       expect(eurRows).toHaveLength(1)
       expectRowWithAmountBeneath(eurRows[0], 'You pay Ana', '€20.00')
+    })
+
+    it('names the two cards in Macedonian with «ден.» for the denar card and EUR for the euro card', async () => {
+      await renderGroupApp(routes.groupBalances(groupId), {
+        language: 'mk',
+        balances: greeceTripInTwoCurrencies,
+        ...filipView,
+      })
+
+      const cards = await screen.findAllByRole('region', { name: /^Твое салдо/ })
+
+      expect(cards).toHaveLength(2)
+      expect(screen.getByRole('region', { name: 'Твое салдо · ден.' })).toBe(cards[0])
+      expect(screen.getByRole('region', { name: 'Твое салдо · EUR' })).toBe(cards[1])
     })
 
     it('writes the amounts in Macedonian with a dot for thousands, «ден.» and the real minus sign', async () => {
@@ -630,7 +649,7 @@ describe('GroupScreen with the Balances tab', () => {
       })
       const card = await findOnlyBalanceCard()
 
-      expectAmountLook(textIn(card, '0 MKD'), 'plain')
+      expectAmountLook(amountParagraphIn(card, '0 MKD'), 'plain')
       expect(textIn(card, 'All even')).toBeTruthy()
       const rows = rowsOf(card)
       expect(rows).toHaveLength(1)
@@ -699,7 +718,7 @@ describe('GroupScreen with the Balances tab', () => {
       })
       const card = await findOnlyBalanceCard()
 
-      expectAmountLook(textIn(card, `${minus}700 MKD`), 'negative')
+      expectAmountLook(amountParagraphIn(card, `${minus}700 MKD`), 'negative')
       expect(textIn(card, 'You owe Filip')).toBeTruthy()
     })
 
@@ -727,7 +746,7 @@ describe('GroupScreen with the Balances tab', () => {
       })
       const card = await findOnlyBalanceCard()
 
-      expectAmountLook(textIn(card, '0 MKD'), 'plain')
+      expectAmountLook(amountParagraphIn(card, '0 MKD'), 'plain')
       expect(textIn(card, 'All even')).toBeTruthy()
       const rows = rowsOf(card)
       expect(rows).toHaveLength(1)
@@ -760,7 +779,7 @@ describe('GroupScreen with the Balances tab', () => {
       expect(cards).toHaveLength(2)
       expect(screen.getByRole('region', { name: /^Your balance.*MKD/ })).toBe(cards[0])
       expect(screen.getByRole('region', { name: /^Your balance.*EUR/ })).toBe(cards[1])
-      expectAmountLook(textIn(cards[1], '€0.00'), 'plain')
+      expectAmountLook(amountParagraphIn(cards[1], '€0.00'), 'plain')
       expect(textIn(cards[1], 'All even')).toBeTruthy()
       expect(textIn(rowsOf(cards[1])[0], 'You paid Filip €50.00')).toBeTruthy()
       expectRowWithAmountBeneath(rowsOf(cards[0])[0], 'You pay Filip', '700 MKD')
@@ -1247,7 +1266,7 @@ describe('GroupScreen with the Balances tab', () => {
       expect(screen.queryByText(kvitTitle)).toBeNull()
       expect(screen.queryByText(kvitHint)).toBeNull()
       expect(textIn(card, 'All even')).toBeTruthy()
-      expectAmountLook(textIn(card, '0 MKD'), 'plain')
+      expectAmountLook(amountParagraphIn(card, '0 MKD'), 'plain')
     })
 
     it('shows the receiver of that pending payment a Needs you card, while the card says "All even"', async () => {

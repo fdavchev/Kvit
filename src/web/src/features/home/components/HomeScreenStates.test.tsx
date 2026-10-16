@@ -15,6 +15,7 @@ import {
   networkFailureAnswer,
   requestCount,
 } from '@/test/requestTestHelpers'
+import { loadingLook } from '@/test/skeletonTestHelpers'
 import { translated } from '@/test/translated'
 
 function plusButton(language: 'en' | 'mk' = 'en'): HTMLElement | null {
@@ -26,10 +27,13 @@ describe('the loading state', () => {
     vi.unstubAllGlobals()
   })
 
-  it('shows the loading status while the server has not answered', async () => {
+  it('shows the loading status with pulsing placeholders, not a spinner, while the server has not answered', async () => {
     await renderHomeWaitingForServer()
 
     expect(screen.getByRole('status')).toBeTruthy()
+    const look = loadingLook()
+    expect(look.hasSpinner).toBe(false)
+    expect(look.skeletonCount).toBeGreaterThan(0)
   })
 
   it('shows the greeting and the round Settings button while loading', async () => {

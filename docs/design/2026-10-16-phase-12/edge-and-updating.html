@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kvit field edge and Updating label</title>
+<style>
+:root{--bg:#1f1816;--card:#2c2220;--text:#fff1dc;--muted:#ffd9a8;--pill:#d9b48a;--pilltext:#1f1816;--field:#161110}
+*{box-sizing:border-box}
+body{margin:0;padding:1.25rem;font:1rem system-ui,sans-serif;background:#111;color:#eee}
+h1{font-size:1.25rem;margin:0 0 .5rem}h2{font-size:1.05rem;margin:1.6rem 0 .5rem}
+.note{font-size:.85rem;color:#ccc;margin:.3rem 0 .8rem;max-width:56rem}
+.row{display:flex;gap:1rem;flex-wrap:wrap}
+.lab{font-size:.85rem;margin-bottom:.4rem}
+.phone{width:20rem;max-width:100%;height:27rem;border-radius:1.2rem;background:var(--bg);color:var(--text);position:relative;overflow:hidden;box-shadow:0 0 0 1px #444}
+.art{position:absolute;inset:0;padding:1rem}
+.btnart{background:var(--pill);color:var(--pilltext);border-radius:999px;padding:.7rem;text-align:center;font-weight:800;margin-bottom:.6rem}
+.sheet{position:absolute;left:0;right:0;bottom:0;padding:1.1rem;border-radius:1.4rem 1.4rem 0 0;background:color-mix(in srgb,var(--card) 90%,transparent);backdrop-filter:blur(14px) saturate(160%);border:1px solid #fff4;box-shadow:inset 0 1px 0 #fff4}
+.field{background:var(--field);border:1.5px solid var(--e);border-radius:.8rem;padding:.8rem;margin-top:.6rem;color:var(--text)}
+.chip{display:inline-block;background:var(--pill);color:var(--pilltext);border-radius:999px;padding:.4rem .9rem;font-weight:800;margin:.4rem .3rem 0 0}
+.card{background:var(--card);border-radius:1rem;padding:.9rem;margin-bottom:.6rem;border:1px solid #fff1}
+.upd{display:inline-block;background:var(--card);color:var(--muted);border:1px solid #fff3;border-radius:999px;padding:.25rem .8rem;font-size:.8rem;font-weight:700}
+.tabbar{position:absolute;left:.7rem;right:.7rem;bottom:.7rem;background:var(--card);border-radius:999px;padding:.4rem;display:flex;justify-content:space-around;font-size:.75rem;font-weight:700;color:var(--muted)}
+.tabbar .s{background:var(--pill);color:var(--pilltext);border-radius:999px;padding:.4rem .9rem}
+.dot{display:inline-block;width:.5rem;height:.5rem;border-radius:50%;background:var(--pill);margin-left:.3rem;animation:p 1s infinite}
+@keyframes p{50%{opacity:.3}}
+</style></head><body>
+<h1>Two decisions, with pictures</h1>
+<h2>1. Field box edge inside a glass sheet (dark mode)</h2>
+<div class="note">The same sheet with a text field. Behind the glass there are bright orange-tan buttons, which is the hard case: the edge of the box must stay clearly visible (3:1). Compare how the edge looks.</div>
+<div class="row" id="e"></div>
+<h2>2. Where the "Updating…" label goes</h2>
+<div class="note">It shows while saved data is refreshing, at the top of the page when the page has just loaded. A: above the page title. B: a pulsing dot on the tab bar. C: today, floating above the tab bar, covering the first card.</div>
+<div class="row" id="u"></div>
+<script>
+const edges=[['NOW','#7a6a64','today (3.00 on a solid card, falls to 2.2 over bright content)'],['A','#82726c','a bit lighter (still not safe over bright content)'],['B','#8d7d77','safe over the brightest dark-mode colours (recommended)'],['C','#90807a','safe even over pure white (the brightest edge)']];
+document.getElementById('e').innerHTML=edges.map(([k,c,d])=>`<div><div class="lab"><b>${k}</b> ${c}<br>${d}</div><div class="phone"><div class="art"><div class="btnart">Add expense</div><div class="btnart">Settle up</div><div class="btnart">New group</div></div><div class="sheet"><b>Add a name</b><div class="field" style="--e:${c}">Grandma</div><span class="chip">Add</span></div></div></div>`).join('');
+const cards=`<div class="card"><b>Trip to Ohrid</b><div style="color:var(--muted);font-size:.85rem">You are owed 1 200 ден.</div></div><div class="card"><b>Flat</b><div style="color:var(--muted);font-size:.85rem">You owe 800 ден.</div></div>`;
+const bar=(dot)=>`<div class="tabbar"><span class="s">Home</span><span>Groups${dot?'<i class="dot"></i>':''}</span><span>Settings</span></div>`;
+document.getElementById('u').innerHTML=[
+['A: top of the screen',`<div style="text-align:center;margin-bottom:.6rem"><span class="upd">Updating…</span></div><h3 style="margin:.2rem 0 .8rem">Home</h3>${cards}${bar(0)}`],
+['B: dot on the tab bar',`<h3 style="margin:.2rem 0 .8rem">Home</h3>${cards}${bar(1)}`],
+['C: today (covers a card)',`<h3 style="margin:.2rem 0 .8rem">Home</h3>${cards.replace('<div class="card"><b>Flat','<div class="card" style="margin-top:-.2rem"><b>Flat')}<div style="position:absolute;left:0;right:0;top:6.2rem;text-align:center"><span class="upd">Updating…</span></div>${bar(0)}`]
+].map(([t,h])=>`<div><div class="lab"><b>${t}</b></div><div class="phone"><div class="art">${h}</div></div></div>`).join('');
+</script></body></html>

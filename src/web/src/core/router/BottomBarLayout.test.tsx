@@ -8,6 +8,7 @@ import { meQueryKey } from '@/core/auth/useMe'
 import { languages, type Language } from '@/core/i18n/language'
 import type { Me } from '@/core/services/me/meService'
 import { requestCountTo, stubFetch, stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
+import { stubDesktopScreen } from '@/test/matchMediaTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import { testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
@@ -43,6 +44,10 @@ function tab(language: Language, key: string): HTMLElement {
 }
 
 describe('BottomBarLayout', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it.each(tabs)('shows the page of the route and the bar at %s', async (_key, path, pageText) => {
     await renderRoutesWithProviders(routeTable, path)
 
@@ -107,6 +112,30 @@ describe('BottomBarLayout', () => {
     const page = screen.getByText('groups page')
 
     expect(page.compareDocumentPosition(bar()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('keeps the same pill and moves it under the pressed tab, so it slides instead of jumping', async () => {
+    const { router } = await renderRoutesWithProviders(routeTable, routes.groups)
+    const pillBefore = bar().querySelector<HTMLElement>('[data-tab-pill]')
+
+    fireEvent.click(tab('en', 'nav.settings'))
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(routes.settings)
+    })
+    expect(pillBefore?.isConnected).toBe(true)
+    expect(bar().querySelector('[data-tab-pill]')).toBe(pillBefore)
+    expect(pillBefore?.style.transform).toBe('translateX(200%)')
+  })
+
+  it('shows no bottom bar on a desktop-sized window, only the page', async () => {
+    stubDesktopScreen()
+
+    await renderRoutesWithProviders(routeTable, routes.groups)
+
+    expect(screen.getByText('groups page')).toBeTruthy()
+    expect(screen.queryByRole('navigation')).toBeNull()
+    expect(document.querySelector('[data-bottom-bar]')).toBeNull()
   })
 
   it('keeps the bar and changes the page when a tab is pressed', async () => {
@@ -197,5 +226,69 @@ describe('BottomBarLayout Updating… note', () => {
 
     expect(await screen.findByText('welcome page')).toBeTruthy()
     expect(screen.queryByText(translated('en', 'common.updating'))).toBeNull()
+  })
+
+  it('shows the note at the top of the screen, before the page and its title, not in the bottom bar', async () => {
+    stubFetchThatNeverAnswers()
+
+    await renderRoutesWithProviders(signedInRouteTable, routes.groups, { seedCache: restoredMe(testMe) })
+
+    const note = await screen.findByRole('status')
+    const page = screen.getByText('groups page')
+    expect(note.compareDocumentPosition(page) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(note.closest('[data-bottom-bar]')).toBeNull()
+  })
+
+  it('lays the note over the top padding, centred and out of the flow, so nothing jumps when it comes and goes', async () => {
+    stubFetchThatNeverAnswers()
+
+    await renderRoutesWithProviders(signedInRouteTable, routes.groups, { seedCache: restoredMe(testMe) })
+
+    const slot = (await screen.findByRole('status')).parentElement
+    const classes = slot?.className.split(/\s+/)
+    expect(slot?.hasAttribute('data-updating-note-slot')).toBe(true)
+    expect(classes).toEqual(
+      expect.arrayContaining([
+        'absolute',
+        'inset-x-0',
+        'top-[max(0.125rem,env(safe-area-inset-top))]',
+        'flex',
+        'justify-center',
+        'pointer-events-none',
+      ]),
+    )
+  })
+
+  it('keeps the empty top slot when no note is shown, so the page keeps its place in the tree', async () => {
+    await renderRoutesWithProviders(routeTable, routes.groups)
+
+    const slot = document.querySelector('[data-updating-note-slot]')
+    if (slot === null) {
+      throw new Error('The layout has no slot for the Updating… note')
+    }
+    expect(slot.childElementCount).toBe(0)
+    expect(slot.compareDocumentPosition(screen.getByText('groups page')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('shows the note at the top on a desktop-sized window too, where there is no bottom bar', async () => {
+    stubDesktopScreen()
+    stubFetchThatNeverAnswers()
+
+    await renderRoutesWithProviders(signedInRouteTable, routes.groups, { seedCache: restoredMe(testMe) })
+
+    const note = await screen.findByRole('status')
+    expect(note.textContent).toBe(translated('en', 'common.updating'))
+    expect(note.parentElement?.hasAttribute('data-updating-note-slot')).toBe(true)
+    expect(document.querySelector('[data-bottom-bar]')).toBeNull()
+  })
+
+  it('has no animation of its own, so it respects reduced motion', async () => {
+    stubFetchThatNeverAnswers()
+
+    await renderRoutesWithProviders(signedInRouteTable, routes.groups, { seedCache: restoredMe(testMe) })
+
+    const note = await screen.findByRole('status')
+    const classes = `${note.className} ${note.parentElement?.className ?? ''}`
+    expect(classes).not.toMatch(/animate|transition/)
   })
 })

@@ -2,6 +2,7 @@ import { useSignedInMe } from '@/core/auth/useSignedInMe'
 import { useSettlements } from '@/features/settlements/list/hooks/useSettlements'
 import { useMembers } from '@/features/groups/members/hooks/useMembers'
 import { KvitLoading } from '@/shared/components/KvitLoading'
+import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
 import type { Currency } from '@/shared/utils/formatMoney'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
 import { balancesView } from '../balancesView'
@@ -30,7 +31,15 @@ export function GroupBalances({ groupId, defaultCurrency, canChangePayments }: G
     return <GroupLoadError error={membersQuery.error} onRetry={() => void membersQuery.refetch()} />
   }
   if (balancesQuery.isPending || settlementsQuery.isPending || membersQuery.isPending) {
-    return <KvitLoading />
+    return (
+      <KvitLoading>
+        <div className="flex flex-col gap-2 pb-6">
+          <KvitSkeleton className="mb-1.5 h-26 rounded-[20px]" />
+          <KvitSkeleton className="h-16" />
+          <KvitSkeleton className="h-16" />
+        </div>
+      </KvitLoading>
+    )
   }
   const members = membersQuery.data.members
   return (

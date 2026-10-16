@@ -1393,7 +1393,7 @@ describe('OneBillScreen', () => {
       const body = await savedBody({}, async () => {
         typeAmount('1800')
         const sheet = await openSheet('category')
-        fireEvent.click(within(sheet).getByRole('button', { name: /Accommodation/ }))
+        fireEvent.click(within(sheet).getByRole('button', { name: /Stay/ }))
         await waitForSheetToClose()
         expect(formRow('category').textContent).toContain(accommodationCategory.emoji)
         expect(formRow('category').textContent).toContain(categoryName('en', accommodationCategory))
@@ -1614,7 +1614,7 @@ describe('OneBillScreen', () => {
         fireEvent.click(within(date).getByRole('button', { name: translated('en', 'expenses.yesterday') }))
         await waitForSheetToClose()
         const category = await openSheet('category')
-        fireEvent.click(within(category).getByRole('button', { name: /Accommodation/ }))
+        fireEvent.click(within(category).getByRole('button', { name: /Stay/ }))
         await waitForSheetToClose()
       })
 
@@ -1859,7 +1859,7 @@ describe('OneBillScreen', () => {
       fireEvent.click(personButton(paidBy, 'Ana'))
       await waitForSheetToClose()
       const category = await openSheet('category')
-      fireEvent.click(within(category).getByRole('button', { name: /Accommodation/ }))
+      fireEvent.click(within(category).getByRole('button', { name: /Stay/ }))
       await waitForSheetToClose()
 
       fireEvent.click(saveBillButton())

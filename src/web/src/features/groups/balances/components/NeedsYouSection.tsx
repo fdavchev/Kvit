@@ -1,6 +1,7 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Language } from '@/core/i18n/language'
+import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { formatHowLongAgo } from '@/shared/utils/formatDate'
 import { formatMoney } from '@/shared/utils/formatMoney'
 import { balancesSectionHeadingLook } from '../balancesLooks'
@@ -19,6 +20,7 @@ interface NeedsYouSectionProps {
 export function NeedsYouSection({ groupId, items, language, timeZone, now, canAnswer }: NeedsYouSectionProps) {
   const { t } = useTranslation()
   const headingId = useId()
+  const listRef = useListAnimation<HTMLUListElement>()
 
   function sentenceOf(item: NeedsYouView): string {
     const amount = formatMoney(item.amountMinor, item.currency, language)
@@ -32,7 +34,7 @@ export function NeedsYouSection({ groupId, items, language, timeZone, now, canAn
       <h2 id={headingId} className={balancesSectionHeadingLook}>
         {t('balances.needsYou')}
       </h2>
-      <ul className="mb-3.5 flex flex-col gap-3.5">
+      <ul ref={listRef} className="mb-3.5 flex flex-col gap-3.5">
         {items.map((item) => (
           <NeedsYouCard
             key={item.settlementId}

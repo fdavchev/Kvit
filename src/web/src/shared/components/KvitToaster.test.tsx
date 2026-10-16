@@ -2,6 +2,7 @@ import { render } from '@testing-library/react'
 import type { ToasterProps } from 'sonner'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { KvitToaster } from './KvitToaster'
+import { kvitGlassPanelBlur } from './kvitGlassLooks'
 
 const toasterPropsSeen = vi.hoisted((): { latest: ToasterProps | null } => ({ latest: null }))
 
@@ -37,5 +38,15 @@ describe('KvitToaster', () => {
 
   it('still shows the toasts at the bottom centre', () => {
     expect(toasterProps().position).toBe('bottom-center')
+  })
+
+  it('blurs what is behind every toast with the blur of the glass panel', () => {
+    expect(toasterProps().toastOptions?.className).toBe(kvitGlassPanelBlur)
+  })
+
+  it('paints the toasts with the see-through glass panel colour and its edge', () => {
+    expect(toasterProps().style).toEqual(
+      expect.objectContaining({ '--normal-bg': 'var(--glass-panel)', '--normal-border': 'var(--glass-edge)' }),
+    )
   })
 })

@@ -2,11 +2,18 @@ import indexCss from '@/index.css?raw'
 
 export type ThemeName = 'light' | 'dark'
 
-type Rgb = readonly [number, number, number]
+export type Rgb = readonly [number, number, number]
 
-const colorMixPrefix = 'color-mix('
+export interface Tint {
+  rgb: Rgb
+  alpha: number
+}
 
-function blockAfter(css: string, header: string): string {
+export type InteractionState = 'rest' | 'hover'
+
+const glassSupportsHeader = '@supports (backdrop-filter'
+
+export function blockAfter(css: string, header: string): string {
   const headerStart = css.indexOf(header)
   if (headerStart === -1) {
     throw new Error(`index.css has no block that starts with "${header}"`)
@@ -61,52 +68,28 @@ function withoutVariables(text: string, declarations: Map<string, string>): stri
   return resolved
 }
 
-function splitAtTopLevelCommas(text: string): string[] {
-  const parts: string[] = []
-  let depth = 0
-  let partStart = 0
-  for (let position = 0; position < text.length; position += 1) {
-    if (text[position] === '(') {
-      depth += 1
-    } else if (text[position] === ')') {
-      depth -= 1
-    } else if (text[position] === ',' && depth === 0) {
-      parts.push(text.slice(partStart, position).trim())
-      partStart = position + 1
-    }
-  }
-  parts.push(text.slice(partStart).trim())
-  return parts
-}
-
-function parseMixPart(part: string): { rgb: Rgb; percent: number | null } {
-  const match = /^(.*?)(?:\s+(\d+(?:\.\d+)?)%)?$/s.exec(part)
-  if (match === null) {
-    throw new Error(`Cannot read the colour-mix part "${part}"`)
-  }
-  return { rgb: parseColor(match[1]), percent: match[2] === undefined ? null : Number(match[2]) }
-}
-
 function parseColor(text: string): Rgb {
   const color = text.trim()
   const hex = /^#([0-9a-f]{6})$/i.exec(color)
-  if (hex !== null) {
-    const value = Number.parseInt(hex[1], 16)
-    return [(value >> 16) & 255, (value >> 8) & 255, value & 255]
+  if (hex === null) {
+    throw new Error(`Only #rrggbb colours are understood, found: ${color}`)
   }
-  if (color.startsWith(colorMixPrefix) && color.endsWith(')')) {
-    const parts = splitAtTopLevelCommas(color.slice(colorMixPrefix.length, -1))
-    if (parts.length !== 3 || parts[0] !== 'in srgb') {
-      throw new Error(`Only "color-mix(in srgb, A, B)" is understood, found: ${color}`)
-    }
-    const first = parseMixPart(parts[1])
-    const second = parseMixPart(parts[2])
-    const firstShare = (first.percent ?? 100 - (second.percent ?? 50)) / 100
-    const mixed = (channel: 0 | 1 | 2): number =>
-      Math.round(first.rgb[channel] * firstShare + second.rgb[channel] * (1 - firstShare))
-    return [mixed(0), mixed(1), mixed(2)]
+  const value = Number.parseInt(hex[1], 16)
+  return [(value >> 16) & 255, (value >> 8) & 255, value & 255]
+}
+
+function parseTint(text: string): Tint {
+  const color = text.trim()
+  const seeThrough = /^color-mix\(in srgb, (#[0-9a-f]{6}) (\d+(?:\.\d+)?)%, transparent\)$/i.exec(color)
+  if (seeThrough === null) {
+    return { rgb: parseColor(color), alpha: 1 }
   }
-  throw new Error(`Only #rrggbb and color-mix(in srgb, ...) colours are understood, found: ${color}`)
+  return { rgb: parseColor(seeThrough[1]), alpha: Number(seeThrough[2]) / 100 }
+}
+
+function declarationsWithGlass(theme: ThemeName): Map<string, string> {
+  const glassRoot = blockAfter(blockAfter(indexCss, glassSupportsHeader), ':root {')
+  return new Map([...declarationsOfTheme(theme), ...declarationsOf(glassRoot)])
 }
 
 function relativeLuminance(rgb: Rgb): number {
@@ -130,12 +113,63 @@ export function colorOfToken(tokenName: string, theme: ThemeName): Rgb {
   return parseColor(withoutVariables(value, declarations))
 }
 
-export function contrastBetween(foregroundToken: string, backgroundToken: string, theme: ThemeName): number {
-  const foreground = relativeLuminance(colorOfToken(foregroundToken, theme))
-  const background = relativeLuminance(colorOfToken(backgroundToken, theme))
-  const lighter = Math.max(foreground, background)
-  const darker = Math.min(foreground, background)
+export function contrastOfColors(first: Rgb, second: Rgb): number {
+  const firstLuminance = relativeLuminance(first)
+  const secondLuminance = relativeLuminance(second)
+  const lighter = Math.max(firstLuminance, secondLuminance)
+  const darker = Math.min(firstLuminance, secondLuminance)
   return (lighter + 0.05) / (darker + 0.05)
+}
+
+export function contrastBetween(foregroundToken: string, backgroundToken: string, theme: ThemeName): number {
+  return contrastOfColors(colorOfToken(foregroundToken, theme), colorOfToken(backgroundToken, theme))
+}
+
+export function glassTintOfToken(tokenName: string, theme: ThemeName): Tint {
+  const declarations = declarationsWithGlass(theme)
+  const value = declarations.get(`--color-${tokenName}`)
+  if (value === undefined) {
+    throw new Error(`index.css has no colour token "--color-${tokenName}"`)
+  }
+  return parseTint(withoutVariables(value, declarations))
+}
+
+export function tintOfColorUtility(utilityValue: string, theme: ThemeName): Tint {
+  const [tokenName, opacityPercent] = utilityValue.split('/')
+  const tint = glassTintOfToken(tokenName, theme)
+  if (opacityPercent === undefined) {
+    return tint
+  }
+  return { rgb: tint.rgb, alpha: tint.alpha * (Number(opacityPercent) / 100) }
+}
+
+export function compositeOver(tint: Tint, backdrop: Rgb): Rgb {
+  const [red, green, blue] = tint.rgb.map((channel, index) => tint.alpha * channel + (1 - tint.alpha) * backdrop[index])
+  return [red, green, blue]
+}
+
+export function colorUtilityOfClasses(
+  classNames: readonly string[],
+  utility: 'text' | 'border' | 'bg',
+  theme: ThemeName,
+  state: InteractionState,
+): string | null {
+  const variants = ['', 'dark:', 'hover:', 'dark:hover:'].filter(
+    (variant) => (theme === 'dark' || !variant.includes('dark:')) && (state === 'hover' || !variant.includes('hover:')),
+  )
+  let found: string | null = null
+  for (const variant of variants) {
+    for (const className of classNames) {
+      if (!className.startsWith(`${variant}${utility}-`)) {
+        continue
+      }
+      const value = className.slice(variant.length + utility.length + 1)
+      if (hasColorToken(value.split('/')[0])) {
+        found = value
+      }
+    }
+  }
+  return found
 }
 
 export function colorTokenOfClasses(

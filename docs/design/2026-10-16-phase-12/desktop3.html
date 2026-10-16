@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kvit desktop layouts, round 3</title>
+<style>
+:root{--bg:#1f1816;--side:#161110;--card:#2c2220;--line:#72625c;--text:#fff1dc;--muted:#ffd9a8;--pill:#d9b48a;--pilltext:#1f1816;--pos:#7fd68f;--neg:#ff9a9a}
+*{box-sizing:border-box}
+body{margin:0;padding:1.25rem;font:1rem system-ui,sans-serif;background:#111;color:#eee}
+h1{font-size:1.25rem;margin:0 0 .6rem}.note{font-size:.85rem;color:#ccc;margin:.4rem 0 .8rem;max-width:60rem}
+.bar button{padding:.55rem 1rem;border-radius:999px;border:1px solid #888;background:#222;color:#eee;font-size:.95rem;cursor:pointer;margin:0 .4rem .4rem 0}
+.bar button.on{background:var(--pill);color:var(--pilltext);font-weight:700}
+.frame{container-type:inline-size;background:var(--bg);color:var(--text);border-radius:.75rem;box-shadow:0 0 0 1px #444;margin:.5rem auto 0;min-height:36rem;overflow:hidden}
+.lbl{color:var(--muted);font-size:clamp(.8rem,1.3cqi,.95rem)}
+.big{font-size:clamp(1.4rem,3cqi,2.1rem);font-weight:800}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:.9rem;padding:clamp(.7rem,1.6cqi,1.1rem)}
+.nav{padding:.5rem .9rem;border-radius:999px;color:var(--muted);font-weight:700;white-space:nowrap}
+.nav.sel{background:var(--pill);color:var(--pilltext)}
+.row{display:flex;justify-content:space-between;gap:.5rem;padding:.6rem .4rem;border-bottom:1px solid #ffffff14;border-radius:.5rem}
+.row.sel{background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
+.sec{font-weight:700;color:var(--muted);margin:0 0 .5rem}
+.plus{background:var(--pill);color:var(--pilltext);border-radius:999px;padding:.55rem 1.1rem;font-weight:800;white-space:nowrap;border:0;font-size:1rem}
+.gl{padding:.7rem .9rem;border-radius:.7rem}.gl.sel{background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
+.rail{background:var(--side);padding:clamp(.6rem,1.4cqi,1rem)}
+.rail .it{display:flex;align-items:center;gap:.7rem;padding:.65rem .8rem;border-radius:.8rem;color:var(--muted);font-weight:700}
+.rail .it.sel{background:var(--pill);color:var(--pilltext)}
+.rail .sub{margin:.3rem 0 .3rem 1.3rem;font-weight:400;font-size:.9rem;color:var(--text)}
+.rail .sub div{padding:.3rem .6rem;border-radius:.5rem}.rail .sub .cur{background:#ffffff18}
+/* B */
+.B{display:grid;grid-template-columns:minmax(11rem,19%) minmax(0,1fr);min-height:36rem}
+.B .page{padding:clamp(.75rem,2.4cqi,2rem)}
+.B .hd{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem 1.2rem;margin-bottom:.9rem}
+.B .hd h2{margin:0;font-size:clamp(1.3rem,2.6cqi,1.9rem)}
+.B .tabs{display:flex;gap:.3rem;margin-bottom:1rem;flex-wrap:wrap}
+.B .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr));gap:clamp(.7rem,1.6cqi,1.2rem)}
+@container (max-width:50rem){.B{grid-template-columns:1fr}.B .rail{display:none}}
+/* C */
+.C{display:grid;grid-template-columns:minmax(12rem,22%) minmax(0,1fr) minmax(0,0px);min-height:36rem}
+.C.open{grid-template-columns:minmax(12rem,22%) minmax(0,1fr) minmax(15rem,30%)}
+.C .main{padding:clamp(.75rem,2cqi,1.5rem)}
+.C .insp{background:var(--side);padding:clamp(.9rem,1.8cqi,1.4rem);overflow:hidden;border-left:1px solid #ffffff14}
+.C:not(.open) .insp{padding:0;border:0}
+.C .x{float:right;color:var(--muted);cursor:pointer}
+@container (max-width:50rem){.C,.C.open{grid-template-columns:1fr}.C .rail{display:none}.C .insp{position:static}}
+.hint{font-size:.8rem;color:var(--muted);margin:.5rem 0}
+</style></head><body>
+<h1>Desktop layouts, round 3: patterns from real apps</h1>
+<div class="note">Based on the research: B is "nav rail + one wide page with tabs" (Actual, Stripe style). C is "list + main view + a panel that opens on click" (YNAB, Linear style). Your favourite A (three panes always visible) is shown first for comparison. Fluid sizes. The Phone button is only a resize preview: the wide layout folds into today's phone column.</div>
+<div class="bar" id="o"><button data-k="A">A: three panes (your favourite)</button><button data-k="B">B: rail + wide group page with tabs</button><button data-k="C">C: list + main + panel on click</button><button data-k="D">D: summary dashboard home</button><button data-k="E">E: centred narrow column</button></div>
+<div class="bar" id="w"><button data-w="26">Phone</button><button data-w="55">Tablet</button><button data-w="85">Laptop</button><button data-w="100">Wide</button></div>
+<div class="note" id="n"></div>
+<div class="frame" id="f"></div>
+<script>
+const groups=`<div class="gl sel"><b>Trip to Ohrid</b><div class="lbl">You are owed 1 200 ден.</div></div><div class="gl"><b>Flat</b><div class="lbl">You owe 800 ден.</div></div><div class="gl"><b>Dinner club</b><div class="lbl">All even</div></div><div class="gl"><b>Ski week</b><div class="lbl">You are owed 3 000 ден.</div></div>`;
+const exp=(sel)=>`<div class="row${sel===0?' sel':''}"><span>Dinner · Ana paid</span><b>1 200</b></div><div class="row${sel===1?' sel':''}"><span>Taxi · You paid</span><b>300</b></div><div class="row"><span>Hotel · Marko paid</span><b>6 400</b></div><div class="row"><span>Groceries · Sara paid</span><b>950</b></div>`;
+const bal=`<div class="card" style="margin-bottom:.8rem"><div class="lbl">Your balance</div><div class="big pos">+1 200 ден.</div></div><div class="sec">Who pays whom</div><div class="row"><span>Marko → Ana</span><b>800</b></div><div class="row"><span>Sara → You</span><b>400</b></div>`;
+const railB=`<div class="rail"><div style="font-weight:800;font-size:1.4rem;color:var(--muted);padding:.3rem .8rem 1rem">Kvit</div><div class="it">⌂ Home</div><div class="it sel">👥 Groups</div><div class="sub"><div class="cur">Trip to Ohrid</div><div>Flat</div><div>Dinner club</div><div>Ski week</div></div><div class="it">📊 Budget</div><div class="it">⚙ Settings</div></div>`;
+const O={
+A:{n:'A (your favourite): groups on the left, the open group in the middle, balances on the right, all visible at once. Very fast: no clicks to see who owes whom. A bit crowded on a small laptop.',
+h:()=>`<div style="display:grid;grid-template-columns:minmax(12rem,22%) minmax(0,1fr) minmax(14rem,28%);min-height:36rem"><div class="rail">${groups}</div><div class="main" style="padding:clamp(.75rem,2cqi,1.5rem)"><div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem"><span class="nav sel">Expenses</span><span class="nav">Balances</span><span class="nav">Activity</span><span class="nav">Budget</span><span class="plus" style="margin-left:auto">＋ Add expense</span></div>${exp(-1)}</div><div class="rail">${bal}</div></div>`},
+B:{n:'B: a left menu where the groups sit under "Groups", and one wide page for the open group with the same tabs as the phone (Expenses, Balances, Activity). On a wide screen the tab page uses two columns (for example expenses and balances side by side). Closest to the phone: easiest to build and to keep in sync. Budget and Settings are their own sections.',
+h:()=>`<div class="B">${railB}<div class="page"><div class="hd"><h2>Trip to Ohrid</h2><span class="lbl">4 people · Open</span><span class="plus" style="margin-left:auto">＋ Add expense</span></div><div class="tabs"><span class="nav sel">Expenses</span><span class="nav">Balances</span><span class="nav">Activity</span></div><div class="cols"><div class="card"><div class="sec">Expenses</div>${exp(-1)}</div><div class="card">${bal}</div></div></div></div>`},
+C:{n:'C: groups on the left and the expense list in the main area. Nothing else is visible until you click an expense or "Balances": then a detail panel slides open on the right (edit, delete, mark paid) and closes again. The main area stays calm and wide. Click an expense below to try it.',
+h:()=>`<div class="C" id="cc">${'<div class="rail">'+groups+'</div>'}<div class="main"><div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem"><span class="nav sel">Expenses</span><span class="nav">Balances</span><span class="nav">Activity</span><span class="nav">Budget</span><span class="plus" style="margin-left:auto">＋ Add expense</span></div><div class="hint">Click a row to open its panel</div><div id="rows">${exp(-1)}</div></div><div class="insp" id="ins"></div></div>`}
+,
+D:{n:'D: Home is a summary dashboard: a few big numbers (owed, owe, needs you), this month\'s spending as bars, your groups and recent activity as tiles that wrap to fit the width. Click a group tile to open it as a full page (like B). Best for the budget side later, because Home shows both worlds at once.',
+h:()=>`<div class="B">${railB.replace('it sel">👥 Groups','it">👥 Groups').replace('<div class="it">⌂ Home','<div class="it sel">⌂ Home')}<div class="page"><div class="hd"><h2>Home</h2><span class="plus" style="margin-left:auto">＋ Add</span></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:clamp(.7rem,1.6cqi,1.2rem)"><div class="card"><div class="lbl">You are owed</div><div class="big pos">12 400 ден.</div></div><div class="card"><div class="lbl">You owe</div><div class="big neg">3 200 ден.</div></div><div class="card"><div class="lbl">Needs you</div><div class="big">2</div><div class="lbl">Marko paid you 800</div></div><div class="card" style="grid-column:1/-1"><div class="sec">This month's spending (budget)</div><div class="row"><span>Food</span><span>8 400 / 12 000</span></div><div style="height:.6rem;border-radius:99px;background:#ffffff18"><div style="width:70%;height:100%;border-radius:99px;background:var(--pill)"></div></div><div class="row"><span>Fun</span><span>5 300 / 5 000</span></div><div style="height:.6rem;border-radius:99px;background:#ffffff18"><div style="width:100%;height:100%;border-radius:99px;background:var(--neg)"></div></div></div><div class="card"><div class="sec">Your groups</div>${groups}</div><div class="card"><div class="sec">Recent activity</div><div class="row"><span>Ana added Dinner</span><span class="lbl">2h</span></div><div class="row"><span>Marko paid Ana</span><span class="lbl">5h</span></div><div class="row"><span>Sara joined Flat</span><span class="lbl">1d</span></div></div></div></div></div>`},
+E:{n:'E: the phone screens centred in a roomy column (about 40 rem wide) with a top menu, and a lot of empty space around. The cheapest to build and exactly like the phone. On a big screen it can look empty.',
+h:()=>`<div><div style="display:flex;align-items:center;gap:.5rem;padding:.8rem clamp(.75rem,3cqi,2rem);background:var(--side);flex-wrap:wrap"><b style="font-size:1.3rem;color:var(--muted);margin-right:auto">Kvit</b><span class="nav sel">Home</span><span class="nav">Groups</span><span class="nav">Budget</span><span class="nav">Settings</span></div><div style="width:min(100%,40rem);margin:0 auto;padding:clamp(.75rem,3cqi,2rem);display:grid;gap:.9rem"><div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem"><div class="card"><div class="lbl">You are owed</div><div class="big pos">12 400 ден.</div></div><div class="card"><div class="lbl">You owe</div><div class="big neg">3 200 ден.</div></div></div><div class="sec" style="margin:0">Your groups</div>${groups}</div></div>`}
+};
+const f=document.getElementById('f');
+function k(x){f.innerHTML=O[x].h();document.getElementById('n').textContent=O[x].n;document.querySelectorAll('#o button').forEach(b=>b.classList.toggle('on',b.dataset.k===x));
+ if(x==='C'){const c=document.getElementById('cc'),ins=document.getElementById('ins');document.querySelectorAll('#rows .row').forEach((r,i)=>r.onclick=()=>{c.classList.add('open');document.querySelectorAll('#rows .row').forEach(z=>z.classList.remove('sel'));r.classList.add('sel');ins.innerHTML='<span class="x" id="xx">✕</span><div class="sec">Expense</div><div class="big">'+(i==0?'1 200':i==1?'300':i==2?'6 400':'950')+' ден.</div><div class="lbl" style="margin:.4rem 0 1rem">Paid by '+['Ana','You','Marko','Sara'][i]+' · split equally</div><button class="plus" style="width:100%;margin-bottom:.5rem">Edit</button><button class="plus" style="width:100%;background:transparent;color:var(--muted);border:1.5px solid var(--line)">Delete</button>';document.getElementById('xx').onclick=()=>{c.classList.remove('open');r.classList.remove('sel')}})}}
+function w(x){f.style.width=x+'%';document.querySelectorAll('#w button').forEach(b=>b.classList.toggle('on',b.dataset.w===String(x)))}
+document.querySelectorAll('#o button').forEach(b=>b.onclick=()=>k(b.dataset.k));document.querySelectorAll('#w button').forEach(b=>b.onclick=()=>w(+b.dataset.w));k('B');w(100);
+</script></body></html>

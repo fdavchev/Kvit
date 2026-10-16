@@ -1,6 +1,6 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { useRouteError } from 'react-router'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import {
@@ -14,7 +14,9 @@ import {
 import { renderHome } from '@/test/homeTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import { jsonAnswer, stubFetchByRequest } from '@/test/requestTestHelpers'
+import { installFakeResizeObservers } from '@/test/resizeObserverTestHelpers'
 import { seedMe, testMe } from '@/test/testMe'
+import { clearToastLiftOnPage, rectOfHeight, toastLiftOnPage } from '@/test/toastLiftTestHelpers'
 import { translated } from '@/test/translated'
 import { HomeScreen } from './HomeScreen'
 
@@ -164,5 +166,45 @@ describe('the plus button on the home screen', () => {
     )
 
     expect(await screen.findByText(new RegExp(strayId))).toBeTruthy()
+  })
+})
+
+describe('the toasts on the home screen', () => {
+  const plusAreaHeight = 76
+
+  beforeEach(() => {
+    installFakeResizeObservers()
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(rectOfHeight(plusAreaHeight))
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+    clearToastLiftOnPage()
+  })
+
+  it('lifts the toasts above the plus button by the height of its area plus 12px, so the plus stays reachable', async () => {
+    await renderHome()
+
+    await screen.findByRole('button', { name: translated('en', 'home.plus') })
+
+    expect(toastLiftOnPage()).toBe(`${plusAreaHeight + 12}px`)
+  })
+
+  it('does not lift the toasts for a person without groups, who has no plus button', async () => {
+    await renderHome({ dashboard: newUserDashboard })
+
+    await screen.findByText(translated('en', 'home.noGroupsTitle'))
+
+    expect(toastLiftOnPage()).toBe('')
+  })
+
+  it('takes the lift away when the home screen goes away', async () => {
+    await renderHome()
+    await screen.findByRole('button', { name: translated('en', 'home.plus') })
+
+    cleanup()
+
+    expect(toastLiftOnPage()).toBe('')
   })
 })

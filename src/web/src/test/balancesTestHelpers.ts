@@ -33,6 +33,14 @@ export function textIn(container: HTMLElement, text: string): HTMLElement {
   return within(container).getByText(text, { normalizer: plainSpaces })
 }
 
+export function amountParagraphIn(container: HTMLElement, amount: string): HTMLElement {
+  const paragraph = textIn(container, amount).closest('p')
+  if (paragraph === null) {
+    throw new Error(`The amount "${amount}" is not inside a paragraph`)
+  }
+  return paragraph
+}
+
 export function queryTextIn(container: HTMLElement, text: string): HTMLElement | null {
   return within(container).queryByText(text, { normalizer: plainSpaces })
 }

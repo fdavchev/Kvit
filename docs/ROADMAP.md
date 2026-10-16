@@ -169,9 +169,9 @@ Moved forward from Phase 11 because the Render wake-up (about 22 s) made the app
 - **Done when:** all tests pass and Filip says Release 1 works for him.
 
 ## Phase 12: Animations + touch-ups · `feat/12-polish`
-- [ ] The glass-look redesign on every popup, and the animation pass with Filip's 2026-10-09 picks (BACKLOG)
-- [ ] Dark mode surface colours: Filip dislikes the `color-mix` ones (`--color-night-field`, `--color-night-raised`, `--color-night-line`) and wants them reconsidered (2026-10-15)
-- [ ] The desktop layout and the other small look items from BACKLOG
+- [x] The glass-look redesign on every popup, and the animation pass with Filip's 2026-10-09 picks (BACKLOG)
+- [x] Dark mode surface colours: solid colours B instead of `color-mix`, tan selected pill (2026-10-16)
+- [x] The desktop layout (round-4 hybrid, phone unchanged) and the other small look items from BACKLOG (the "Updating…" label on group pages and the Split sheet pill are left in BACKLOG)
 - Moved here from Phase 11 on 2026-10-15 (Filip: "it's big").
 
 ---

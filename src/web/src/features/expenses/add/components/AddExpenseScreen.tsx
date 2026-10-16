@@ -70,24 +70,29 @@ export function AddExpenseScreen() {
     const members = membersQuery.data.members
     const today = todayInTimeZone(me.timeZone, new Date())
     return (
-      <ExpenseForm
-        initialValues={{
-          amountText: '',
-          currency: groupQuery.data.defaultCurrency,
-          paidByMemberId: ownRowOf(members).id,
-          splitDraft: defaultSplitDraft(members.map((member) => member.id)),
-          expenseDate: today,
-          categoryId: null,
-          title: '',
-          note: '',
-        }}
-        people={expensePeople(members)}
-        categories={categoriesQuery.data}
-        today={today}
-        isPending={createExpense.isPending}
-        errorMessage={createExpense.isError ? t(errorMessageKey(createExpense.error)) : null}
-        onSubmit={save}
-      />
+      <>
+        {groupQuery.data.status === 'Closing' && (
+          <p className="pt-2 pb-3 text-[0.9375rem] text-pretty text-muted-foreground">{t('closing.addCancels')}</p>
+        )}
+        <ExpenseForm
+          initialValues={{
+            amountText: '',
+            currency: groupQuery.data.defaultCurrency,
+            paidByMemberId: ownRowOf(members).id,
+            splitDraft: defaultSplitDraft(members.map((member) => member.id)),
+            expenseDate: today,
+            categoryId: null,
+            title: '',
+            note: '',
+          }}
+          people={expensePeople(members)}
+          categories={categoriesQuery.data}
+          today={today}
+          isPending={createExpense.isPending}
+          errorMessage={createExpense.isError ? t(errorMessageKey(createExpense.error)) : null}
+          onSubmit={save}
+        />
+      </>
     )
   }
 
