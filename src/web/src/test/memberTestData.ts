@@ -16,6 +16,7 @@ export const filipMember: GroupMember = {
   isOwner: true,
   isYou: true,
   isNameOnly: false,
+  isGuest: false,
   claimedName: null,
   pictureUrl: null,
 }
@@ -28,6 +29,7 @@ export const anaMember: GroupMember = {
   isOwner: false,
   isYou: false,
   isNameOnly: false,
+  isGuest: false,
   claimedName: null,
   pictureUrl: null,
 }
@@ -40,6 +42,7 @@ export const markoMember: GroupMember = {
   isOwner: false,
   isYou: false,
   isNameOnly: true,
+  isGuest: false,
   claimedName: null,
   pictureUrl: null,
 }
@@ -52,6 +55,7 @@ export const grandmaMember: GroupMember = {
   isOwner: false,
   isYou: false,
   isNameOnly: true,
+  isGuest: false,
   claimedName: null,
   pictureUrl: null,
 }
@@ -64,7 +68,21 @@ export const petarMember: GroupMember = {
   isOwner: false,
   isYou: false,
   isNameOnly: false,
+  isGuest: false,
   claimedName: 'Darko',
+  pictureUrl: null,
+}
+
+export const cvetaGuestMember: GroupMember = {
+  id: 'a1b2c3d4-0007-4aaa-8bbb-000000000007',
+  name: 'Cveta',
+  displayName: 'Cveta',
+  userId: '5e4d3c2b-1a09-4f8e-9d7c-6b5a49382716',
+  isOwner: false,
+  isYou: false,
+  isNameOnly: false,
+  isGuest: true,
+  claimedName: null,
   pictureUrl: null,
 }
 

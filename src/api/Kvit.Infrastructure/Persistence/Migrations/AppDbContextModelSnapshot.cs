@@ -75,7 +75,7 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                     b.ToTable("activity_events", null, t =>
                         {
-                            t.HasCheckConstraint("ck_activity_events_type", "type IN ('GroupCreated', 'GroupRenamed', 'GroupSettingsChanged', 'InviteLinkReset', 'MemberAdded', 'MemberJoined', 'MemberClaimed', 'ClaimUndone', 'MemberRemoved', 'MemberLeft', 'OwnershipTransferred', 'MemberLetBackIn', 'InviteLinkRestored', 'ExpenseAdded', 'ExpenseEdited', 'ExpenseDeleted', 'ExpenseRestored', 'SettlementRecorded', 'SettlementConfirmed', 'SettlementRejected', 'SettlementCancelled', 'SettlementDeleted', 'SettlementRestored', 'ClosingStarted', 'ClosingConfirmed', 'ClosingObjected', 'ClosingCancelled', 'GroupFinished', 'GroupReopened', 'GroupDeleted', 'GroupRestored')");
+                            t.HasCheckConstraint("ck_activity_events_type", "type IN ('GroupCreated', 'GroupRenamed', 'GroupSettingsChanged', 'InviteLinkReset', 'MemberAdded', 'MemberJoined', 'MemberClaimed', 'ClaimUndone', 'MemberRemoved', 'MemberLeft', 'OwnershipTransferred', 'MemberLetBackIn', 'InviteLinkRestored', 'ExpenseAdded', 'ExpenseEdited', 'ExpenseDeleted', 'ExpenseRestored', 'SettlementRecorded', 'SettlementConfirmed', 'SettlementRejected', 'SettlementCancelled', 'SettlementDeleted', 'SettlementRestored', 'ClosingStarted', 'ClosingConfirmed', 'ClosingObjected', 'ClosingCancelled', 'GroupFinished', 'GroupReopened', 'GroupDeleted', 'GroupRestored', 'GuestLetInAgain')");
                         });
                 });
 
@@ -568,6 +568,7 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnName("removed_by_user_id");
 
                     b.Property<Guid?>("UserId")
+                        .IsConcurrencyToken()
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 

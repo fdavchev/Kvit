@@ -32,7 +32,7 @@ namespace Kvit.Domain.Services.Groups
                 return target;
             }
 
-            Result transferred = found.Value.TransferOwnership(target.Value.Member);
+            Result transferred = found.Value.TransferOwnership(target.Value);
             if (!transferred.IsSuccess)
             {
                 return transferred;

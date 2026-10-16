@@ -332,6 +332,48 @@ namespace Kvit.Api.Tests.Groups
             Assert.Equal(usersBefore, await _app.CountUsersAsync());
         }
 
+        [Fact]
+        public async Task JoinAsGuest_BySomeoneSignedInWithAnAccount_Answers409GuestJoinSignedInAndCreatesNoGuest()
+        {
+            GuestScene scene = await CreateSceneAsync();
+            SignedInUser outsider = await _app.SignUpAsync("Cvetan");
+            int guestsBefore = await CountGuestsAsync();
+            string before = await GroupRows.SnapshotAsync(_app, scene.Setup.GroupId);
+
+            HttpResponseMessage response = await GroupRequests.JoinAsGuestAsync(outsider.Client, scene.Setup.InviteToken, claimMemberId: scene.FreeNameRowId);
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.Conflict, ResultCodes.GUEST_JOIN_SIGNED_IN);
+            Assert.Equal(guestsBefore, await CountGuestsAsync());
+            Assert.Equal(before, await GroupRows.SnapshotAsync(_app, scene.Setup.GroupId));
+            Assert.Equal(outsider.UserId, await GuestIdAsync(outsider.Client));
+        }
+
+        [Fact]
+        public async Task JoinAsGuest_ByAGuestWhoIsAlreadySignedIn_Answers409GuestJoinSignedInAndCreatesNoSecondGuest()
+        {
+            GuestScene scene = await CreateSceneAsync();
+            await AssertOkAsync(GroupRequests.JoinAsGuestAsync(scene.Guest, scene.Setup.InviteToken, name: NewName));
+            Guid firstGuestId = await GuestIdAsync(scene.Guest);
+            int guestsBefore = await CountGuestsAsync();
+
+            HttpResponseMessage response = await GroupRequests.JoinAsGuestAsync(scene.Guest, scene.Setup.InviteToken, claimMemberId: scene.FreeNameRowId);
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.Conflict, ResultCodes.GUEST_JOIN_SIGNED_IN);
+            Assert.Equal(guestsBefore, await CountGuestsAsync());
+            Assert.Null(await GroupRows.MemberRowValueAsync(_app, scene.FreeNameRowId, "user_id"));
+            Assert.Equal(firstGuestId, await GuestIdAsync(scene.Guest));
+        }
+
+        [Fact]
+        public async Task JoinAsGuest_BySomeoneSignedInWithAnInvalidChoice_Answers409BeforeTheChoiceIsChecked()
+        {
+            GuestScene scene = await CreateSceneAsync();
+
+            HttpResponseMessage response = await GroupRequests.JoinAsGuestAsync(scene.Setup.Member.Client, scene.Setup.InviteToken);
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.Conflict, ResultCodes.GUEST_JOIN_SIGNED_IN);
+        }
+
         private async Task<GuestScene> CreateSceneAsync()
         {
             GroupSetup setup = await _app.CreateGroupWithMemberAsync();

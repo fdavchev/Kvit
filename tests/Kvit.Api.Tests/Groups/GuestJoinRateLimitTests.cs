@@ -88,20 +88,23 @@ namespace Kvit.Api.Tests.Groups
 
         private async Task<InviteVisitor> VisitorWithAGroupAsync()
         {
-            HttpClient client = _app.CreateClientSending(ProxiedApp.Secret, _app.NewVisitorAddress());
+            string address = _app.NewVisitorAddress();
+            HttpClient client = _app.CreateClientSending(ProxiedApp.Secret, address);
             Guid ownerId = await UserRows.AddAsync(_app);
             Guid groupId = await GroupRows.InsertGroupWithOwnerAsync(_app, ownerId);
             string token = (await GroupRows.GroupValueAsync(_app, groupId, "invite_token"))!;
 
-            return new InviteVisitor(client, token);
+            return new InviteVisitor(client, token, address);
         }
 
-        private static Task<HttpResponseMessage> JoinWithNewNameAsync(InviteVisitor visitor, int guest)
+        private Task<HttpResponseMessage> JoinWithNewNameAsync(InviteVisitor visitor, int guest)
         {
-            return GroupRequests.JoinAsGuestAsync(visitor.Client, visitor.Token, name: $"Guest {guest}");
+            HttpClient guestPhone = _app.CreateClientSending(ProxiedApp.Secret, visitor.Address);
+
+            return GroupRequests.JoinAsGuestAsync(guestPhone, visitor.Token, name: $"Guest {guest}");
         }
 
-        private static async Task JoinManyAsync(InviteVisitor visitor, int count)
+        private async Task JoinManyAsync(InviteVisitor visitor, int count)
         {
             for (int guest = 1; guest <= count; guest++)
             {

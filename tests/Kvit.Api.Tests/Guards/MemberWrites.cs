@@ -67,6 +67,19 @@ namespace Kvit.Api.Tests.Guards
             },
             new GuardedWrite
             {
+                Name = "LetGuestInAgain",
+                Who = WhoMayCall.OwnerOnly,
+                EffectOnClosing = EffectOnClosing.CancelsIt,
+                CodeWhenAnotherMemberTries = ResultCodes.GROUP_NOT_OWNER,
+                PrepareAsync = async (app, group) =>
+                {
+                    GuestMember guest = await GuestSteps.TapFreeNameAsync(app, group.GroupId, group.MarkoRowId);
+
+                    return caller => GroupRequests.LetGuestInAgainAsync(caller, group.GroupId, guest.RowId);
+                },
+            },
+            new GuardedWrite
+            {
                 Name = "MakeOwner",
                 Who = WhoMayCall.OwnerOnly,
                 EffectOnClosing = EffectOnClosing.CancelsIt,

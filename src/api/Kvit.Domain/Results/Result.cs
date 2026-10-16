@@ -40,6 +40,10 @@ namespace Kvit.Domain.Results
 
         public static Result<T> NotFound<T>(string error, string errorCode) => new(HttpStatusCode.NotFound, error, errorCode);
 
+        public static Result Conflict(string error, string errorCode) => new(false, HttpStatusCode.Conflict, error, errorCode);
+
+        public static Result<T> Conflict<T>(string error, string errorCode) => new(HttpStatusCode.Conflict, error, errorCode);
+
         public Result<T> ToFailure<T>()
         {
             if (IsSuccess)

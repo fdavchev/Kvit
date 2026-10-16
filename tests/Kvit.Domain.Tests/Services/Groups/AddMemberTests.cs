@@ -170,9 +170,59 @@ namespace Kvit.Domain.Tests.Services.Groups
             Assert.Single(_activityEvents.Added);
         }
 
+        [Fact]
+        public async Task Execute_AGuest_FailsWith403GuestNotAllowedAndWritesNothing()
+        {
+            SeedGuest();
+
+            Result<Guid> result = await ExecuteAsync(MemberTestData.OtherUserId, "Grandma");
+
+            ResultAssert.Failed(result, HttpStatusCode.Forbidden, ResultCodes.GUEST_NOT_ALLOWED);
+            AssertNothingWritten();
+        }
+
+        [Fact]
+        public async Task Execute_AGuestWithAnInvalidName_FailsWith403BeforeTheNameIsChecked()
+        {
+            SeedGuest();
+
+            Result<Guid> result = await ExecuteAsync(MemberTestData.OtherUserId, string.Empty);
+
+            ResultAssert.Failed(result, HttpStatusCode.Forbidden, ResultCodes.GUEST_NOT_ALLOWED);
+        }
+
+        [Fact]
+        public async Task Execute_AGuestInAFinishedGroup_FailsWith403BeforeTheGroupStateIsChecked()
+        {
+            SeedGuest();
+            _group.Finish(GroupTestData.Moment.AddDays(-1));
+
+            Result<Guid> result = await ExecuteAsync(MemberTestData.OtherUserId, "Grandma");
+
+            ResultAssert.Failed(result, HttpStatusCode.Forbidden, ResultCodes.GUEST_NOT_ALLOWED);
+            AssertNothingWritten();
+        }
+
+        [Fact]
+        public async Task Execute_AnAccountInAFinishedGroup_StillFailsWith400GroupFinished()
+        {
+            _group.Finish(GroupTestData.Moment.AddDays(-1));
+
+            Result<Guid> result = await ExecuteAsync(GroupTestData.MemberId, "Grandma");
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.GROUP_FINISHED);
+            AssertNothingWritten();
+        }
+
         private Task<Result<Guid>> ExecuteAsync(Guid userId, string name)
         {
             return _addMember.Execute(_group.Id, userId, name, TestContext.Current.CancellationToken);
+        }
+
+        private void SeedGuest()
+        {
+            _groups.Seed(_group, MemberTestData.OtherUserId);
+            _members.SeedGuest(MemberTestData.Account(_group.Id, MemberTestData.OtherUserId, "Cveta"));
         }
 
         private void AssertNothingWritten()

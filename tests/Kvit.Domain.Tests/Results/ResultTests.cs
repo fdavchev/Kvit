@@ -63,6 +63,14 @@ namespace Kvit.Domain.Tests.Results
         }
 
         [Fact]
+        public void Conflict_ReturnsStatus409WithErrorAndCode()
+        {
+            Result result = Result.Conflict(ErrorMessage, ErrorCode);
+
+            AssertFailure(result, HttpStatusCode.Conflict);
+        }
+
+        [Fact]
         public void FailureWithValueType_ReturnsStatus400WithErrorAndCode()
         {
             Result<int> result = Result.Failure<int>(ErrorMessage, ErrorCode);
@@ -92,6 +100,14 @@ namespace Kvit.Domain.Tests.Results
             Result<int> result = Result.NotFound<int>(ErrorMessage, ErrorCode);
 
             AssertFailure(result, HttpStatusCode.NotFound);
+        }
+
+        [Fact]
+        public void ConflictWithValueType_ReturnsStatus409WithErrorAndCode()
+        {
+            Result<int> result = Result.Conflict<int>(ErrorMessage, ErrorCode);
+
+            AssertFailure(result, HttpStatusCode.Conflict);
         }
 
         [Fact]

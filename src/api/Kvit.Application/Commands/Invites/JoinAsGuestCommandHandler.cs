@@ -10,6 +10,7 @@ using Kvit.Domain.Services.Groups;
 namespace Kvit.Application.Commands.Invites
 {
     public sealed class JoinAsGuestCommandHandler(
+        ICurrentUserProvider _currentUserProvider,
         IAccountService _accountService,
         PickGuestName _pickGuestName,
         JoinGroup _joinGroup,
@@ -17,13 +18,18 @@ namespace Kvit.Application.Commands.Invites
     {
         public async Task<Result<JoinGroupResponse>> Handle(JoinAsGuestCommand command, CancellationToken cancellationToken)
         {
+            if (_currentUserProvider.GetCurrentUserId().IsSuccess)
+            {
+                return Result.Conflict<JoinGroupResponse>("Someone is already signed in on this browser, so no guest is made. Join with that account instead.", ResultCodes.GUEST_JOIN_SIGNED_IN);
+            }
+
             Result<GuestJoinChoice> choice = GuestJoinChoice.Create(command.ClaimMemberId, command.Name, command.TimeZone, command.Language);
             if (!choice.IsSuccess)
             {
                 return choice.ToFailure<JoinGroupResponse>();
             }
 
-            Result<GuestJoinedDto> joined = await _groupWrite.RunForInviteAsync(
+            Result<GuestJoinedDto> joined = await _groupWrite.RunForInviteOnceMoreIfMemberChangedMeanwhileAsync(
                 command.Token,
                 () => CreateGuestAndJoinAsync(command.Token, choice.Value, cancellationToken),
                 cancellationToken);

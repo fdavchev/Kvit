@@ -1,4 +1,4 @@
 namespace Kvit.Api.Tests.Groups
 {
-    public sealed record InviteVisitor(HttpClient Client, string Token);
+    public sealed record InviteVisitor(HttpClient Client, string Token, string Address);
 }

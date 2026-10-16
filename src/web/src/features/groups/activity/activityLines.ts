@@ -167,6 +167,8 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
         return [t('activity.ownershipTransferred', { name, member: memberName(event, 'name') })]
       case 'MemberLetBackIn':
         return [t('activity.memberLetBackIn', { name, member: memberName(event, 'name') })]
+      case 'GuestLetInAgain':
+        return [t('activity.guestLetInAgain', { name, member: memberName(event, 'name') })]
       case 'GroupDeleted':
         return [t('activity.groupDeleted', { name })]
       case 'GroupRestored':

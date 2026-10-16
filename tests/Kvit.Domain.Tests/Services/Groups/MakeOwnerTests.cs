@@ -126,6 +126,18 @@ namespace Kvit.Domain.Tests.Services.Groups
         }
 
         [Fact]
+        public async Task Execute_AGuest_FailsWith400MemberNotAccountAndChangesNothing()
+        {
+            GroupMember guestRow = MemberTestData.Account(_group.Id, MemberTestData.OtherUserId, "Cveta");
+            _members.SeedGuest(guestRow);
+
+            Result result = await ExecuteAsync(GroupTestData.OwnerId, guestRow.Id);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.MEMBER_NOT_ACCOUNT);
+            AssertOwnerUnchanged();
+        }
+
+        [Fact]
         public async Task Execute_TheOwnerThemselves_FailsWith400MemberAlreadyOwner()
         {
             Result result = await ExecuteAsync(GroupTestData.OwnerId, _ownerRow.Id);

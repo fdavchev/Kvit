@@ -19,7 +19,7 @@ namespace Kvit.Api.Tests.Groups
         public const string GuestLanguage = "en";
 
         public static readonly Regex TokenFormat = new("^[A-Za-z0-9_-]{43}$");
-        public static readonly string[] MemberFieldNames = ["claimedName", "displayName", "id", "isNameOnly", "isOwner", "isYou", "name", "pictureUrl", "userId"];
+        public static readonly string[] MemberFieldNames = ["claimedName", "displayName", "id", "isGuest", "isNameOnly", "isOwner", "isYou", "name", "pictureUrl", "userId"];
         public static readonly string[] GroupFieldNames =
         [
             "canStartClosing",
@@ -131,6 +131,11 @@ namespace Kvit.Api.Tests.Groups
         public static Task<HttpResponseMessage> UndoClaimAsync(HttpClient client, Guid groupId, Guid memberId)
         {
             return client.PostAsync($"{MemberPathOf(groupId, memberId)}/undo-claim", null, TestContext.Current.CancellationToken);
+        }
+
+        public static Task<HttpResponseMessage> LetGuestInAgainAsync(HttpClient client, Guid groupId, Guid memberId)
+        {
+            return client.PostAsync($"{MemberPathOf(groupId, memberId)}/let-in-again", null, TestContext.Current.CancellationToken);
         }
 
         public static Task<HttpResponseMessage> ResetInviteAsync(HttpClient client, Guid groupId)

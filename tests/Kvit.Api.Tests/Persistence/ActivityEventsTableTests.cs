@@ -73,6 +73,7 @@ namespace Kvit.Api.Tests.Persistence
         [InlineData("GroupReopened")]
         [InlineData("GroupDeleted")]
         [InlineData("GroupRestored")]
+        [InlineData("GuestLetInAgain")]
         public async Task Type_OfTheKnownNames_IsAccepted(string type)
         {
             Guid groupId = await GroupRows.InsertGroupWithoutMembersAsync(_database);

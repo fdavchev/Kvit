@@ -33,5 +33,18 @@ namespace Kvit.Application.Persistence
                 return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
             }
         }
+
+        public static async Task<TResult> RunInTransactionOnceMoreIfMemberChangedMeanwhileAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
+            where TResult : Result
+        {
+            try
+            {
+                return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
+            }
+            catch (MemberChangedMeanwhileException)
+            {
+                return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
+            }
+        }
     }
 }

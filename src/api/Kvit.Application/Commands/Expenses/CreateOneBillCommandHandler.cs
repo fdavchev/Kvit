@@ -4,6 +4,7 @@ using Kvit.Application.Queries.Me;
 using Kvit.Contracts.Expenses;
 using Kvit.Contracts.Me;
 using Kvit.Contracts.Persistence;
+using Kvit.Domain.Accounts;
 using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Expenses;
 using Kvit.Domain.Results;
@@ -24,6 +25,12 @@ namespace Kvit.Application.Commands.Expenses
             if (!me.IsSuccess)
             {
                 return me.ToFailure<OneBillResponse>();
+            }
+
+            Result notGuest = AccountRules.CheckIsNotGuest(me.Value.IsGuest);
+            if (!notGuest.IsSuccess)
+            {
+                return notGuest.ToFailure<OneBillResponse>();
             }
 
             Result<ExchangeRateSnapshot> rate = await _getCurrentExchangeRate.Execute(cancellationToken);

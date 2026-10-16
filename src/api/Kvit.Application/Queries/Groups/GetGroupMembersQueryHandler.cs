@@ -55,6 +55,7 @@ namespace Kvit.Application.Queries.Groups
                     named.Member.UserId == ownerUserId,
                     named.Member.UserId == userId,
                     named.Member.UserId == null,
+                    named.IsGuest,
                     named.Member.ClaimedAt == null ? null : named.Member.Name,
                     named.PictureUrl));
         }

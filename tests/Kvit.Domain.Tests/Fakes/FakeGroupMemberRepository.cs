@@ -21,6 +21,11 @@ namespace Kvit.Domain.Tests.Fakes
             _rows.Add(new NamedMember { Member = member, DisplayName = displayName });
         }
 
+        public void SeedGuest(GroupMember member)
+        {
+            _rows.Add(new NamedMember { Member = member, DisplayName = member.Name, IsGuest = true });
+        }
+
         public void Add(GroupMember member)
         {
             Added.Add(member);

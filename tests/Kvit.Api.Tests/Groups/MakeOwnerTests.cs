@@ -94,6 +94,20 @@ namespace Kvit.Api.Tests.Groups
         }
 
         [Fact]
+        public async Task MakeOwner_Guest_Answers400NotAccountAndWritesNothing()
+        {
+            GroupSetup setup = await _app.CreateGroupWithMemberAsync();
+            GuestMember guest = await GuestSteps.JoinWithNewNameAsync(_app, setup.GroupId, "Cvetan");
+            string before = await GroupRows.SnapshotAsync(_app, setup.GroupId);
+
+            HttpResponseMessage response = await GroupRequests.MakeOwnerAsync(setup.Owner.Client, setup.GroupId, guest.RowId);
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, ResultCodes.MEMBER_NOT_ACCOUNT);
+            Assert.Equal(before, await GroupRows.SnapshotAsync(_app, setup.GroupId));
+            Assert.Equal(setup.Owner.UserId.ToString(), await GroupRows.GroupValueAsync(_app, setup.GroupId, "owner_user_id"));
+        }
+
+        [Fact]
         public async Task MakeOwner_PlainName_Answers400NotAccountAndWritesNothing()
         {
             GroupSetup setup = await _app.CreateGroupWithMemberAsync();

@@ -54,6 +54,7 @@ namespace Kvit.Infrastructure.Persistence
                         Member = member,
                         DisplayName = user == null ? member.Name : user.DisplayName,
                         PictureUrl = user == null ? null : user.GooglePictureUrl,
+                        IsGuest = user != null && user.IsGuest,
                     });
         }
     }

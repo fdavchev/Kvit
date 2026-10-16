@@ -291,6 +291,7 @@ const timeNamespace = /^time\./
 const step5Namespaces = /^(activity|oneBill|newGroup)\./
 const phase9DraftActivityKeys = /^activity\.settlement/
 const phase10DraftActivityKeys = /^activity\.(closing|groupFinished|groupReopened)/
+const phase12bDraftActivityKeys = /^activity\.guestLetInAgain$/
 const phase7NewGroupKeys: string[] = approvedPhase7Texts
   .map(([key]) => key)
   .filter((key) => key.startsWith('newGroup.'))
@@ -487,6 +488,7 @@ describe('the approved Phase 8 Step 5 texts', () => {
       .filter((path) => step5Namespaces.test(path))
       .filter((path) => !phase9DraftActivityKeys.test(path))
       .filter((path) => !phase10DraftActivityKeys.test(path))
+      .filter((path) => !phase12bDraftActivityKeys.test(path))
       .sort()
     const keysListedAbove = [
       ...phase7NewGroupKeys,
@@ -496,7 +498,7 @@ describe('the approved Phase 8 Step 5 texts', () => {
     expect(keysInTheFile).toEqual(keysListedAbove)
   })
 
-  it.each(['activity.ownershipTransferred', 'activity.memberLetBackIn'])('writes «го/ја» literally in the Macedonian text of %s, because the app does not know the gender of a person', (key) => {
+  it.each(['activity.ownershipTransferred', 'activity.memberLetBackIn', 'activity.guestLetInAgain'])('writes «го/ја» literally in the Macedonian text of %s, because the app does not know the gender of a person', (key) => {
     expect(translated('mk', key)).toContain('го/ја')
   })
 

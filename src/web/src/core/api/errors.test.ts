@@ -45,6 +45,9 @@ const mappedErrorCodes = [
   'INVITE_REMOVED',
   'INVITE_NOTHING_TO_UNDO',
   'INVITE_GUEST_CHOICE_INVALID',
+  'GUEST_NOT_ALLOWED',
+  'GUEST_JOIN_SIGNED_IN',
+  'MEMBER_NOT_GUEST',
 ]
 
 const errorTexts: Record<'en' | 'mk', Record<string, unknown>> = {
