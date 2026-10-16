@@ -17,6 +17,7 @@ import { RouterAfterRestore } from '@/core/router/RouterAfterRestore'
 import { routes } from '@/core/router/routes'
 import type { Me } from '@/core/services/me/meService'
 import { problemResponse, requestCountTo, stubFetch, stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
+import { jsonAnswer, noContentAnswer, stubFetchByRequest } from '@/test/requestTestHelpers'
 import { testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
 import { createTestPersister } from '@/test/testPersister'
@@ -193,7 +194,10 @@ describe('restoring the saved data when the app starts', () => {
   })
 
   it('resets the groups and deletes the saved copy when /api/me names a different person', async () => {
-    stubFetch(Response.json(otherPerson))
+    stubFetchByRequest({
+      'GET /api/me': jsonAnswer(otherPerson),
+      'POST /api/me/active': noContentAnswer(),
+    })
     const { persister, removeClient } = await persisterHolding(savedCopy(testMe))
 
     const queryClient = await startApp(persister)

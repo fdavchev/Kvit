@@ -43,6 +43,16 @@ namespace Kvit.Domain.Entities
             return New(userId, UsageEventType.SettlementConfirmed, null, occurredAt);
         }
 
+        public static UsageEvent Active(Guid userId, DateTimeOffset occurredAt)
+        {
+            return New(userId, UsageEventType.Active, null, occurredAt);
+        }
+
+        public static DateOnly UtcDayOf(DateTimeOffset moment)
+        {
+            return DateOnly.FromDateTime(moment.UtcDateTime);
+        }
+
         private static UsageEvent New(Guid userId, UsageEventType type, string? detail, DateTimeOffset occurredAt)
         {
             DateTimeOffset occurredAtUtc = occurredAt.ToUniversalTime();
@@ -53,7 +63,7 @@ namespace Kvit.Domain.Entities
                 Type = type,
                 Detail = detail,
                 OccurredAt = occurredAtUtc,
-                OccurredOn = DateOnly.FromDateTime(occurredAtUtc.UtcDateTime),
+                OccurredOn = UtcDayOf(occurredAtUtc),
             };
         }
     }

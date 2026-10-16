@@ -19,12 +19,36 @@ namespace Kvit.Infrastructure.Persistence
             return new GroupMoney(memberIds, expenses, settlements);
         }
 
+        public static async Task<Dictionary<Guid, GroupMoney>> GroupMoneyOfGroupsAsync(this AppDbContext context, IReadOnlyCollection<Guid> groupIds, CancellationToken cancellationToken)
+        {
+            List<GroupMember> members = await context.GroupMembers
+                .AsNoTracking()
+                .Where(member => groupIds.Contains(member.GroupId))
+                .OrderBy(member => member.JoinedAt)
+                .ThenBy(member => member.Id)
+                .ToListAsync(cancellationToken);
+            List<Expense> expenses = await CountedExpenses(context)
+                .Where(expense => groupIds.Contains(expense.GroupId))
+                .ToListAsync(cancellationToken);
+            List<Settlement> settlements = await CountedSettlements(context)
+                .Where(settlement => groupIds.Contains(settlement.GroupId))
+                .ToListAsync(cancellationToken);
+            ILookup<Guid, Guid> memberIdsByGroup = members.ToLookup(member => member.GroupId, member => member.Id);
+            ILookup<Guid, Expense> expensesByGroup = expenses.ToLookup(expense => expense.GroupId);
+            ILookup<Guid, Settlement> settlementsByGroup = settlements.ToLookup(settlement => settlement.GroupId);
+
+            return groupIds.Distinct().ToDictionary(
+                groupId => groupId,
+                groupId => new GroupMoney(
+                    [.. memberIdsByGroup[groupId]],
+                    [.. expensesByGroup[groupId].Select(BalanceExpenseOf)],
+                    [.. settlementsByGroup[groupId].Select(BalanceSettlementOf)]));
+        }
+
         public static async Task<List<BalanceExpense>> CountedBalanceExpensesOfAsync(this AppDbContext context, Guid groupId, CancellationToken cancellationToken)
         {
-            List<Expense> expenses = await context.Expenses
-                .AsNoTracking()
-                .Include(expense => expense.Shares)
-                .Where(expense => expense.GroupId == groupId && expense.DeletedAt == null)
+            List<Expense> expenses = await CountedExpenses(context)
+                .Where(expense => expense.GroupId == groupId)
                 .ToListAsync(cancellationToken);
 
             return [.. expenses.Select(BalanceExpenseOf)];
@@ -32,12 +56,26 @@ namespace Kvit.Infrastructure.Persistence
 
         public static async Task<List<BalanceSettlement>> CountedBalanceSettlementsOfAsync(this AppDbContext context, Guid groupId, CancellationToken cancellationToken)
         {
-            List<Settlement> settlements = await context.Settlements
-                .AsNoTracking()
-                .Where(settlement => settlement.GroupId == groupId && settlement.DeletedAt == null)
+            List<Settlement> settlements = await CountedSettlements(context)
+                .Where(settlement => settlement.GroupId == groupId)
                 .ToListAsync(cancellationToken);
 
             return [.. settlements.Select(BalanceSettlementOf)];
+        }
+
+        private static IQueryable<Expense> CountedExpenses(AppDbContext context)
+        {
+            return context.Expenses
+                .AsNoTracking()
+                .Include(expense => expense.Shares)
+                .Where(expense => expense.DeletedAt == null);
+        }
+
+        private static IQueryable<Settlement> CountedSettlements(AppDbContext context)
+        {
+            return context.Settlements
+                .AsNoTracking()
+                .Where(settlement => settlement.DeletedAt == null);
         }
 
         private static BalanceExpense BalanceExpenseOf(Expense expense)

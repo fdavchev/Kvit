@@ -1,13 +1,34 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
+import { errorMessageKey } from '@/core/api/errors'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
 import { routes } from '@/core/router/routes'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
+import { KvitError } from '@/shared/components/KvitError'
+import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
+import { useDashboard } from '../hooks/useDashboard'
+import { HomeDashboard } from './HomeDashboard'
 
 export function HomeScreen() {
   const { t } = useTranslation()
   const me = useSignedInMe()
+  const dashboardQuery = useDashboard()
+
+  function renderDashboard() {
+    if (dashboardQuery.isPending) {
+      return <KvitLoading />
+    }
+    if (dashboardQuery.isError) {
+      return (
+        <KvitError
+          message={t(errorMessageKey(dashboardQuery.error))}
+          onRetry={() => void dashboardQuery.refetch()}
+        />
+      )
+    }
+    return <HomeDashboard dashboard={dashboardQuery.data} />
+  }
 
   return (
     <KvitScreen>
@@ -23,11 +44,7 @@ export function HomeScreen() {
           <KvitAvatar name={me.displayName} pictureUrl={me.pictureUrl} colorIndex="brand" size="fill" />
         </Link>
       </header>
-      <section className="grid flex-1 place-items-center pt-8 pb-[18dvh]">
-        <p className="max-w-[26ch] text-center text-balance text-muted-foreground">
-          {t('home.placeholder')}
-        </p>
-      </section>
+      {renderDashboard()}
     </KvitScreen>
   )
 }

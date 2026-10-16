@@ -14,8 +14,8 @@ import {
 import type { Currency } from '@/shared/utils/formatMoney'
 
 export const groupCurrencies: readonly Currency[] = ['MKD', 'EUR']
-const groupKinds = ['Group', 'OneBill'] as const
-const groupStatuses = ['Open', 'Closing', 'Finished'] as const
+export const groupKinds = ['Group', 'OneBill'] as const
+export const groupStatuses = ['Open', 'Closing', 'Finished'] as const
 
 export type GroupKind = (typeof groupKinds)[number]
 export type GroupStatus = (typeof groupStatuses)[number]

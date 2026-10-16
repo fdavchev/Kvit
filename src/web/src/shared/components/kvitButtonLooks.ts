@@ -20,7 +20,7 @@ export const kvitButtonLooks = {
   },
   smallLink: {
     shadcnVariant: 'link',
-    className: `${sharedLook} min-h-10 text-[0.9375rem] font-semibold text-link`,
+    className: `${sharedLook} min-h-11 text-[0.9375rem] font-semibold text-link`,
   },
   underlinedLink: {
     shadcnVariant: 'link',

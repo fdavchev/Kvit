@@ -1,5 +1,14 @@
 # Decisions
 
+## 2026-10-16: Phase 11 (dashboard + Release 1): done, the rules that stay
+The whole Phase 11 decision log (Filip's answers, the Step 2 to 6 choices, rejected alternatives) moved word for word to the end of `reports/2026-10-16-phase-11-dashboard.md`, section "Decisions and rejected alternatives". What stays true:
+- **Home is layout C:** the "You are owed" and "You owe" boxes (MKD and EUR apart, two different colours), a pinned "Needs you" bar (the count only in the circle), groups as cards, Recent activity = everyone's last 5 actions.
+- **"Needs you" is answered on Home** (payments: Confirm / Reject; closing: Confirm / Object). Closing items come first, then payments, oldest first.
+- **The "+" opens a short list:** "Add to <group>" (the Open normal group of the caller's newest own expense, else the one joined last; never a One bill), "New One bill", "Another group…". No "New group" item: a group is made in the Groups section (the empty Home keeps its New group button). Adding from Home is 3 taps, which Filip accepted.
+- **A person whose groups are all Finished** sees a compact "No open groups right now" card with a New group button above Recent activity; the full "No groups yet" screen only when there are no groups and no activity.
+- **`Active` usage event:** one row per user per UTC day (`POST /api/me/active`).
+- **Toasts sit above the closing bar** while it is on screen. The dark `color-mix` surfaces are reconsidered in Phase 12.
+
 ## 2026-10-15: Phase 10 (finishing groups): done, the rules that stay
 The whole Phase 10 decision log (Filip's answers, the Step 1 to 3 choices, the live-check fixes, rejected alternatives) moved word for word to the end of `reports/2026-10-15-phase-10-finish-groups.md`, section "Decisions and rejected alternatives". What stays true:
 - **Closing:** the owner starts it when every balance is 0, nothing is pending and the group has at least one counted expense (a One bill never closes by hand). Every member with an account except the owner confirms or objects (optional reason, 200 characters). Everyone confirmed, or 24 hours with no objection (applied lazily on the next write, GET never writes), means Finished; an objection returns the group to Open. Only the owner can Unlock a Finished group.
@@ -268,7 +277,7 @@ The whole Phase 4 decision log (technical decisions, rejected alternatives, code
 
 ## 2026-09-24: Speed details
 - **Adding an expense:** one screen with the amount field focused and the number keypad open. The other fields are **pre-filled with the most common choice** and shown as tappable chips: paid by me, split equally among everyone, today, the group's currency, and a category guessed or left empty. Tap a chip only to change it. The title is optional.
-- **After login** the app opens on the **dashboard**, with a big "+" button that adds to the last-used group.
+- **After login** the app opens on the **dashboard**, with a big "+" button that opens a short list (Add to the last-used group, New One bill, Another group…); see the Phase 11 entry (2026-10-15).
 - **Personal spending:** tap a category (or "+ new category" right there), type the amount, save.
 - **Undo instead of "Are you sure?"** pop-ups.
 - **No limits and no ads** in the app for now. Paid features may come later if it becomes popular. If that happens, the free-hosting terms must be checked again for commercial use.

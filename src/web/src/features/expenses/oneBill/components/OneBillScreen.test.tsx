@@ -379,7 +379,7 @@ describe('OneBillScreen', () => {
       const sheet = await openSheet('split')
       fireEvent.click(splitTab(sheet, 'splitExact'))
       typeInPerson(sheet, 'Marko', '480')
-      fireEvent.keyDown(sheet, { key: 'Escape' })
+      fireEvent.click(doneButton(sheet))
       await waitForSheetToClose()
 
       fireEvent.click(currencyToggle('MKD'))
@@ -1137,21 +1137,22 @@ describe('OneBillScreen', () => {
       expect(isDisabled(saveBillButton())).toBe(false)
     })
 
-    it('keeps Save bill disabled while the split does not add up, even with a valid amount', async () => {
+    it('keeps Save bill enabled with the old equal split when the sheet is dismissed while the Exact split does not add up', async () => {
       await renderReadyBill()
       typeAmount('1800')
       await addNames('Marko', 'Ana')
       const sheet = await openSheet('split')
       fireEvent.click(splitTab(sheet, 'splitExact'))
       typeInPerson(sheet, 'Filip', '600')
+      expect(isDisabled(doneButton(sheet))).toBe(true)
 
       fireEvent.keyDown(sheet, { key: 'Escape' })
       await waitForSheetToClose()
 
-      expect(isDisabled(saveBillButton())).toBe(true)
+      expect(isDisabled(saveBillButton())).toBe(false)
     })
 
-    it('keeps Save bill disabled when nobody is in the split', async () => {
+    it('keeps Save bill enabled with the old equal split when the sheet is dismissed while nobody is in the split', async () => {
       await renderReadyBill()
       typeAmount('1800')
       await addNames('Marko')
@@ -1159,11 +1160,12 @@ describe('OneBillScreen', () => {
       for (const name of ['Filip', 'Marko']) {
         fireEvent.click(within(personGroup(sheet, name)).getByRole('button', { name: startsWith(name) }))
       }
+      expect(isDisabled(doneButton(sheet))).toBe(true)
 
       fireEvent.keyDown(sheet, { key: 'Escape' })
       await waitForSheetToClose()
 
-      expect(isDisabled(saveBillButton())).toBe(true)
+      expect(isDisabled(saveBillButton())).toBe(false)
     })
   })
 
@@ -1234,7 +1236,7 @@ describe('OneBillScreen', () => {
       const sheet = await openSheetOnTab('splitExact', 'Marko')
       typeInPerson(sheet, 'Filip', '600')
 
-      fireEvent.keyDown(sheet, { key: 'Escape' })
+      fireEvent.click(doneButton(sheet))
       await waitForSheetToClose()
 
       expect(isDisabled(saveBillButton())).toBe(false)
@@ -1261,7 +1263,7 @@ describe('OneBillScreen', () => {
     it('fills the box nobody typed in again when the amount is changed after the sheet was closed', async () => {
       const sheet = await openSheetOnTab('splitExact', 'Marko')
       typeInPerson(sheet, 'Filip', '600')
-      fireEvent.keyDown(sheet, { key: 'Escape' })
+      fireEvent.click(doneButton(sheet))
       await waitForSheetToClose()
 
       typeAmount('2000')

@@ -157,21 +157,31 @@ Moved forward from Phase 11 because the Render wake-up (about 22 s) made the app
 - [ ] **Filip:** commit, push, see CI go green, merge into `main` (CI applies the `ClosingResponses` migration on Neon)
 
 ## Phase 11: Dashboard + Release 1 · `feat/11-dashboard`
-- [ ] Dashboard (Filip decides the layout that day), recent activity, "+" to the last-used group
+- [x] **Done 2026-10-15 (VERIFIED by automated test and live run).** Dashboard layout C, "Needs you" across groups answered on Home, recent activity, "+" list with "Add to" the group last added to
 - [x] Saved data shown instantly: moved to Phase 8b
-- [ ] `Active` usage event (once per user per day)
-- [ ] Full pass at 360 px in EN and MK, light and dark; every text translated
+- [x] **Done 2026-10-15 (VERIFIED by automated test).** `Active` usage event (once per user per day)
+- [x] **Done 2026-10-15 (VERIFIED by automated test and live run).** Closing bar: already floating and staying until answered; toasts now sit above it
+- [x] **Done 2026-10-15 (VERIFIED by automated test and live run).** Phase 10 leftovers from BACKLOG (except the awaited refetches and a few small items, which are in BACKLOG)
+- [x] **Done 2026-10-15 (VERIFIED by live run, 764 snapshots).** Full pass at 360 px in EN and MK, light and dark; every text translated (the Macedonian drafts are NOT read by Filip)
+- [x] **Code review done 2026-10-16:** four findings fixed (Home with only Finished groups, stale payment card, slash words, one closing rule) and the CI test `Active_SecondCall…` made independent of run order (VERIFIED by automated test: backend 3485, frontend 7119). Report: `reports/2026-10-16-phase-11-dashboard.md`; guide: `guides/phase-11-dashboard.md`
+- [ ] **Filip:** commit, push, see CI go green, merge into `main` (no migration)
 - [ ] Deploy; **Filip** and friends use it on something real
 - **Done when:** all tests pass and Filip says Release 1 works for him.
+
+## Phase 12: Animations + touch-ups · `feat/12-polish`
+- [ ] The glass-look redesign on every popup, and the animation pass with Filip's 2026-10-09 picks (BACKLOG)
+- [ ] Dark mode surface colours: Filip dislikes the `color-mix` ones (`--color-night-field`, `--color-night-raised`, `--color-night-line`) and wants them reconsidered (2026-10-15)
+- [ ] The desktop layout and the other small look items from BACKLOG
+- Moved here from Phase 11 on 2026-10-15 (Filip: "it's big").
 
 ---
 
 # Release 2: "budget" (phases get detailed when Release 1 is done)
-- Phase 12: personal spending + custom categories
-- Phase 13: income, once and repeating (lazy)
-- Phase 14: budget share per group, budget currency, limits, monthly summary
-- Phase 15: possible duplicates, group totals per category, group spending plan
+- Phase 13: personal spending + custom categories
+- Phase 14: income, once and repeating (lazy)
+- Phase 15: budget share per group, budget currency, limits, monthly summary
+- Phase 16: possible duplicates, group totals per category, group spending plan
 
 # Release 3: "polish"
-- Phase 16: the outbox (queue while the server wakes, "All up to date ✓", failed items with Retry / Discard)
-- Phase 17: admin statistics page
+- Phase 17: the outbox (queue while the server wakes, "All up to date ✓", failed items with Retry / Discard)
+- Phase 18: admin statistics page

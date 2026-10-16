@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router'
+import { Navigate, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { errorMessageKey } from '@/core/api/errors'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
@@ -10,6 +10,7 @@ import type { GroupMember } from '@/core/services/groups/membersService'
 import { useGroup } from '@/features/groups/group/hooks/useGroup'
 import { useMembers } from '@/features/groups/members/hooks/useMembers'
 import { GroupLoadError } from '@/features/groups/shared/components/GroupLoadError'
+import { canChangeGroup } from '@/features/groups/shared/groupAccess'
 import { useGroupIdParam } from '@/features/groups/shared/useGroupIdParam'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitLoading } from '@/shared/components/KvitLoading'
@@ -46,6 +47,9 @@ export function AddExpenseScreen() {
   }
 
   function renderContent() {
+    if (groupQuery.isSuccess && !canChangeGroup(groupQuery.data)) {
+      return <Navigate to={routes.group(groupId)} replace />
+    }
     if (groupQuery.isError) {
       return <GroupLoadError error={groupQuery.error} onRetry={() => void groupQuery.refetch()} />
     }

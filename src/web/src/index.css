@@ -30,7 +30,7 @@
   --color-brand-950: #3d2610;
   --color-brand-line: #9c6f47;
   --color-night: #351f1b;
-  --color-night-field: color-mix(in srgb, var(--color-night) 78%, black);
+  --color-night-field: color-mix(in srgb, var(--color-night) 78%, #000000);
   --color-night-raised: color-mix(
     in srgb,
     var(--color-night) 82%,
@@ -39,6 +39,11 @@
   --color-night-line: color-mix(
     in srgb,
     var(--color-night) 45%,
+    var(--color-brand-400)
+  );
+  --color-night-raised-line: color-mix(
+    in srgb,
+    var(--color-night) 25%,
     var(--color-brand-400)
   );
 }
@@ -72,6 +77,7 @@
   --color-field: var(--field);
   --color-field-foreground: var(--field-foreground);
   --color-field-border: var(--field-border);
+  --color-field-border-raised: var(--field-border-raised);
   --color-field-border-focus: var(--field-border-focus);
   --color-track: var(--track);
   --color-track-active: var(--track-active);
@@ -83,6 +89,8 @@
   --color-danger: var(--danger);
   --color-positive: var(--positive);
   --color-negative: var(--negative);
+  --color-positive-surface: var(--positive-surface);
+  --color-negative-surface: var(--negative-surface);
   --color-danger-fill: var(--danger-fill);
   --color-danger-fill-foreground: var(--danger-fill-foreground);
   --color-tab-active: var(--tab-active);
@@ -124,6 +132,7 @@
   --field: #ffffff;
   --field-foreground: var(--color-brand-950);
   --field-border: var(--color-brand-line);
+  --field-border-raised: var(--color-brand-line);
   --field-border-focus: var(--color-brand-950);
   --track: var(--color-brand-50);
   --track-active: #ffffff;
@@ -140,6 +149,8 @@
   --danger-fill-foreground: #ffffff;
   --positive: #1d6b2e;
   --negative: #b71f1f;
+  --positive-surface: #d9efd6;
+  --negative-surface: #f7d8d3;
   --tab-active: var(--track-active);
   --tab-active-foreground: var(--foreground);
   --category-orange: #bf5900;
@@ -194,6 +205,7 @@
     --field: var(--color-night-field);
     --field-foreground: var(--color-brand-50);
     --field-border: var(--color-night-line);
+    --field-border-raised: var(--color-night-raised-line);
     --field-border-focus: var(--color-brand-400);
     --track: var(--color-night-field);
     --track-active: var(--color-night-raised);
@@ -205,10 +217,12 @@
     --caret: var(--color-brand-400);
     --selection: var(--color-brand-400);
     --selection-foreground: var(--color-night);
-    --danger: #ff6b64;
+    --danger: #ff8a80;
     --danger-fill: #d12828;
     --positive: #7fd68f;
     --negative: #ff9a9a;
+    --positive-surface: #1f4a2a;
+    --negative-surface: #55222a;
     --tab-active: var(--color-brand-700);
     --tab-active-foreground: #ffffff;
   }

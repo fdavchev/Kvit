@@ -100,7 +100,7 @@ export function ExpenseRows({
             amountMinor={amountMinor}
             currency={currency}
             language={language}
-            onChange={onSplitDraftChange}
+            onDone={onSplitDraftChange}
             onClose={close}
           />
         )

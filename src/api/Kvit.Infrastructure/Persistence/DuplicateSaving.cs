@@ -1,0 +1,40 @@
+using Kvit.Contracts.Persistence;
+using Kvit.Infrastructure.Persistence.Configurations;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+
+namespace Kvit.Infrastructure.Persistence
+{
+    public static class DuplicateSaving
+    {
+        public static async Task SaveChangesOrReportDuplicateAsync(this AppDbContext context, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, ExpenseConfiguration.ClientRequestIdIndexName, SettlementConfiguration.ClientRequestIdIndexName))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new ClientRequestIdAlreadySavedException(exception);
+            }
+            catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, UsageEventConfiguration.ActiveDayIndexName))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new ActiveDayAlreadySavedException(exception);
+            }
+        }
+
+        private static bool IsUniqueViolationOf(DbUpdateException exception, params string[] indexNames)
+        {
+            return exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } violation
+                && indexNames.Contains(violation.ConstraintName);
+        }
+
+        private static async Task DiscardAsync(AppDbContext context, CancellationToken cancellationToken)
+        {
+            await context.Database.RollbackTransactionAsync(cancellationToken);
+            context.ChangeTracker.Clear();
+        }
+    }
+}

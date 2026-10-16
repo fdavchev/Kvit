@@ -227,7 +227,7 @@ describe('GroupScreen with the Balances tab', () => {
       await findBalanceCards()
 
       const urls = fetchMock.mock.calls.map(([url]) => String(url)).sort()
-      expect(urls).toEqual(['/api/me', groupPath, membersPath, balancesPath, settlementsPath].sort())
+      expect(urls).toEqual(['/api/me', '/api/me/active', groupPath, membersPath, balancesPath, settlementsPath].sort())
     })
 
     it('does not ask for the balances or the payments while the Expenses tab is open', async () => {

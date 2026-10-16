@@ -165,7 +165,22 @@
   },
   "home": {
     "greeting": "Здраво, {{name}}",
-    "placeholder": "Твоите групи и салда ќе се појават овде."
+    "owed": "Ти должат",
+    "owe": "Должиш",
+    "thingsNeedYou_one": "нешто те чека",
+    "thingsNeedYou_other": "нешта те чекаат",
+    "nothingNeedsYou": "Моментално ништо не те чека ✓",
+    "groups": "Твоите групи",
+    "recentActivity": "Скорашна активност",
+    "kvit": "квит",
+    "noGroupsTitle": "Сѐ уште нема групи",
+    "noGroupsHint": "Направи група или една сметка, па додај го првиот трошок.",
+    "noOpenGroupsTitle": "Моментално нема отворени групи",
+    "plus": "Додај",
+    "plusAddTo": "Додај во {{group}}",
+    "plusNewOneBill": "Нова една сметка",
+    "plusAnotherGroup": "Друга група…",
+    "activityExpenseEdited": "{{name}} уреди трошок"
   },
   "settings": {
     "title": "Поставки",
@@ -496,6 +511,13 @@
     "title": "Страницата не е пронајдена",
     "message": "Оваа страница не постои или е преместена.",
     "goHome": "Оди на почетната страница"
+  },
+  "wakingUp": {
+    "title": "Го будиме серверот…",
+    "hint": "Првиот пат ова трае околу една минута."
+  },
+  "toasts": {
+    "region": "Известувања"
   },
   "time": {
     "justNow": "пред малку",

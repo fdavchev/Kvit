@@ -62,7 +62,7 @@ export function DateSheet({ expenseDate, today, onPick, onClose }: DateSheetProp
           min={earliestDate}
           max={latestDate}
           onChange={(event) => setTypedDate(event.target.value)}
-          className="min-h-14 w-full rounded-[14px] border-2 border-field-border bg-field px-4 text-[1.0625rem] font-semibold text-field-foreground focus:border-field-border-focus focus-visible:outline-offset-0"
+          className="min-h-14 w-full rounded-[14px] border-2 border-field-border-raised bg-field px-4 text-[1.0625rem] font-semibold text-field-foreground focus:border-field-border-focus focus-visible:outline-offset-0"
         />
         <p className="mt-2 text-[0.9375rem] text-muted-foreground">{t('expense.dateHint')}</p>
       </div>

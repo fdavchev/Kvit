@@ -45,7 +45,7 @@ namespace Kvit.Api.Tests.Expenses
             ExpenseInput input = ExpenseInputs.Equal(ExpenseInputs.OneThousandMkd, ExpenseInputs.Mkd, group.OwnerRowId, group.OwnerRowId, group.MemberRowId);
             Guid clientRequestId = Guid.CreateVersion7();
             await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.Zero);
-            await using ExpenseInsertGate gate = await ExpenseInsertGate.CloseAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "expenses");
 
             Task<HttpResponseMessage> first = ExpenseRequests.AddAsync(group.Owner.Client, group.GroupId, input, clientRequestId);
             await gate.WaitUntilRequestsAreHeldAsync(1);
@@ -67,7 +67,7 @@ namespace Kvit.Api.Tests.Expenses
             ExpenseInput input = ExpenseInputs.Equal(ExpenseInputs.OneThousandMkd, ExpenseInputs.Mkd, group.OwnerRowId, group.OwnerRowId, group.MemberRowId);
             Guid clientRequestId = Guid.CreateVersion7();
             await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.Zero);
-            await using ExpenseInsertGate gate = await ExpenseInsertGate.CloseAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "expenses");
 
             Task<HttpResponseMessage> first = ExpenseRequests.AddAsync(group.Owner.Client, group.GroupId, input, clientRequestId);
             await gate.WaitUntilRequestsAreHeldAsync(1);
@@ -92,7 +92,7 @@ namespace Kvit.Api.Tests.Expenses
             ExpenseInput inOther = ExpenseInputs.Equal(ExpenseInputs.OneThousandMkd, ExpenseInputs.Mkd, other.OwnerRowId, other.OwnerRowId);
             Guid clientRequestId = Guid.CreateVersion7();
             await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.Zero);
-            await using ExpenseInsertGate gate = await ExpenseInsertGate.CloseAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "expenses");
 
             Task<HttpResponseMessage> first = ExpenseRequests.AddAsync(group.Owner.Client, group.GroupId, input, clientRequestId);
             await gate.WaitUntilRequestsAreHeldAsync(1);
@@ -113,7 +113,7 @@ namespace Kvit.Api.Tests.Expenses
             ExpenseInput input = ExpenseInputs.Equal(ExpenseInputs.OneThousandMkd, ExpenseInputs.Mkd, group.OwnerRowId, group.OwnerRowId);
             Guid clientRequestId = Guid.CreateVersion7();
             await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.Zero);
-            await using ExpenseInsertGate gate = await ExpenseInsertGate.CloseAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "expenses");
 
             Task<HttpResponseMessage> first = ExpenseRequests.AddAsync(group.Owner.Client, group.GroupId, input, clientRequestId);
             await gate.WaitUntilRequestsAreHeldAsync(1);

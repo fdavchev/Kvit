@@ -27,8 +27,24 @@ namespace Kvit.Infrastructure.Persistence
 
         public static IQueryable<NamedMember> NamedGroupMembers(this AppDbContext context, Guid groupId)
         {
-            return context.GroupMembers
-                .Where(member => member.GroupId == groupId)
+            return NamedMembersOf(context, context.GroupMembers.Where(member => member.GroupId == groupId));
+        }
+
+        public static IQueryable<NamedMember> NamedGroupMembers(this AppDbContext context, IReadOnlyCollection<Guid> groupIds)
+        {
+            return NamedMembersOf(context, context.GroupMembers.Where(member => groupIds.Contains(member.GroupId)));
+        }
+
+        public static IQueryable<NamedMember> InJoiningOrder(this IQueryable<NamedMember> members)
+        {
+            return members
+                .OrderBy(named => named.Member.JoinedAt)
+                .ThenBy(named => named.Member.Id);
+        }
+
+        private static IQueryable<NamedMember> NamedMembersOf(AppDbContext context, IQueryable<GroupMember> members)
+        {
+            return members
                 .LeftJoin(
                     context.Users,
                     member => member.UserId,
@@ -39,13 +55,6 @@ namespace Kvit.Infrastructure.Persistence
                         DisplayName = user == null ? member.Name : user.DisplayName,
                         PictureUrl = user == null ? null : user.GooglePictureUrl,
                     });
-        }
-
-        public static IQueryable<NamedMember> InJoiningOrder(this IQueryable<NamedMember> members)
-        {
-            return members
-                .OrderBy(named => named.Member.JoinedAt)
-                .ThenBy(named => named.Member.Id);
         }
     }
 }

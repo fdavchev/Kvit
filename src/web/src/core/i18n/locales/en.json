@@ -165,7 +165,22 @@
   },
   "home": {
     "greeting": "Hi, {{name}}",
-    "placeholder": "Your groups and balances will appear here."
+    "owed": "You are owed",
+    "owe": "You owe",
+    "thingsNeedYou_one": "thing needs you",
+    "thingsNeedYou_other": "things need you",
+    "nothingNeedsYou": "Nothing needs you right now ✓",
+    "groups": "Your groups",
+    "recentActivity": "Recent activity",
+    "kvit": "kvit",
+    "noGroupsTitle": "No groups yet",
+    "noGroupsHint": "Make a group or a one-time bill, then add your first expense.",
+    "noOpenGroupsTitle": "No open groups right now",
+    "plus": "Add",
+    "plusAddTo": "Add to {{group}}",
+    "plusNewOneBill": "New One bill",
+    "plusAnotherGroup": "Another group…",
+    "activityExpenseEdited": "{{name}} edited an expense"
   },
   "settings": {
     "title": "Settings",
@@ -496,6 +511,13 @@
     "title": "Page not found",
     "message": "This page doesn't exist or has moved.",
     "goHome": "Go to the dashboard"
+  },
+  "wakingUp": {
+    "title": "Waking up the server…",
+    "hint": "This takes about a minute the first time."
+  },
+  "toasts": {
+    "region": "Notifications"
   },
   "time": {
     "justNow": "just now",

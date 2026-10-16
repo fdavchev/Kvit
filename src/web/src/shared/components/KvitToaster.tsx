@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Toaster } from 'sonner'
 import { useTheme } from '@/core/theme/useTheme'
 
@@ -9,7 +10,7 @@ const toasterStyle: CSSProperties & Record<`--${string}`, string> = {
   '--border-radius': 'var(--radius)',
 }
 
-const bottomOffset = { bottom: 'var(--toast-offset-bottom)' }
+const bottomOffset = { bottom: 'calc(var(--toast-offset-bottom) + var(--toast-lift, 0px))' }
 
 const actionButtonStyle: CSSProperties = {
   height: 'auto',
@@ -23,6 +24,7 @@ const actionButtonStyle: CSSProperties = {
 }
 
 export function KvitToaster() {
+  const { t } = useTranslation()
   const { theme } = useTheme()
   return (
     <Toaster
@@ -32,6 +34,7 @@ export function KvitToaster() {
       offset={bottomOffset}
       mobileOffset={bottomOffset}
       toastOptions={{ actionButtonStyle }}
+      containerAriaLabel={t('toasts.region')}
     />
   )
 }

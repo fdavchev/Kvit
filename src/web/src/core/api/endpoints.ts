@@ -9,6 +9,8 @@ export const endpoints = {
   setPassword: '/api/auth/set-password',
   me: '/api/me',
   meLanguage: '/api/me/language',
+  meActive: '/api/me/active',
+  dashboard: '/api/dashboard',
   groups: '/api/groups',
   invitePreview: '/api/invites/preview',
   inviteJoin: '/api/invites/join',

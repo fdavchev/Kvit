@@ -27,5 +27,12 @@ namespace Kvit.Api.Controllers
             Result result = await _dispatcher.Send(new ChangeLanguageCommand(request.Language), cancellationToken);
             return Result(result);
         }
+
+        [HttpPost("active")]
+        public async Task<ActionResult> RecordActive(CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new RecordActiveCommand(), cancellationToken);
+            return Result(result);
+        }
     }
 }

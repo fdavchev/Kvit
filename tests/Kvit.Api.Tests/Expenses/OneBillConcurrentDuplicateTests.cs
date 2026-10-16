@@ -47,7 +47,7 @@ namespace Kvit.Api.Tests.Expenses
             OneBillInput input = OneBillInput.EqualAmongEveryone(ExpenseInputs.OneThousandMkd, ExpenseInputs.Mkd, "Marko");
             Guid clientRequestId = Guid.CreateVersion7();
             await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.Zero);
-            await using ExpenseInsertGate gate = await ExpenseInsertGate.CloseAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "expenses");
 
             Task<HttpResponseMessage> first = ExpenseRequests.OneBillAsync(caller.Client, input, clientRequestId);
             await gate.WaitUntilRequestsAreHeldAsync(1);
@@ -70,7 +70,7 @@ namespace Kvit.Api.Tests.Expenses
             OneBillInput input = OneBillInput.EqualAmongEveryone(ExpenseInputs.OneThousandMkd, ExpenseInputs.Mkd, "Marko");
             Guid clientRequestId = Guid.CreateVersion7();
             await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.Zero);
-            await using ExpenseInsertGate gate = await ExpenseInsertGate.CloseAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "expenses");
 
             Task<HttpResponseMessage> first = ExpenseRequests.OneBillAsync(caller.Client, input, clientRequestId);
             await gate.WaitUntilRequestsAreHeldAsync(1);
@@ -99,7 +99,7 @@ namespace Kvit.Api.Tests.Expenses
             OneBillInput input = OneBillInput.EqualAmongEveryone(ExpenseInputs.OneThousandMkd, ExpenseInputs.Mkd, "Marko");
             Guid clientRequestId = Guid.CreateVersion7();
             await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.Zero);
-            await using ExpenseInsertGate gate = await ExpenseInsertGate.CloseAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "expenses");
 
             Task<HttpResponseMessage> firstRequest = ExpenseRequests.OneBillAsync(first.Client, input, clientRequestId);
             await gate.WaitUntilRequestsAreHeldAsync(1);

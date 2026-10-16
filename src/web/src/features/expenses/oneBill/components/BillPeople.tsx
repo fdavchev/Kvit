@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
+import { cn } from '@/shared/utils/cn'
 import type { ExpensePerson } from '../../shared/expensePeople'
 
 interface BillPeopleProps {
@@ -10,6 +11,7 @@ interface BillPeopleProps {
 
 const circleLook = 'flex w-16 flex-col items-center gap-1'
 const circleLabelLook = 'max-w-16 truncate text-[0.8125rem] text-muted-foreground'
+const personChipLook = 'grid grid-cols-[4rem_auto] items-start justify-items-center gap-y-1'
 
 export function BillPeople({ people, onRemove, onAddName }: BillPeopleProps) {
   const { t } = useTranslation()
@@ -19,20 +21,20 @@ export function BillPeople({ people, onRemove, onAddName }: BillPeopleProps) {
       <h2 className="text-[1.0625rem] font-bold">{t('oneBill.people')}</h2>
       <ul className="flex flex-wrap items-start gap-2.5">
         {people.map((person) => (
-          <li key={person.memberId} className={`relative ${circleLook}`}>
+          <li key={person.memberId} className={personChipLook}>
             <KvitAvatar
               name={person.name}
               pictureUrl={person.pictureUrl}
               colorIndex={person.colorIndex}
               size="large"
             />
-            <span className={circleLabelLook}>{person.isYou ? t('expense.me') : person.name}</span>
+            <span className={cn(circleLabelLook, 'col-start-1 row-start-2')}>{person.isYou ? t('expense.me') : person.name}</span>
             {!person.isYou && (
               <button
                 type="button"
                 aria-label={t('oneBill.removeName', { name: person.name })}
                 onClick={() => onRemove(person.memberId)}
-                className="pressable absolute -top-3.5 -right-2.5 grid min-h-11 min-w-11 place-items-center rounded-full"
+                className="pressable col-start-2 row-start-1 flex min-h-11 min-w-11 items-start justify-start rounded-full"
               >
                 <span
                   aria-hidden="true"

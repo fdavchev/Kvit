@@ -1,7 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import type { RouteObject } from 'react-router'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { Language } from '@/core/i18n/language'
 import { checkRestoredMeWithServer } from '@/core/api/savedQueryCache'
 import { meQueryKey } from '@/core/auth/useMe'
 import type { Me } from '@/core/services/me/meService'
@@ -14,6 +15,7 @@ import {
   stubFetchThatNeverAnswers,
 } from '@/test/apiTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
+import { jsonAnswer, noContentAnswer, stubFetchByRequest } from '@/test/requestTestHelpers'
 import { seedMe, testMe } from '@/test/testMe'
 import { RequireAuth } from './RequireAuth'
 import { routes } from './routes'
@@ -191,7 +193,10 @@ describe('RequireAuth', () => {
     })
 
     it('goes to the change-password page when the background /api/me says the password must change', async () => {
-      stubFetch(Response.json(mustChangePasswordMe))
+      stubFetchByRequest({
+        'GET /api/me': jsonAnswer(mustChangePasswordMe),
+        'POST /api/me/active': noContentAnswer(),
+      })
 
       await renderRoutesWithProviders(routeTable, routes.dashboard, {
         seedCache: seedRestoredMe(testMe),
@@ -238,5 +243,152 @@ describe('RequireAuth', () => {
     expect(await screen.findByRole('alert')).toBeTruthy()
     expect(screen.queryByRole('status')).toBeNull()
     expect(screen.queryByText('home page')).toBeNull()
+  })
+
+  describe('the waking-up screen while there is no saved data', () => {
+    const wakingUpTexts: Record<Language, { title: string; hint: string }> = {
+      en: { title: 'Waking up the server…', hint: 'This takes about a minute the first time.' },
+      mk: { title: 'Го будиме серверот…', hint: 'Првиот пат ова трае околу една минута.' },
+    }
+    const centredClasses = ['items-center', 'justify-center']
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('shows only the spinner during the first 2 seconds, so a fast server shows no flash', async () => {
+      stubFetchThatNeverAnswers()
+      await renderRoutesWithProviders(routeTable, routes.dashboard)
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1999)
+      })
+
+      expect(screen.getByRole('status')).toBeTruthy()
+      expect(screen.queryByText(wakingUpTexts.en.title)).toBeNull()
+      expect(screen.queryByText(wakingUpTexts.en.hint)).toBeNull()
+    })
+
+    it.each(['en', 'mk'] as const)('shows the spinner with the title and the hint in one status after 2 seconds (%s)', async (language) => {
+      stubFetchThatNeverAnswers()
+      await renderRoutesWithProviders(routeTable, routes.dashboard, { language })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2000)
+      })
+
+      const status = screen.getByRole('status')
+      expect(status.textContent).toContain(wakingUpTexts[language].title)
+      expect(status.textContent).toContain(wakingUpTexts[language].hint)
+      expect(status.querySelector('[aria-hidden="true"]')).not.toBeNull()
+    })
+
+    it('centres the waking-up status on the full screen in the same layout as RouteError', async () => {
+      stubFetchThatNeverAnswers()
+      await renderRoutesWithProviders(routeTable, routes.dashboard)
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2000)
+      })
+
+      const screenOfStatus = screen.getByRole('status').closest('main')
+      expect(screenOfStatus).not.toBeNull()
+      expect(Array.from(screenOfStatus?.classList ?? [])).toEqual(expect.arrayContaining(centredClasses))
+    })
+
+    it('keeps waiting without any error text while the server stays silent for a minute', async () => {
+      stubFetchThatNeverAnswers()
+      await renderRoutesWithProviders(routeTable, routes.dashboard)
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(60000)
+      })
+
+      expect(screen.getByRole('status').textContent).toContain(wakingUpTexts.en.title)
+      expect(screen.queryByRole('alert')).toBeNull()
+    })
+
+    it('never shows the waking-up text when the server answers within 2 seconds', async () => {
+      stubFetch(Response.json(testMe))
+      await renderRoutesWithProviders(routeTable, routes.dashboard)
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500)
+      })
+      expect(screen.getByText('home page')).toBeTruthy()
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000)
+      })
+
+      expect(screen.queryByText(wakingUpTexts.en.title)).toBeNull()
+      expect(screen.queryByText(wakingUpTexts.en.hint)).toBeNull()
+    })
+
+    it('shows no waking-up text at all when saved data exists, however long the server takes', async () => {
+      stubFetchThatNeverAnswers()
+      await renderRoutesWithProviders(routeTable, routes.dashboard, { seedCache: seedRestoredMe(testMe) })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(30000)
+      })
+
+      expect(screen.getByText('home page')).toBeTruthy()
+      expect(screen.queryByText(wakingUpTexts.en.title)).toBeNull()
+      expect(screen.queryByText(wakingUpTexts.en.hint)).toBeNull()
+      expect(screen.queryByRole('status')).toBeNull()
+    })
+
+    it('starts the 2 seconds again after Retry, so the retry shows only the spinner at first', async () => {
+      stubFetch(new TypeError('Failed to fetch'))
+      await renderRoutesWithProviders(routeTable, routes.dashboard)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3000)
+      })
+      stubFetchThatNeverAnswers()
+
+      fireEvent.click(screen.getByRole('button', { name: en.common.retry }))
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000)
+      })
+
+      expect(screen.getByRole('status')).toBeTruthy()
+      expect(screen.queryByText(wakingUpTexts.en.title)).toBeNull()
+    })
+  })
+
+  describe('when the server cannot be reached while there is no saved data', () => {
+    const centredClasses = ['items-center', 'justify-center']
+
+    it.each([
+      ['no answer at all', () => new TypeError('Failed to fetch')],
+      ['a 502 from the server', () => new Response(null, { status: 502 })],
+      ['a 503 from the server', () => new Response(null, { status: 503 })],
+      ['a 504 from the server', () => new Response(null, { status: 504 })],
+    ])('shows the network error through KvitError in a centred full-screen layout, with Retry, after %s', async (_name, makeFailure) => {
+      stubFetch(makeFailure())
+
+      await renderRoutesWithProviders(routeTable, routes.dashboard)
+
+      const alert = await screen.findByRole('alert')
+      expect(alert.textContent).toContain(en.errors.network)
+      expect(screen.getByRole('button', { name: en.common.retry })).toBeTruthy()
+      const screenOfAlert = alert.closest('main')
+      expect(screenOfAlert, 'the error must sit inside the same <main> screen that RouteError uses').not.toBeNull()
+      expect(Array.from(screenOfAlert?.classList ?? [])).toEqual(expect.arrayContaining(centredClasses))
+    })
+
+    it('shows the Macedonian network error in the centred layout too', async () => {
+      stubFetch(new TypeError('Failed to fetch'))
+
+      await renderRoutesWithProviders(routeTable, routes.dashboard, { language: 'mk' })
+
+      const alert = await screen.findByRole('alert')
+      expect(alert.textContent).toContain(mk.errors.network)
+      expect(Array.from(alert.closest('main')?.classList ?? [])).toEqual(expect.arrayContaining(centredClasses))
+    })
   })
 })

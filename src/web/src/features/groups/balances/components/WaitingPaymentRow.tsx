@@ -5,7 +5,8 @@ import { useCancelSettlement } from '@/features/settlements/pending/hooks/useCan
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitInlineError } from '@/shared/components/KvitInlineError'
-import { balancesTextButtonLook } from '../balancesLooks'
+import { cn } from '@/shared/utils/cn'
+import { balancesRowLook, balancesRowTextLook, balancesTextButtonLook } from '../balancesLooks'
 
 interface WaitingPaymentRowProps {
   groupId: string
@@ -29,9 +30,9 @@ export function WaitingPaymentRow({
 
   return (
     <li className="flex flex-col gap-2 border-t border-field-border pt-2.5">
-      <div className="flex items-center gap-3">
+      <div className={cn(balancesRowLook, 'gap-3')}>
         <KvitAvatar name={receiver.name} pictureUrl={receiver.pictureUrl} colorIndex={receiver.colorIndex} />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className={balancesRowTextLook}>
           <p className="font-bold break-words">{title}</p>
           <p className="text-[0.8125rem] text-muted-foreground">{detail}</p>
         </div>

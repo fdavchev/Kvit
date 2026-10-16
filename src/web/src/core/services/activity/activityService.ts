@@ -28,7 +28,7 @@ export async function getActivity(groupId: string): Promise<ActivityEvent[]> {
   return readList(fields, 'events', what).map(parseActivityEvent)
 }
 
-function parseActivityEvent(row: unknown): ActivityEvent {
+export function parseActivityEvent(row: unknown): ActivityEvent {
   const what = 'an activity event'
   const fields = readObject(row, what)
   return {

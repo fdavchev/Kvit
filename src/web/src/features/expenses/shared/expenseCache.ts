@@ -23,6 +23,19 @@ export function deletedExpensesQueryKey(
 export async function refreshAfterExpenseChange(queryClient: QueryClient, groupId: string): Promise<void> {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: expensesQueryKey(groupId) }),
+    refreshGroupAfterExpenseChange(queryClient, groupId),
+  ])
+}
+
+export async function refreshAfterExpenseDelete(queryClient: QueryClient, groupId: string): Promise<void> {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: expensesQueryKey(groupId), refetchType: 'none' }),
+    refreshGroupAfterExpenseChange(queryClient, groupId),
+  ])
+}
+
+async function refreshGroupAfterExpenseChange(queryClient: QueryClient, groupId: string): Promise<void> {
+  await Promise.all([
     queryClient.invalidateQueries({ queryKey: activityQueryKey(groupId) }),
     queryClient.invalidateQueries({ queryKey: balancesQueryKey(groupId) }),
     refreshGroupAndList(queryClient, groupId),

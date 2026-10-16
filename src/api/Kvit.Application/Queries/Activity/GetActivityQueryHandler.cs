@@ -28,7 +28,10 @@ namespace Kvit.Application.Queries.Activity
                 return Group.NotFound<ActivityResponse>(query.GroupId);
             }
 
-            List<ActivityEventDto> events = await ActivityEventDtosOf(query.GroupId).ToListAsync(cancellationToken);
+            List<ActivityEventDto> events = await _context
+                .NewestActivityEventDtosOf(_context.ActivityEvents.Where(activityEvent => activityEvent.GroupId == query.GroupId))
+                .Take(FeedLimit)
+                .ToListAsync(cancellationToken);
             List<ActivityEventRow> rows = [.. events.Select(activityEvent => new ActivityEventRow(
                 activityEvent.Id,
                 activityEvent.Type,
@@ -41,27 +44,6 @@ namespace Kvit.Application.Queries.Activity
                 activityEvent.CreatedAt))];
 
             return Result.Ok(new ActivityResponse(rows));
-        }
-
-        private IQueryable<ActivityEventDto> ActivityEventDtosOf(Guid groupId)
-        {
-            return _context.ActivityEvents
-                .AsNoTracking()
-                .Where(activityEvent => activityEvent.GroupId == groupId)
-                .Join(_context.Users, activityEvent => activityEvent.ActorUserId, user => user.Id, (activityEvent, user) => new { Event = activityEvent, ActorName = user.DisplayName })
-                .OrderByDescending(row => row.Event.CreatedAt)
-                .ThenByDescending(row => row.Event.Id)
-                .Take(FeedLimit)
-                .Select(row => new ActivityEventDto(
-                    row.Event.Id,
-                    row.Event.Type,
-                    row.Event.ActorUserId,
-                    row.ActorName,
-                    row.Event.ExpenseId,
-                    row.Event.MemberId,
-                    row.Event.Changes,
-                    row.Event.Data,
-                    row.Event.CreatedAt));
         }
     }
 }
