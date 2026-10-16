@@ -1,6 +1,7 @@
 import { apiRequest, jsonRequest } from '@/core/api/apiClient'
 import { endpoints } from '@/core/api/endpoints'
 import type { Language } from '@/core/i18n/language'
+import { readDeviceTimeZone } from '@/core/services/deviceTimeZone'
 import { parseMe, type Me } from '@/core/services/me/meService'
 
 export interface RegisterInput {
@@ -68,8 +69,4 @@ export async function googleSignUp(input: GoogleSignUpInput): Promise<Me> {
 
 export async function setPassword(newPassword: string): Promise<void> {
   await apiRequest(endpoints.setPassword, jsonRequest('POST', { newPassword }))
-}
-
-function readDeviceTimeZone(): string {
-  return new Intl.DateTimeFormat().resolvedOptions().timeZone ?? ''
 }

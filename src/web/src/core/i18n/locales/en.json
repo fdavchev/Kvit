@@ -512,8 +512,15 @@
     "areYou": "Are you one of these?",
     "imNew": "No, I'm new",
     "joined": "You joined {{name}}",
-    "signInHint": "Create an account or log in to join.",
-    "removed": "You were removed from {{name}}. Ask the owner to let you back in."
+    "removed": "You were removed from {{name}}. Ask the owner to let you back in.",
+    "guest": {
+      "whoAreYou": "Who are you? Tap your name:",
+      "whatsYourName": "What's your name?",
+      "imNew": "I'm new",
+      "haveAccount": "Have an account?",
+      "logInWithEmail": "Log in with email",
+      "logInNote": "After logging in you come back here and join."
+    }
   },
   "notFound": {
     "title": "Page not found",

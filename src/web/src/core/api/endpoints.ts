@@ -14,6 +14,7 @@ export const endpoints = {
   groups: '/api/groups',
   invitePreview: '/api/invites/preview',
   inviteJoin: '/api/invites/join',
+  inviteJoinAsGuest: '/api/invites/join-as-guest',
   categories: '/api/categories',
   oneBill: '/api/groups/one-bill',
   group: (groupId: string) => `/api/groups/${groupId}`,

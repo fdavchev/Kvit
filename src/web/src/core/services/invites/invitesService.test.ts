@@ -13,7 +13,7 @@ import {
   openInvitePreviewWithNames,
   removedInvitePreview,
 } from '@/test/inviteTestData'
-import { joinGroup, previewInvite } from './invitesService'
+import { joinAsGuest, joinGroup, previewInvite } from './invitesService'
 
 const previewFields = Object.keys(openInvitePreview)
 const unclaimedFields = Object.keys(openInvitePreviewWithNames.unclaimedNames[0])
@@ -237,5 +237,91 @@ describe('joinGroup', () => {
     stubFetch(Response.json(body))
 
     await expect(joinGroup(testInviteToken)).rejects.toThrow(/object/)
+  })
+})
+
+describe('joinAsGuest', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  function stubDeviceTimeZone(timeZone: string | undefined): void {
+    const options = new Intl.DateTimeFormat().resolvedOptions()
+    vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue(
+      Object.assign({}, options, { timeZone }),
+    )
+  }
+
+  it('sends POST /api/invites/join-as-guest with the token, the free name, the language and the device time zone, and returns the group id', async () => {
+    const fetchMock = stubFetch(Response.json({ groupId: testGroupId }))
+    stubDeviceTimeZone('Europe/Skopje')
+
+    const groupId = await joinAsGuest(testInviteToken, { claimMemberId }, 'mk')
+
+    expect(groupId).toBe(testGroupId)
+    const request = sentRequest(fetchMock)
+    expect(request).toEqual({
+      url: '/api/invites/join-as-guest',
+      method: 'POST',
+      contentType: 'application/json',
+      body: { token: testInviteToken, claimMemberId, language: 'mk', timeZone: 'Europe/Skopje' },
+    })
+    expect(request.url).not.toContain(testInviteToken)
+  })
+
+  it('sends the typed name and no claimMemberId when the guest is new', async () => {
+    const fetchMock = stubFetch(Response.json({ groupId: testGroupId }))
+    stubDeviceTimeZone('Europe/Skopje')
+
+    await joinAsGuest(testInviteToken, { name: 'Ана' }, 'en')
+
+    expect(sentRequest(fetchMock).body).toStrictEqual({
+      token: testInviteToken,
+      name: 'Ана',
+      language: 'en',
+      timeZone: 'Europe/Skopje',
+    })
+  })
+
+  it('sends the typed name exactly as typed, also when it is empty, so the server decides', async () => {
+    const fetchMock = stubFetch(Response.json({ groupId: testGroupId }))
+
+    await joinAsGuest(testInviteToken, { name: '' }, 'en')
+
+    expect(sentRequest(fetchMock).body).toMatchObject({ name: '' })
+  })
+
+  it('sends an empty time zone when the device has none, so the server answers TIME_ZONE_INVALID', async () => {
+    const fetchMock = stubFetch(Response.json({ groupId: testGroupId }))
+    stubDeviceTimeZone(undefined)
+
+    await joinAsGuest(testInviteToken, { claimMemberId }, 'en')
+
+    expect(sentRequest(fetchMock).body).toMatchObject({ timeZone: '' })
+  })
+
+  it.each([
+    ['a name someone else took first', problemResponse(404, 'MEMBER_NOT_FOUND'), 404, 'MEMBER_NOT_FOUND'],
+    ['a new name already in the group', problemResponse(400, 'MEMBER_NAME_TAKEN'), 400, 'MEMBER_NAME_TAKEN'],
+    ['an invalid name', problemResponse(400, 'AUTH_DISPLAY_NAME_INVALID'), 400, 'AUTH_DISPLAY_NAME_INVALID'],
+    ['a person who is already signed in', problemResponse(409, 'GUEST_JOIN_SIGNED_IN'), 409, 'GUEST_JOIN_SIGNED_IN'],
+    ['too many tries', problemResponse(429, 'RATE_LIMITED'), 429, 'RATE_LIMITED'],
+  ])('rethrows the ApiError unchanged for %s', async (_name, response, httpStatus, errorCode) => {
+    stubFetch(response)
+
+    const error = await captureError(joinAsGuest(testInviteToken, { claimMemberId }, 'en'))
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ httpStatus, errorCode })
+  })
+
+  it.each([
+    ['an empty answer', {}],
+    ['a number for the group id', { groupId: 4 }],
+  ])('throws an error naming "groupId" for %s', async (_name, body) => {
+    stubFetch(Response.json(body))
+
+    await expect(joinAsGuest(testInviteToken, { claimMemberId }, 'en')).rejects.toThrow('groupId')
   })
 })

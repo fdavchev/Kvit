@@ -14,6 +14,18 @@ export const testMe: Me & { email: string } = {
   isGuest: false,
 }
 
+export const testGuestMe: Me = {
+  id: '5d0c9e1b-2a4f-4c6d-8e7f-9a0b1c2d3e4f',
+  displayName: 'Marko',
+  email: null,
+  language: 'en',
+  timeZone: 'Europe/Skopje',
+  mustChangePassword: false,
+  hasPassword: false,
+  pictureUrl: null,
+  isGuest: true,
+}
+
 export function seedMe(me: Me | null): (queryClient: QueryClient) => void {
   return (queryClient) => {
     queryClient.setQueryData<Me | null>(meQueryKey, me)

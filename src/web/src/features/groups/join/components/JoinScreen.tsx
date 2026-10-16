@@ -60,7 +60,7 @@ export function JoinScreen() {
       <>
         <InviteCard preview={preview} />
         {meQuery.data === null ? (
-          <SignedOutJoin token={token} onGoogleCredential={signInWithGoogle} />
+          <SignedOutJoin token={token} preview={preview} onGoogleCredential={signInWithGoogle} />
         ) : (
           <SignedInJoin token={token} preview={preview} />
         )}

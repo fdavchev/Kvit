@@ -340,7 +340,7 @@ describe('the join route followed through the real route table', () => {
     expect(
       await screen.findByText(translated('en', 'join.invitedTo', { name: testInviteGroupName })),
     ).toBeTruthy()
-    expect(screen.getByText(translated('en', 'join.signInHint'))).toBeTruthy()
+    expect(screen.getByText(translated('en', 'join.guest.whatsYourName'))).toBeTruthy()
     expect(router.state.location.pathname).toBe(routes.join(testInviteToken))
   })
 

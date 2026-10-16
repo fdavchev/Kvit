@@ -127,7 +127,6 @@ const approvedPhase7Step5Texts: [string, string, string][] = [
   ['join.areYou', 'Are you one of these?', 'Дали си некој од овие?'],
   ['join.imNew', "No, I'm new", 'Не, прв пат сум тука'],
   ['join.joined', 'You joined {{name}}', 'Се придружи на групата „{{name}}“'],
-  ['join.signInHint', 'Create an account or log in to join.', 'Направи профил или најави се за да се придружиш.'],
   ['join.removed', 'You were removed from {{name}}. Ask the owner to let you back in.', 'Те отстранија од групата „{{name}}“. Побарај од сопственикот да те врати.'],
   ['errors.MEMBER_NOT_FOUND', 'This person is no longer in the group.', 'Оваа личност веќе не е во групата.'],
   ['errors.MEMBER_IS_OWNER', "The owner can't be removed.", 'Сопственикот не може да се отстрани.'],
@@ -332,7 +331,7 @@ const timePluralCounts: [number, string, string, string][] = [
   [21, 'days', '21 days ago', 'пред 21 ден'],
 ]
 
-const removedKeys = ['welcome.pitch', 'common.comingSoon', 'group.expensesSoon', 'group.addPeople', 'expenses.empty']
+const removedKeys = ['welcome.pitch', 'common.comingSoon', 'group.expensesSoon', 'group.addPeople', 'expenses.empty', 'join.signInHint']
 
 describe('the approved Phase 6 texts', () => {
   it.each(approvedTexts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
