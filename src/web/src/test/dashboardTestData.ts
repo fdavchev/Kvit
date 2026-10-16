@@ -175,6 +175,14 @@ export const newUserDashboard: Dashboard = {
   plusTarget: null,
 }
 
+export const allGroupsFinishedDashboard: Dashboard = {
+  totals: { owed: [], owe: [] },
+  groups: [],
+  needsYou: [],
+  recentActivity: [taxiAddedRow, paymentRecordedRow],
+  plusTarget: null,
+}
+
 export function dashboardOf(changes: Partial<Dashboard>): Dashboard {
   return { ...fullDashboard, ...changes }
 }

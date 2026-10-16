@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import {
+  allGroupsFinishedDashboard,
   dashboardOf,
   dashboardPath,
   fullDashboard,
@@ -104,10 +105,91 @@ describe('the empty state', () => {
     expect(screen.queryByText(translated('en', 'home.noGroupsTitle'))).toBeNull()
   })
 
-  it('shows the empty state when the server lists no groups, whatever else it sends', async () => {
-    await renderHome({ dashboard: dashboardOf({ groups: [], needsYou: [], plusTarget: null }) })
+  it('shows the empty state when the server lists no groups and no recent activity, whatever else it sends', async () => {
+    await renderHome({
+      dashboard: dashboardOf({ groups: [], needsYou: [], recentActivity: [], plusTarget: null }),
+    })
 
     expect(await screen.findByText(translated('en', 'home.noGroupsTitle'))).toBeTruthy()
+  })
+})
+
+describe('the no open groups card', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it.each(languages)('shows the short title for a person whose groups are all finished in %s', async (language) => {
+    await renderHome({ language, dashboard: allGroupsFinishedDashboard })
+
+    expect(await screen.findByText(translated(language, 'home.noOpenGroupsTitle'))).toBeTruthy()
+  })
+
+  it('does not show the full empty state, because the person has used the app before', async () => {
+    await renderHome({ dashboard: allGroupsFinishedDashboard })
+    await screen.findByText(translated('en', 'home.noOpenGroupsTitle'))
+
+    expect(screen.queryByText(translated('en', 'home.noGroupsTitle'))).toBeNull()
+    expect(screen.queryByText(translated('en', 'home.noGroupsHint'))).toBeNull()
+  })
+
+  it('does not show the short card on the full empty state of a new person', async () => {
+    await renderHome({ dashboard: newUserDashboard })
+    await screen.findByText(translated('en', 'home.noGroupsTitle'))
+
+    expect(screen.queryByText(translated('en', 'home.noOpenGroupsTitle'))).toBeNull()
+  })
+
+  it('does not show the short card to a person who has open groups', async () => {
+    await renderHome()
+    await screen.findByRole('heading', { name: translated('en', 'home.groups') })
+
+    expect(screen.queryByText(translated('en', 'home.noOpenGroupsTitle'))).toBeNull()
+  })
+
+  it.each(languages)('shows the Recent activity heading and its rows in %s', async (language) => {
+    await renderHome({ language, dashboard: allGroupsFinishedDashboard })
+
+    expect(await screen.findByRole('heading', { name: translated(language, 'home.recentActivity') })).toBeTruthy()
+    expect(screen.getAllByRole('listitem').length).toBe(allGroupsFinishedDashboard.recentActivity.length)
+  })
+
+  it('puts the short card above Recent activity', async () => {
+    await renderHome({ dashboard: allGroupsFinishedDashboard })
+    const title = await screen.findByText(translated('en', 'home.noOpenGroupsTitle'))
+
+    const heading = screen.getByRole('heading', { name: translated('en', 'home.recentActivity') })
+
+    expect(title.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it.each(languages)('has exactly one New group button in %s that opens the New group screen', async (language) => {
+    const { router } = await renderHome({ language, dashboard: allGroupsFinishedDashboard })
+    await screen.findByText(translated(language, 'home.noOpenGroupsTitle'))
+
+    const buttons = screen.getAllByText(translated(language, 'groups.newButton'))
+    expect(buttons.length).toBe(1)
+    const button = buttons[0].closest('a, button')
+    expect(button).not.toBeNull()
+    fireEvent.click(button as Element)
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(routes.newGroup)
+    })
+  })
+
+  it('shows no empty Your groups list, because there is no open group to list', async () => {
+    await renderHome({ dashboard: allGroupsFinishedDashboard })
+    await screen.findByText(translated('en', 'home.noOpenGroupsTitle'))
+
+    expect(screen.queryByRole('heading', { name: translated('en', 'home.groups') })).toBeNull()
+  })
+
+  it('still shows the greeting', async () => {
+    await renderHome({ dashboard: allGroupsFinishedDashboard })
+    await screen.findByText(translated('en', 'home.noOpenGroupsTitle'))
+
+    expect(screen.getByText(translated('en', 'home.greeting', { name: 'Filip' }))).toBeTruthy()
   })
 })
 

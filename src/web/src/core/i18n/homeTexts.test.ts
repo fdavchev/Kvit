@@ -28,6 +28,7 @@ const dashboardTexts: HomeText[] = [
     en: 'Make a group or a one-time bill, then add your first expense.',
     mk: 'Направи група или една сметка, па додај го првиот трошок.',
   },
+  { key: 'home.noOpenGroupsTitle', en: 'No open groups right now', mk: 'Моментално нема отворени групи' },
   { key: 'home.plus', en: 'Add', mk: 'Додај' },
   { key: 'home.plusAddTo', en: 'Add to {{group}}', mk: 'Додај во {{group}}' },
   { key: 'home.plusNewOneBill', en: 'New One bill', mk: 'Нова една сметка' },

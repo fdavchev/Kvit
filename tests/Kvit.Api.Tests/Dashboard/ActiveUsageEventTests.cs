@@ -39,6 +39,7 @@ namespace Kvit.Api.Tests.Dashboard
         public async Task Active_SecondCallTheSameUtcDay_AnswersNoContentAndWritesNoSecondRow()
         {
             SignedInUser user = await _app.SignUpAsync();
+            DashboardSteps.AdvanceTo(_app.Clock, StartOfUtcDay(_app.Clock.UtcToday).AddDays(1).AddHours(12));
             await DashboardRequests.ActiveAsync(user.Client);
             _app.Clock.Advance(TimeSpan.FromMinutes(5));
 

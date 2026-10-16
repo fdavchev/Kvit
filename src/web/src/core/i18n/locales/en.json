@@ -175,6 +175,7 @@
     "kvit": "kvit",
     "noGroupsTitle": "No groups yet",
     "noGroupsHint": "Make a group or a one-time bill, then add your first expense.",
+    "noOpenGroupsTitle": "No open groups right now",
     "plus": "Add",
     "plusAddTo": "Add to {{group}}",
     "plusNewOneBill": "New One bill",

@@ -24,6 +24,7 @@ import {
   renderHome,
   type LiveDashboard,
 } from '@/test/homeTestHelpers'
+import { problemResponse } from '@/test/apiTestHelpers'
 import { expectDisabledWhilePending } from '@/test/formTestHelpers'
 import { neverAnsweringFetch } from '@/test/settlementActionsTestHelpers'
 import {
@@ -406,6 +407,59 @@ describe('answering a payment card from the home screen', () => {
       fireEvent.click(cardButton(card, translated('en', 'settlements.reject')))
 
       expect((await within(card).findByRole('alert')).textContent).toContain(translated('en', 'errors.network'))
+    })
+
+    it.each([
+      ['settlements.confirm', 400, 'SETTLEMENT_NOT_PENDING', confirmPaymentPath],
+      ['settlements.reject', 400, 'SETTLEMENT_NOT_PENDING', rejectPaymentPath],
+      ['settlements.confirm', 403, 'SETTLEMENT_NOT_ALLOWED', confirmPaymentPath],
+      ['settlements.reject', 404, 'SETTLEMENT_NOT_FOUND', rejectPaymentPath],
+    ])(
+      'asks for the dashboard again after %s is refused with %i %s, so the stale card can go away',
+      async (buttonKey, status, code, path) => {
+        vi.spyOn(console, 'error').mockImplementation(() => {})
+        const { fetchMock } = await renderLive({ [`POST ${path}`]: problemAnswer(status, code) })
+
+        fireEvent.click(cardButton(cardOf(markoSentence()), translated('en', buttonKey)))
+
+        await waitFor(() => {
+          expect(requestCount(fetchMock, 'POST', path)).toBe(1)
+          expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(2)
+        })
+      },
+    )
+
+    it('asks for the dashboard again when the server cannot be reached', async () => {
+      const { fetchMock } = await renderLive({ [`POST ${confirmPaymentPath}`]: networkFailureAnswer() })
+
+      fireEvent.click(cardButton(cardOf(markoSentence()), translated('en', 'settlements.confirm')))
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(2)
+      })
+    })
+
+    it('removes the card when the refused payment is already gone from the fresh dashboard', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const live: LiveDashboard = { current: fullDashboard }
+      await renderHome({
+        answers: {
+          [`GET ${dashboardPath}`]: liveDashboardAnswer(live),
+          [`POST ${confirmPaymentPath}`]: () => {
+            live.current = dashboardOf({ needsYou: [anaClosingItem] })
+            return problemResponse(400, 'SETTLEMENT_NOT_PENDING')
+          },
+        },
+      })
+      await findBar()
+      openNeedsBar()
+
+      fireEvent.click(cardButton(cardOf(markoSentence()), translated('en', 'settlements.confirm')))
+
+      await waitFor(() => {
+        expect(screen.queryByText(paragraphWithText(markoSentence()))).toBeNull()
+      })
+      expect(screen.getByText(paragraphWithText(closingSentence()))).toBeTruthy()
     })
 
     it('shows the error in Macedonian for a person who uses Macedonian', async () => {

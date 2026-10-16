@@ -1,15 +1,17 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { errorMessageKey } from '@/core/api/errors'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import type { DashboardPaymentItem } from '@/core/services/dashboard/dashboardService'
 import { balancesActionButtonLook } from '@/features/groups/balances/balancesLooks'
-import { useAnswerSettlement } from '@/features/settlements/pending/hooks/useAnswerSettlement'
+import { useAnswerSettlement, type SettlementAnswer } from '@/features/settlements/pending/hooks/useAnswerSettlement'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitInlineError } from '@/shared/components/KvitInlineError'
 import { kvitGlassButtonLook, kvitGlassDangerButtonLook } from '@/shared/components/kvitGlassLooks'
 import { cn } from '@/shared/utils/cn'
 import { formatMoney } from '@/shared/utils/formatMoney'
 import { needsYouCardLook } from '../homeLooks'
+import { invalidateDashboard } from '../shared/dashboardCache'
 import { NeedsYouCardText } from './NeedsYouCardText'
 
 interface HomePaymentCardProps {
@@ -19,11 +21,16 @@ interface HomePaymentCardProps {
 export function HomePaymentCard({ item }: HomePaymentCardProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
+  const queryClient = useQueryClient()
   const answerSettlement = useAnswerSettlement(item.groupId, item.settlementId)
   const sentence = t('balances.saysPaidYou', {
     from: item.fromName,
     amount: formatMoney(item.amountMinor, item.currency, language),
   })
+
+  function answer(choice: SettlementAnswer) {
+    answerSettlement.mutate(choice, { onError: () => void invalidateDashboard(queryClient) })
+  }
 
   return (
     <li className={needsYouCardLook}>
@@ -33,7 +40,7 @@ export function HomePaymentCard({ item }: HomePaymentCardProps) {
           type="button"
           className={cn(balancesActionButtonLook, kvitGlassDangerButtonLook, 'flex-1')}
           disabled={answerSettlement.isPending}
-          onClick={() => answerSettlement.mutate('reject')}
+          onClick={() => answer('reject')}
         >
           {t('settlements.reject')}
         </KvitButton>
@@ -41,7 +48,7 @@ export function HomePaymentCard({ item }: HomePaymentCardProps) {
           type="button"
           className={cn(balancesActionButtonLook, kvitGlassButtonLook, 'flex-1')}
           disabled={answerSettlement.isPending}
-          onClick={() => answerSettlement.mutate('confirm')}
+          onClick={() => answer('confirm')}
         >
           {t('settlements.confirm')}
         </KvitButton>

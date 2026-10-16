@@ -42,7 +42,7 @@ namespace Kvit.Application.Queries.Dashboard
                 group.Status,
                 [.. balancesByGroup[group.Id].Select(CurrencyAmountRowOf)]))];
             List<NeedsYouItem> needsYou = [
-                .. await ClosingNeedsYouItemsOfAsync(unfinishedGroups, userId.Value, cancellationToken),
+                .. await ClosingNeedsYouItemsOfAsync(unfinishedGroups, cancellationToken),
                 .. await PaymentNeedsYouItemsOfAsync(unfinishedGroups, userId.Value, cancellationToken)];
 
             return Result.Ok(new DashboardResponse(
@@ -73,18 +73,20 @@ namespace Kvit.Application.Queries.Dashboard
             return groups.ToDictionary(group => group.Id, group => moneyByGroup[group.Id].NonZeroBalancesOf(group.CallerMemberId));
         }
 
-        private async Task<List<ClosingNeedsYouItem>> ClosingNeedsYouItemsOfAsync(IReadOnlyList<DashboardGroupDto> groups, Guid userId, CancellationToken cancellationToken)
+        private async Task<List<ClosingNeedsYouItem>> ClosingNeedsYouItemsOfAsync(IReadOnlyList<DashboardGroupDto> groups, CancellationToken cancellationToken)
         {
-            List<DashboardGroupDto> closingGroups = [.. groups.Where(group => group.Status == GroupStatus.Closing && group.OwnerUserId != userId)];
+            List<DashboardGroupDto> closingGroups = [.. groups.Where(group => group.Status == GroupStatus.Closing)];
             List<Guid> closingGroupIds = [.. closingGroups.Select(group => group.Id)];
             HashSet<Guid> confirmedMemberIds = [.. await _context.ClosingResponses
                 .AsNoTracking()
                 .Where(response => closingGroupIds.Contains(response.GroupId) && response.Response == ClosingAnswer.Confirmed)
                 .Select(response => response.MemberId)
                 .ToListAsync(cancellationToken)];
+            Dictionary<Guid, GroupRoster> rostersByGroup = await RostersOfAsync(closingGroupIds, cancellationToken);
 
             return [.. closingGroups
-                .Where(group => !confirmedMemberIds.Contains(group.CallerMemberId))
+                .Where(group => rostersByGroup[group.Id].ClosingConfirmers(group.OwnerUserId)
+                    .Any(row => row.Member.Id == group.CallerMemberId && !confirmedMemberIds.Contains(row.Member.Id)))
                 .Select(group => new ClosingNeedsYouItem(group.Id, group.Name, group.OwnerName))];
         }
 
@@ -98,11 +100,7 @@ namespace Kvit.Application.Queries.Dashboard
                 .OrderBy(settlement => settlement.CreatedAt)
                 .ThenBy(settlement => settlement.Id)
                 .ToListAsync(cancellationToken);
-            List<Guid> groupIdsWithPending = [.. pendingSettlements.Select(settlement => settlement.GroupId).Distinct()];
-            List<NamedMember> memberRows = await _context.NamedGroupMembers(groupIdsWithPending).AsNoTracking().ToListAsync(cancellationToken);
-            Dictionary<Guid, GroupRoster> rostersByGroup = memberRows
-                .GroupBy(row => row.Member.GroupId)
-                .ToDictionary(groupRows => groupRows.Key, groupRows => new GroupRoster([.. groupRows]));
+            Dictionary<Guid, GroupRoster> rostersByGroup = await RostersOfAsync([.. pendingSettlements.Select(settlement => settlement.GroupId).Distinct()], cancellationToken);
 
             return [.. pendingSettlements
                 .Where(settlement => settlement.CanBeAnsweredBy(rostersByGroup[settlement.GroupId], userId, groupsById[settlement.GroupId].OwnerUserId))
@@ -113,6 +111,15 @@ namespace Kvit.Application.Queries.Dashboard
                     rostersByGroup[settlement.GroupId].RowOf(settlement.FromMemberId).DisplayName,
                     settlement.AmountMinor,
                     settlement.Currency))];
+        }
+
+        private async Task<Dictionary<Guid, GroupRoster>> RostersOfAsync(IReadOnlyCollection<Guid> groupIds, CancellationToken cancellationToken)
+        {
+            List<NamedMember> memberRows = await _context.NamedGroupMembers(groupIds).AsNoTracking().ToListAsync(cancellationToken);
+
+            return memberRows
+                .GroupBy(row => row.Member.GroupId)
+                .ToDictionary(groupRows => groupRows.Key, groupRows => new GroupRoster([.. groupRows]));
         }
 
         private async Task<List<DashboardActivityRow>> DashboardActivityRowsOfAsync(IReadOnlyList<DashboardGroupDto> groups, CancellationToken cancellationToken)
