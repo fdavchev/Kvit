@@ -728,7 +728,7 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                     b.ToTable("usage_events", null, t =>
                         {
-                            t.HasCheckConstraint("ck_usage_events_type", "type IN ('SignedUp', 'Active', 'JoinedViaInvite', 'GroupCreated', 'ExpenseAdded', 'SettlementConfirmed')");
+                            t.HasCheckConstraint("ck_usage_events_type", "type IN ('SignedUp', 'Active', 'JoinedViaInvite', 'GroupCreated', 'ExpenseAdded', 'SettlementConfirmed', 'GuestUpgraded')");
                         });
                 });
 

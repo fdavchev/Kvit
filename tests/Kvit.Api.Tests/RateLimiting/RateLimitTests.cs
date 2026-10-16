@@ -17,6 +17,8 @@ namespace Kvit.Api.Tests.RateLimiting
         [InlineData(AuthRequests.RegisterPath, 5)]
         [InlineData(AuthRequests.GoogleLogInPath, 10)]
         [InlineData(AuthRequests.GoogleSignUpPath, 10)]
+        [InlineData(AuthRequests.UpgradeGuestPath, 10)]
+        [InlineData(AuthRequests.GoogleUpgradeGuestPath, 10)]
         public async Task Request_AfterTheAllowedNumberFromOneAddress_Answers429RateLimited(string path, int allowed)
         {
             HttpClient client = _app.CreateClientSending(ProxiedApp.Secret, _app.NewVisitorAddress());
@@ -33,6 +35,8 @@ namespace Kvit.Api.Tests.RateLimiting
         [InlineData(AuthRequests.RegisterPath, 5)]
         [InlineData(AuthRequests.GoogleLogInPath, 10)]
         [InlineData(AuthRequests.GoogleSignUpPath, 10)]
+        [InlineData(AuthRequests.UpgradeGuestPath, 10)]
+        [InlineData(AuthRequests.GoogleUpgradeGuestPath, 10)]
         public async Task RefusedRequest_CarriesARetryAfterInWholeSeconds(string path, int allowed)
         {
             HttpClient client = _app.CreateClientSending(ProxiedApp.Secret, _app.NewVisitorAddress());
@@ -49,6 +53,8 @@ namespace Kvit.Api.Tests.RateLimiting
         [InlineData(AuthRequests.RegisterPath, 5)]
         [InlineData(AuthRequests.GoogleLogInPath, 10)]
         [InlineData(AuthRequests.GoogleSignUpPath, 10)]
+        [InlineData(AuthRequests.UpgradeGuestPath, 10)]
+        [InlineData(AuthRequests.GoogleUpgradeGuestPath, 10)]
         public async Task AnotherAddress_IsStillAllowedWhileOneAddressIsRefused(string path, int allowed)
         {
             HttpClient refusedVisitor = _app.CreateClientSending(ProxiedApp.Secret, _app.NewVisitorAddress());
@@ -68,6 +74,8 @@ namespace Kvit.Api.Tests.RateLimiting
         [InlineData(AuthRequests.RegisterPath, 5)]
         [InlineData(AuthRequests.GoogleLogInPath, 10)]
         [InlineData(AuthRequests.GoogleSignUpPath, 10)]
+        [InlineData(AuthRequests.UpgradeGuestPath, 10)]
+        [InlineData(AuthRequests.GoogleUpgradeGuestPath, 10)]
         public async Task ClientSentXForwardedFor_DoesNotChangeTheCountedAddress(string path, int allowed)
         {
             HttpClient client = _app.CreateClientSending(ProxiedApp.Secret, _app.NewVisitorAddress());

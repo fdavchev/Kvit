@@ -50,6 +50,7 @@ namespace Kvit.Domain.Results
         public const string AUTH_GOOGLE_EMAIL_NOT_VERIFIED = "AUTH_GOOGLE_EMAIL_NOT_VERIFIED";
         public const string AUTH_GOOGLE_NO_ACCOUNT = "AUTH_GOOGLE_NO_ACCOUNT";
         public const string AUTH_GOOGLE_EMAIL_TAKEN = "AUTH_GOOGLE_EMAIL_TAKEN";
+        public const string AUTH_NOT_GUEST = "AUTH_NOT_GUEST";
         public const string TIME_ZONE_INVALID = "TIME_ZONE_INVALID";
         public const string LANGUAGE_INVALID = "LANGUAGE_INVALID";
         public const string RATE_LIMITED = "RATE_LIMITED";

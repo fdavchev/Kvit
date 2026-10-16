@@ -23,5 +23,21 @@ namespace Kvit.Domain.Tests.Accounts
 
             Assert.True(result.IsSuccess);
         }
+
+        [Fact]
+        public void CheckIsGuest_ForAPersonWithAFullAccount_FailsWith409NotGuest()
+        {
+            Result result = AccountRules.CheckIsGuest(isGuest: false);
+
+            ResultAssert.Failed(result, HttpStatusCode.Conflict, ResultCodes.AUTH_NOT_GUEST);
+        }
+
+        [Fact]
+        public void CheckIsGuest_ForAGuest_Succeeds()
+        {
+            Result result = AccountRules.CheckIsGuest(isGuest: true);
+
+            Assert.True(result.IsSuccess);
+        }
     }
 }

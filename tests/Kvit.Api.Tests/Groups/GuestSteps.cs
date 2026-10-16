@@ -1,5 +1,6 @@
 using System.Net;
 using Kvit.Api.Tests.Auth;
+using Kvit.Api.Tests.Expenses;
 using Kvit.Api.Tests.Persistence;
 using Xunit;
 
@@ -26,6 +27,14 @@ namespace Kvit.Api.Tests.Groups
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Guid userId = await UserIdOfAsync(client);
             return new GuestMember(client, userId, await GroupRows.CurrentMemberIdAsync(app, groupId, userId));
+        }
+
+        public static async Task<(ExpenseGroup Group, GuestMember Guest)> CreateExpenseGroupWithGuestAsync(ExpensesApp app, string freeName)
+        {
+            ExpenseGroup group = await app.CreateExpenseGroupAsync(freeName);
+            GuestMember guest = await TapFreeNameAsync(app, group.GroupId, group.PlainRowIds[0]);
+
+            return (group, guest);
         }
 
         public static async Task<string> InviteTokenOfAsync(GroupsApp app, Guid groupId)

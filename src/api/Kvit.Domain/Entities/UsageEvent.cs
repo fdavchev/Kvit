@@ -23,6 +23,11 @@ namespace Kvit.Domain.Entities
             return New(userId, UsageEventType.SignedUp, method.ToString(), occurredAt);
         }
 
+        public static UsageEvent GuestUpgraded(Guid userId, SignUpMethod method, DateTimeOffset occurredAt)
+        {
+            return New(userId, UsageEventType.GuestUpgraded, method.ToString(), occurredAt);
+        }
+
         public static UsageEvent GroupCreated(Guid userId, DateTimeOffset occurredAt)
         {
             return New(userId, UsageEventType.GroupCreated, null, occurredAt);

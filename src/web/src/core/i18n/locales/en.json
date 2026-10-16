@@ -42,6 +42,7 @@
     "AUTH_GOOGLE_EMAIL_TAKEN": "This email already has an account.",
     "AUTH_USES_GOOGLE": "This account signs in with Google.",
     "AUTH_PASSWORD_ALREADY_SET": "This account already has a password. Use \"Change password\".",
+    "AUTH_NOT_GUEST": "You already have an account.",
     "GROUP_NOT_FOUND": "This group doesn't exist or you're no longer in it.",
     "GROUP_NOT_OWNER": "Only the group's owner can do this.",
     "GROUP_NAME_INVALID": "Enter a name (up to 60 characters).",

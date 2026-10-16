@@ -13,6 +13,8 @@ namespace Kvit.Api.Tests.Auth
         public const string RegisterPath = "/api/auth/register";
         public const string GoogleLogInPath = "/api/auth/google";
         public const string GoogleSignUpPath = "/api/auth/google/sign-up";
+        public const string UpgradeGuestPath = "/api/auth/upgrade";
+        public const string GoogleUpgradeGuestPath = "/api/auth/google/upgrade";
 
         public static string RegistrationJson(RegistrationForm form)
         {
@@ -79,6 +81,20 @@ namespace Kvit.Api.Tests.Auth
             string json = JsonSerializer.Serialize(new { idToken, displayName, timeZone, language });
 
             return PostJsonAsync(client, GoogleSignUpPath, json);
+        }
+
+        public static Task<HttpResponseMessage> UpgradeGuestAsync(HttpClient client, string email, string password)
+        {
+            string json = JsonSerializer.Serialize(new { email, password });
+
+            return PostJsonAsync(client, UpgradeGuestPath, json);
+        }
+
+        public static Task<HttpResponseMessage> GoogleUpgradeGuestAsync(HttpClient client, string idToken)
+        {
+            string json = JsonSerializer.Serialize(new { idToken });
+
+            return PostJsonAsync(client, GoogleUpgradeGuestPath, json);
         }
 
         public static Task<HttpResponseMessage> SetPasswordAsync(HttpClient client, string newPassword)

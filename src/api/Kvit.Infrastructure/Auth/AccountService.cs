@@ -108,6 +108,76 @@ namespace Kvit.Infrastructure.Auth
             return Result.Ok(MeResponseOf(user));
         }
 
+        public async Task<Result<MeResponse>> UpgradeGuestAsync(Guid userId, string email, string password, CancellationToken cancellationToken)
+        {
+            Result<AppUser> guest = await FindGuestAsync(userId);
+            if (!guest.IsSuccess)
+            {
+                return guest.ToFailure<MeResponse>();
+            }
+
+            AppUser user = guest.Value;
+            BecomeAccount(user, email);
+
+            IdentityResult upgraded;
+            try
+            {
+                upgraded = await _userManager.AddPasswordAsync(user, password);
+            }
+            catch (DbUpdateException exception) when (IsEmailUniqueViolation(exception))
+            {
+                return EmailTaken;
+            }
+
+            if (!upgraded.Succeeded)
+            {
+                return RegistrationFailure(upgraded, EmailTaken);
+            }
+
+            await RecordGuestUpgradeAsync(user, SignUpMethod.Email, cancellationToken);
+
+            return Result.Ok(MeResponseOf(user));
+        }
+
+        public async Task<Result<MeResponse>> UpgradeGuestWithGoogleAsync(Guid userId, string email, string googleSubject, string? googlePictureUrl, CancellationToken cancellationToken)
+        {
+            Result<AppUser> guest = await FindGuestAsync(userId);
+            if (!guest.IsSuccess)
+            {
+                return guest.ToFailure<MeResponse>();
+            }
+
+            if (await _userManager.FindByLoginAsync(GoogleLoginProvider, googleSubject) is not null)
+            {
+                return GoogleEmailTaken;
+            }
+
+            AppUser user = guest.Value;
+            BecomeAccount(user, email);
+            user.GooglePictureUrl = googlePictureUrl;
+
+            IdentityResult upgraded;
+            try
+            {
+                upgraded = await _userManager.UpdateSecurityStampAsync(user);
+            }
+            catch (DbUpdateException exception) when (IsEmailUniqueViolation(exception))
+            {
+                return GoogleEmailTaken;
+            }
+
+            if (!upgraded.Succeeded)
+            {
+                return RegistrationFailure(upgraded, GoogleEmailTaken);
+            }
+
+            UserLoginInfo googleLogin = new(GoogleLoginProvider, googleSubject, GoogleLoginProvider);
+            IdentityResultChecks.ThrowIfFailed(await _userManager.AddLoginAsync(user, googleLogin), $"link the Google account to the upgraded guest {user.Id}");
+            await RecordGuestUpgradeAsync(user, SignUpMethod.Google, cancellationToken);
+
+            return Result.Ok(MeResponseOf(user));
+        }
+
         public async Task<Result<MeResponse>> CheckLogInAsync(string email, string password, string timeZone, CancellationToken cancellationToken)
         {
             AppUser? user = await _userManager.FindByEmailAsync(email.Trim());
@@ -290,9 +360,39 @@ namespace Kvit.Infrastructure.Auth
             };
         }
 
+        private async Task<Result<AppUser>> FindGuestAsync(Guid userId)
+        {
+            AppUser? user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user is null)
+            {
+                return Result.Unauthorized<AppUser>(NotSignedInMessage, ResultCodes.AUTH_NOT_SIGNED_IN);
+            }
+
+            Result isGuest = AccountRules.CheckIsGuest(user.IsGuest);
+            if (!isGuest.IsSuccess)
+            {
+                return isGuest.ToFailure<AppUser>();
+            }
+
+            return Result.Ok(user);
+        }
+
+        private static void BecomeAccount(AppUser guest, string email)
+        {
+            guest.UserName = email;
+            guest.Email = email;
+            guest.IsGuest = false;
+        }
+
         private async Task RecordSignUpAsync(AppUser user, SignUpMethod method, CancellationToken cancellationToken)
         {
             _context.UsageEvents.Add(UsageEvent.SignedUp(user.Id, method, user.CreatedAt));
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        private async Task RecordGuestUpgradeAsync(AppUser user, SignUpMethod method, CancellationToken cancellationToken)
+        {
+            _context.UsageEvents.Add(UsageEvent.GuestUpgraded(user.Id, method, _timeProvider.GetUtcNow()));
             await _context.SaveChangesAsync(cancellationToken);
         }
 

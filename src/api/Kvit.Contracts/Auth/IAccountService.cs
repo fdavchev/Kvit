@@ -12,6 +12,10 @@ namespace Kvit.Contracts.Auth
 
         Task<Result<MeResponse>> CreateGuestAsync(string displayName, string language, string timeZone, CancellationToken cancellationToken);
 
+        Task<Result<MeResponse>> UpgradeGuestAsync(Guid userId, string email, string password, CancellationToken cancellationToken);
+
+        Task<Result<MeResponse>> UpgradeGuestWithGoogleAsync(Guid userId, string email, string googleSubject, string? googlePictureUrl, CancellationToken cancellationToken);
+
         Task<Result<MeResponse>> CheckLogInAsync(string email, string password, string timeZone, CancellationToken cancellationToken);
 
         Task<Result<MeResponse>> CheckGoogleLogInAsync(GoogleIdentity identity, string timeZone, CancellationToken cancellationToken);

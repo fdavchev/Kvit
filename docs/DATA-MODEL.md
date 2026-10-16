@@ -216,8 +216,8 @@ For the admin statistics page (Release 3), but **recorded from Release 1** so no
 |---|---|---|
 | `id` | bigint, auto-numbered | |
 | `user_id` | uuid null, FK → users, ON DELETE SET NULL | Deleting an account keeps its events (counts stay right) with `user_id` empty. A plain index on this column is kept for that delete (Phase 4, Step 1) |
-| `type` | text `'SignedUp'` / `'Active'` / `'JoinedViaInvite'` / `'GroupCreated'` / `'ExpenseAdded'` / `'SettlementConfirmed'` | A check constraint allows only these six |
-| `detail` | text null | `'Email'` or `'Google'` for `SignedUp` |
+| `type` | text `'SignedUp'` / `'Active'` / `'JoinedViaInvite'` / `'GroupCreated'` / `'ExpenseAdded'` / `'SettlementConfirmed'` / `'GuestUpgraded'` | A check constraint allows only these seven (`GuestUpgraded` added in Phase 12b Step 3, migration `GuestUpgradedUsageEvent`) |
+| `detail` | text null | `'Email'`, `'Google'` or `'Guest'` for `SignedUp`; `'Email'` or `'Google'` for `GuestUpgraded` (how the guest made the account) |
 | `occurred_at` | timestamptz | |
 | `occurred_on` | date (UTC day) | |
 
