@@ -10,7 +10,7 @@ interface UndoToastOptions {
 const toastDurationMs = 4000
 
 const dangerToastStyle: CSSProperties & Record<`--${string}`, string> = {
-  '--normal-bg': 'var(--danger-fill)',
+  '--normal-bg': 'var(--glass-danger)',
   '--normal-border': 'var(--danger-fill)',
   '--normal-text': 'var(--danger-fill-foreground)',
 }

@@ -474,7 +474,7 @@ describe('ExpenseDetailScreen', () => {
       expect(sentence('Bojan added it')).toBeTruthy()
       expect(sentence('Ana changed the amount: 2,800 MKD → 3,000 MKD')).toBeTruthy()
       expect(sentence('Ana changed the title: — → Hotel')).toBeTruthy()
-      expect(sentence('Ana changed the category: Food & drinks → Accommodation')).toBeTruthy()
+      expect(sentence('Ana changed the category: Food & drinks → Stay')).toBeTruthy()
       expect(sentence('Filip changed the note: Booked → —')).toBeTruthy()
       expect(sentence('Filip changed the date: 2 Oct → 3 Oct')).toBeTruthy()
       expect(sentence('Filip changed who paid: Ana → Filip')).toBeTruthy()

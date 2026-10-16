@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next'
+import { useLanguage } from '@/core/i18n/useLanguage'
 import { groupCurrencies } from '@/core/services/groups/groupsService'
 import { KvitChoiceChips } from '@/shared/components/KvitChoiceChips'
 import { KvitInlineError } from '@/shared/components/KvitInlineError'
 import { KvitTextField } from '@/shared/components/KvitTextField'
-import type { Currency } from '@/shared/utils/formatMoney'
+import { currencyLabel, type Currency } from '@/shared/utils/formatMoney'
 import { groupEmojis } from '../groupEmojis'
 
 interface GroupFieldsProps {
@@ -17,7 +18,6 @@ interface GroupFieldsProps {
 }
 
 const emojiOptions = groupEmojis.map((emoji) => ({ value: emoji, label: emoji }))
-const currencyOptions = groupCurrencies.map((currency) => ({ value: currency, label: currency }))
 
 export function GroupFields({
   name,
@@ -29,7 +29,9 @@ export function GroupFields({
   onCurrencyChange,
 }: GroupFieldsProps) {
   const { t } = useTranslation()
+  const { language } = useLanguage()
   const hasNameError = typeof nameInvalid === 'string'
+  const currencyOptions = groupCurrencies.map((code) => ({ value: code, label: currencyLabel(code, language) }))
 
   return (
     <>

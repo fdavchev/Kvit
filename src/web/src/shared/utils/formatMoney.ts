@@ -3,6 +3,14 @@ import { formatGroupedDecimal } from './formatNumber'
 
 export type Currency = 'MKD' | 'EUR'
 
+export interface MoneyParts {
+  language: Language
+  sign: string
+  currencyBefore: string
+  unsignedDecimal: string
+  currencyAfter: string
+}
+
 const minorUnitsPerMajor = 100n
 const nonBreakingSpace = ' '
 const denarSuffix: Record<Language, string> = { en: 'MKD', mk: 'ден.' }
@@ -12,6 +20,23 @@ export function formatMoney(
   currency: Currency,
   language: Language,
 ): string {
+  return moneyText(moneyParts(amountMinor, currency, language))
+}
+
+export function currencyLabel(currency: Currency, language: Language): string {
+  return currency === 'MKD' ? denarSuffix[language] : currency
+}
+
+export function moneyText(parts: MoneyParts): string {
+  const number = formatGroupedDecimal(parts.unsignedDecimal, parts.language)
+  return `${parts.sign}${parts.currencyBefore}${number}${parts.currencyAfter}`
+}
+
+export function moneyParts(
+  amountMinor: number,
+  currency: Currency,
+  language: Language,
+): MoneyParts {
   if (!Number.isSafeInteger(amountMinor)) {
     throw new Error(
       `Money amount must be a safe integer of minor units, got ${amountMinor}`,
@@ -28,11 +53,20 @@ export function formatMoney(
         `MKD amount must be whole denars (a multiple of 100 deni), got ${amountMinor}`,
       )
     }
-    const number = formatGroupedDecimal(whole.toString(), language)
-    return `${sign}${number}${nonBreakingSpace}${denarSuffix[language]}`
+    return {
+      language,
+      sign,
+      currencyBefore: '',
+      unsignedDecimal: whole.toString(),
+      currencyAfter: `${nonBreakingSpace}${denarSuffix[language]}`,
+    }
   }
 
-  const exactDecimal = `${whole}.${fraction.toString().padStart(2, '0')}`
-  const number = formatGroupedDecimal(exactDecimal, language)
-  return `${sign}€${number}`
+  return {
+    language,
+    sign,
+    currencyBefore: '€',
+    unsignedDecimal: `${whole}.${fraction.toString().padStart(2, '0')}`,
+    currencyAfter: '',
+  }
 }

@@ -12,6 +12,7 @@ import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { jsonAnswer, requestCount, stubFetchByRequest } from '@/test/requestTestHelpers'
 import { pendingPaymentOf } from '@/test/settlementActionsTestData'
 import { isPressed, sheetButton } from '@/test/settlementActionsTestHelpers'
+import { translated } from '@/test/translated'
 import { RecordPaymentSheet } from './RecordPaymentSheet'
 
 const recordAnotherPayment = 'Record another payment'
@@ -162,5 +163,28 @@ describe('the Record another payment sheet when two or more other people are in 
     fireEvent.click(within(sheet).getByRole('button', { name: markoMember.displayName }))
 
     expect(isDisabled(saveButton())).toBe(false)
+  })
+})
+
+describe('the currency chips of the Record another payment sheet', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it.each([
+    ['en', ['MKD', 'EUR']],
+    ['mk', ['ден.', 'EUR']],
+  ] as const)('write the denar and the euro as the amounts write them (%s)', async (language, labels) => {
+    await renderElementWithProviders(
+      <RecordPaymentSheet groupId={testGroupId} me={filipMember} members={[filipMember, anaMember]} defaultCurrency="MKD" onClose={() => {}} />,
+      '/sheet',
+      { language },
+    )
+
+    const sheet = await screen.findByRole('dialog', { name: translated(language, 'balances.recordAnother') })
+    const currencyChips = within(within(sheet).getByRole('group', { name: translated(language, 'groupFields.currency') })).getAllByRole('button')
+
+    expect(currencyChips.map((chip) => chip.textContent)).toEqual(labels)
   })
 })

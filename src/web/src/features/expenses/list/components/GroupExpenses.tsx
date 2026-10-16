@@ -8,11 +8,12 @@ import type { ExpenseListRow } from '@/core/services/expenses/expensesService'
 import { GroupLoadError } from '@/features/groups/shared/components/GroupLoadError'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitLoading } from '@/shared/components/KvitLoading'
+import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
+import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { addDays, formatExpenseDay, todayInTimeZone } from '@/shared/utils/formatDate'
-import { categoryOf } from '../../shared/expenseCategories'
 import { useCategories } from '../../shared/hooks/useCategories'
 import { useExpenses } from '../hooks/useExpenses'
-import { ExpenseListItem } from './ExpenseListItem'
+import { ExpenseDaySection } from './ExpenseDaySection'
 
 interface GroupExpensesProps {
   groupId: string
@@ -32,6 +33,7 @@ export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps)
   const me = useSignedInMe()
   const expensesQuery = useExpenses(groupId)
   const categoriesQuery = useCategories()
+  const daysRef = useListAnimation<HTMLDivElement>()
 
   function dayLabel(date: string, today: string): string {
     const day = formatExpenseDay(date, today, language)
@@ -54,7 +56,16 @@ export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps)
       )
     }
     if (expensesQuery.isPending || categoriesQuery.isPending) {
-      return <KvitLoading />
+      return (
+        <KvitLoading>
+          <div className="flex flex-col gap-2">
+            <KvitSkeleton className="mx-1 mt-4 mb-0.5 h-3.5 w-28 rounded-full" />
+            <KvitSkeleton className="h-16" />
+            <KvitSkeleton className="h-16" />
+            <KvitSkeleton className="h-16" />
+          </div>
+        </KvitLoading>
+      )
     }
     if (expensesQuery.data.length === 0) {
       return (
@@ -64,24 +75,21 @@ export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps)
         </>
       )
     }
-    const categories = categoriesQuery.data
     const today = todayInTimeZone(me.timeZone, new Date())
-    return groupByDay(expensesQuery.data).map((day) => (
-      <section key={day.date} className="flex flex-col gap-2">
-        <h2 className="mx-1 mt-3.5 text-[0.8125rem] font-bold tracking-[0.04em] text-muted-foreground uppercase">
-          {dayLabel(day.date, today)}
-        </h2>
-        {day.rows.map((row) => (
-          <ExpenseListItem
-            key={row.id}
+    return (
+      <div ref={daysRef} className="flex flex-col">
+        {groupByDay(expensesQuery.data).map((day) => (
+          <ExpenseDaySection
+            key={day.date}
             groupId={groupId}
-            row={row}
-            category={categoryOf(categories, row.categoryId)}
+            label={dayLabel(day.date, today)}
+            rows={day.rows}
+            categories={categoriesQuery.data}
             language={language}
           />
         ))}
-      </section>
-    ))
+      </div>
+    )
   }
 
   return (

@@ -5,7 +5,7 @@ const colorSchemes: readonly ColorScheme[] = ['light', 'dark']
 
 const statusBarColors: Record<ColorScheme, string> = {
   light: '#ffd9a8',
-  dark: '#351f1b',
+  dark: '#1f1816',
 }
 
 export function applyTheme(choice: ThemeChoice): void {

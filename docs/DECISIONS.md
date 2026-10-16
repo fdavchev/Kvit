@@ -1,4 +1,14 @@
-# Decisions
+﻿# Decisions
+
+## 2026-10-16: Phase 12 (animations + touch-ups): done, the rules that stay
+The whole Phase 12 decision log (Filip's answers, the colour, glass and desktop picks, the Step 7 and browser-pass choices, rejected alternatives) moved word for word to the end of `reports/2026-10-16-phase-12-polish.md`, section "Decisions and rejected alternatives". What stays true:
+- **Dark mode uses solid colours,** not `color-mix`: background `#1f1816`, field `#161110`, card/sheet `#2c2220`, line `#72625c`, raised line `#8d7d77`. The selected pill is tan `#d9b48a` with dark text everywhere in dark (bottom bar, left menu, group tabs, Settings switches).
+- **Motion:** only transform and opacity, about 0.15 to 0.25 s, everything off under `prefers-reduced-motion`, never blocks a tap. Lists animate with AutoAnimate (our `useListAnimation`), loading shows pulse skeletons, amounts roll with NumberFlow (display only, never typing).
+- **Popups use the full glass look** (blur 14 px, 90% card tint, bright edge, solid fallback); text stays at 4.5:1 and edges at 3:1 over any backdrop, also on hover. Fields inside glass use the lighter edge.
+- **Currency labels:** English "MKD", Macedonian "ден." (chips, size line, amounts); the value sent to the server stays the code. MKD is whole denars only.
+- **Desktop (64rem = about 1024 px and wider) is a separate layout; the phone layout never changes.** A soft left menu on every signed-in screen, wide Home and group page, other screens capped at 40rem, the closing bar at most 40rem, a round "Add expense" button instead of the floating "+" on the group page. Filip may change the desktop look later.
+- **"Updating…" sits at the top of the screen** (not above the tab bar).
+- **Words:** English "Stay", Macedonian «Смештај», settings theme «Тема».
 
 ## 2026-10-16: Phase 11 (dashboard + Release 1): done, the rules that stay
 The whole Phase 11 decision log (Filip's answers, the Step 2 to 6 choices, rejected alternatives) moved word for word to the end of `reports/2026-10-16-phase-11-dashboard.md`, section "Decisions and rejected alternatives". What stays true:

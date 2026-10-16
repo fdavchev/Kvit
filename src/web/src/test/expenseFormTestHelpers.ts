@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { expect, type Mock } from 'vitest'
 import type { Language } from '@/core/i18n/language'
-import { formatMoney, type Currency } from '@/shared/utils/formatMoney'
+import { currencyLabel, formatMoney, type Currency } from '@/shared/utils/formatMoney'
 import { plainSpaces, startsWith } from './expenseTestHelpers'
 import { requestsOf } from './requestTestHelpers'
 import { translated } from './translated'
@@ -53,9 +53,9 @@ export function saveButton(language: Language = 'en'): HTMLElement {
   return screen.getByRole('button', { name: translated(language, 'groupSettings.save') })
 }
 
-export function currencyToggle(currency: string, language: Language = 'en'): HTMLElement {
+export function currencyToggle(currency: Currency, language: Language = 'en'): HTMLElement {
   return screen.getByRole('button', {
-    name: translated(language, 'expense.currencyToggle', { currency }),
+    name: translated(language, 'expense.currencyToggle', { currency: currencyLabel(currency, language) }),
   })
 }
 

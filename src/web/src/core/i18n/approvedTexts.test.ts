@@ -224,7 +224,7 @@ const approvedPhase8Step4Texts: [string, string, string][] = [
   ['categories.food', 'Food & drinks', 'Храна и пијалоци'],
   ['categories.groceries', 'Groceries', 'Намирници'],
   ['categories.transport', 'Transport', 'Превоз'],
-  ['categories.accommodation', 'Accommodation', 'Сместување'],
+  ['categories.accommodation', 'Stay', 'Смештај'],
   ['categories.fun', 'Fun', 'Забава'],
   ['categories.shopping', 'Shopping', 'Купување'],
   ['categories.bills', 'Bills', 'Сметки'],

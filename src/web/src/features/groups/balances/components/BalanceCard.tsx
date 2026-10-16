@@ -4,10 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { countedText } from '@/core/i18n/pluralForm'
 import type { Language } from '@/core/i18n/language'
 import type { PaymentToRecord } from '@/features/settlements/record/paymentToRecord'
+import { KvitAmount } from '@/shared/components/KvitAmount'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
+import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { cn } from '@/shared/utils/cn'
 import { formatMoney } from '@/shared/utils/formatMoney'
-import { formatSignedMoney } from '@/shared/utils/formatSignedMoney'
+import { signedMoneyParts } from '@/shared/utils/formatSignedMoney'
 import { amountLookOf, balancesCardLook, balancesRowLook, balancesRowTextLook } from '../balancesLooks'
 import type { BalanceCardRow, BalanceCardView, OwedLine } from '../balancesView'
 import { MarkPaidButton } from './MarkPaidButton'
@@ -30,6 +32,7 @@ interface RowTexts {
 export function BalanceCard({ groupId, title, card, language, canChangePayments, onMarkPaid }: BalanceCardProps) {
   const { t } = useTranslation()
   const headingId = useId()
+  const listRef = useListAnimation<HTMLUListElement>()
 
   function rowTexts(row: BalanceCardRow): RowTexts {
     const amount = formatMoney(row.amountMinor, card.currency, language)
@@ -54,16 +57,16 @@ export function BalanceCard({ groupId, title, card, language, canChangePayments,
         </h2>
         <p
           className={cn(
-            'text-[1.6rem] leading-tight font-extrabold tracking-[-0.02em] whitespace-nowrap',
+            'text-[1.6rem] leading-tight font-extrabold tracking-[-0.02em] whitespace-nowrap lg:text-[clamp(2rem,3.5vw,3rem)] lg:font-black',
             amountLookOf(card.myBalanceMinor),
           )}
         >
-          {formatSignedMoney(card.myBalanceMinor, card.currency, language)}
+          <KvitAmount parts={signedMoneyParts(card.myBalanceMinor, card.currency, language)} />
         </p>
         <p className="text-[0.8125rem] text-muted-foreground">{owedLineText(card.owedLine, t, language)}</p>
       </div>
       {card.rows.length > 0 && (
-        <ul className="flex flex-col gap-2.5">
+        <ul ref={listRef} className="flex flex-col gap-2.5">
           {card.rows.map((row) => {
             const texts = rowTexts(row)
             if (row.kind === 'youPaid') {

@@ -89,8 +89,8 @@ function dayText(language: Language, date: string): string {
 
 function categoryText(language: Language, key: string): string {
   const names: Record<Language, Record<string, string>> = {
-    en: { food: 'Food & drinks', accommodation: 'Accommodation' },
-    mk: { food: 'Храна и пијалоци', accommodation: 'Сместување' },
+    en: { food: 'Food & drinks', accommodation: 'Stay' },
+    mk: { food: 'Храна и пијалоци', accommodation: 'Смештај' },
   }
   return names[language][key]
 }

@@ -4,11 +4,14 @@ import type { Dashboard } from '@/core/services/dashboard/dashboardService'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitLinkButton } from '@/shared/components/KvitLinkButton'
+import { useIsDesktop } from '@/shared/hooks/useIsDesktop'
 import { cn } from '@/shared/utils/cn'
+import type { HomePlusMenuTarget } from '../homePlusItems'
+import { HomeActions } from './HomeActions'
 import { HomeActivity } from './HomeActivity'
 import { HomeGroups } from './HomeGroups'
 import { HomeNeedsYou } from './HomeNeedsYou'
-import { HomePlusMenu, type HomePlusMenuTarget } from './HomePlusMenu'
+import { HomePlusMenu } from './HomePlusMenu'
 import { HomeTotals } from './HomeTotals'
 
 interface HomeDashboardProps {
@@ -17,6 +20,7 @@ interface HomeDashboardProps {
 
 export function HomeDashboard({ dashboard }: HomeDashboardProps) {
   const { t } = useTranslation()
+  const isDesktop = useIsDesktop()
 
   if (dashboard.groups.length === 0 && dashboard.recentActivity.length === 0) {
     return (
@@ -37,13 +41,17 @@ export function HomeDashboard({ dashboard }: HomeDashboardProps) {
       </>
     )
   }
+  const plusTarget = plusMenuTargetOf(dashboard)
   return (
     <>
       <HomeTotals totals={dashboard.totals} />
+      {isDesktop && <HomeActions target={plusTarget} />}
       <HomeNeedsYou items={dashboard.needsYou} />
-      <HomeGroups groups={dashboard.groups} />
-      <HomeActivity rows={dashboard.recentActivity} />
-      <HomePlusMenu target={plusMenuTargetOf(dashboard)} />
+      <div className="contents lg:grid lg:grid-cols-[repeat(auto-fit,minmax(min(100%,26rem),1fr))] lg:items-start lg:gap-x-[clamp(1.5rem,3vw,3rem)]">
+        <HomeGroups groups={dashboard.groups} />
+        <HomeActivity rows={dashboard.recentActivity} />
+      </div>
+      {!isDesktop && <HomePlusMenu target={plusTarget} />}
     </>
   )
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatMoney } from './formatMoney'
+import { currencyLabel, formatMoney } from './formatMoney'
 
 const nbsp = ' '
 
@@ -97,4 +97,19 @@ describe('formatMoney', () => {
       )
     },
   )
+})
+
+describe('currencyLabel', () => {
+  it.each([
+    ['MKD', 'en', 'MKD'],
+    ['MKD', 'mk', 'ден.'],
+    ['EUR', 'en', 'EUR'],
+    ['EUR', 'mk', 'EUR'],
+  ] as const)('labels %s in %s as %s', (currency, language, expected) => {
+    expect(currencyLabel(currency, language)).toBe(expected)
+  })
+
+  it.each(['en', 'mk'] as const)('uses the same denar word as the amounts in %s', (language) => {
+    expect(formatMoney(100, 'MKD', language).endsWith(currencyLabel('MKD', language))).toBe(true)
+  })
 })

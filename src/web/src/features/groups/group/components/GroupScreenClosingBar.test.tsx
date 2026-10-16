@@ -133,6 +133,16 @@ describe('the closing bar on the group screen', () => {
       expect(await findBarTitled(closingTexts.readyTitle)).toBeTruthy()
     })
 
+    it('spans the whole width on a phone and at most 40rem, centred, on a desktop', async () => {
+      await renderGroupApp(routes.group(groupId), ownerView(readyToCloseGroup))
+
+      const barClasses = (await findBarTitled(closingTexts.readyTitle)).classList
+
+      expect(barClasses.contains('w-full')).toBe(true)
+      expect(barClasses.contains('lg:max-w-[40rem]')).toBe(true)
+      expect(barClasses.contains('lg:self-center')).toBe(true)
+    })
+
     it('is a named part of the page, so a screen reader can find it', async () => {
       await renderGroupApp(routes.group(groupId), ownerView(readyToCloseGroup))
 

@@ -307,7 +307,7 @@ describe('GroupScreen', () => {
     it.each([
       ['en', 1, 'MKD', '1 person · MKD'],
       ['en', 3, 'EUR', '3 people · EUR'],
-      ['mk', 1, 'MKD', '1 лице · MKD'],
+      ['mk', 1, 'MKD', '1 лице · ден.'],
       ['mk', 3, 'EUR', '3 лица · EUR'],
     ] as const)('shows how many people and which currency (%s, %i people, %s)', async (language, memberCount, defaultCurrency, text) => {
       await renderGroup({ language, group: groupOf({ memberCount, defaultCurrency }) })

@@ -5,6 +5,7 @@ import { useMe } from '@/core/auth/useMe'
 import { useRecordActive } from '@/features/home/hooks/useRecordActive'
 import { KvitError } from '@/shared/components/KvitError'
 import { KvitScreen } from '@/shared/components/KvitScreen'
+import { DesktopRailLayout } from './DesktopRailLayout'
 import { routes } from './routes'
 import { WakingUp } from './WakingUp'
 
@@ -41,5 +42,5 @@ export function RequireAuth() {
 
 function SignedInOutlet() {
   useRecordActive()
-  return <Outlet />
+  return <DesktopRailLayout />
 }

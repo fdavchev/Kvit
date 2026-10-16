@@ -72,7 +72,7 @@ describe('index.html', () => {
     expect(themeColorFor('light')).toBe('#ffd9a8')
   })
 
-  it('colours the phone status bar dark brown in the dark scheme', () => {
-    expect(themeColorFor('dark')).toBe('#351f1b')
+  it('colours the phone status bar like the dark page in the dark scheme', () => {
+    expect(themeColorFor('dark')).toBe('#1f1816')
   })
 })

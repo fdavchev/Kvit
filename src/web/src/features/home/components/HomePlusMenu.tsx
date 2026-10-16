@@ -1,14 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
-import { routes } from '@/core/router/routes'
 import { kvitGlassButtonLook, kvitGlassPanelLook } from '@/shared/components/kvitGlassLooks'
+import { useToastsAboveElement } from '@/shared/hooks/useToastsAboveElement'
 import { cn } from '@/shared/utils/cn'
-
-export interface HomePlusMenuTarget {
-  groupId: string
-  groupName: string
-}
+import { homePlusItems, type HomePlusMenuTarget } from '../homePlusItems'
 
 interface HomePlusMenuProps {
   target: HomePlusMenuTarget | null
@@ -16,11 +12,14 @@ interface HomePlusMenuProps {
 
 const itemLook = 'pressable flex min-h-12 items-center gap-2.5 rounded-[14px] px-3.5 font-bold'
 const plainItemLook = cn(itemLook, 'hover:bg-secondary-hover')
+const mainItemLook = cn(itemLook, 'bg-primary text-primary-foreground hover:bg-primary-hover')
 
 export function HomePlusMenu({ target }: HomePlusMenuProps) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const menuAreaRef = useRef<HTMLDivElement>(null)
+  const floatingAreaRef = useRef<HTMLDivElement>(null)
+  useToastsAboveElement(floatingAreaRef)
 
   useEffect(() => {
     if (!isOpen) {
@@ -49,7 +48,7 @@ export function HomePlusMenu({ target }: HomePlusMenuProps) {
   }
 
   return (
-    <div className="pointer-events-none sticky bottom-[calc(var(--bottom-bar-height)+16px)] z-10 mt-auto flex justify-end pt-4">
+    <div ref={floatingAreaRef} className="pointer-events-none sticky bottom-[calc(var(--bottom-bar-height)+16px)] z-10 mt-auto flex justify-end pt-4">
       <div ref={menuAreaRef} className="pointer-events-auto relative">
         {isOpen && (
           <div
@@ -59,25 +58,18 @@ export function HomePlusMenu({ target }: HomePlusMenuProps) {
               kvitGlassPanelLook,
             )}
           >
-            {target !== null && (
+            {homePlusItems(target, t).map((item) => (
               <Link
+                key={item.to}
                 role="menuitem"
-                to={routes.groupExpenseNew(target.groupId)}
-                className={cn(itemLook, 'bg-primary text-primary-foreground hover:bg-primary-hover')}
+                to={item.to}
+                className={item.isMain ? mainItemLook : plainItemLook}
                 onClick={close}
               >
-                <span aria-hidden="true" className="w-6 text-center">＋</span>
-                <span className="wrap-anywhere">{t('home.plusAddTo', { group: target.groupName })}</span>
+                <span aria-hidden="true" className="w-6 text-center">{item.icon}</span>
+                <span className="wrap-anywhere">{item.label}</span>
               </Link>
-            )}
-            <Link role="menuitem" to={routes.newBill} className={plainItemLook} onClick={close}>
-              <span aria-hidden="true" className="w-6 text-center">🧾</span>
-              {t('home.plusNewOneBill')}
-            </Link>
-            <Link role="menuitem" to={routes.groups} className={plainItemLook} onClick={close}>
-              <span aria-hidden="true" className="w-6 text-center">⋯</span>
-              {t('home.plusAnotherGroup')}
-            </Link>
+            ))}
           </div>
         )}
         <button

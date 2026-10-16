@@ -37,6 +37,7 @@ import {
   stubClipboard,
   stubShare,
 } from '@/test/shareTestHelpers'
+import { loadingLook } from '@/test/skeletonTestHelpers'
 import { seedMe, testMe } from '@/test/testMe'
 import {
   actionOf,
@@ -198,7 +199,7 @@ describe('MembersScreen', () => {
   })
 
   describe('loading and failing', () => {
-    it('shows the loading spinner while the group and its members are being asked', async () => {
+    it('shows pulsing placeholder rows, not a spinner, while the group and its members are being asked', async () => {
       stubFetchThatNeverAnswers()
 
       await renderRoutesWithProviders(
@@ -208,6 +209,9 @@ describe('MembersScreen', () => {
       )
 
       expect(screen.getByRole('status')).toBeTruthy()
+      const look = loadingLook()
+      expect(look.hasSpinner).toBe(false)
+      expect(look.skeletonCount).toBeGreaterThan(0)
     })
 
     it.each(languages)('shows the GROUP_NOT_FOUND message when the members of the group cannot be seen (%s)', async (language) => {
@@ -450,6 +454,17 @@ describe('MembersScreen', () => {
       await showsMembers()
 
       expect(addNameLink()).toBeTruthy()
+    })
+
+    it('keeps the + Add a name link as the last item of the member list, so it slides with the rows when one is removed', async () => {
+      await renderMembers()
+      await showsMembers()
+
+      const item = addNameLink().closest('li')
+      const list = item?.parentElement
+
+      expect(list?.tagName).toBe('UL')
+      expect(list?.lastElementChild).toBe(item)
     })
 
     it('sends the typed name to the members endpoint of the group', async () => {

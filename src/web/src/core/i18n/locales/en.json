@@ -120,7 +120,8 @@
     "or": "or",
     "signUpWithEmail": "Sign up with email",
     "haveAccount": "I already have an account",
-    "googleUnavailable": "Couldn't load Google sign-in. Check your connection and try again."
+    "googleUnavailable": "Couldn't load Google sign-in. Check your connection and try again.",
+    "googleButtonTitle": "Sign in with Google"
   },
   "auth": {
     "email": "Email",
@@ -422,7 +423,8 @@
     "unlocked": "Group unlocked.",
     "badgeClosing": "Closing",
     "badgeFinished": "Finished",
-    "settingsFrozen": "The group is being closed. Nothing can be changed."
+    "settingsFrozen": "The group is being closed. Nothing can be changed.",
+    "addCancels": "The group is being closed. Saving this expense cancels the closing."
   },
   "settlements": {
     "markPaid": "Mark paid",
@@ -446,7 +448,7 @@
     "food": "Food & drinks",
     "groceries": "Groceries",
     "transport": "Transport",
-    "accommodation": "Accommodation",
+    "accommodation": "Stay",
     "fun": "Fun",
     "shopping": "Shopping",
     "bills": "Bills",

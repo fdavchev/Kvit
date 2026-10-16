@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { KvitSheet } from './KvitSheet'
+import { kvitGlassPanelLook } from './kvitGlassLooks'
 
 const title = 'Add a name'
 
@@ -151,5 +152,20 @@ describe('KvitSheet', () => {
     renderSheet()
 
     expect(hasTokenStartingWith(popupClassTokens(), 'motion-reduce:')).toBe(true)
+  })
+
+  it('uses the shared glass panel look', () => {
+    renderSheet()
+
+    expect(popupClassTokens()).toEqual(expect.arrayContaining(kvitGlassPanelLook.split(' ')))
+  })
+
+  it('keeps the dark backdrop behind the sheet without blurring the page', () => {
+    renderSheet()
+
+    const backdropTokens = backdropOf(screen.getByRole('dialog')).previousElementSibling?.className.split(/\s+/) ?? []
+
+    expect(backdropTokens).toContain('bg-black/50')
+    expect(hasTokenStartingWith(backdropTokens, 'backdrop-blur')).toBe(false)
   })
 })

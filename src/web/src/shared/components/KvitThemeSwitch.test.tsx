@@ -2,6 +2,7 @@ import { fireEvent, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { languages, type Language } from '@/core/i18n/language'
 import { themeChoices, type ThemeChoice } from '@/core/theme/theme'
+import { colorOfToken, contrastBetween } from '@/test/indexCssColors'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { appliedTheme, themeButtonName, themeGroupName } from '@/test/themeTestHelpers'
 import { KvitThemeSwitch } from './KvitThemeSwitch'
@@ -59,6 +60,22 @@ describe('KvitThemeSwitch', () => {
     fireEvent.click(buttonFor(clicked))
 
     expect(onChange).toHaveBeenCalledExactlyOnceWith(clicked)
+  })
+
+  it('gives the pressed button the selected-tab pill and its text colour, the same as the bottom bar', async () => {
+    await renderSwitch('dark')
+
+    expect(buttonFor('dark').className).toContain('aria-pressed:bg-tab-active')
+    expect(buttonFor('dark').className).toContain('aria-pressed:text-tab-active-foreground')
+  })
+
+  it('keeps the pressed button white with the usual text in light mode, as before', () => {
+    expect(colorOfToken('tab-active', 'light')).toEqual(colorOfToken('track-active', 'light'))
+    expect(colorOfToken('tab-active-foreground', 'light')).toEqual(colorOfToken('foreground', 'light'))
+  })
+
+  it('makes the dark pressed pill stand out from its track at 3:1 or more', () => {
+    expect(contrastBetween('tab-active', 'track', 'dark')).toBeGreaterThanOrEqual(3)
   })
 
   it('does not change the pressed button or the page by itself', async () => {

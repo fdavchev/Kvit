@@ -56,16 +56,35 @@ export function GoogleSignInButton({ onCredential }: GoogleSignInButtonProps) {
   }, [])
 
   useEffect(() => {
+    if (hasFailed) {
+      return
+    }
+    const observers = languages.map((slotLanguage) => {
+      const slot = slotOf(slotsRef.current, slotLanguage)
+      const frameTitle = t('welcome.googleButtonTitle', { lng: slotLanguage })
+      const titleFrames = (): void => {
+        slot.querySelectorAll('iframe').forEach((frame) => {
+          frame.title = frameTitle
+        })
+      }
+      titleFrames()
+      const observer = new MutationObserver(titleFrames)
+      observer.observe(slot, { childList: true, subtree: true })
+      return observer
+    })
+    return () => {
+      observers.forEach((observer) => observer.disconnect())
+    }
+  }, [t, hasFailed])
+
+  useEffect(() => {
     const root = rootRef.current
     if (identity === null || root === null) {
       return
     }
     const width = Math.min(maxButtonWidth, Math.floor(root.getBoundingClientRect().width))
     languages.forEach((slotLanguage) => {
-      const slot = slotsRef.current[slotLanguage]
-      if (slot === null) {
-        throw new Error(`The Google button slot for "${slotLanguage}" is not on the page`)
-      }
+      const slot = slotOf(slotsRef.current, slotLanguage)
       identity.renderButton(slot, {
         type: 'standard',
         theme: 'outline',
@@ -101,4 +120,12 @@ export function GoogleSignInButton({ onCredential }: GoogleSignInButtonProps) {
       })}
     </div>
   )
+}
+
+function slotOf(slots: Record<Language, HTMLDivElement | null>, slotLanguage: Language): HTMLDivElement {
+  const slot = slots[slotLanguage]
+  if (slot === null) {
+    throw new Error(`The Google button slot for "${slotLanguage}" is not on the page`)
+  }
+  return slot
 }

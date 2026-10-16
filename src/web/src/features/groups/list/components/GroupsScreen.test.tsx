@@ -18,6 +18,7 @@ import {
   stubFetchByRequest,
   type AnswerFactory,
 } from '@/test/requestTestHelpers'
+import { loadingLook } from '@/test/skeletonTestHelpers'
 import { seedMe, testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
 import { GroupsScreen } from './GroupsScreen'
@@ -81,12 +82,15 @@ describe('GroupsScreen', () => {
     ).toBeTruthy()
   })
 
-  it('shows the loading spinner while the groups are being asked', async () => {
+  it('shows pulsing placeholder rows, not a spinner, while the groups are being asked', async () => {
     stubFetchThatNeverAnswers()
 
     await renderGroups()
 
     expect(screen.getByRole('status')).toBeTruthy()
+    const look = loadingLook()
+    expect(look.hasSpinner).toBe(false)
+    expect(look.skeletonCount).toBeGreaterThan(0)
   })
 
   it('shows one link per open group to the group screen', async () => {
@@ -120,7 +124,7 @@ describe('GroupsScreen', () => {
 
   it.each([
     ['en', '1 person · MKD', '3 people · EUR'],
-    ['mk', '1 лице · MKD', '3 лица · EUR'],
+    ['mk', '1 лице · ден.', '3 лица · EUR'],
   ] as const)('shows how many people and which currency under each open group (%s)', async (language, greece, flat) => {
     stubGroupList(jsonAnswer(openGroupsList))
     await renderGroups(language)

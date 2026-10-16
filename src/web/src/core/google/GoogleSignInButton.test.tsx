@@ -408,6 +408,85 @@ describe('GoogleSignInButton', () => {
   })
 })
 
+describe('the title of the frame Google draws', () => {
+  const titleFromGoogleScript = 'Копче за „Најавување со Google“'
+
+  function drawFramesLikeGoogle(identity: GoogleIdentityStub): void {
+    identity.renderButton.mockImplementation((element) => {
+      const frame = document.createElement('iframe')
+      frame.title = titleFromGoogleScript
+      element.replaceChildren(frame)
+    })
+  }
+
+  function frameIn(slot: HTMLElement): HTMLIFrameElement {
+    const frame = slot.querySelector('iframe')
+    if (frame === null) {
+      throw new Error(`The "${slot.getAttribute('data-language')}" slot has no Google frame`)
+    }
+    return frame
+  }
+
+  beforeEach(() => {
+    window.localStorage.clear()
+    resetThemeDocument()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it.each(languages)('titles the frame in the %s slot in its own language, not in the language of the Google script', async (language) => {
+    const identity = stubGoogleSignIn()
+    drawFramesLikeGoogle(identity)
+
+    await renderButton(() => {}, { language: otherLanguage[language] })
+    await waitForDraws(identity, 2)
+
+    await waitFor(() => {
+      expect(frameIn(slotFor(language)).title).toBe(translated(language, 'welcome.googleButtonTitle'))
+    })
+  })
+
+  it.each([
+    ['en', 'mk'],
+    ['mk', 'en'],
+  ] as const)('gives the visible frame the title in the page language, %s first and %s after a switch', async (from, to) => {
+    const identity = stubGoogleSignIn()
+    drawFramesLikeGoogle(identity)
+    const { i18n } = await renderButton(() => {}, { language: from })
+    await waitForDraws(identity, 2)
+    await waitFor(() => {
+      expect(frameIn(slotFor(from)).title).toBe(translated(from, 'welcome.googleButtonTitle'))
+    })
+
+    await act(() => i18n.changeLanguage(to))
+
+    await waitFor(() => {
+      expectActive(slotFor(to))
+    })
+    expect(frameIn(slotFor(to)).title).toBe(translated(to, 'welcome.googleButtonTitle'))
+  })
+
+  it('titles a frame that Google puts into a slot again later', async () => {
+    const identity = stubGoogleSignIn()
+    drawFramesLikeGoogle(identity)
+    await renderButton(() => {}, { language: 'en' })
+    await waitForDraws(identity, 2)
+    const newFrame = document.createElement('iframe')
+    newFrame.title = titleFromGoogleScript
+
+    act(() => {
+      slotFor('en').replaceChildren(newFrame)
+    })
+
+    await waitFor(() => {
+      expect(newFrame.title).toBe(translated('en', 'welcome.googleButtonTitle'))
+    })
+  })
+})
+
 describe('GoogleSignInButton when the Google script cannot be loaded', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -435,5 +514,17 @@ describe('GoogleSignInButton when the Google script cannot be loaded', () => {
     await screen.findByRole('alert')
 
     expect(consoleError).toHaveBeenCalledWith(expect.any(String), expect.any(Error))
+  })
+
+  it('keeps showing the unavailable text when the app language changes afterwards', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', testGoogleClientId)
+    const { i18n } = await renderButton(() => {}, { language: 'en' })
+    failEveryGoogleScript()
+    await screen.findByRole('alert')
+
+    await act(() => i18n.changeLanguage('mk'))
+
+    expect((await screen.findByRole('alert')).textContent).toBe(translated('mk', 'welcome.googleUnavailable'))
   })
 })

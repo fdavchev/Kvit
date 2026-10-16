@@ -95,6 +95,14 @@ describe('showDangerToast', () => {
     expect(stylingOf(toastShownWithText('You left Greece trip'))).toEqual(undoStyling)
   })
 
+  it('paints the danger toast with the see-through wine-red glass colour', () => {
+    showDangerToast('You left Greece trip')
+
+    expect(toastShownWithText('You left Greece trip').options.style).toEqual(
+      expect.objectContaining({ '--normal-bg': 'var(--glass-danger)' }),
+    )
+  })
+
   it('has a different style from a normal undo toast', () => {
     const normalStyling = stylingOf(undoToastOf(false))
     vi.clearAllMocks()

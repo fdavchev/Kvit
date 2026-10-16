@@ -15,16 +15,16 @@ describe('indexCssColors', () => {
     expect(colorOfToken('danger', 'dark')).toEqual([255, 138, 128])
   })
 
-  it('mixes a color-mix token in srgb, so the dark card is the night color pulled 18% to orange', () => {
-    expect(colorOfToken('card', 'dark')).toEqual([89, 55, 33])
+  it('reads the dark card as the solid raised colour #2c2220', () => {
+    expect(colorOfToken('card', 'dark')).toEqual([44, 34, 32])
   })
 
   it('measures the white pill on the peach page as 1.33:1, the number in the BACKLOG', () => {
     expect(contrastBetween('pill', 'background', 'light')).toBeCloseTo(1.33, 2)
   })
 
-  it('measures the dark danger color on the dark card as 4.62:1', () => {
-    expect(contrastBetween('danger', 'card', 'dark')).toBeCloseTo(4.62, 2)
+  it('measures the dark danger color on the dark card as 6.78:1', () => {
+    expect(contrastBetween('danger', 'card', 'dark')).toBeCloseTo(6.78, 2)
   })
 
   it('gives the same ratio whichever color is named first', () => {

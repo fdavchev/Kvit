@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kvit dark colours</title>
+<style>
+body{margin:0;padding:20px;font:16px system-ui,sans-serif;background:#111;color:#eee}
+h1{font-size:20px}
+.bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.bar button{padding:10px 16px;border-radius:999px;border:1px solid #888;background:#222;color:#eee;font-size:15px;cursor:pointer}
+.bar button.on{background:#ffd9a8;color:#351f1b;font-weight:700}
+.phone{width:360px;max-width:100%;padding:16px;border-radius:20px;background:var(--bg);color:#fff1dc;box-shadow:0 0 0 1px #444}
+.card{background:var(--raised);border:1px solid var(--rline);border-radius:12px;padding:14px;margin-bottom:12px}
+.field{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px;color:#fff1dc}
+.tabs{display:flex;gap:2px;background:var(--field);border:1px solid var(--line);border-radius:999px;padding:4px}
+.tabs span{flex:1;text-align:center;padding:10px;border-radius:999px;color:#ffd9a8;font-weight:700}
+.tabs span.sel{background:var(--pillbg);color:var(--pilltext);box-shadow:inset 0 0 0 1px var(--pillring)}
+.bar2 button.on{background:#ffd9a8;color:#351f1b;font-weight:700}
+.bar2 button{padding:10px 16px;border-radius:999px;border:1px solid #888;background:#222;color:#eee;font-size:15px;cursor:pointer}
+.bar2{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap}
+.muted{color:#ffd9a8;font-size:14px}
+.nums{font-size:12px;margin-top:12px;line-height:1.6;color:#ddd}
+.wrap{display:flex;gap:20px;flex-wrap:wrap}
+</style></head><body>
+<h1>Dark mode surfaces: pick A, B or C (or NOW)</h1>
+<div class="bar" id="bar"></div>
+<h1>Selected tab pill (the orange one): pick P1 to P5</h1>
+<div class="bar2" id="bar2"></div>
+<div class="wrap"><div class="phone" id="phone">
+<div class="tabs"><span class="sel">Expenses</span><span>Balances</span><span>Activity</span></div>
+<div style="height:12px"></div>
+<div class="card"><b>Trip to Ohrid</b><div class="muted">You are owed 1,200 ден.</div></div>
+<div class="field">Type an amount</div>
+<div class="card"><b>Sheet / card</b><div class="muted">Muted text on the card</div></div>
+<div class="nums" id="nums"></div>
+</div></div>
+<script>
+const opts={
+NOW:{bg:'#351f1b',field:'#2a1815',raised:'#3a2420',line:'#6e4a3a',rline:'#9c6f47',note:'current colour-mix values (approximate hex)'},
+A:{bg:'#2a1a16',field:'#1f1210',raised:'#3d2823',line:'#7a5848',rline:'#8a6652',note:'A: deeper brown, flat cards, soft brown lines'},
+B:{bg:'#1f1816',field:'#161110',raised:'#2c2220',line:'#6a5a54',rline:'#7a6a64',note:'B: near-neutral charcoal with a warm tint, orange stays only on accents'},
+B2:{bg:'#1f1816',field:'#161110',raised:'#2c2220',line:'#72625c',rline:'#7a6a64',note:'B as built (edge line lightened to pass 3:1)'},
+C:{bg:'#2d1d18',field:'#241410',raised:'#43302a',line:'#8a6a58',rline:'#9a7a66',note:'C: lifted brown, clearly separated cards, strong lines'}
+};
+function lum(h){const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4));return .2126*c[0]+.7152*c[1]+.0722*c[2]}
+function cr(a,b){const x=lum(a),y=lum(b);return ((Math.max(x,y)+.05)/(Math.min(x,y)+.05)).toFixed(2)}
+function set(k){const o=opts[k];const s=document.getElementById('phone').style;
+s.setProperty('--bg',o.bg);s.setProperty('--field',o.field);s.setProperty('--raised',o.raised);s.setProperty('--line',o.line);s.setProperty('--rline',o.rline);
+document.getElementById('nums').innerHTML=o.note+'<br>Text on card: '+cr('#fff1dc',o.raised)+':1<br>Muted text on card: '+cr('#ffd9a8',o.raised)+':1<br>Field line vs field: '+cr(o.line,o.field)+':1<br>Card vs background: '+cr(o.raised,o.bg)+':1';
+document.querySelectorAll('#bar button').forEach(b=>b.classList.toggle('on',b.dataset.k===k))}
+Object.keys(opts).forEach(k=>{const b=document.createElement('button');b.textContent=k;b.dataset.k=k;b.onclick=()=>set(k);document.getElementById('bar').appendChild(b)});
+const pills={
+NOW:{bg:'#b54a00',text:'#ffffff',ring:'transparent',note:'current orange'},
+P1:{bg:'#4a3a34',text:'#fff1dc',ring:'#9a8a84',note:'P1: warm taupe, light ring, quiet'},
+P2:{bg:'#ffd9a8',text:'#2c2220',ring:'transparent',note:'P2: sand with dark text (same as the main buttons in dark)'},
+P3:{bg:'#8a5a2b',text:'#ffffff',ring:'transparent',note:'P3: muted bronze, less loud than the orange'},
+P4:{bg:'#3a2e2a',text:'#ffa53a',ring:'#ffa53a',note:'P4: dark pill, orange text and orange ring only'},
+P5:{bg:'#d9b48a',text:'#1f1816',ring:'transparent',note:'P5: dusty tan, dark text'}
+};
+let curKey='B2',curPill='P1';
+function setPill(k){curPill=k;const p=pills[k],s=document.getElementById('phone').style;
+s.setProperty('--pillbg',p.bg);s.setProperty('--pilltext',p.text);s.setProperty('--pillring',p.ring);
+document.querySelectorAll('#bar2 button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+document.getElementById('nums2').innerHTML=p.note+'<br>Pill text: '+cr(p.text,p.bg)+':1<br>Pill vs the bar behind it: '+cr(p.bg,opts[curKey].field)+':1'}
+Object.keys(pills).forEach(k=>{const b=document.createElement('button');b.textContent=k;b.dataset.k=k;b.onclick=()=>setPill(k);document.getElementById('bar2').appendChild(b)});
+const n2=document.createElement('div');n2.className='nums';n2.id='nums2';document.getElementById('phone').appendChild(n2);
+const oldSet=set;set=function(k){curKey=k;oldSet(k);setPill(curPill)};
+set('B2');
+</script></body></html>

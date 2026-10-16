@@ -61,6 +61,7 @@ import {
   shareLinkButton,
 } from '@/test/groupEmptyStateTestHelpers'
 import { groupOf, testGroup, testInviteToken } from '@/test/groupTestData'
+import { colorOfToken, contrastBetween } from '@/test/indexCssColors'
 import {
   anaMember,
   anaUserId,
@@ -80,6 +81,7 @@ import {
   stubClipboard,
   stubShare,
 } from '@/test/shareTestHelpers'
+import { loadingLook } from '@/test/skeletonTestHelpers'
 import { testMe } from '@/test/testMe'
 import { stubDeviceColorScheme } from '@/test/themeTestHelpers'
 import { translated } from '@/test/translated'
@@ -118,6 +120,22 @@ function crashErrors(consoleError: MockInstance<typeof console.error>): Error[] 
     .filter(([message]) => message === crashMessage)
     .map(([, error]) => error)
     .filter((error): error is Error => error instanceof Error)
+}
+
+function groupTabPill(): HTMLElement {
+  const found = expensesTab().parentElement?.querySelector<HTMLElement>('[data-tab-pill]')
+  if (found === null || found === undefined) {
+    throw new Error('The group tabs have no sliding pill')
+  }
+  return found
+}
+
+function tabPanel(): HTMLElement {
+  const found = document.querySelector<HTMLElement>('[data-tab-panel]')
+  if (found === null) {
+    throw new Error('The group screen has no tab panel')
+  }
+  return found
 }
 
 const inviteLinkResetEvent: ActivityEventJson = activityEventOf({ type: 'InviteLinkReset' })
@@ -195,6 +213,87 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
       })
       expect(await screen.findByRole('link', { name: /Dinner/ })).toBeTruthy()
       expect(expensesTab().getAttribute('aria-current')).toBe('page')
+    })
+
+    it.each([
+      ['the Expenses tab', routes.group(groupId), 'translateX(0%)'],
+      ['the Balances tab', routes.groupBalances(groupId), 'translateX(100%)'],
+      ['the Activity tab', routes.groupActivity(groupId), 'translateX(200%)'],
+    ])('puts the sliding pill under %s', async (_name, path, transform) => {
+      await renderGroupApp(path)
+      await showsGroupScreen()
+
+      expect(groupTabPill().style.transform).toBe(transform)
+    })
+
+    it('keeps the same pill and moves it under Activity when Activity is pressed, so it slides instead of jumping', async () => {
+      const { router } = await renderGroupApp(routes.group(groupId))
+      await showsGroupScreen()
+      const pillBefore = groupTabPill()
+
+      fireEvent.click(activityTab())
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.groupActivity(groupId))
+      })
+      expect(groupTabPill()).toBe(pillBefore)
+      expect(pillBefore.style.transform).toBe('translateX(200%)')
+    })
+
+    it('keeps the selected-tab look and shadow on the pill, not on the tab link', async () => {
+      await renderGroupApp(routes.group(groupId))
+      await showsGroupScreen()
+
+      expect(groupTabPill().classList.contains('bg-tab-active')).toBe(true)
+      expect(groupTabPill().classList.contains('shadow-[0_1px_3px_var(--track-shadow)]')).toBe(true)
+      expect(expensesTab().className).not.toContain('bg-tab-active')
+    })
+
+    it('gives the current tab the text colour made for the selected pill', async () => {
+      await renderGroupApp(routes.group(groupId))
+      await showsGroupScreen()
+
+      expect(expensesTab().className).toContain('aria-[current=page]:text-tab-active-foreground')
+    })
+
+    it('keeps the selected pill white in light mode, as before', () => {
+      expect(colorOfToken('tab-active', 'light')).toEqual(colorOfToken('pill', 'light'))
+      expect(colorOfToken('tab-active-foreground', 'light')).toEqual(colorOfToken('foreground', 'light'))
+    })
+
+    it('makes the dark selected pill stand out from the tab track at 3:1 or more', () => {
+      expect(contrastBetween('tab-active', 'card', 'dark')).toBeGreaterThanOrEqual(3)
+    })
+
+    it('slides the pill by its transform in 200 ms and not at all for people who prefer reduced motion', async () => {
+      await renderGroupApp(routes.group(groupId))
+      await showsGroupScreen()
+
+      const pillClasses = groupTabPill().classList
+
+      expect(pillClasses.contains('transition-transform')).toBe(true)
+      expect(pillClasses.contains('duration-200')).toBe(true)
+      expect(pillClasses.contains('motion-reduce:transition-none')).toBe(true)
+    })
+
+    it('does not fade the tab content in when the group is first opened', async () => {
+      await renderGroupApp(routes.group(groupId))
+      await showsGroupScreen()
+
+      expect(tabPanel().className).not.toContain('animate-')
+    })
+
+    it('fades the new tab content in after a tab switch, only for people who do not prefer reduced motion', async () => {
+      const { router } = await renderGroupApp(routes.group(groupId))
+      await showsGroupScreen()
+
+      fireEvent.click(activityTab())
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.groupActivity(groupId))
+      })
+
+      const animationClasses = Array.from(tabPanel().classList).filter((className) => className.includes('animate-'))
+      expect(animationClasses).toEqual(['motion-safe:animate-tab-panel-in'])
     })
 
     it.each([
@@ -300,6 +399,9 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
       await showsGroupScreen()
 
       expect(screen.getByRole('status')).toBeTruthy()
+      const look = loadingLook()
+      expect(look.hasSpinner).toBe(false)
+      expect(look.skeletonCount).toBeGreaterThan(0)
     })
 
     it.each(languages)('shows the empty text and no row when nothing has happened yet (%s)', async (language) => {

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kvit animated amount</title>
+<style>
+body{margin:0;padding:20px;font:16px system-ui,sans-serif;background:#1f1816;color:#fff1dc}
+h1{font-size:20px}h2{font-size:16px;margin:0 0 8px}
+.row{display:flex;gap:16px;flex-wrap:wrap}
+.opt{width:300px;background:#2c2220;border:1px solid #72625c;border-radius:14px;padding:16px}
+.box{background:#1f1816;border-radius:12px;padding:14px;margin:10px 0}
+.lbl{color:#ffd9a8;font-size:14px}
+.amt{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;height:44px;overflow:hidden;display:flex;align-items:center}
+.owed{color:#7fd68f}
+button{padding:10px 16px;border-radius:999px;border:1px solid #888;background:#222;color:#eee;font-size:15px;cursor:pointer;margin-right:6px}
+button.on{background:#d9b48a;color:#1f1816;font-weight:700}
+.d{display:inline-block;height:44px;overflow:hidden;line-height:44px}
+.d i{display:block;font-style:normal;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.fade{transition:opacity .15s,transform .15s}
+.fade.out{opacity:0;transform:translateY(-6px)}
+.note{font-size:13px;color:#ddd;margin-top:8px;line-height:1.5}
+@media (prefers-reduced-motion:reduce){.d i,.fade{transition:none}}
+</style></head><body>
+<h1>Animated amount (Home totals and balances): pick A, B or C</h1>
+<p class="lbl">Tap "Change amount" on each. Amounts are shown in ден. Typing fields stay normal (no animation while typing).</p>
+<button id="all">Change all</button> <button id="rm">Reduced motion: <span id="rmv">off</span></button>
+<div class="row" style="margin-top:14px">
+<div class="opt"><h2>A: rolling digits</h2><div class="box"><div class="lbl">You are owed</div><div class="amt owed" id="a"></div></div><button data-t="a">Change amount</button><div class="note">Each digit rolls up or down like an odometer, about 0.25 s. Only digits that changed move. Library: NumberFlow (needs a test fix and a check of the "ден." label).</div></div>
+<div class="opt"><h2>B: quick count</h2><div class="box"><div class="lbl">You are owed</div><div class="amt owed" id="b"></div></div><button data-t="b">Change amount</button><div class="note">The number counts from the old to the new value in about 0.3 s. No library, a few lines of code. Looks busy for big jumps.</div></div>
+<div class="opt"><h2>C: soft swap</h2><div class="box"><div class="lbl">You are owed</div><div class="amt owed" id="c"><span class="fade" id="cs"></span></div></div><button data-t="c">Change amount</button><div class="note">The old amount fades up and the new one fades in, about 0.15 s each. No library, the calmest and cheapest.</div></div>
+</div>
+<script>
+let reduce=false;const f=n=>n.toLocaleString('en-US').replace(/,/g,' ');
+const vals={a:12400,b:12400,c:12400};
+function digitsEl(el,v){const s=f(v);if(el.dataset.len!=String(s.length)){el.innerHTML='';el.dataset.len=s.length;[...s].forEach(ch=>{const sp=document.createElement('span');if(/\d/.test(ch)){sp.className='d';sp.innerHTML='<i>'+[0,1,2,3,4,5,6,7,8,9].join('<br>')+'</i>';sp.dataset.d=ch}else{sp.textContent=ch;sp.style.padding='0 3px'}el.appendChild(sp)})}
+[...s].forEach((ch,i)=>{const sp=el.children[i];if(sp.className==='d'){sp.querySelector('i').style.transform='translateY(-'+(+ch*44)+'px)'}})}
+function setA(v){digitsEl(document.getElementById('a'),v)}
+function setB(v){const el=document.getElementById('b');if(reduce){el.textContent=f(v)+' ден.';vals.b=v;return}const from=vals.b,t0=performance.now();vals.b=v;(function step(t){const p=Math.min(1,(t-t0)/300);el.textContent=f(Math.round(from+(v-from)*p))+' ден.';if(p<1)requestAnimationFrame(step)})(t0)}
+function setC(v){const s=document.getElementById('cs');if(reduce){s.textContent=f(v)+' ден.';return}s.classList.add('out');setTimeout(()=>{s.textContent=f(v)+' ден.';s.classList.remove('out')},150)}
+function rnd(){return Math.round(Math.random()*90000+500)}
+const fn={a:setA,b:setB,c:setC};
+document.querySelectorAll('button[data-t]').forEach(b=>b.onclick=()=>{const v=rnd();fn[b.dataset.t](v)});
+document.getElementById('all').onclick=()=>{const v=rnd();setA(v);setB(v);setC(v)};
+document.getElementById('rm').onclick=()=>{reduce=!reduce;document.getElementById('rmv').textContent=reduce?'on':'off';document.documentElement.style.setProperty('--x',0);document.querySelectorAll('.d i').forEach(i=>i.style.transition=reduce?'none':'')};
+setA(12400);document.getElementById('b').textContent=f(12400)+' ден.';document.getElementById('cs').textContent=f(12400)+' ден.';
+</script></body></html>

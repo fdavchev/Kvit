@@ -169,6 +169,11 @@ export const closingTexts = {
     en: 'The group is being closed. Nothing can be changed.',
     mk: 'Групата се затвора. Ништо не може да се менува.',
   },
+  addCancels: {
+    key: 'closing.addCancels',
+    en: 'The group is being closed. Saving this expense cancels the closing.',
+    mk: 'Групата се затвора. Ако го зачуваш овој трошок, затворањето се откажува.',
+  },
 } satisfies Record<string, ClosingText>
 
 export const finishedBarText: ClosingText = {

@@ -1,13 +1,15 @@
 import { vi } from 'vitest'
 import type { Language } from '@/core/i18n/language'
 import type { ThemeChoice } from '@/core/theme/theme'
+import { desktopQuery } from '@/shared/hooks/useIsDesktop'
+import { fakeMatchMedia, reducedMotionQuery } from './matchMediaTestHelpers'
 import { translated } from './translated'
 
 export type ColorScheme = 'light' | 'dark'
 
 export const themeColors: Record<ColorScheme, string> = {
   light: '#ffd9a8',
-  dark: '#351f1b',
+  dark: '#1f1816',
 }
 
 const darkSchemeQuery = '(prefers-color-scheme: dark)'
@@ -33,21 +35,7 @@ export function resetThemeDocument(): void {
 }
 
 export function stubDeviceColorScheme(scheme: ColorScheme): void {
-  vi.stubGlobal('matchMedia', (query: string): MediaQueryList => {
-    if (query !== darkSchemeQuery) {
-      throw new Error(`The test device only answers "${darkSchemeQuery}", but matchMedia got "${query}"`)
-    }
-    return {
-      matches: scheme === 'dark',
-      media: query,
-      onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => false,
-    }
-  })
+  vi.stubGlobal('matchMedia', fakeMatchMedia({ [darkSchemeQuery]: scheme === 'dark', [reducedMotionQuery]: true, [desktopQuery]: false }))
 }
 
 export function themeColorOf(scheme: ColorScheme): string | undefined {

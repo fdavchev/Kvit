@@ -10,6 +10,12 @@ const numberSeparators: Record<Language, NumberSeparators> = {
   mk: { thousands: '.', decimal: ',' },
 }
 
+const intlLocaleWithTheSameSeparators: Record<Language, string> = { en: 'en', mk: 'de' }
+
+export function intlLocaleWithTheSameSeparatorsAs(language: Language): string {
+  return intlLocaleWithTheSameSeparators[language]
+}
+
 const plainDecimalPattern = /^(-?)(\d+)(?:\.(\d+))?$/
 const digitsBeforeEachThousandsGroup = /\B(?=(\d{3})+$)/g
 

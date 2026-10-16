@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { Language } from '@/core/i18n/language'
 import type { PaymentToRecord } from '@/features/settlements/record/paymentToRecord'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
+import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { formatMoney } from '@/shared/utils/formatMoney'
 import { balancesSectionHeadingLook } from '../balancesLooks'
 import type { BetweenOthersView } from '../balancesView'
@@ -18,13 +19,14 @@ interface BetweenOthersSectionProps {
 export function BetweenOthersSection({ items, language, canMarkPaid, onMarkPaid }: BetweenOthersSectionProps) {
   const { t } = useTranslation()
   const headingId = useId()
+  const listRef = useListAnimation<HTMLUListElement>()
 
   return (
     <section aria-labelledby={headingId}>
       <h2 id={headingId} className={balancesSectionHeadingLook}>
         {t('balances.betweenOthers')}
       </h2>
-      <ul className="mb-1 flex flex-col gap-2">
+      <ul ref={listRef} className="mb-1 flex flex-col gap-2">
         {items.map((item) => (
           <li
             key={item.key}

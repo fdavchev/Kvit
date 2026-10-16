@@ -14,6 +14,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: { include: [/index\.css/] },
+    server: { deps: { inline: ['@number-flow/react', 'number-flow'] } },
   },
   server: {
     port: 5173,
