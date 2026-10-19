@@ -17,10 +17,12 @@ Branch `feat/12b-guest-join`. Release 1 was accepted on 2026-10-16; Filip put th
 | Check | Result | Label |
 |---|---|---|
 | `dotnet build Kvit.slnx` | 0 warnings, 0 errors | VERIFIED by live run |
-| `dotnet test Kvit.slnx` | 3710 of 3710 (Phase 12: 3485) | VERIFIED by automated test |
+| `dotnet test Kvit.slnx` | 3717 of 3717 (Phase 12: 3485) | VERIFIED by automated test |
 | `npm run lint` | no warnings | VERIFIED by live run |
 | `npm run build` | no type errors | VERIFIED by live run |
-| `npm test` | 7870 of 7870 (Phase 12: 7508) | VERIFIED by automated test |
+| `npm test` | 7874 of 7874 (Phase 12: 7508) | VERIFIED by automated test |
+| Code review of the whole branch (`/code-review high`, 8 findings) | 2 fixed (every member-row save runs once more after a same-moment change; a guest row shows only "Let in again"), the rest in BACKLOG; the fixes have 7 race tests with two real simultaneous requests | VERIFIED by automated test; the findings were not each re-checked by hand |
+| The two review fixes in a browser at phone width | not run | NOT VERIFIED |
 | Join by tap, "I'm new", no-free-names, guest limits, Let in again and rejoin, email upgrade, double click on Save, Log in sheet, 360/768/1280 px in EN and MK, light and dark, reduced motion | passed, 3 small bugs found and fixed | VERIFIED by live run (headless Chromium, local stack; details in the browser-pass report) |
 | The three fixes (one "joined" line, no extra name line, long names on the invite card) | tests and a headless check of the join page at 320 and 360 px | VERIFIED by automated test and by live run (the invite answer was faked by the script) |
 | The Activity tab and Members screen after a real guest tap, with the fixes, in the real app | not re-run after the fixes | NOT VERIFIED |

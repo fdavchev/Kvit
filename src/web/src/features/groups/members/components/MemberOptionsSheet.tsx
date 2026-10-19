@@ -113,7 +113,7 @@ export function MemberOptionsSheet({ groupId, member, onClose }: MemberOptionsSh
             {t('members.makeOwner')}
           </KvitButton>
         )}
-        {claimedName !== null && (
+        {claimedName !== null && !member.isGuest && (
           <KvitButton
             variant="secondary"
             className="bg-field"

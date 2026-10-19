@@ -37,11 +37,16 @@ vi.mock('sonner', async () => (await import('@/test/sonnerMock')).sonnerMock)
 const groupPath = `/api/groups/${testGroup.id}`
 const membersPath = `${groupPath}/members`
 const letInAgainPath = `${membersPath}/${cvetaGuestMember.id}/let-in-again`
+const undoClaimPath = `${membersPath}/${cvetaGuestMember.id}/undo-claim`
 
 const ownerGroup = groupOf({ memberCount: 6 })
 const membersWithGuest: GroupMembers = {
   ...ownerViewMembers,
   members: [...ownerViewMembers.members, cvetaGuestMember],
+}
+const membersWithTappedGuest: GroupMembers = {
+  ...ownerViewMembers,
+  members: [...ownerViewMembers.members, { ...cvetaGuestMember, claimedName: cvetaGuestMember.displayName }],
 }
 
 const guestMe = { ...testGuestMe, id: cvetaGuestMember.userId ?? '', displayName: cvetaGuestMember.displayName }
@@ -203,6 +208,41 @@ describe('the Members screen with a guest in the group', () => {
       ).toBeTruthy()
       expect(within(sheet).getByRole('button', { name: translated(language, 'members.remove') })).toBeTruthy()
       expect(within(sheet).queryByRole('button', { name: translated(language, 'members.makeOwner') })).toBeNull()
+    })
+
+    it.each(languages)('offers Let in again but no Undo claim for a guest who tapped a free name, so the owner has one way to free it (%s)', async (language) => {
+      await renderMembers({ language, members: membersWithTappedGuest })
+
+      const sheet = await openOptions(cvetaGuestMember.displayName, language)
+
+      expect(letInAgainButton(sheet, language)).toBeTruthy()
+      expect(within(sheet).queryByRole('button', { name: translated(language, 'members.undoClaim') })).toBeNull()
+      expect(within(sheet).getByRole('button', { name: translated(language, 'members.remove') })).toBeTruthy()
+    })
+
+    it('frees the name of a guest who tapped a free name with two taps, the options button and Let in again, and sends no undo-claim request', async () => {
+      const { fetchMock } = await renderMembers({
+        members: membersWithTappedGuest,
+        answers: { [`POST ${letInAgainPath}`]: noContentAnswer() },
+      })
+
+      const sheet = await openOptions(cvetaGuestMember.displayName)
+      fireEvent.click(letInAgainButton(sheet))
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'POST', letInAgainPath)).toBe(1)
+      })
+      expect(requestCount(fetchMock, 'POST', undoClaimPath)).toBe(0)
+    })
+
+    it('offers Undo claim again once the guest who tapped a free name made an account', async () => {
+      const upgradedGuest = { ...cvetaGuestMember, isGuest: false, claimedName: cvetaGuestMember.displayName }
+      await renderMembers({ members: { ...ownerViewMembers, members: [...ownerViewMembers.members, upgradedGuest] } })
+
+      const sheet = await openOptions(cvetaGuestMember.displayName)
+
+      expect(within(sheet).getByRole('button', { name: translated('en', 'members.undoClaim') })).toBeTruthy()
+      expect(within(sheet).queryByRole('button', { name: translated('en', 'members.letInAgain') })).toBeNull()
     })
 
     it('puts Let in again first in the sheet, before Remove from group', async () => {

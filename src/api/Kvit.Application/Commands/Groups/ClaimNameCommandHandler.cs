@@ -19,7 +19,7 @@ namespace Kvit.Application.Commands.Groups
                 return userId;
             }
 
-            return await _groupWrite.RunAsync(command.GroupId, userId.Value, () => _claimName.Execute(command.GroupId, userId.Value, command.MemberId, cancellationToken), cancellationToken);
+            return await _groupWrite.RunOnceMoreIfMemberChangedMeanwhileAsync(command.GroupId, userId.Value, () => _claimName.Execute(command.GroupId, userId.Value, command.MemberId, cancellationToken), cancellationToken);
         }
     }
 }

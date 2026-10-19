@@ -184,7 +184,7 @@ Release 1 accepted 2026-10-16. Filip put this BACKLOG "must do" before Phase 13.
 - [x] **Done (VERIFIED by automated test).** Step 5: frontend, Guest badge, limits, Settings card, Log out warning
 - [x] **Done (VERIFIED by automated test).** Step 6: frontend, upgrade screens
 - [x] **Done 2026-10-19 (VERIFIED by live run, headless, local stack; 3 findings fixed).** Step 7: real-browser pass. Backend 3710, frontend 7870 tests. Report: `reports/2026-10-19-phase-12b-guest-join.md`; guide: `guides/phase-12b-guest-join.md`
-- [ ] Code review of the whole branch (Filip to say if he wants it before the PR)
+- [x] **Code review done 2026-10-19 (VERIFIED by automated test: backend 3717, frontend 7874):** 2 findings fixed (every member-row save runs once more after a same-moment change; a guest row shows only Let in again), the rest in BACKLOG (l) and (g)
 - [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the 3 migrations on Neon)
 
 ---
