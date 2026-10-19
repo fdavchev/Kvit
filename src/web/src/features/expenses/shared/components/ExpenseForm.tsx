@@ -18,6 +18,7 @@ import {
 } from '../splitDraft'
 import { AmountField } from './AmountField'
 import { ExpenseRows } from './ExpenseRows'
+import { NoteField } from './NoteField'
 
 export interface ExpenseFormValues {
   amountText: string
@@ -50,7 +51,6 @@ export function ExpenseForm({
   onSubmit,
 }: ExpenseFormProps) {
   const { t } = useTranslation()
-  const noteId = useId()
   const titleId = useId()
   const [amountText, setAmountText] = useState<string>(initialValues.amountText)
   const [currency, setCurrency] = useState<Currency>(initialValues.currency)
@@ -124,18 +124,7 @@ export function ExpenseForm({
       />
       <KvitTextField id={titleId} label={t('expense.titleField')} value={title} onChange={setTitle} />
       {isNoteOpen ? (
-        <div className="flex flex-col">
-          <label htmlFor={noteId} className="mb-2 text-[0.9375rem] font-bold">
-            {t('expense.note')}
-          </label>
-          <textarea
-            id={noteId}
-            value={note}
-            rows={3}
-            onChange={(event) => setNote(event.target.value)}
-            className="min-h-24 w-full rounded-[14px] border-2 border-field-border bg-field px-4 py-3 text-[1.0625rem] font-semibold text-field-foreground focus:border-field-border-focus focus-visible:outline-offset-0"
-          />
-        </div>
+        <NoteField value={note} onChange={setNote} />
       ) : (
         <KvitButton type="button" variant="smallLink" className="min-h-11 w-auto min-w-11 self-start px-0" onClick={() => setIsNoteOpen(true)}>
           {t('expense.note')}

@@ -32,7 +32,7 @@ First phase of Release 2 ("budget"). Adds personal spending (tap a category, typ
 - [x] Step 1: backend, custom categories (migration `PersonalCategories`)
 - [x] Step 2: backend, personal entries (migration `PersonalEntries`)
 - [x] Step 3: frontend, categories (grid with "+ New", new-category sheet, Edit my categories)
-- [ ] Step 4: frontend, add, edit and delete spending
+- [x] Step 4: frontend, add, edit and delete spending
 - [ ] Step 5: frontend, Budget tab (not for guests)
 - [ ] Step 6: desktop layout and the 360 px browser pass (EN/MK, light/dark)
 - [ ] Step 7: code review fixes, report and guide

@@ -6,7 +6,7 @@ import { cn } from '@/shared/utils/cn'
 export type KvitSheetActions = Dialog.Root.Actions
 
 interface KvitSheetProps {
-  title: string
+  title: ReactNode
   children: ReactNode
   onClose: () => void
   actionsRef?: RefObject<KvitSheetActions | null>

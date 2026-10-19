@@ -63,7 +63,7 @@ export async function getPersonalCategoriesWithArchived(): Promise<PersonalCateg
 }
 
 export async function createPersonalCategory(fields: PersonalCategoryFields): Promise<PersonalCategory> {
-  return parseCategory(await apiRequest(endpoints.personalCategories, jsonRequest('POST', fields)))
+  return parsePersonalCategory(await apiRequest(endpoints.personalCategories, jsonRequest('POST', fields)))
 }
 
 export async function updatePersonalCategory(
@@ -83,10 +83,10 @@ export async function unarchivePersonalCategory(categoryId: string): Promise<voi
 
 function parseCategoryList(body: unknown): PersonalCategory[] {
   const what = 'the personal categories'
-  return readList(readObject(body, what), 'categories', what).map(parseCategory)
+  return readList(readObject(body, what), 'categories', what).map(parsePersonalCategory)
 }
 
-function parseCategory(row: unknown): PersonalCategory {
+export function parsePersonalCategory(row: unknown): PersonalCategory {
   const what = 'a personal category'
   const fields = readObject(row, what)
   const look: PersonalCategoryLook = {

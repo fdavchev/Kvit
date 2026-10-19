@@ -517,6 +517,12 @@
       "archivedHeading": "Archived ({{count}})",
       "bringBack": "Bring back",
       "emptyMine": "You have no categories of your own yet. Tap “+ New” to make one."
+    },
+    "entries": {
+      "homeItem": "Personal spending",
+      "pickCategory": "What did you spend on?",
+      "deleted": "Deleted",
+      "restored": "Restored"
     }
   },
   "addName": {

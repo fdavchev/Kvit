@@ -10,16 +10,17 @@ interface AmountFieldProps {
   currency: Currency
   onAmountTextChange: (amountText: string) => void
   onCurrencyChange?: (currency: Currency) => void
+  invalid?: boolean
 }
 
 const otherCurrency: Record<Currency, Currency> = { MKD: 'EUR', EUR: 'MKD' }
 
-export function AmountField({ amountText, currency, onAmountTextChange, onCurrencyChange }: AmountFieldProps) {
+export function AmountField({ amountText, currency, onAmountTextChange, onCurrencyChange, invalid = false }: AmountFieldProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const amountId = useId()
   const shownCurrency = currencyLabel(currency, language)
-  const isAmountInvalid = amountText !== '' && parseMoneyInput(amountText, currency) === null
+  const isAmountInvalid = invalid || (amountText !== '' && parseMoneyInput(amountText, currency) === null)
 
   return (
     <div className="flex items-center justify-center gap-2 pt-2">

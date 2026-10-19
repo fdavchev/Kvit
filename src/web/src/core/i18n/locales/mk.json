@@ -517,6 +517,12 @@
       "archivedHeading": "Архивирани ({{count}})",
       "bringBack": "Врати",
       "emptyMine": "Сѐ уште немаш свои категории. Допри „+ Нова“ за да направиш една."
+    },
+    "entries": {
+      "homeItem": "Лично трошење",
+      "pickCategory": "На што потроши?",
+      "deleted": "Избришано",
+      "restored": "Вратено"
     }
   },
   "addName": {
