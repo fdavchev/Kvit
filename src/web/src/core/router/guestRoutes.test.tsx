@@ -35,6 +35,7 @@ describe('the routes a guest cannot use, followed through the real route table',
     ['One bill', routes.newBill],
     ['Set a password', routes.setPassword],
     ['Change password', routes.changePassword],
+    ['the Budget tab', routes.budget],
   ])('sends a guest who opens %s to Settings, where the guest card explains to make an account', async (_label, path) => {
     const { router } = await renderAsGuest(path)
 

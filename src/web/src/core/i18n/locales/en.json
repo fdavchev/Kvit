@@ -18,6 +18,7 @@
   "nav": {
     "home": "Home",
     "groups": "Groups",
+    "budget": "Budget",
     "settings": "Settings"
   },
   "errors": {
@@ -523,6 +524,14 @@
       "pickCategory": "What did you spend on?",
       "deleted": "Deleted",
       "restored": "Restored"
+    },
+    "screen": {
+      "spentThisMonth": "Spent this month",
+      "emptyTitle": "Nothing spent this month",
+      "add": "Add spending",
+      "months": "Month",
+      "categoryTotals": "Totals by category",
+      "entries": "Entries"
     }
   },
   "addName": {

@@ -197,7 +197,7 @@ Release 1 accepted 2026-10-16. Filip put this BACKLOG "must do" before Phase 13.
 - [x] **Done 2026-10-19 (VERIFIED by automated test: backend 4072, frontend 7958).** Step 2: backend, personal entries (migration `PersonalEntries`)
 - [x] **Done 2026-10-19 (VERIFIED by automated test: frontend 8194; no screen yet, not seen in a browser).** Step 3: frontend, categories (grid with "+ New", new-category sheet, Edit my categories)
 - [x] **Done 2026-10-19 (VERIFIED by automated test: frontend 8391; not seen in a browser).** Step 4: frontend, add, edit and delete spending (entry point: Home "+")
-- [ ] Step 5: frontend, Budget tab (`/budget`, month strip, totals, entries; not for guests)
+- [x] **Done 2026-10-19 (VERIFIED by automated test: frontend 8527; not seen in a browser).** Step 5: frontend, Budget tab (`/budget`, month strip, totals, entries; not for guests)
 - [ ] Step 6: desktop layout and the 360 px browser pass
 - [ ] Step 7: code review, report, guide, first-push texts
 - [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the 2 migrations on Neon)

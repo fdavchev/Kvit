@@ -302,9 +302,11 @@ describe('restoring the saved data when the app starts', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn<typeof fetch>(
-        () =>
+        (input) =>
           new Promise<Response>((resolve) => {
-            answerMe = resolve
+            if (String(input) === endpoints.me) {
+              answerMe = resolve
+            }
           }),
       ),
     )

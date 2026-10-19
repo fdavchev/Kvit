@@ -6,6 +6,7 @@ import {
   archivedGymCategory,
   coffeeCategory,
   personalFoodCategory,
+  personalGroceriesCategory,
 } from './personalCategoryTestData'
 
 export const coffeeEntry: PersonalEntry = {
@@ -77,4 +78,86 @@ export function monthAnswerBody(month: PersonalEntryMonth): Record<string, unkno
       categories: total.categories.map((row) => ({ ...row, categoryId: row.category.id })),
     })),
   }
+}
+
+export const groceriesEntry: PersonalEntry = {
+  id: 'f0000000-0000-4000-8000-000000000004',
+  category: personalGroceriesCategory,
+  amountMinor: 123400,
+  currency: 'MKD',
+  entryDate: '2026-10-12',
+  note: 'Weekly shop',
+  mkdPerEur: 61.5,
+  rateDate: '2026-10-10',
+  createdAt: '2026-10-12T17:00:00Z',
+  updatedAt: null,
+}
+
+export const secondCoffeeEntry: PersonalEntry = {
+  id: 'f0000000-0000-4000-8000-000000000005',
+  category: coffeeCategory,
+  amountMinor: 15000,
+  currency: 'MKD',
+  entryDate: '2026-10-18',
+  note: null,
+  mkdPerEur: 61.5,
+  rateDate: '2026-10-17',
+  createdAt: '2026-10-18T09:00:00Z',
+  updatedAt: null,
+}
+
+export const mkdOnlyMonth: PersonalEntryMonth = {
+  month: '2026-10',
+  entries: [coffeeEntry, secondCoffeeEntry, groceriesEntry],
+  totals: [
+    {
+      currency: 'MKD',
+      totalMinor: 150400,
+      categories: [
+        { category: personalGroceriesCategory, totalMinor: 123400, count: 1 },
+        { category: coffeeCategory, totalMinor: 27000, count: 2 },
+      ],
+    },
+  ],
+}
+
+export const euroDinnerEntry: PersonalEntry = {
+  id: 'f0000000-0000-4000-8000-000000000006',
+  category: personalFoodCategory,
+  amountMinor: 4250,
+  currency: 'EUR',
+  entryDate: '2026-08-14',
+  note: 'Dinner in Thessaloniki',
+  mkdPerEur: 61.5,
+  rateDate: '2026-08-14',
+  createdAt: '2026-08-14T19:00:00Z',
+  updatedAt: null,
+}
+
+export const euroOnlyAugust: PersonalEntryMonth = {
+  month: '2026-08',
+  entries: [euroDinnerEntry],
+  totals: [
+    {
+      currency: 'EUR',
+      totalMinor: 4250,
+      categories: [{ category: personalFoodCategory, totalMinor: 4250, count: 1 }],
+    },
+  ],
+}
+
+export const septemberWithArchivedCategory: PersonalEntryMonth = {
+  month: '2026-09',
+  entries: [gymEntryWithArchivedCategory],
+  totals: [
+    {
+      currency: 'MKD',
+      totalMinor: 150000,
+      categories: [{ category: archivedGymCategory, totalMinor: 150000, count: 1 }],
+    },
+  ],
+}
+
+export function emptyMonth(month: string): PersonalEntryMonth {
+  return { month, entries: [], totals: [] }
 }

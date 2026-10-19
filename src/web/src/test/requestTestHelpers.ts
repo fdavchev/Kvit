@@ -1,7 +1,7 @@
 import { vi, type Mock } from 'vitest'
 import { describeRequest, problemResponse, type SentRequest } from './apiTestHelpers'
 
-export type AnswerFactory = () => Response | Error
+export type AnswerFactory = () => Response | Error | Promise<Response>
 
 export function jsonAnswer(body: unknown): AnswerFactory {
   return () => Response.json(body)
@@ -13,6 +13,10 @@ export function noContentAnswer(): AnswerFactory {
 
 export function problemAnswer(status: number, errorCode: string): AnswerFactory {
   return () => problemResponse(status, errorCode)
+}
+
+export function neverAnswer(): AnswerFactory {
+  return () => new Promise<Response>(() => {})
 }
 
 export function networkFailureAnswer(): AnswerFactory {

@@ -18,6 +18,7 @@
   "nav": {
     "home": "Почетна",
     "groups": "Групи",
+    "budget": "Буџет",
     "settings": "Поставки"
   },
   "errors": {
@@ -523,6 +524,14 @@
       "pickCategory": "На што потроши?",
       "deleted": "Избришано",
       "restored": "Вратено"
+    },
+    "screen": {
+      "spentThisMonth": "Потрошено овој месец",
+      "emptyTitle": "Овој месец нема трошоци",
+      "add": "Додај трошење",
+      "months": "Месец",
+      "categoryTotals": "Вкупно по категории",
+      "entries": "Внесови"
     }
   },
   "addName": {

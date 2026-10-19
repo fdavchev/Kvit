@@ -248,7 +248,7 @@ describe('group routes followed through the real route table', () => {
     })
   })
 
-  it.each(barRoutePaths)('shows the bottom bar with the Home, Groups and Settings tabs at %s', async (path) => {
+  it.each(barRoutePaths)('shows the bottom bar with the Home, Groups, Budget and Settings tabs at %s', async (path) => {
     stubSignedInPerson()
 
     await renderRoutesWithProviders(routeObjects, path)
@@ -261,6 +261,7 @@ describe('group routes followed through the real route table', () => {
     ).toEqual([
       translated('en', 'nav.home'),
       translated('en', 'nav.groups'),
+      translated('en', 'nav.budget'),
       translated('en', 'nav.settings'),
     ])
   })
