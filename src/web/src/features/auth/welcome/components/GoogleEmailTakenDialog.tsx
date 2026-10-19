@@ -10,12 +10,14 @@ interface GoogleEmailTakenDialogProps {
   idToken: string
   onCredential: (idToken: string) => void
   onClose: () => void
+  offersPasswordLogIn?: boolean
 }
 
 export function GoogleEmailTakenDialog({
   idToken,
   onCredential,
   onClose,
+  offersPasswordLogIn = true,
 }: GoogleEmailTakenDialogProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -24,9 +26,11 @@ export function GoogleEmailTakenDialog({
   return (
     <KvitDialog title={t('auth.googleTaken.title')} onClose={onClose}>
       <div className="flex flex-col gap-2 pt-2">
-        <KvitButton onClick={() => navigate(routes.logIn, { state: { email } })}>
-          {t('auth.googleTaken.logIn')}
-        </KvitButton>
+        {offersPasswordLogIn && (
+          <KvitButton onClick={() => navigate(routes.logIn, { state: { email } })}>
+            {t('auth.googleTaken.logIn')}
+          </KvitButton>
+        )}
         <p className="pt-3 text-center text-[0.9375rem] font-semibold text-muted-foreground">
           {t('auth.googleTaken.another')}
         </p>

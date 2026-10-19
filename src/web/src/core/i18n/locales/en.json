@@ -167,6 +167,10 @@
       "title": "Set a password",
       "submit": "Save password",
       "done": "Password saved. You can now also log in with your email and password."
+    },
+    "makeAccount": {
+      "keeps": "You keep all your groups and expenses.",
+      "done": "Your account is ready"
     }
   },
   "home": {

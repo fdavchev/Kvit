@@ -11,6 +11,8 @@ describe('endpoints', () => {
     ['googleLogIn', '/api/auth/google'],
     ['googleSignUp', '/api/auth/google/sign-up'],
     ['setPassword', '/api/auth/set-password'],
+    ['upgradeGuest', '/api/auth/upgrade'],
+    ['googleUpgradeGuest', '/api/auth/google/upgrade'],
     ['groups', '/api/groups'],
     ['invitePreview', '/api/invites/preview'],
     ['inviteJoin', '/api/invites/join'],

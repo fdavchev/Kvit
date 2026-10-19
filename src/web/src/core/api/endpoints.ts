@@ -7,6 +7,8 @@ export const endpoints = {
   googleLogIn: '/api/auth/google',
   googleSignUp: '/api/auth/google/sign-up',
   setPassword: '/api/auth/set-password',
+  upgradeGuest: '/api/auth/upgrade',
+  googleUpgradeGuest: '/api/auth/google/upgrade',
   me: '/api/me',
   meLanguage: '/api/me/language',
   meActive: '/api/me/active',

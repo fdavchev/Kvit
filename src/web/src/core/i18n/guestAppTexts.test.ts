@@ -37,6 +37,8 @@ const guestAppTexts: GuestAppText[] = [
     mk: 'Откако ќе се одјавиш, не можеш сам/а да се вратиш. Побарај од сопственикот на групата да те пушти повторно. Или прво направи профил.',
   },
   { key: 'settings.guest.logOutAnyway', en: 'Log out anyway', mk: 'Сепак одјави се' },
+  { key: 'auth.makeAccount.keeps', en: 'You keep all your groups and expenses.', mk: 'Ги задржуваш сите групи и трошоци.' },
+  { key: 'auth.makeAccount.done', en: 'Your account is ready', mk: 'Профилот е готов' },
   {
     key: 'groups.emptyGuest',
     en: 'You have no groups yet. Open a link a friend sent you.',
@@ -49,11 +51,15 @@ const guestAppTexts: GuestAppText[] = [
   },
 ]
 
-function settingsGuestKeysOf(texts: object): string[] {
+function keysUnder(texts: object, prefix: string): string[] {
   return collectTexts(texts)
     .map(([path]) => path)
-    .filter((key) => key.startsWith('settings.guest.'))
+    .filter((key) => key.startsWith(prefix))
     .sort()
+}
+
+function pinnedKeysUnder(prefix: string): string[] {
+  return guestAppTexts.map(({ key }) => key).filter((key) => key.startsWith(prefix)).sort()
 }
 
 function placeholdersOf(text: string): string[] {
@@ -77,11 +83,9 @@ describe('the texts of a guest inside the app', () => {
     expect(translated('mk', key).replace(placeholders, '').replace(appName, '')).not.toMatch(latinLetters)
   })
 
-  it('has exactly the texts pinned above under settings.guest, in English and in Macedonian', () => {
-    const pinnedKeys = guestAppTexts.map(({ key }) => key).filter((key) => key.startsWith('settings.guest.')).sort()
-
-    expect(settingsGuestKeysOf(en)).toEqual(pinnedKeys)
-    expect(settingsGuestKeysOf(mk)).toEqual(pinnedKeys)
+  it.each(['settings.guest.', 'auth.makeAccount.'])('has exactly the texts pinned above under %s, in English and in Macedonian', (prefix) => {
+    expect(keysUnder(en, prefix)).toEqual(pinnedKeysUnder(prefix))
+    expect(keysUnder(mk, prefix)).toEqual(pinnedKeysUnder(prefix))
   })
 
   it('writes «сѐ» in the Macedonian empty Groups text for a guest with the Cyrillic ѐ (U+0450)', () => {

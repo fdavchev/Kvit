@@ -16,6 +16,8 @@ export interface LogInInput {
   password: string
 }
 
+export type UpgradeGuestInput = LogInInput
+
 export interface ChangePasswordInput {
   currentPassword: string
   newPassword: string
@@ -69,4 +71,14 @@ export async function googleSignUp(input: GoogleSignUpInput): Promise<Me> {
 
 export async function setPassword(newPassword: string): Promise<void> {
   await apiRequest(endpoints.setPassword, jsonRequest('POST', { newPassword }))
+}
+
+export async function upgradeGuest(input: UpgradeGuestInput): Promise<Me> {
+  const body = await apiRequest(endpoints.upgradeGuest, jsonRequest('POST', input))
+  return parseMe(body)
+}
+
+export async function googleUpgradeGuest(idToken: string): Promise<Me> {
+  const body = await apiRequest(endpoints.googleUpgradeGuest, jsonRequest('POST', { idToken }))
+  return parseMe(body)
 }
