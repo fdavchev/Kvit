@@ -488,6 +488,37 @@
     "gifts": "Подароци",
     "other": "Друго"
   },
+  "budget": {
+    "categories": {
+      "new": "Нова",
+      "editMine": "Уреди ги моите категории",
+      "mineTitle": "Мои категории",
+      "newTitle": "Нова категорија",
+      "editTitle": "Измени категорија",
+      "name": "Име",
+      "namePlaceholder": "Кафе",
+      "emoji": "Емоџи",
+      "emojiPicks": "Брз избор на емоџи",
+      "color": "Боја",
+      "colors": {
+        "orange": "Портокалова",
+        "green": "Зелена",
+        "yellow": "Жолта",
+        "blue": "Сина",
+        "pink": "Розова",
+        "purple": "Виолетова",
+        "slate": "Сиво-сина",
+        "red": "Црвена",
+        "teal": "Тиркизна",
+        "gray": "Сива"
+      },
+      "archive": "Архивирај",
+      "archivedToast": "Архивирано: {{name}}",
+      "archivedHeading": "Архивирани ({{count}})",
+      "bringBack": "Врати",
+      "emptyMine": "Сѐ уште немаш свои категории. Допри „+ Нова“ за да направиш една."
+    }
+  },
   "addName": {
     "title": "Додај име",
     "label": "Име",

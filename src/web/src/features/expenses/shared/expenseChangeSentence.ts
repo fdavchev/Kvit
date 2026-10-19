@@ -3,9 +3,9 @@ import type { Language } from '@/core/i18n/language'
 import type { Category } from '@/core/services/categories/categoriesService'
 import type { ExpenseChange } from '@/core/services/expenses/expensesService'
 import { groupCurrencies } from '@/core/services/groups/groupsService'
+import { categoryNameKey } from '@/shared/utils/categoryLooks'
 import { formatExpenseDay } from '@/shared/utils/formatDate'
 import { formatMoney, type Currency } from '@/shared/utils/formatMoney'
-import { categoryNameKey } from './expenseCategories'
 import { noValueText } from './expenseTitle'
 
 export interface ChangeSentenceContext {

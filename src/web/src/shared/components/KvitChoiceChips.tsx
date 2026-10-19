@@ -14,6 +14,7 @@ interface KvitChoiceChipsProps<Value extends string> {
   onChange: (value: Value) => void
   chipClassName?: string
   labelClassName?: string
+  optionsClassName?: string
 }
 
 export function KvitChoiceChips<Value extends string>({
@@ -23,6 +24,7 @@ export function KvitChoiceChips<Value extends string>({
   onChange,
   chipClassName,
   labelClassName,
+  optionsClassName,
 }: KvitChoiceChipsProps<Value>) {
   const labelId = useId()
 
@@ -31,7 +33,7 @@ export function KvitChoiceChips<Value extends string>({
       <span id={labelId} className={cn('mb-2 text-[0.9375rem] font-bold', labelClassName)}>
         {label}
       </span>
-      <div className="flex flex-wrap gap-2">
+      <div className={cn('flex flex-wrap gap-2', optionsClassName)}>
         {options.map((option) => (
           <button
             key={option.value}

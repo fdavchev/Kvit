@@ -87,4 +87,13 @@ describe('KvitChoiceChips', () => {
     expect(chip('MKD').getAttribute('type')).toBe('button')
     expect(chip('EUR').getAttribute('type')).toBe('button')
   })
+
+  it('adds the given classes to the row of chips, so a long row can scroll instead of wrapping', () => {
+    render(<KvitChoiceChips label="Currency" options={options} value="MKD" onChange={() => {}} optionsClassName="flex-nowrap overflow-x-auto" />)
+
+    const row = chip('MKD').parentElement
+
+    expect(Array.from(row?.classList ?? [])).toEqual(expect.arrayContaining(['flex', 'gap-2', 'flex-nowrap', 'overflow-x-auto']))
+    expect(Array.from(row?.classList ?? [])).not.toContain('flex-wrap')
+  })
 })

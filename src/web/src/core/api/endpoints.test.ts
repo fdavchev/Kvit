@@ -5,6 +5,7 @@ const groupId = '7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e'
 const memberId = 'a1b2c3d4-0002-4aaa-8bbb-000000000002'
 const expenseId = 'e0000000-0000-4000-8000-000000000004'
 const settlementId = 'c0000000-0000-4000-8000-000000000001'
+const categoryId = 'd0000000-0000-4000-8000-000000000001'
 
 describe('endpoints', () => {
   it.each([
@@ -19,6 +20,8 @@ describe('endpoints', () => {
     ['inviteJoinAsGuest', '/api/invites/join-as-guest'],
     ['categories', '/api/categories'],
     ['oneBill', '/api/groups/one-bill'],
+    ['personalCategories', '/api/personal/categories'],
+    ['personalCategoriesWithArchived', '/api/personal/categories?includeArchived=true'],
   ] as const)('has the path %s at %s', (name, path) => {
     expect(endpoints[name]).toBe(path)
   })
@@ -65,5 +68,13 @@ describe('endpoints', () => {
     ['groupSettlementRestore', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/settlements/c0000000-0000-4000-8000-000000000001/restore'],
   ] as const)('builds the path %s for a group id and a settlement id as %s', (name, path) => {
     expect(endpoints[name](groupId, settlementId)).toBe(path)
+  })
+
+  it.each([
+    ['personalCategory', '/api/personal/categories/d0000000-0000-4000-8000-000000000001'],
+    ['personalCategoryArchive', '/api/personal/categories/d0000000-0000-4000-8000-000000000001/archive'],
+    ['personalCategoryUnarchive', '/api/personal/categories/d0000000-0000-4000-8000-000000000001/unarchive'],
+  ] as const)('builds the path %s for a personal category id as %s', (name, path) => {
+    expect(endpoints[name](categoryId)).toBe(path)
   })
 })

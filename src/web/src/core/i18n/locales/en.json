@@ -488,6 +488,37 @@
     "gifts": "Gifts",
     "other": "Other"
   },
+  "budget": {
+    "categories": {
+      "new": "New",
+      "editMine": "Edit my categories",
+      "mineTitle": "My categories",
+      "newTitle": "New category",
+      "editTitle": "Edit category",
+      "name": "Name",
+      "namePlaceholder": "Coffee",
+      "emoji": "Emoji",
+      "emojiPicks": "Quick emoji picks",
+      "color": "Colour",
+      "colors": {
+        "orange": "Orange",
+        "green": "Green",
+        "yellow": "Yellow",
+        "blue": "Blue",
+        "pink": "Pink",
+        "purple": "Purple",
+        "slate": "Slate",
+        "red": "Red",
+        "teal": "Teal",
+        "gray": "Grey"
+      },
+      "archive": "Archive",
+      "archivedToast": "Archived: {{name}}",
+      "archivedHeading": "Archived ({{count}})",
+      "bringBack": "Bring back",
+      "emptyMine": "You have no categories of your own yet. Tap “+ New” to make one."
+    }
+  },
   "addName": {
     "title": "Add a name",
     "label": "Name",

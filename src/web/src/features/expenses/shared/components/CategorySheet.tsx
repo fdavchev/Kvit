@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import type { Category } from '@/core/services/categories/categoriesService'
+import { KvitCategoryChoice, kvitCategoryGridLook } from '@/shared/components/KvitCategoryChoice'
 import { KvitSheet } from '@/shared/components/KvitSheet'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
-import { categoryNameKey } from '../expenseCategories'
+import { categoryNameKey } from '@/shared/utils/categoryLooks'
 import { CategoryTile } from './CategoryTile'
 
 interface CategorySheetProps {
@@ -23,18 +24,15 @@ export function CategorySheet({ categories, categoryId, onPick, onClose }: Categ
 
   return (
     <KvitSheet title={t('expense.pickCategory')} onClose={onClose} actionsRef={sheet.actionsRef}>
-      <div className="grid grid-cols-4 gap-x-1.5 gap-y-2.5">
+      <div className={kvitCategoryGridLook}>
         {categories.map((category) => (
-          <button
+          <KvitCategoryChoice
             key={category.id}
-            type="button"
-            aria-pressed={category.id === categoryId}
+            label={t(categoryNameKey(category))}
+            tile={<CategoryTile category={category} />}
+            isPressed={category.id === categoryId}
             onClick={() => pick(category.id)}
-            className="pressable flex min-w-0 flex-col items-center gap-1 rounded-[14px] border-2 border-transparent py-1 text-xs leading-tight font-semibold hover:bg-secondary-hover aria-pressed:border-primary"
-          >
-            <CategoryTile category={category} />
-            <span className="w-full text-center break-words">{t(categoryNameKey(category))}</span>
-          </button>
+          />
         ))}
       </div>
     </KvitSheet>

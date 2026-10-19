@@ -38,4 +38,20 @@ describe('KvitEmojiTile', () => {
     expect(screen.queryByRole('img')).toBeNull()
     expect(screen.queryByRole('button')).toBeNull()
   })
+
+  it('draws the dashed empty look with a + inside and no fill colour when asked for the dashed variant', () => {
+    const { container } = render(<KvitEmojiTile emoji="+" variant="dashed" />)
+
+    const tile = tileElement(container)
+    expect(tile.textContent).toBe('+')
+    expect(Array.from(tile.classList)).toEqual(expect.arrayContaining(['border-dashed', 'bg-track', 'size-11']))
+    expect(Array.from(tile.classList)).not.toContain('bg-brand-700')
+  })
+
+  it('keeps the filled look by default', () => {
+    const { container } = render(<KvitEmojiTile emoji={beach} />)
+
+    expect(Array.from(tileElement(container).classList)).toContain('bg-brand-700')
+    expect(Array.from(tileElement(container).classList)).not.toContain('border-dashed')
+  })
 })
