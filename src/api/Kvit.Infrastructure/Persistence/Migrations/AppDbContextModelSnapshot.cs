@@ -123,11 +123,14 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_categories_key");
 
+                    b.HasIndex("OwnerUserId")
+                        .HasDatabaseName("ix_categories_owner_user_id");
+
                     b.ToTable("categories", null, t =>
                         {
                             t.HasCheckConstraint("ck_categories_built_in_or_custom", "(owner_user_id IS NULL AND key IS NOT NULL AND name IS NULL) OR (owner_user_id IS NOT NULL AND key IS NULL AND name IS NOT NULL)");
 
-                            t.HasCheckConstraint("ck_categories_color_not_empty", "char_length(color) >= 1");
+                            t.HasCheckConstraint("ck_categories_color", "color IN ('orange', 'green', 'yellow', 'blue', 'pink', 'purple', 'slate', 'red', 'teal', 'gray')");
 
                             t.HasCheckConstraint("ck_categories_emoji_not_empty", "char_length(emoji) >= 1");
                         });
@@ -1066,6 +1069,15 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_activity_events_groups_group_id");
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.Category", b =>
+                {
+                    b.HasOne("Kvit.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_categories_users_owner_user_id");
                 });
 
             modelBuilder.Entity("Kvit.Domain.Entities.ClosingResponse", b =>

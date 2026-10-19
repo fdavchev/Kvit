@@ -49,6 +49,11 @@ const mappedErrorCodes = [
   'GUEST_NOT_ALLOWED',
   'GUEST_JOIN_SIGNED_IN',
   'MEMBER_NOT_GUEST',
+  'CATEGORY_NOT_FOUND',
+  'CATEGORY_NAME_INVALID',
+  'CATEGORY_NAME_TAKEN',
+  'CATEGORY_EMOJI_INVALID',
+  'CATEGORY_COLOR_INVALID',
 ]
 
 const errorTexts: Record<'en' | 'mk', Record<string, unknown>> = {

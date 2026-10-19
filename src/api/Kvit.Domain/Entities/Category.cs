@@ -1,7 +1,11 @@
+using Kvit.Domain.Results;
+
 namespace Kvit.Domain.Entities
 {
     public class Category
     {
+        public const int LastBuiltInSortOrder = 10;
+
         private Category()
         {
         }
@@ -21,6 +25,46 @@ namespace Kvit.Domain.Entities
         public int SortOrder { get; private set; }
 
         public DateTimeOffset? ArchivedAt { get; private set; }
+
+        public static Category CreateCustom(Guid ownerUserId, CategoryFields fields, int sortOrder)
+        {
+            return new Category
+            {
+                Id = Guid.CreateVersion7(),
+                OwnerUserId = ownerUserId,
+                Name = fields.Name,
+                Emoji = fields.Emoji,
+                Color = fields.Color,
+                SortOrder = sortOrder,
+            };
+        }
+
+        public static Result<T> NotFound<T>(Guid categoryId)
+        {
+            return Result.NotFound<T>($"Category {categoryId} is not one of your own categories.", ResultCodes.CATEGORY_NOT_FOUND);
+        }
+
+        public void Update(CategoryFields fields)
+        {
+            Name = fields.Name;
+            Emoji = fields.Emoji;
+            Color = fields.Color;
+        }
+
+        public void Archive(DateTimeOffset archivedAt)
+        {
+            ArchivedAt ??= archivedAt;
+        }
+
+        public void Unarchive()
+        {
+            ArchivedAt = null;
+        }
+
+        public string CustomName()
+        {
+            return Name ?? throw new InvalidOperationException($"Category {Id} is a built-in category without a name, but only custom categories have one.");
+        }
 
         public bool CanTagGroupExpenses()
         {
