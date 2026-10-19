@@ -163,7 +163,8 @@ namespace Kvit.Api.Tests.Persistence
         [InlineData("GroupCreated")]
         [InlineData("ExpenseAdded")]
         [InlineData("SettlementConfirmed")]
-        public async Task Type_OfTheSixKnownNames_IsAccepted(string type)
+        [InlineData("GuestUpgraded")]
+        public async Task Type_OfTheSevenKnownNames_IsAccepted(string type)
         {
             Guid userId = await AddUserAsync();
 
@@ -179,7 +180,7 @@ namespace Kvit.Api.Tests.Persistence
         [InlineData("Bogus")]
         [InlineData("active")]
         [InlineData("")]
-        public async Task Type_OutsideTheSixKnownNames_ViolatesTheCheckConstraint(string type)
+        public async Task Type_OutsideTheSevenKnownNames_ViolatesTheCheckConstraint(string type)
         {
             Guid userId = await AddUserAsync();
 

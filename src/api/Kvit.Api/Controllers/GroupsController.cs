@@ -141,6 +141,13 @@ namespace Kvit.Api.Controllers
             return Result(result);
         }
 
+        [HttpPost("{groupId:guid}/members/{memberId:guid}/let-in-again")]
+        public async Task<ActionResult> LetGuestInAgain(Guid groupId, Guid memberId, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new LetGuestInAgainCommand(groupId, memberId), cancellationToken);
+            return Result(result);
+        }
+
         [HttpPost("{groupId:guid}/invite/reset")]
         public async Task<ActionResult<InviteTokenResponse>> ResetInviteLink(Guid groupId, CancellationToken cancellationToken)
         {

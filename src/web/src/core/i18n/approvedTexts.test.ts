@@ -127,7 +127,6 @@ const approvedPhase7Step5Texts: [string, string, string][] = [
   ['join.areYou', 'Are you one of these?', 'Дали си некој од овие?'],
   ['join.imNew', "No, I'm new", 'Не, прв пат сум тука'],
   ['join.joined', 'You joined {{name}}', 'Се придружи на групата „{{name}}“'],
-  ['join.signInHint', 'Create an account or log in to join.', 'Направи профил или најави се за да се придружиш.'],
   ['join.removed', 'You were removed from {{name}}. Ask the owner to let you back in.', 'Те отстранија од групата „{{name}}“. Побарај од сопственикот да те врати.'],
   ['errors.MEMBER_NOT_FOUND', 'This person is no longer in the group.', 'Оваа личност веќе не е во групата.'],
   ['errors.MEMBER_IS_OWNER', "The owner can't be removed.", 'Сопственикот не може да се отстрани.'],
@@ -291,6 +290,7 @@ const timeNamespace = /^time\./
 const step5Namespaces = /^(activity|oneBill|newGroup)\./
 const phase9DraftActivityKeys = /^activity\.settlement/
 const phase10DraftActivityKeys = /^activity\.(closing|groupFinished|groupReopened)/
+const phase12bDraftActivityKeys = /^activity\.guestLetInAgain$/
 const phase7NewGroupKeys: string[] = approvedPhase7Texts
   .map(([key]) => key)
   .filter((key) => key.startsWith('newGroup.'))
@@ -331,7 +331,7 @@ const timePluralCounts: [number, string, string, string][] = [
   [21, 'days', '21 days ago', 'пред 21 ден'],
 ]
 
-const removedKeys = ['welcome.pitch', 'common.comingSoon', 'group.expensesSoon', 'group.addPeople', 'expenses.empty']
+const removedKeys = ['welcome.pitch', 'common.comingSoon', 'group.expensesSoon', 'group.addPeople', 'expenses.empty', 'join.signInHint']
 
 describe('the approved Phase 6 texts', () => {
   it.each(approvedTexts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
@@ -487,6 +487,7 @@ describe('the approved Phase 8 Step 5 texts', () => {
       .filter((path) => step5Namespaces.test(path))
       .filter((path) => !phase9DraftActivityKeys.test(path))
       .filter((path) => !phase10DraftActivityKeys.test(path))
+      .filter((path) => !phase12bDraftActivityKeys.test(path))
       .sort()
     const keysListedAbove = [
       ...phase7NewGroupKeys,
@@ -496,7 +497,7 @@ describe('the approved Phase 8 Step 5 texts', () => {
     expect(keysInTheFile).toEqual(keysListedAbove)
   })
 
-  it.each(['activity.ownershipTransferred', 'activity.memberLetBackIn'])('writes «го/ја» literally in the Macedonian text of %s, because the app does not know the gender of a person', (key) => {
+  it.each(['activity.ownershipTransferred', 'activity.memberLetBackIn', 'activity.guestLetInAgain'])('writes «го/ја» literally in the Macedonian text of %s, because the app does not know the gender of a person', (key) => {
     expect(translated('mk', key)).toContain('го/ја')
   })
 

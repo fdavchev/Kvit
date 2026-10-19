@@ -1,5 +1,4 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react'
-import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { endpoints } from '@/core/api/endpoints'
 import { languages, type Language } from '@/core/i18n/language'
@@ -7,13 +6,8 @@ import { routes } from '@/core/router/routes'
 import type { Me } from '@/core/services/me/meService'
 import { problemResponse, stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
 import { expectDisabledWhilePending } from '@/test/formTestHelpers'
-import {
-  findDrawnGoogleButton,
-  sendGoogleCredential,
-  stubGoogleSignIn,
-  testIdToken,
-} from '@/test/googleTestHelpers'
-import { defaultGroupEmoji, testGroupId, testInviteToken } from '@/test/groupTestData'
+import { stubGoogleSignIn } from '@/test/googleTestHelpers'
+import { defaultGroupEmoji, groupNameMaxLength, testGroupId, testInviteToken } from '@/test/groupTestData'
 import {
   alreadyMemberInvitePreview,
   openInvitePreview,
@@ -124,10 +118,6 @@ function expectTokenNeverInAnApiAddress(fetchMock: { mock: { calls: unknown[][] 
   for (const url of urls) {
     expect(url).not.toContain(token)
   }
-}
-
-function consoleErrorSilenced(): void {
-  vi.spyOn(console, 'error').mockImplementation(() => {})
 }
 
 describe('JoinScreen', () => {
@@ -364,7 +354,8 @@ describe('JoinScreen', () => {
 
       expect(screen.queryByText(translated('en', 'join.areYou'))).toBeNull()
       expect(screen.queryByRole('button', { name: translated('en', 'join.imNew') })).toBeNull()
-      expect(screen.queryByText(translated('en', 'join.signInHint'))).toBeNull()
+      expect(screen.queryByText(translated('en', 'join.guest.whoAreYou'))).toBeNull()
+      expect(screen.queryByText(translated('en', 'join.guest.whatsYourName'))).toBeNull()
       expect(
         screen.queryByRole('link', { name: translated('en', 'welcome.signUpWithEmail') }),
       ).toBeNull()
@@ -512,10 +503,26 @@ describe('JoinScreen', () => {
 
   describe('the people in the group on the invite card', () => {
     const multiWordNames: string[] = ['Filip Davchev', 'Ana Maria Petrovska', 'Marko']
-    const noBreakLook: RegExp = /(^|\s)(whitespace-nowrap|text-nowrap)(\s|$)/
+    const neverWrapsAtAll: RegExp = /(^|\s)(whitespace-nowrap|text-nowrap)(\s|$)/
 
     function previewWithMembers(memberNames: string[]): AnswerFactory {
       return jsonAnswer({ ...openInvitePreview, memberNames })
+    }
+
+    function boxOf(name: string): HTMLElement {
+      const box = screen.getByText(name).parentElement
+      if (box === null) {
+        throw new Error(`The name ${name} on the invite card has no box around it`)
+      }
+      return box
+    }
+
+    function expectKeptWholeUnlessLongerThanALine(name: string): void {
+      const classes = Array.from(boxOf(name).classList)
+      expect(classes).toContain('inline-block')
+      expect(classes).toContain('max-w-full')
+      expect(classes).toContain('wrap-anywhere')
+      expect(boxOf(name).className).not.toMatch(neverWrapsAtAll)
     }
 
     it('shows each name of a member in its own element', async () => {
@@ -527,13 +534,43 @@ describe('JoinScreen', () => {
       }
     })
 
-    it('gives each name a no-break style so a name never wraps inside itself', async () => {
+    it('puts each name in a box that keeps it on one line and breaks it only when it is longer than a whole line', async () => {
       await renderJoin({ preview: previewWithMembers(multiWordNames) })
       await showsInviteCard()
 
       for (const name of multiWordNames) {
-        expect(screen.getByText(name).className).toMatch(noBreakLook)
+        expectKeptWholeUnlessLongerThanALine(name)
       }
+    })
+
+    it('keeps the comma inside the box of the name before it, so a line never starts with a comma', async () => {
+      await renderJoin({ preview: previewWithMembers(multiWordNames) })
+      await showsInviteCard()
+
+      expect(multiWordNames.map((name) => boxOf(name).textContent)).toEqual(['Filip Davchev,', 'Ana Maria Petrovska,', 'Marko'])
+      expect(boxOf('Filip Davchev').parentElement?.textContent).toBe(
+        `${translated('en', 'join.inGroup')}: Filip Davchev, Ana Maria Petrovska, Marko`,
+      )
+    })
+
+    it('lets a member name that is one very long word break anywhere instead of making the page wider than the phone', async () => {
+      const oneLongWord = 'W'.repeat(60)
+      await renderJoin({ visitor: null, preview: previewWithMembers(['Filip', oneLongWord]) })
+      await showsInviteCard()
+
+      expectKeptWholeUnlessLongerThanALine(oneLongWord)
+    })
+
+    it.each(languages)('lets a group name that is one very long word break anywhere in the invite heading (%s)', async (language) => {
+      const oneLongWord = 'G'.repeat(groupNameMaxLength)
+      await renderJoin({ language, visitor: null, preview: jsonAnswer({ ...openInvitePreview, name: oneLongWord }) })
+
+      const heading = await screen.findByRole('heading', {
+        level: 1,
+        name: translated(language, 'join.invitedTo', { name: oneLongWord }),
+      })
+
+      expect(Array.from(heading.classList)).toContain('wrap-anywhere')
     })
 
     it('shows the names in the order the server sent them', async () => {
@@ -555,19 +592,20 @@ describe('JoinScreen', () => {
       expect(screen.getAllByText('Marko')).toHaveLength(2)
     })
 
-    it('shows a single member name in its own element with the no-break style', async () => {
+    it('shows a single member name in its own box with no comma after it', async () => {
       await renderJoin({ preview: previewWithMembers(['Filip Davchev']) })
       await showsInviteCard()
 
-      expect(screen.getByText('Filip Davchev').className).toMatch(noBreakLook)
+      expectKeptWholeUnlessLongerThanALine('Filip Davchev')
+      expect(boxOf('Filip Davchev').textContent).toBe('Filip Davchev')
     })
 
-    it('shows the names in their own elements to a signed-out visitor too', async () => {
+    it('shows the names in their own boxes to a signed-out visitor too', async () => {
       await renderJoin({ visitor: null, preview: previewWithMembers(multiWordNames) })
       await showsInviteCard()
 
       for (const name of multiWordNames) {
-        expect(screen.getByText(name).className).toMatch(noBreakLook)
+        expectKeptWholeUnlessLongerThanALine(name)
       }
     })
 
@@ -722,26 +760,6 @@ describe('JoinScreen', () => {
   })
 
   describe('a signed-out visitor with an open invite', () => {
-    it.each(languages)('shows the invite card, the sign-in hint, the Google button and the two account links, and no Join button (%s)', async (language) => {
-      const { identity } = await renderJoin({ language, visitor: null })
-
-      await showsInviteCard(language)
-
-      expect(screen.getByText(defaultGroupEmoji)).toBeTruthy()
-      expect(mainText()).toContain(translated(language, 'join.inGroup'))
-      expect(screen.getByText(translated(language, 'join.signInHint'))).toBeTruthy()
-      expect(await findDrawnGoogleButton(identity, screen.getByRole('main'))).toBeTruthy()
-      expect(
-        screen.getByRole('link', { name: translated(language, 'welcome.signUpWithEmail') }),
-      ).toBeTruthy()
-      expect(
-        screen.getByRole('link', { name: translated(language, 'welcome.haveAccount') }),
-      ).toBeTruthy()
-      expect(
-        screen.queryByRole('button', { name: translated(language, 'join.join') }),
-      ).toBeNull()
-    })
-
     it('knows the visitor is signed out from the 401 of asking who is signed in', async () => {
       await renderJoin({
         visitor: 'unknown',
@@ -750,8 +768,8 @@ describe('JoinScreen', () => {
 
       await showsInviteCard()
 
-      expect(screen.getByText(translated('en', 'join.signInHint'))).toBeTruthy()
-      expect(screen.queryByRole('button', { name: translated('en', 'join.join') })).toBeNull()
+      expect(screen.getByText(translated('en', 'join.guest.whatsYourName'))).toBeTruthy()
+      expect(screen.getByLabelText(translated('en', 'auth.signUp.name'))).toBeTruthy()
     })
 
     it('knows the visitor is signed in from asking who is signed in', async () => {
@@ -763,10 +781,10 @@ describe('JoinScreen', () => {
       await showsInviteCard()
 
       expect(joinButton()).toBeTruthy()
-      expect(screen.queryByText(translated('en', 'join.signInHint'))).toBeNull()
+      expect(screen.queryByText(translated('en', 'join.guest.whatsYourName'))).toBeNull()
     })
 
-    it('shows an error instead of the sign-up links when asking who is signed in fails with a server error', async () => {
+    it('shows an error instead of the guest join when asking who is signed in fails with a server error', async () => {
       await renderJoin({
         visitor: 'unknown',
         answers: { 'GET /api/me': () => new Response(null, { status: 500 }) },
@@ -775,37 +793,8 @@ describe('JoinScreen', () => {
       expect((await screen.findByRole('alert')).textContent).toContain(
         translated('en', 'errors.generic'),
       )
-      expect(
-        screen.queryByRole('link', { name: translated('en', 'welcome.signUpWithEmail') }),
-      ).toBeNull()
+      expect(screen.queryByRole('button', { name: translated('en', 'join.guest.imNew') })).toBeNull()
       expect(screen.queryByRole('button', { name: translated('en', 'join.join') })).toBeNull()
-    })
-
-    it.each([
-      ['welcome.signUpWithEmail', routes.signUp],
-      ['welcome.haveAccount', routes.logIn],
-    ])('opens the screen for "%s" and carries the invite token in the router state', async (key, path) => {
-      const { router } = await renderJoin({ visitor: null })
-      await showsInviteCard()
-
-      fireEvent.click(screen.getByRole('link', { name: translated('en', key) }))
-
-      await waitFor(() => {
-        expect(router.state.location.pathname).toBe(path)
-      })
-      expect(router.state.location.state).toEqual({ joinToken: testInviteToken })
-    })
-
-    it.each([
-      ['welcome.signUpWithEmail', routes.signUp],
-      ['welcome.haveAccount', routes.logIn],
-    ])('points the link "%s" at %s', async (key, path) => {
-      await renderJoin({ visitor: null })
-      await showsInviteCard()
-
-      const link = screen.getByRole('link', { name: translated('en', key) })
-
-      expect(link.getAttribute('href')).toBe(path)
     })
 
     it('sends no join request', async () => {
@@ -813,73 +802,8 @@ describe('JoinScreen', () => {
       await showsInviteCard()
 
       expect(requestCount(fetchMock, 'POST', endpoints.inviteJoin)).toBe(0)
+      expect(requestCount(fetchMock, 'POST', endpoints.inviteJoinAsGuest)).toBe(0)
       expectTokenNeverInAnApiAddress(fetchMock, testInviteToken)
-    })
-
-    it('shows the names to take only after the visitor has an account, not before', async () => {
-      await renderJoin({ visitor: null, preview: jsonAnswer(openInvitePreviewWithNames) })
-      await showsInviteCard()
-
-      expect(screen.queryByText(translated('en', 'join.areYou'))).toBeNull()
-    })
-
-    describe('and the Google button', () => {
-      it('goes back to the join screen, replacing the entry in the history, and shows Join after Google signs the visitor in', async () => {
-        const { identity, router } = await renderJoin({
-          visitor: null,
-          answers: { [`POST ${endpoints.googleLogIn}`]: jsonAnswer(testMe) },
-        })
-        await showsInviteCard()
-        const button = await findDrawnGoogleButton(identity, screen.getByRole('main'))
-
-        sendGoogleCredential(identity, button, testIdToken)
-
-        expect(await screen.findByRole('button', { name: translated('en', 'join.join') })).toBeTruthy()
-        expect(router.state.location.pathname).toBe(routes.join(testInviteToken))
-        expect(router.state.historyAction).toBe('REPLACE')
-      })
-
-      it('goes to the Google name screen carrying the ID token and the invite token when the person has no account yet', async () => {
-        const { identity, router } = await renderJoin({
-          visitor: null,
-          answers: {
-            [`POST ${endpoints.googleLogIn}`]: problemAnswer(404, 'AUTH_GOOGLE_NO_ACCOUNT'),
-          },
-        })
-        await showsInviteCard()
-        const button = await findDrawnGoogleButton(identity, screen.getByRole('main'))
-
-        sendGoogleCredential(identity, button, testIdToken)
-
-        await waitFor(() => {
-          expect(router.state.location.pathname).toBe(routes.googleSignUp)
-        })
-        expect(router.state.location.state).toEqual({
-          idToken: testIdToken,
-          joinToken: testInviteToken,
-        })
-      })
-
-      it('shows the error toast and stays on the join screen when Google sign-in fails', async () => {
-        consoleErrorSilenced()
-        const { identity, router } = await renderJoin({
-          visitor: null,
-          answers: {
-            [`POST ${endpoints.googleLogIn}`]: problemAnswer(401, 'AUTH_GOOGLE_TOKEN_INVALID'),
-          },
-        })
-        await showsInviteCard()
-        const button = await findDrawnGoogleButton(identity, screen.getByRole('main'))
-
-        sendGoogleCredential(identity, button, testIdToken)
-
-        await waitFor(() => {
-          expect(toast.error).toHaveBeenCalledWith(
-            translated('en', 'errors.AUTH_GOOGLE_TOKEN_INVALID'),
-          )
-        })
-        expect(router.state.location.pathname).toBe(routes.join(testInviteToken))
-      })
     })
   })
 })

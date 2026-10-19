@@ -62,6 +62,14 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
     return readText(dataOf(event), field, `the data of the ${event.type} event`)
   }
 
+  function memberClaimedSentence(event: ActivityEvent): string {
+    const member = memberName(event, 'name')
+    const claimedName = memberName(event, 'claimedName')
+    return member === claimedName
+      ? t('activity.memberJoined', { member })
+      : t('activity.memberClaimed', { member, claimedName })
+  }
+
   function settlementSentence(event: ActivityEvent, key: string): string {
     const what = `the data of the ${event.type} event`
     const data = dataOf(event)
@@ -151,12 +159,7 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
       case 'MemberJoined':
         return [t('activity.memberJoined', { member: memberName(event, 'name') })]
       case 'MemberClaimed':
-        return [
-          t('activity.memberClaimed', {
-            member: memberName(event, 'name'),
-            claimedName: memberName(event, 'claimedName'),
-          }),
-        ]
+        return [memberClaimedSentence(event)]
       case 'ClaimUndone':
         return [t('activity.claimUndone', { name, claimedName: memberName(event, 'claimedName') })]
       case 'MemberRemoved':
@@ -167,6 +170,8 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
         return [t('activity.ownershipTransferred', { name, member: memberName(event, 'name') })]
       case 'MemberLetBackIn':
         return [t('activity.memberLetBackIn', { name, member: memberName(event, 'name') })]
+      case 'GuestLetInAgain':
+        return [t('activity.guestLetInAgain', { name, member: memberName(event, 'name') })]
       case 'GroupDeleted':
         return [t('activity.groupDeleted', { name })]
       case 'GroupRestored':

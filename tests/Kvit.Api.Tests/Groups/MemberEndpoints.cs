@@ -16,6 +16,7 @@ namespace Kvit.Api.Tests.Groups
             { "POST", "/owner" },
             { "POST", "/members/{member}/claim" },
             { "POST", "/members/{member}/undo-claim" },
+            { "POST", "/members/{member}/let-in-again" },
             { "POST", "/invite/reset" },
             { "POST", "/invite/undo-reset" },
         };
@@ -26,6 +27,7 @@ namespace Kvit.Api.Tests.Groups
             { "POST", "/members/{member}/let-back-in" },
             { "POST", "/members/{member}/claim" },
             { "POST", "/members/{member}/undo-claim" },
+            { "POST", "/members/{member}/let-in-again" },
         };
 
         public static TheoryData<string, string> OwnerOnly => new()
@@ -34,6 +36,7 @@ namespace Kvit.Api.Tests.Groups
             { "POST", "/members/{member}/let-back-in" },
             { "POST", "/owner" },
             { "POST", "/members/{member}/undo-claim" },
+            { "POST", "/members/{member}/let-in-again" },
             { "POST", "/invite/reset" },
             { "POST", "/invite/undo-reset" },
         };

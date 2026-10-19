@@ -7,6 +7,8 @@ export const endpoints = {
   googleLogIn: '/api/auth/google',
   googleSignUp: '/api/auth/google/sign-up',
   setPassword: '/api/auth/set-password',
+  upgradeGuest: '/api/auth/upgrade',
+  googleUpgradeGuest: '/api/auth/google/upgrade',
   me: '/api/me',
   meLanguage: '/api/me/language',
   meActive: '/api/me/active',
@@ -14,6 +16,7 @@ export const endpoints = {
   groups: '/api/groups',
   invitePreview: '/api/invites/preview',
   inviteJoin: '/api/invites/join',
+  inviteJoinAsGuest: '/api/invites/join-as-guest',
   categories: '/api/categories',
   oneBill: '/api/groups/one-bill',
   group: (groupId: string) => `/api/groups/${groupId}`,
@@ -28,6 +31,8 @@ export const endpoints = {
   groupMember: (groupId: string, memberId: string) => `/api/groups/${groupId}/members/${memberId}`,
   groupMemberLetBackIn: (groupId: string, memberId: string) =>
     `/api/groups/${groupId}/members/${memberId}/let-back-in`,
+  groupMemberLetInAgain: (groupId: string, memberId: string) =>
+    `/api/groups/${groupId}/members/${memberId}/let-in-again`,
   groupMemberClaim: (groupId: string, memberId: string) =>
     `/api/groups/${groupId}/members/${memberId}/claim`,
   groupMemberUndoClaim: (groupId: string, memberId: string) =>

@@ -17,7 +17,7 @@ namespace Kvit.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -75,7 +75,7 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                     b.ToTable("activity_events", null, t =>
                         {
-                            t.HasCheckConstraint("ck_activity_events_type", "type IN ('GroupCreated', 'GroupRenamed', 'GroupSettingsChanged', 'InviteLinkReset', 'MemberAdded', 'MemberJoined', 'MemberClaimed', 'ClaimUndone', 'MemberRemoved', 'MemberLeft', 'OwnershipTransferred', 'MemberLetBackIn', 'InviteLinkRestored', 'ExpenseAdded', 'ExpenseEdited', 'ExpenseDeleted', 'ExpenseRestored', 'SettlementRecorded', 'SettlementConfirmed', 'SettlementRejected', 'SettlementCancelled', 'SettlementDeleted', 'SettlementRestored', 'ClosingStarted', 'ClosingConfirmed', 'ClosingObjected', 'ClosingCancelled', 'GroupFinished', 'GroupReopened', 'GroupDeleted', 'GroupRestored')");
+                            t.HasCheckConstraint("ck_activity_events_type", "type IN ('GroupCreated', 'GroupRenamed', 'GroupSettingsChanged', 'InviteLinkReset', 'MemberAdded', 'MemberJoined', 'MemberClaimed', 'ClaimUndone', 'MemberRemoved', 'MemberLeft', 'OwnershipTransferred', 'MemberLetBackIn', 'InviteLinkRestored', 'ExpenseAdded', 'ExpenseEdited', 'ExpenseDeleted', 'ExpenseRestored', 'SettlementRecorded', 'SettlementConfirmed', 'SettlementRejected', 'SettlementCancelled', 'SettlementDeleted', 'SettlementRestored', 'ClosingStarted', 'ClosingConfirmed', 'ClosingObjected', 'ClosingCancelled', 'GroupFinished', 'GroupReopened', 'GroupDeleted', 'GroupRestored', 'GuestLetInAgain')");
                         });
                 });
 
@@ -568,6 +568,7 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnName("removed_by_user_id");
 
                     b.Property<Guid?>("UserId")
+                        .IsConcurrencyToken()
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
@@ -727,7 +728,7 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                     b.ToTable("usage_events", null, t =>
                         {
-                            t.HasCheckConstraint("ck_usage_events_type", "type IN ('SignedUp', 'Active', 'JoinedViaInvite', 'GroupCreated', 'ExpenseAdded', 'SettlementConfirmed')");
+                            t.HasCheckConstraint("ck_usage_events_type", "type IN ('SignedUp', 'Active', 'JoinedViaInvite', 'GroupCreated', 'ExpenseAdded', 'SettlementConfirmed', 'GuestUpgraded')");
                         });
                 });
 
@@ -769,6 +770,12 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                     b.Property<string>("GooglePictureUrl")
                         .HasColumnType("text")
                         .HasColumnName("google_picture_url");
+
+                    b.Property<bool>("IsGuest")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_guest");
 
                     b.Property<bool>("IsTimeZoneManual")
                         .ValueGeneratedOnAdd()
@@ -857,6 +864,8 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_users_created_at_set", "created_at > '0002-01-01 00:00:00+00'");
 
                             t.HasCheckConstraint("ck_users_display_name_not_empty", "char_length(display_name) >= 1");
+
+                            t.HasCheckConstraint("ck_users_guest_has_no_email_or_password", "NOT is_guest OR (email IS NULL AND normalized_email IS NULL AND password_hash IS NULL)");
 
                             t.HasCheckConstraint("ck_users_language", "language IN ('en', 'mk')");
 

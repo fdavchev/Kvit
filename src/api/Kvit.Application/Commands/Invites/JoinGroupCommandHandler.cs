@@ -21,7 +21,7 @@ namespace Kvit.Application.Commands.Invites
                 return me.ToFailure<JoinGroupResponse>();
             }
 
-            Result<Guid> joined = await _groupWrite.RunForInviteAsync(
+            Result<Guid> joined = await _groupWrite.RunForInviteOnceMoreIfMemberChangedMeanwhileAsync(
                 command.Token,
                 () => _joinGroup.Execute(command.Token, me.Value.Id, me.Value.DisplayName, command.ClaimMemberId, cancellationToken),
                 cancellationToken);

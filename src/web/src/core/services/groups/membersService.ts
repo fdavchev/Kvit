@@ -16,6 +16,7 @@ export interface GroupMember {
   isOwner: boolean
   isYou: boolean
   isNameOnly: boolean
+  isGuest: boolean
   claimedName: string | null
   pictureUrl: string | null
 }
@@ -42,6 +43,10 @@ export async function removeMember(groupId: string, memberId: string): Promise<v
 
 export async function letBackIn(groupId: string, memberId: string): Promise<void> {
   await apiRequest(endpoints.groupMemberLetBackIn(groupId, memberId), { method: 'POST' })
+}
+
+export async function letInAgain(groupId: string, memberId: string): Promise<void> {
+  await apiRequest(endpoints.groupMemberLetInAgain(groupId, memberId), { method: 'POST' })
 }
 
 export async function makeOwner(groupId: string, memberId: string): Promise<void> {
@@ -89,6 +94,7 @@ function parseGroupMember(row: unknown): GroupMember {
     isOwner: readYesNo(fields, 'isOwner', what),
     isYou: readYesNo(fields, 'isYou', what),
     isNameOnly: readYesNo(fields, 'isNameOnly', what),
+    isGuest: readYesNo(fields, 'isGuest', what),
     claimedName: readTextOrNull(fields, 'claimedName', what),
     pictureUrl: readTextOrNull(fields, 'pictureUrl', what),
   }

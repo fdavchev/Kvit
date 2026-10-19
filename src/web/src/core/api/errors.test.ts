@@ -24,6 +24,7 @@ const mappedErrorCodes = [
   'AUTH_GOOGLE_EMAIL_TAKEN',
   'AUTH_USES_GOOGLE',
   'AUTH_PASSWORD_ALREADY_SET',
+  'AUTH_NOT_GUEST',
   'GROUP_NOT_FOUND',
   'GROUP_NOT_OWNER',
   'GROUP_NAME_INVALID',
@@ -44,6 +45,10 @@ const mappedErrorCodes = [
   'INVITE_NOT_FOUND',
   'INVITE_REMOVED',
   'INVITE_NOTHING_TO_UNDO',
+  'INVITE_GUEST_CHOICE_INVALID',
+  'GUEST_NOT_ALLOWED',
+  'GUEST_JOIN_SIGNED_IN',
+  'MEMBER_NOT_GUEST',
 ]
 
 const errorTexts: Record<'en' | 'mk', Record<string, unknown>> = {

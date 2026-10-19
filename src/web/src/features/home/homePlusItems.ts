@@ -13,11 +13,11 @@ export interface HomePlusItem {
   isMain: boolean
 }
 
-export function homePlusItems(target: HomePlusMenuTarget | null, t: TFunction): HomePlusItem[] {
-  const otherItems: HomePlusItem[] = [
-    { to: routes.newBill, icon: '🧾', label: t('home.plusNewOneBill'), isMain: false },
-    { to: routes.groups, icon: '⋯', label: t('home.plusAnotherGroup'), isMain: false },
-  ]
+export function homePlusItems(target: HomePlusMenuTarget | null, isGuest: boolean, t: TFunction): HomePlusItem[] {
+  const anotherGroupItem: HomePlusItem = { to: routes.groups, icon: '⋯', label: t('home.plusAnotherGroup'), isMain: false }
+  const otherItems: HomePlusItem[] = isGuest
+    ? [anotherGroupItem]
+    : [{ to: routes.newBill, icon: '🧾', label: t('home.plusNewOneBill'), isMain: false }, anotherGroupItem]
   if (target === null) {
     return otherItems
   }

@@ -71,5 +71,10 @@ namespace Kvit.Domain.Tests.Entities
         {
             return new NamedMember { Member = member, DisplayName = displayName };
         }
+
+        public static NamedMember NamedGuest(GroupMember member)
+        {
+            return new NamedMember { Member = member, DisplayName = member.Name, IsGuest = true };
+        }
     }
 }

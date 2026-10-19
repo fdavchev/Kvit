@@ -54,6 +54,26 @@ namespace Kvit.Api.Controllers
             return Result(result);
         }
 
+        [HttpPost("upgrade")]
+        [Authorize]
+        [EnableRateLimiting("log-in")]
+        public async Task<ActionResult<MeResponse>> UpgradeGuest(UpgradeGuestRequest request, CancellationToken cancellationToken)
+        {
+            UpgradeGuestCommand command = new(request.Email, request.Password);
+            Result<MeResponse> result = await _dispatcher.Send<UpgradeGuestCommand, MeResponse>(command, cancellationToken);
+            return Result(result);
+        }
+
+        [HttpPost("google/upgrade")]
+        [Authorize]
+        [EnableRateLimiting("log-in")]
+        public async Task<ActionResult<MeResponse>> GoogleUpgradeGuest(GoogleUpgradeGuestRequest request, CancellationToken cancellationToken)
+        {
+            GoogleUpgradeGuestCommand command = new(request.IdToken);
+            Result<MeResponse> result = await _dispatcher.Send<GoogleUpgradeGuestCommand, MeResponse>(command, cancellationToken);
+            return Result(result);
+        }
+
         [HttpPost("logout")]
         [AllowAnonymous]
         public async Task<ActionResult> LogOut(CancellationToken cancellationToken)

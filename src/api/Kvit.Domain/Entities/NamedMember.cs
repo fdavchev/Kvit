@@ -8,6 +8,8 @@ namespace Kvit.Domain.Entities
 
         public bool IsInAnyExpenseOrSettlement { get; init; }
 
+        public bool IsGuest { get; init; }
+
         public string? PictureUrl { get; init; }
     }
 }

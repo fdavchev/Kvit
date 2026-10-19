@@ -17,6 +17,7 @@ interface KvitTextFieldProps {
   autoCorrect?: string
   spellCheck?: boolean
   maxLength?: number
+  autoFocus?: boolean
   hint?: string
   invalid?: boolean
   trailing?: ReactNode

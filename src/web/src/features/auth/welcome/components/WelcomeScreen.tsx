@@ -8,6 +8,7 @@ import { routes } from '@/core/router/routes'
 import { useGoogleSignIn } from '@/features/auth/google/hooks/useGoogleSignIn'
 import { KvitLanguageSwitch } from '@/shared/components/KvitLanguageSwitch'
 import { KvitLinkButton } from '@/shared/components/KvitLinkButton'
+import { KvitOrDivider } from '@/shared/components/KvitOrDivider'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitThemeToggle } from '@/shared/components/KvitThemeToggle'
 import { useApiHealth } from '../hooks/useApiHealth'
@@ -57,9 +58,7 @@ export function WelcomeScreen() {
       </header>
       <div className="flex flex-col gap-3">
         <GoogleSignInButton onCredential={signInWithGoogle} />
-        <p className="my-1 text-center text-[0.8125rem] font-semibold tracking-[0.02em] text-muted-foreground">
-          {t('welcome.or')}
-        </p>
+        <KvitOrDivider label={t('welcome.or')} />
         <KvitLinkButton to={routes.signUp} variant="secondary">
           {t('welcome.signUpWithEmail')}
         </KvitLinkButton>

@@ -174,6 +174,19 @@ Moved forward from Phase 11 because the Render wake-up (about 22 s) made the app
 - [x] The desktop layout (round-4 hybrid, phone unchanged) and the other small look items from BACKLOG (the "Updating…" label on group pages and the Split sheet pill are left in BACKLOG)
 - Moved here from Phase 11 on 2026-10-15 (Filip: "it's big").
 
+## Phase 12b: Join without an account · `feat/12b-guest-join`
+Release 1 accepted 2026-10-16. Filip put this BACKLOG "must do" before Phase 13. Decisions: `DECISIONS.md`.
+- [x] Step 0: mockup (join screen B picked) and docs
+- [x] **Done 2026-10-16 (VERIFIED by automated test).** Step 1: backend, guest accounts and `POST /api/invites/join-as-guest` (migration `GuestAccounts`)
+- [x] **Done (VERIFIED by automated test).** Step 2: backend, guest limits and owner's "Let in again" (migration `GuestLetInAgain`)
+- [x] **Done (VERIFIED by automated test).** Step 3: backend, upgrade a guest to an account, email or Google (migration `GuestUpgradedUsageEvent`)
+- [x] **Done (VERIFIED by automated test).** Step 4: frontend, the join screen
+- [x] **Done (VERIFIED by automated test).** Step 5: frontend, Guest badge, limits, Settings card, Log out warning
+- [x] **Done (VERIFIED by automated test).** Step 6: frontend, upgrade screens
+- [x] **Done 2026-10-19 (VERIFIED by live run, headless, local stack; 3 findings fixed).** Step 7: real-browser pass. Backend 3710, frontend 7870 tests. Report: `reports/2026-10-19-phase-12b-guest-join.md`; guide: `guides/phase-12b-guest-join.md`
+- [x] **Code review done 2026-10-19 (VERIFIED by automated test: backend 3717, frontend 7874):** 2 findings fixed (every member-row save runs once more after a same-moment change; a guest row shows only Let in again), the rest in BACKLOG (l) and (g)
+- [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the 3 migrations on Neon)
+
 ---
 
 # Release 2: "budget" (phases get detailed when Release 1 is done)

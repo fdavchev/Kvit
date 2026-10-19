@@ -40,6 +40,26 @@ namespace Kvit.Domain.Accounts
             return Result.Ok(trimmed);
         }
 
+        public static Result CheckIsNotGuest(bool isGuest)
+        {
+            if (isGuest)
+            {
+                return Result.Forbid("A guest cannot do this. Make an account first.", ResultCodes.GUEST_NOT_ALLOWED);
+            }
+
+            return Result.Ok();
+        }
+
+        public static Result CheckIsGuest(bool isGuest)
+        {
+            if (!isGuest)
+            {
+                return Result.Conflict("This is already a full account, not a guest.", ResultCodes.AUTH_NOT_GUEST);
+            }
+
+            return Result.Ok();
+        }
+
         public static Result ValidatePassword(string password)
         {
             if (password.Length < PasswordMinLength || !password.Any(char.IsUpper) || !password.Any(char.IsDigit))

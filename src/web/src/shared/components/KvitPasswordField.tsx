@@ -10,6 +10,7 @@ interface KvitPasswordFieldProps {
   autoComplete: 'current-password' | 'new-password'
   enterKeyHint: ComponentProps<'input'>['enterKeyHint']
   hint?: string
+  invalid?: boolean
 }
 
 export function KvitPasswordField(props: KvitPasswordFieldProps) {

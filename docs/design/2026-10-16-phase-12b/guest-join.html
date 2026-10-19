@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guest join mockup</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fff;--ink:#1d1b16;--mute:#6b665a;--line:#e3dccb;--pill:#e8dcc0;--field:#fff;--accent:#2f6f4f;--accentink:#fff;--warn:#b3402a}
+[data-pal=app]{--bg:#ffd9a8;--card:#fff1dc;--ink:#3d2610;--mute:#7a3300;--line:#9c6f47;--pill:#ffffff;--field:#fff;--accent:#b54a00;--accentink:#fff;--warn:#b71f1f}
+[data-pal=light]{--bg:#ffead0;--card:#fff9f0;--ink:#3d2610;--mute:#7a3300;--line:#d9b48a;--pill:#ffffff;--field:#fff;--accent:#b54a00;--accentink:#fff;--warn:#b71f1f}
+[data-pal=lighter]{--bg:#fff4e6;--card:#ffffff;--ink:#3d2610;--mute:#7a3300;--line:#e6c9a3;--pill:#ffe9cc;--field:#fff;--accent:#b54a00;--accentink:#fff;--warn:#b71f1f}
+[data-theme=dark]{--bg:#1f1816;--card:#2c2220;--ink:#fff1dc;--mute:#ffd9a8;--line:#72625c;--pill:#1f1816;--field:#161110;--accent:#ffd9a8;--accentink:#1f1816;--warn:#ff8a80}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#888;color:var(--ink)}
+.top{position:sticky;top:0;background:#222;color:#fff;padding:8px 12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;z-index:9}
+.top button{padding:6px 10px;border-radius:8px;border:0;background:#555;color:#fff;cursor:pointer}
+.top button.on{background:#e8dcc0;color:#222}
+.sec{padding:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+h2{width:100%;margin:8px 0 0;color:#fff;font-size:15px}
+.phone{width:360px;min-height:560px;background:var(--bg);border-radius:18px;padding:16px;position:relative;overflow:hidden;box-shadow:0 4px 20px #0006}
+.lbl{position:absolute;top:4px;right:10px;font-size:11px;color:var(--mute)}
+h3{margin:18px 0 4px;font-size:20px}.mute{color:var(--mute);font-size:14px}
+.chip{display:inline-block;padding:12px 16px;margin:4px 6px 4px 0;border-radius:999px;background:var(--pill);border:1px solid var(--line);font-size:16px;cursor:pointer}
+.chip:active{transform:scale(.97)}
+.btn{display:block;width:100%;padding:14px;border-radius:12px;border:0;background:var(--accent);color:var(--accentink);font-size:16px;font-weight:600;margin-top:10px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+input{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--field);color:var(--ink);font-size:16px;margin-top:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}.av{width:36px;height:36px;border-radius:50%;background:var(--pill);display:grid;place-items:center;font-weight:700}
+.badge{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--pill);margin-left:6px}
+.badge.guest{background:transparent;border:1px dashed var(--mute);color:var(--mute)}
+.small{font-size:13px;color:var(--mute);text-align:center;margin-top:14px}.small a{color:var(--ink);text-decoration:underline;cursor:pointer}
+.sheet{position:absolute;left:8px;right:8px;bottom:8px;background:color-mix(in srgb,var(--card) 80%,transparent);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 -4px 24px #0005}
+.toast{position:absolute;left:16px;right:16px;bottom:16px;background:var(--ink);color:var(--bg);padding:12px;border-radius:12px;text-align:center}
+.hide{display:none}.warn{color:var(--warn)}
+</style></head><body>
+<div class="top">
+  <b>Guest join</b>
+  <button id="lang" onclick="tl()">EN</button><button id="th" onclick="tt()">Light</button><button id="pal" onclick="tp()">Peach: current app</button>
+  <span style="font-size:12px;opacity:.7">Tap the names, buttons and "..." – they work. Pick A, B or C for the join screen.</span>
+</div>
+
+<div class="sec"><h2>1) Join screen (signed out) – pick A, B or C</h2>
+
+<div class="phone"><span class="lbl">A · names first</span>
+  <div class="mute" data-t="invited">You're invited to</div><h3>🏖 Ohrid trip</h3>
+  <div class="mute" data-t="who">Who are you? Tap your name:</div>
+  <div style="margin-top:8px"><span class="chip" onclick="joinA('Marko')">Marko</span><span class="chip" onclick="joinA('Grandma')">Grandma</span><span class="chip" onclick="joinA('Ana')">Ana</span></div>
+  <div class="mute" style="margin-top:16px" data-t="newhere">Not on the list?</div>
+  <input id="nameA" placeholder="Your name" data-p="yourname"><button class="btn" onclick="joinA(document.getElementById('nameA').value||'Anna')" data-t="join">Join</button>
+  <div class="small"><span data-t="haveacc">Have an account?</span> <a data-t="login" onclick="document.getElementById('lgA').classList.remove('hide')">Log in</a></div>
+  <div class="sheet hide" id="lgA"><b data-t="login">Log in</b>
+    <button class="btn" style="background:#fff;color:#222;border:1px solid var(--line)">Google</button>
+    <button class="btn ghost" data-t="loginEmail">Log in with email</button>
+    <button class="btn ghost" onclick="document.getElementById('lgA').classList.add('hide')" data-t="cancel">Cancel</button>
+    <div class="mute" style="margin-top:8px;text-align:center" data-t="loginNote">After logging in you come back here and join.</div></div>
+  <div class="toast hide" id="toastA"></div>
+</div>
+
+<div class="phone"><span class="lbl">B · one list, "I'm new" row</span>
+  <div class="mute" data-t="invited">You're invited to</div><h3>🏖 Ohrid trip</h3>
+  <div class="mute" style="margin-top:8px" data-t="who">Who are you? Tap your name:</div>
+  <div class="card" style="margin-top:6px">
+    <div class="row" onclick="joinB('Marko')"><div class="av">M</div>Marko<span style="margin-left:auto">›</span></div>
+    <div class="row" onclick="joinB('Grandma')"><div class="av">G</div>Grandma<span style="margin-left:auto">›</span></div>
+    <div class="row" onclick="joinB('Ana')"><div class="av">A</div>Ana<span style="margin-left:auto">›</span></div>
+    <div class="row" onclick="document.getElementById('newB').classList.toggle('hide')"><div class="av">+</div><b data-t="imnew">I'm new</b></div>
+  </div>
+  <div id="newB" class="hide"><input placeholder="Your name" data-p="yourname"><button class="btn" onclick="joinB('Anna')" data-t="join">Join</button></div>
+  <div class="small"><span data-t="haveacc">Have an account?</span> <a data-t="login" onclick="document.getElementById('lgB').classList.remove('hide')">Log in</a></div>
+  <div class="sheet hide" id="lgB"><b data-t="login">Log in</b>
+    <button class="btn" style="background:#fff;color:#222;border:1px solid var(--line)">Google</button>
+    <button class="btn ghost" data-t="loginEmail">Log in with email</button>
+    <button class="btn ghost" onclick="document.getElementById('lgB').classList.add('hide')" data-t="cancel">Cancel</button>
+    <div class="mute" style="margin-top:8px;text-align:center" data-t="loginNote">After logging in you come back here and join.</div></div>
+  <div class="toast hide" id="toastB"></div>
+</div>
+
+<div class="phone"><span class="lbl">C · account first, guest small</span>
+  <div class="mute" data-t="invited">You're invited to</div><h3>🏖 Ohrid trip</h3>
+  <button class="btn">Google</button><button class="btn ghost" data-t="email">Sign up with email</button>
+  <div class="small" style="margin-top:18px" data-t="orguest">or continue without an account:</div>
+  <div style="margin-top:8px"><span class="chip" onclick="joinC('Marko')">Marko</span><span class="chip" onclick="joinC('Grandma')">Grandma</span><span class="chip" onclick="joinC('Ana')">Ana</span><span class="chip" onclick="joinC('Anna')">+ <span data-t="imnew">I'm new</span></span></div>
+  <div class="toast hide" id="toastC"></div>
+</div>
+</div>
+
+<div class="sec"><h2>2) In the group: Guest badge + owner's "Let in again"</h2>
+<div class="phone"><span class="lbl">Members (owner's view)</span>
+  <h3 data-t="members">Members</h3>
+  <div class="card">
+    <div class="row"><div class="av">F</div>Filip<span class="badge" data-t="owner">Owner</span><span class="badge" data-t="you">You</span></div>
+    <div class="row"><div class="av">M</div>Marko<span class="badge guest" data-t="guest">Guest</span><button class="chip" style="margin-left:auto;padding:4px 12px" onclick="document.getElementById('opt').classList.remove('hide')">⋯</button></div>
+    <div class="row"><div class="av">G</div>Grandma<span class="mute" style="margin-left:6px" data-t="justname">Just a name</span></div>
+  </div>
+  <div class="sheet hide" id="opt">
+    <b>Marko <span class="badge guest" data-t="guest">Guest</span></b>
+    <div class="row" onclick="toastIn()"><span data-t="letin">Let in again</span></div>
+    <div class="mute" style="padding:2px 0 8px" data-t="letinhelp">Use this when Marko lost his phone. His name becomes free to tap on the new one.</div>
+    <div class="row warn" onclick="this.parentNode.classList.add('hide')"><span data-t="remove">Remove</span></div>
+    <button class="btn ghost" onclick="document.getElementById('opt').classList.add('hide')" data-t="close">Close</button>
+  </div>
+  <div class="toast hide" id="toastM"></div>
+</div>
+
+<div class="phone"><span class="lbl">Settings (guest's view)</span>
+  <h3 data-t="settings">Settings</h3>
+  <div class="card"><b data-t="guestcardT">You're a guest</b>
+    <div class="mute" style="margin:4px 0 8px" data-t="guestcardB">Make an account to use Kvit on any phone and to create your own groups.</div>
+    <button class="btn" onclick="document.getElementById('up').classList.remove('hide')" data-t="makeacc">Make an account</button></div>
+  <div class="card"><button class="btn ghost" style="margin:0;color:var(--warn)" onclick="document.getElementById('out').classList.remove('hide')" data-t="logout">Log out</button></div>
+  <div class="sheet hide" id="out">
+    <b data-t="outT">Log out as a guest?</b>
+    <div class="mute" style="margin:6px 0" data-t="outB">After logging out you can't get back in by yourself. Ask the group owner to let you in again. Or make an account first.</div>
+    <button class="btn" onclick="document.getElementById('out').classList.add('hide');document.getElementById('up').classList.remove('hide')" data-t="makeacc">Make an account</button>
+    <button class="btn ghost warn" data-t="logoutAnyway">Log out anyway</button>
+    <button class="btn ghost" onclick="document.getElementById('out').classList.add('hide')" data-t="cancel">Cancel</button>
+  </div>
+  <div class="sheet hide" id="up">
+    <b data-t="makeacc">Make an account</b>
+    <button class="btn" style="background:#fff;color:#222;border:1px solid var(--line)">Google</button>
+    <div class="small" data-t="or">or</div>
+    <input placeholder="Email" type="email"><input placeholder="Password" type="password">
+    <button class="btn" onclick="this.parentNode.classList.add('hide')" data-t="save">Save</button>
+    <div class="mute" style="margin-top:8px;text-align:center" data-t="keeps">You keep all your groups and expenses.</div>
+  </div>
+</div>
+
+<div class="phone"><span class="lbl">Groups list (guest's view)</span>
+  <h3 data-t="groups">Groups</h3>
+  <div class="card">🏖 Ohrid trip</div>
+  <div class="small">No "New group" or "One bill" button for guests.<br>They add expenses inside their groups.</div>
+</div>
+</div>
+
+<script>
+const T={en:{loginEmail:"Log in with email",loginNote:"After logging in you come back here and join.",invited:"You're invited to",who:"Who are you? Tap your name:",newhere:"Not on the list?",join:"Join",haveacc:"Have an account?",login:"Log in",imnew:"I'm new",email:"Sign up with email",orguest:"or continue without an account:",members:"Members",owner:"Owner",you:"You",guest:"Guest",justname:"Just a name",letin:"Let in again",letinhelp:"Use this when Marko lost his phone. His name becomes free to tap on the new one.",remove:"Remove",close:"Close",settings:"Settings",guestcardT:"You're a guest",guestcardB:"Make an account to use Kvit on any phone and to create your own groups.",makeacc:"Make an account",logout:"Log out",outT:"Log out as a guest?",outB:"After logging out you can't get back in by yourself. Ask the group owner to let you in again. Or make an account first.",logoutAnyway:"Log out anyway",cancel:"Cancel",or:"or",save:"Save",keeps:"You keep all your groups and expenses.",groups:"Groups",newgroup:"New group",needT:"Make an account first",needB:"Guests can join groups, but only people with an account can create them.",notnow:"Not now",joined:"Joined as ",letdone:"Marko can tap his name again"},
+mk:{loginEmail:"Најава со е-пошта",loginNote:"По најавата се враќате тука и се приклучувате.",invited:"Поканети сте во",who:"Кој сте вие? Допрете го вашето име:",newhere:"Не сте на листата?",join:"Приклучи се",haveacc:"Имате сметка?",login:"Најава",imnew:"Јас сум нов",email:"Регистрација со е-пошта",orguest:"или продолжете без сметка:",members:"Членови",owner:"Сопственик",you:"Вие",guest:"Гостин",justname:"Само име",letin:"Пушти повторно",letinhelp:"Користете го ова кога Марко го загубил телефонот. Неговото име станува слободно за допир на новиот.",remove:"Отстрани",close:"Затвори",settings:"Поставки",guestcardT:"Вие сте гостин",guestcardB:"Направете сметка за да го користите Квит на кој било телефон и за да правите свои групи.",makeacc:"Направи сметка",logout:"Одјава",outT:"Одјава како гостин?",outB:"По одјавата не можете сами да се вратите. Побарајте од сопственикот на групата да ве пушти повторно. Или прво направете сметка.",logoutAnyway:"Одјави се сепак",cancel:"Откажи",or:"или",save:"Зачувај",keeps:"Ги задржувате сите групи и трошоци.",groups:"Групи",newgroup:"Нова група",needT:"Прво направете сметка",needB:"Гостите можат да се приклучат на групи, но само луѓе со сметка можат да ги создаваат.",notnow:"Не сега",joined:"Приклучени како ",letdone:"Марко може повторно да го допре своето име"}};
+let L='en';
+const P={en:{yourname:"Your name"},mk:{yourname:"Вашето име"}};
+function ap(){document.querySelectorAll('[data-t]').forEach(e=>e.textContent=T[L][e.dataset.t]);document.querySelectorAll('[data-p]').forEach(e=>e.placeholder=P[L][e.dataset.p]);}
+function tl(){L=L=='en'?'mk':'en';lang.textContent=L.toUpperCase();ap()}
+const PALS=[['app','Peach: current app'],['light','Peach: lighter'],['lighter','Peach: lightest'],['','Cream + green (old mock)']];let pi=0;
+function tp(){pi=(pi+1)%PALS.length;document.documentElement.dataset.pal=PALS[pi][0];pal.textContent=PALS[pi][1]}
+pi=1;pal.textContent=PALS[1][1];document.documentElement.dataset.pal='light';
+function tt(){const d=document.documentElement.dataset.theme=='dark';document.documentElement.dataset.theme=d?'light':'dark';th.textContent=d?'Light':'Dark'}
+function showT(id,n){const e=document.getElementById(id);e.textContent=T[L].joined+n+' ✓';e.classList.remove('hide');setTimeout(()=>e.classList.add('hide'),1800)}
+const joinA=n=>showT('toastA',n),joinB=n=>showT('toastB',n),joinC=n=>showT('toastC',n);
+function toastIn(){document.getElementById('opt').classList.add('hide');const e=document.getElementById('toastM');e.textContent=T[L].letdone;e.classList.remove('hide');setTimeout(()=>e.classList.add('hide'),2200)}
+ap();
+</script></body></html>

@@ -11,7 +11,17 @@ namespace Kvit.Domain.Services.Groups
         IUsageEventRepository _usageEvents,
         TimeProvider _timeProvider)
     {
-        public async Task<Result<Guid>> Execute(string inviteToken, Guid userId, string accountName, Guid? claimMemberId, CancellationToken cancellationToken)
+        public Task<Result<Guid>> Execute(string inviteToken, Guid userId, string accountName, Guid? claimMemberId, CancellationToken cancellationToken)
+        {
+            return JoinAsync(inviteToken, userId, accountName, claimMemberId, writesClaimEvent: true, cancellationToken);
+        }
+
+        public Task<Result<Guid>> ExecuteForGuest(string inviteToken, Guid guestUserId, string guestName, Guid? freeNameMemberId, CancellationToken cancellationToken)
+        {
+            return JoinAsync(inviteToken, guestUserId, guestName, freeNameMemberId, writesClaimEvent: false, cancellationToken);
+        }
+
+        private async Task<Result<Guid>> JoinAsync(string inviteToken, Guid userId, string accountName, Guid? claimMemberId, bool writesClaimEvent, CancellationToken cancellationToken)
         {
             Result<Group> found = await _groups.FindByInviteTokenAsync(inviteToken, cancellationToken);
             if (!found.IsSuccess)
@@ -40,7 +50,7 @@ namespace Kvit.Domain.Services.Groups
 
             if (claimMemberId is Guid targetId)
             {
-                Result claimed = ClaimAtJoin(roster, groupId, userId, accountName, targetId, now);
+                Result claimed = ClaimAtJoin(roster, groupId, userId, accountName, targetId, writesClaimEvent, now);
                 if (!claimed.IsSuccess)
                 {
                     return claimed.ToFailure<Guid>();
@@ -56,7 +66,7 @@ namespace Kvit.Domain.Services.Groups
             return Result.Ok(groupId);
         }
 
-        private Result ClaimAtJoin(GroupRoster roster, Guid groupId, Guid userId, string accountName, Guid targetId, DateTimeOffset now)
+        private Result ClaimAtJoin(GroupRoster roster, Guid groupId, Guid userId, string accountName, Guid targetId, bool writesClaimEvent, DateTimeOffset now)
         {
             Result<NamedMember> target = roster.FindCurrentPlainName(targetId);
             if (!target.IsSuccess)
@@ -72,7 +82,10 @@ namespace Kvit.Domain.Services.Groups
             GroupMember member = target.Value.Member;
             member.Claim(userId, now);
             _activityEvents.Add(ActivityEvent.MemberJoined(groupId, userId, member.Id, accountName, now));
-            _activityEvents.Add(ActivityEvent.MemberClaimed(groupId, userId, member.Id, accountName, member.Name, now));
+            if (writesClaimEvent)
+            {
+                _activityEvents.Add(ActivityEvent.MemberClaimed(groupId, userId, member.Id, accountName, member.Name, now));
+            }
 
             return Result.Ok();
         }

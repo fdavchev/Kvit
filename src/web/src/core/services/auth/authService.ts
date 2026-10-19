@@ -1,6 +1,7 @@
 import { apiRequest, jsonRequest } from '@/core/api/apiClient'
 import { endpoints } from '@/core/api/endpoints'
 import type { Language } from '@/core/i18n/language'
+import { readDeviceTimeZone } from '@/core/services/deviceTimeZone'
 import { parseMe, type Me } from '@/core/services/me/meService'
 
 export interface RegisterInput {
@@ -14,6 +15,8 @@ export interface LogInInput {
   email: string
   password: string
 }
+
+export type UpgradeGuestInput = LogInInput
 
 export interface ChangePasswordInput {
   currentPassword: string
@@ -70,6 +73,12 @@ export async function setPassword(newPassword: string): Promise<void> {
   await apiRequest(endpoints.setPassword, jsonRequest('POST', { newPassword }))
 }
 
-function readDeviceTimeZone(): string {
-  return new Intl.DateTimeFormat().resolvedOptions().timeZone ?? ''
+export async function upgradeGuest(input: UpgradeGuestInput): Promise<Me> {
+  const body = await apiRequest(endpoints.upgradeGuest, jsonRequest('POST', input))
+  return parseMe(body)
+}
+
+export async function googleUpgradeGuest(idToken: string): Promise<Me> {
+  const body = await apiRequest(endpoints.googleUpgradeGuest, jsonRequest('POST', { idToken }))
+  return parseMe(body)
 }

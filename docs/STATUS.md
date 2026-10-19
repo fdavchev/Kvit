@@ -1,24 +1,26 @@
 # Status: Kvit
 
-_Last updated: 2026-10-16 (Phase 12 built and checked; waiting for Filip's commit, push, PR and merge)_
+_Last updated: 2026-10-19 (Phase 12b built, checked and code-reviewed; waiting for Filip's push, CI and merge)_
 
 ## Where we stopped
-- Branch: `feat/12-polish` (from `main` after PR #14). **Nothing is committed yet:** all Phase 12 code and docs are uncommitted.
-- Done in Phase 12: dark colours B and the tan selected pill, the animation pass (sliding tab pill, tab fade, toast pop, list animations, pulse skeletons, rolling amount), glass on every popup with the hover and rest contrast fixes, the desktop layout (64rem and wider; phone unchanged), and the small items ("Stay" / «Смештај» / «Тема», Google button title, toast vs "+", "Updating…" at the top, Closing-owner notice on Add expense, «ден.» labels).
-- Report: `docs/reports/2026-10-16-phase-12-polish.md`; guide: `docs/guides/phase-12-polish.md`.
+- Release 1 was accepted by Filip on 2026-10-16. Phase 12 is merged (PR #15).
+- Branch: `feat/12b-guest-join`. Phase 12b (join a group without an account) is built, committed in steps and checked: guest accounts, join by tapping a name or typing a new one, Guest badge, guest limits, the owner's "Let in again", Log out warning, and "Make an account" (Google or email). Three migrations: `GuestAccounts`, `GuestLetInAgain`, `GuestUpgradedUsageEvent`.
+- Report: `docs/reports/2026-10-19-phase-12b-guest-join.md` (browser pass: `docs/reports/2026-10-19-phase-12b-browser-pass.md`); guide: `docs/guides/phase-12b-guest-join.md`.
 
 ## Next step
-Filip commits (texts are in the chat), pushes, checks that CI is green, and merges (no migration). Then he runs the app himself (`.\scripts\start-local.ps1`) and follows `docs/guides/phase-12-polish.md`. Release 1 is done when Filip says it works for him on something real.
+1. Filip commits the last fixes and docs, pushes, checks that CI is green, and merges (CI applies the 3 migrations on Neon). The PR is already open.
+2. Then Phase 13 (personal spending + custom categories); its prompt is `docs/guides/phase-13-personal-spending-prompt.md`.
 
 ## Then
-- Filip, once on the real site: one real EUR expense (first real NBRM call), a real Google picture in a circle, and a read of the Macedonian drafts of Phases 9 to 12.
-- BACKLOG: joining without an account (top "must do"), the Phase 12 leftovers (desktop requests, the Split sheet pill, "Updating…" on group pages), then Release 2 (Phase 13: personal spending + custom categories).
+- Filip, once on the real site: one real EUR expense (first real NBRM call), a real Google picture in a circle, the Google button inside the Log in sheet and "Make an account", the invite link on his phone, and a read of the Macedonian drafts of Phases 9 to 12b.
+- BACKLOG: the Phase 12 and Phase 12b leftovers, then Release 2.
 
 ## Blockers and open questions
 - Nothing blocks the next step.
 - Filip to decide: whether `START-HERE-PROMPT.md` stays in the public repository.
+- Filip to decide: whether the light theme gets a lighter peach (options in the BACKLOG, 2026-10-16).
 
 ## Verification state
-- VERIFIED by automated test (2026-10-16, run by me after the last change): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 3485/3485 (no backend code changed in Phase 12); `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 7508/7508.
-- VERIFIED by live run (the tester, headless Chromium, local stack, two passes): all screens at 360, 768 and 1280 px in EN/MK, light/dark, no overflow; sliding pills, toast pop, list animations, skeletons, rolling amount, reduced motion switching them off; glass sheets, dialog and toast; field edges; "Updating…" at the top; the new words; «ден.» labels; the Closing notice; the closing bar at 40rem; no console errors.
-- NOT VERIFIED: a real phone, Safari, Firefox, real Google sign-in, the sign-up screen, hover states, a Finished group, saving an expense in a Closing group, keyboard order in the new menu, a screen reader, the Undo toast over the closing bar in a natural run, a line-by-line read of the Macedonian texts by Filip, and Filip running the app himself.
+- VERIFIED by automated test (2026-10-19, run by me after the last change): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 3717/3717; `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 7874/7874 (after the code-review fixes).
+- VERIFIED by live run (the tester, headless Chromium, local stack): join by tap and by new name, no-free-names, guest limits, Let in again and rejoin, email upgrade, double click on Save, the Log in sheet, 360/768/1280 px in EN/MK, light/dark, reduced motion. Three findings were fixed and re-checked by tests and a headless check of the join page.
+- NOT VERIFIED: the Activity tab and Members after a real guest tap with the fixes, the Google upgrade and Google log in, a real phone, Safari, Firefox, a screen reader, Closing and Finished groups with guests in a browser, two tabs upgrading one guest, the Macedonian drafts, Neon.

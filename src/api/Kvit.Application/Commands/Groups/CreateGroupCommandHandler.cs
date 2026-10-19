@@ -5,6 +5,7 @@ using Kvit.Application.Queries.Me;
 using Kvit.Contracts.Groups;
 using Kvit.Contracts.Me;
 using Kvit.Contracts.Persistence;
+using Kvit.Domain.Accounts;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Groups;
 
@@ -21,6 +22,12 @@ namespace Kvit.Application.Commands.Groups
             if (!me.IsSuccess)
             {
                 return Result.Unauthorized<GroupResponse>(me.Error, me.ErrorCode);
+            }
+
+            Result notGuest = AccountRules.CheckIsNotGuest(me.Value.IsGuest);
+            if (!notGuest.IsSuccess)
+            {
+                return notGuest.ToFailure<GroupResponse>();
             }
 
             Result<Guid> created = await _unitOfWork.RunInTransactionAsync(() => Task.FromResult(_createGroup.Execute(me.Value.Id, me.Value.DisplayName, command.Name, command.Emoji, command.Currency)), cancellationToken);

@@ -125,6 +125,11 @@ namespace Kvit.Domain.Entities
             return AboutMember(groupId, actorUserId, ActivityEventType.MemberLetBackIn, memberId, new { name = memberName }, createdAt);
         }
 
+        public static ActivityEvent GuestLetInAgain(Guid groupId, Guid actorUserId, Guid memberId, string memberName, DateTimeOffset createdAt)
+        {
+            return AboutMember(groupId, actorUserId, ActivityEventType.GuestLetInAgain, memberId, new { name = memberName }, createdAt);
+        }
+
         public static ActivityEvent OwnershipTransferred(Guid groupId, Guid actorUserId, Guid newOwnerMemberId, string newOwnerName, DateTimeOffset createdAt)
         {
             return AboutMember(groupId, actorUserId, ActivityEventType.OwnershipTransferred, newOwnerMemberId, new { name = newOwnerName }, createdAt);

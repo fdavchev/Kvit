@@ -1,5 +1,7 @@
 import { apiRequest, jsonRequest } from '@/core/api/apiClient'
 import { endpoints } from '@/core/api/endpoints'
+import type { Language } from '@/core/i18n/language'
+import { readDeviceTimeZone } from '@/core/services/deviceTimeZone'
 import {
   readList,
   readObject,
@@ -17,6 +19,8 @@ export interface UnclaimedName {
   id: string
   name: string
 }
+
+export type GuestJoinChoice = { claimMemberId: string } | { name: string }
 
 export interface InvitePreview {
   status: InviteStatus
@@ -37,6 +41,19 @@ export async function joinGroup(token: string, claimMemberId?: string): Promise<
   const body = claimMemberId === undefined ? { token } : { token, claimMemberId }
   const what = 'the joined group'
   const answer = await apiRequest(endpoints.inviteJoin, jsonRequest('POST', body))
+  return readText(readObject(answer, what), 'groupId', what)
+}
+
+export async function joinAsGuest(
+  token: string,
+  choice: GuestJoinChoice,
+  language: Language,
+): Promise<string> {
+  const what = 'the group joined as a guest'
+  const answer = await apiRequest(
+    endpoints.inviteJoinAsGuest,
+    jsonRequest('POST', { token, ...choice, language, timeZone: readDeviceTimeZone() }),
+  )
   return readText(readObject(answer, what), 'groupId', what)
 }
 

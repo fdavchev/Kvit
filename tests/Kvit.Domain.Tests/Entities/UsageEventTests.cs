@@ -12,12 +12,40 @@ namespace Kvit.Domain.Tests.Entities
         [Theory]
         [InlineData(SignUpMethod.Email, "Email")]
         [InlineData(SignUpMethod.Google, "Google")]
+        [InlineData(SignUpMethod.Guest, "Guest")]
         public void SignedUp_SetsTypeSignedUpAndTheMethodNameAsDetail(SignUpMethod method, string expectedDetail)
         {
             UsageEvent usageEvent = UsageEvent.SignedUp(UserId, method, SomeMoment);
 
             Assert.Equal(UsageEventType.SignedUp, usageEvent.Type);
             Assert.Equal(expectedDetail, usageEvent.Detail);
+        }
+
+        [Theory]
+        [InlineData(SignUpMethod.Email, "Email")]
+        [InlineData(SignUpMethod.Google, "Google")]
+        public void GuestUpgraded_SetsTypeGuestUpgradedTheMethodNameAsDetailAndTheUserId(SignUpMethod method, string expectedDetail)
+        {
+            UsageEvent usageEvent = UsageEvent.GuestUpgraded(UserId, method, SomeMoment);
+
+            Assert.Equal(UsageEventType.GuestUpgraded, usageEvent.Type);
+            Assert.Equal(expectedDetail, usageEvent.Detail);
+            Assert.Equal(UserId, usageEvent.UserId);
+        }
+
+        [Theory]
+        [InlineData("2026-09-29T23:30:00-05:00", "2026-09-30")]
+        [InlineData("2026-09-30T01:30:00+02:00", "2026-09-29")]
+        public void GuestUpgraded_SetsOccurredOnToTheUtcCalendarDayAndOccurredAtToOffsetZero(string occurredAtText, string expectedDayText)
+        {
+            DateTimeOffset occurredAt = DateTimeOffset.Parse(occurredAtText, CultureInfo.InvariantCulture);
+            DateOnly expectedDay = DateOnly.Parse(expectedDayText, CultureInfo.InvariantCulture);
+
+            UsageEvent usageEvent = UsageEvent.GuestUpgraded(UserId, SignUpMethod.Email, occurredAt);
+
+            Assert.Equal(expectedDay, usageEvent.OccurredOn);
+            Assert.Equal(TimeSpan.Zero, usageEvent.OccurredAt.Offset);
+            Assert.Equal(occurredAt, usageEvent.OccurredAt);
         }
 
         [Fact]

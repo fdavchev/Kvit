@@ -19,6 +19,7 @@ namespace Kvit.Api.Tests.Persistence
         [InlineData("created_at", "timestamp with time zone")]
         [InlineData("lockout_count", "integer")]
         [InlineData("must_change_password", "boolean")]
+        [InlineData("is_guest", "boolean")]
         public async Task Column_HasTheExpectedType(string column, string expectedDataType)
         {
             string? dataType = await SchemaQueries.DataTypeAsync(_database, "users", column);
@@ -35,6 +36,7 @@ namespace Kvit.Api.Tests.Persistence
         [InlineData("created_at", "NO")]
         [InlineData("lockout_count", "NO")]
         [InlineData("must_change_password", "NO")]
+        [InlineData("is_guest", "NO")]
         public async Task Column_HasTheExpectedNullability(string column, string expectedIsNullable)
         {
             string? isNullable = await SchemaQueries.IsNullableAsync(_database, "users", column);
@@ -54,6 +56,7 @@ namespace Kvit.Api.Tests.Persistence
         [InlineData("is_time_zone_manual", "false")]
         [InlineData("lockout_count", "0")]
         [InlineData("must_change_password", "false")]
+        [InlineData("is_guest", "false")]
         public async Task Column_HasTheExpectedDefault(string column, string expectedDefault)
         {
             string? columnDefault = await SchemaQueries.DefaultAsync(_database, "users", column);

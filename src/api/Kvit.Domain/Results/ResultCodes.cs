@@ -50,6 +50,7 @@ namespace Kvit.Domain.Results
         public const string AUTH_GOOGLE_EMAIL_NOT_VERIFIED = "AUTH_GOOGLE_EMAIL_NOT_VERIFIED";
         public const string AUTH_GOOGLE_NO_ACCOUNT = "AUTH_GOOGLE_NO_ACCOUNT";
         public const string AUTH_GOOGLE_EMAIL_TAKEN = "AUTH_GOOGLE_EMAIL_TAKEN";
+        public const string AUTH_NOT_GUEST = "AUTH_NOT_GUEST";
         public const string TIME_ZONE_INVALID = "TIME_ZONE_INVALID";
         public const string LANGUAGE_INVALID = "LANGUAGE_INVALID";
         public const string RATE_LIMITED = "RATE_LIMITED";
@@ -84,8 +85,12 @@ namespace Kvit.Domain.Results
         public const string MEMBER_NOT_CLAIMED = "MEMBER_NOT_CLAIMED";
         public const string MEMBER_BALANCE_NOT_ZERO = "MEMBER_BALANCE_NOT_ZERO";
         public const string MEMBER_HAS_PENDING_PAYMENT = "MEMBER_HAS_PENDING_PAYMENT";
+        public const string MEMBER_NOT_GUEST = "MEMBER_NOT_GUEST";
+        public const string GUEST_NOT_ALLOWED = "GUEST_NOT_ALLOWED";
+        public const string GUEST_JOIN_SIGNED_IN = "GUEST_JOIN_SIGNED_IN";
         public const string INVITE_NOT_FOUND = "INVITE_NOT_FOUND";
         public const string INVITE_REMOVED = "INVITE_REMOVED";
         public const string INVITE_NOTHING_TO_UNDO = "INVITE_NOTHING_TO_UNDO";
+        public const string INVITE_GUEST_CHOICE_INVALID = "INVITE_GUEST_CHOICE_INVALID";
     }
 }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { errorMessageKey } from '@/core/api/errors'
+import { useIsGuest } from '@/core/auth/useIsGuest'
 import { routes } from '@/core/router/routes'
 import type { Group } from '@/core/services/groups/groupsService'
 import type {
@@ -36,6 +37,7 @@ export function MembersScreen() {
   const membersQuery = useMembers(groupId)
   const claimName = useClaimName(groupId)
   const letBackIn = useLetBackIn(groupId)
+  const isGuest = useIsGuest()
   const [isAddingName, setIsAddingName] = useState<boolean>(false)
   const [optionsMember, setOptionsMember] = useState<GroupMember | null>(null)
   const membersListRef = useListAnimation<HTMLUListElement>()
@@ -85,7 +87,7 @@ export function MembersScreen() {
               onOpenOptions={() => setOptionsMember(member)}
             />
           ))}
-          {canChange && (
+          {canChange && !isGuest && (
             <li className="-mt-1.5 flex">
               <button
                 type="button"

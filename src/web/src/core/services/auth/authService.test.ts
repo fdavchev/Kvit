@@ -11,10 +11,12 @@ import {
   changePassword,
   googleLogIn,
   googleSignUp,
+  googleUpgradeGuest,
   logIn,
   logOut,
   register,
   setPassword,
+  upgradeGuest,
 } from './authService'
 
 const registration = {
@@ -190,6 +192,34 @@ describe('authService', () => {
     })
   })
 
+  it('upgradeGuest posts only the email and the password as JSON and returns the person with an account', async () => {
+    const fetchMock = stubFetch(Response.json(testMe))
+
+    const me = await upgradeGuest(credentials)
+
+    expect(me).toEqual(testMe)
+    expect(sentRequest(fetchMock)).toEqual({
+      url: '/api/auth/upgrade',
+      method: 'POST',
+      contentType: 'application/json',
+      body: credentials,
+    })
+  })
+
+  it('googleUpgradeGuest posts only the Google ID token as JSON to the upgrade path, not to Google sign-in', async () => {
+    const fetchMock = stubFetch(Response.json(testMe))
+
+    const me = await googleUpgradeGuest(googleSignUpInput.idToken)
+
+    expect(me).toEqual(testMe)
+    expect(sentRequest(fetchMock)).toEqual({
+      url: '/api/auth/google/upgrade',
+      method: 'POST',
+      contentType: 'application/json',
+      body: { idToken: googleSignUpInput.idToken },
+    })
+  })
+
   it.each([
     ['register', () => register(registration)],
     ['logIn', () => logIn(credentials)],
@@ -198,6 +228,8 @@ describe('authService', () => {
     ['googleLogIn', () => googleLogIn(googleSignUpInput.idToken)],
     ['googleSignUp', () => googleSignUp(googleSignUpInput)],
     ['setPassword', () => setPassword(passwords.newPassword)],
+    ['upgradeGuest', () => upgradeGuest(credentials)],
+    ['googleUpgradeGuest', () => googleUpgradeGuest(googleSignUpInput.idToken)],
   ])('%s rethrows the ApiError unchanged', async (_name, send) => {
     stubFetch(problemResponse(400, 'AUTH_PASSWORD_TOO_WEAK'))
 
@@ -212,6 +244,8 @@ describe('authService', () => {
     ['logIn', () => logIn(credentials)],
     ['googleLogIn', () => googleLogIn(googleSignUpInput.idToken)],
     ['googleSignUp', () => googleSignUp(googleSignUpInput)],
+    ['upgradeGuest', () => upgradeGuest(credentials)],
+    ['googleUpgradeGuest', () => googleUpgradeGuest(googleSignUpInput.idToken)],
   ])('%s checks the answer with the same shape check as getMe', async (_name, send) => {
     stubFetch(Response.json({ ...testMe, language: 'fr' }))
 

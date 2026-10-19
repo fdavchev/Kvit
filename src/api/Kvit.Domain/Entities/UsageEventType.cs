@@ -8,5 +8,6 @@ namespace Kvit.Domain.Entities
         GroupCreated,
         ExpenseAdded,
         SettlementConfirmed,
+        GuestUpgraded,
     }
 }

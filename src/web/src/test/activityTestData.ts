@@ -268,6 +268,16 @@ export const sentenceCases: SentenceCase[] = [
     params: () => ({ name: 'Ana', member: 'Bojan' }),
   },
   {
+    name: 'GuestLetInAgain',
+    event: activityEventOf({
+      type: 'GuestLetInAgain',
+      memberId: 'a1b2c3d4-0007-4aaa-8bbb-000000000007',
+      data: { name: 'Cveta' },
+    }),
+    key: 'activity.guestLetInAgain',
+    params: () => ({ name: 'Ana', member: 'Cveta' }),
+  },
+  {
     name: 'GroupDeleted',
     event: activityEventOf({ type: 'GroupDeleted' }),
     key: 'activity.groupDeleted',

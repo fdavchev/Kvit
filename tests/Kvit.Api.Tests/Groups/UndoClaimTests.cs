@@ -113,6 +113,24 @@ namespace Kvit.Api.Tests.Groups
         }
 
         [Fact]
+        public async Task UndoClaim_AGuestWhoTappedAFreeName_Answers204AndGivesTheGuestTheirOwnRowUnderTheirName()
+        {
+            GroupSetup setup = await _app.CreateGroupWithMemberAsync();
+            Guid plainId = await GroupRows.InsertMemberAsync(_app, setup.GroupId, null, "Marko", setup.Owner.UserId);
+            GuestMember guest = await GuestSteps.TapFreeNameAsync(_app, setup.GroupId, plainId);
+
+            HttpResponseMessage response = await GroupRequests.UndoClaimAsync(setup.Owner.Client, setup.GroupId, plainId);
+
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            Assert.Null(await GroupRows.MemberRowValueAsync(_app, plainId, "user_id"));
+            Guid ownRowId = await GroupRows.CurrentMemberIdAsync(_app, setup.GroupId, guest.UserId);
+            Assert.NotEqual(plainId, ownRowId);
+            Assert.Equal("Marko", await GroupRows.MemberRowValueAsync(_app, ownRowId, "name"));
+            Assert.Equal("Marko", await GroupRows.EventValueAsync(_app, setup.GroupId, "ClaimUndone", "data ->> 'name'"));
+            Assert.Equal("Marko", await GroupRows.EventValueAsync(_app, setup.GroupId, "ClaimUndone", "data ->> 'claimedName'"));
+        }
+
+        [Fact]
         public async Task UndoClaim_SeveralSetAsideRowsOfThePerson_RestoresTheLatestOne()
         {
             GroupSetup setup = await _app.CreateGroupWithMemberAsync();

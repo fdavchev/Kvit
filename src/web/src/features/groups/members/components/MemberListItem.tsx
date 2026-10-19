@@ -29,7 +29,7 @@ export function MemberListItem({
     if (member.isNameOnly) {
       return t('members.nameOnly')
     }
-    if (showsTakenName && member.claimedName !== null) {
+    if (showsTakenName && member.claimedName !== null && member.claimedName !== member.displayName) {
       return t('members.tookName', { name: member.claimedName })
     }
     return null
@@ -50,6 +50,11 @@ export function MemberListItem({
           {member.isYou && (
             <span className={`${badgeLook} border border-field-border text-muted-foreground`}>
               {t('members.you')}
+            </span>
+          )}
+          {member.isGuest && (
+            <span className={`${badgeLook} border border-dashed border-muted-foreground text-muted-foreground`}>
+              {t('members.guest')}
             </span>
           )}
         </span>

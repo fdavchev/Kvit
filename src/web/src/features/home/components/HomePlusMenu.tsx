@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
+import { useIsGuest } from '@/core/auth/useIsGuest'
 import { kvitGlassButtonLook, kvitGlassPanelLook } from '@/shared/components/kvitGlassLooks'
 import { useToastsAboveElement } from '@/shared/hooks/useToastsAboveElement'
 import { cn } from '@/shared/utils/cn'
@@ -16,6 +17,7 @@ const mainItemLook = cn(itemLook, 'bg-primary text-primary-foreground hover:bg-p
 
 export function HomePlusMenu({ target }: HomePlusMenuProps) {
   const { t } = useTranslation()
+  const isGuest = useIsGuest()
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const menuAreaRef = useRef<HTMLDivElement>(null)
   const floatingAreaRef = useRef<HTMLDivElement>(null)
@@ -58,7 +60,7 @@ export function HomePlusMenu({ target }: HomePlusMenuProps) {
               kvitGlassPanelLook,
             )}
           >
-            {homePlusItems(target, t).map((item) => (
+            {homePlusItems(target, isGuest, t).map((item) => (
               <Link
                 key={item.to}
                 role="menuitem"

@@ -42,6 +42,7 @@
     "AUTH_GOOGLE_EMAIL_TAKEN": "This email already has an account.",
     "AUTH_USES_GOOGLE": "This account signs in with Google.",
     "AUTH_PASSWORD_ALREADY_SET": "This account already has a password. Use \"Change password\".",
+    "AUTH_NOT_GUEST": "You already have an account.",
     "GROUP_NOT_FOUND": "This group doesn't exist or you're no longer in it.",
     "GROUP_NOT_OWNER": "Only the group's owner can do this.",
     "GROUP_NAME_INVALID": "Enter a name (up to 60 characters).",
@@ -76,6 +77,10 @@
     "INVITE_NOT_FOUND": "This invite link no longer works. Ask for a new one.",
     "INVITE_REMOVED": "You were removed from this group. Ask the owner to let you back in.",
     "INVITE_NOTHING_TO_UNDO": "There is no earlier link to go back to.",
+    "INVITE_GUEST_CHOICE_INVALID": "Tap your name or type a new one.",
+    "GUEST_NOT_ALLOWED": "You're a guest. Make an account to do this.",
+    "GUEST_JOIN_SIGNED_IN": "You're already logged in. Join with your account.",
+    "MEMBER_NOT_GUEST": "Only a guest can be let in again.",
     "MONEY_CURRENCY_MISMATCH": "These amounts are in different currencies.",
     "MONEY_NOT_ON_CURRENCY_STEP": "Denars have no decimals. Use a whole number.",
     "EXPENSE_AMOUNT_NOT_POSITIVE": "The amount must be more than 0.",
@@ -162,6 +167,10 @@
       "title": "Set a password",
       "submit": "Save password",
       "done": "Password saved. You can now also log in with your email and password."
+    },
+    "makeAccount": {
+      "keeps": "You keep all your groups and expenses.",
+      "done": "Your account is ready"
     }
   },
   "home": {
@@ -176,6 +185,7 @@
     "kvit": "kvit",
     "noGroupsTitle": "No groups yet",
     "noGroupsHint": "Make a group or a one-time bill, then add your first expense.",
+    "noGroupsHintGuest": "Open an invite link a friend sent you, then add your first expense.",
     "noOpenGroupsTitle": "No open groups right now",
     "plus": "Add",
     "plusAddTo": "Add to {{group}}",
@@ -189,7 +199,15 @@
     "theme": "Theme",
     "themeSystem": "Same as device",
     "themeLight": "Light",
-    "themeDark": "Dark"
+    "themeDark": "Dark",
+    "guest": {
+      "title": "You're a guest",
+      "body": "Make an account to use Kvit on any phone and to create your own groups.",
+      "makeAccount": "Make an account",
+      "logOutTitle": "Log out as a guest?",
+      "logOutBody": "After logging out you can't get back in by yourself. Ask the group owner to let you in again. Or make an account first.",
+      "logOutAnyway": "Log out anyway"
+    }
   },
   "privacy": {
     "title": "Privacy",
@@ -229,6 +247,7 @@
     "title": "Groups",
     "newButton": "New group",
     "empty": "You have no groups yet. Create one, or open a link a friend sent you.",
+    "emptyGuest": "You have no groups yet. Open a link a friend sent you.",
     "people_one": "{{count}} person",
     "people_other": "{{count}} people",
     "finished": "Finished",
@@ -350,6 +369,7 @@
     "memberLeft": "{{member}} left the group",
     "ownershipTransferred": "{{name}} made “{{member}}” the owner",
     "memberLetBackIn": "{{name}} let “{{member}}” back in",
+    "guestLetInAgain": "{{name}} let “{{member}}” in again",
     "groupDeleted": "{{name}} deleted the group",
     "groupRestored": "{{name}} restored the group",
     "expenseAdded": "{{name}} added “{{title}}” · {{amount}}",
@@ -476,6 +496,7 @@
     "title": "Members",
     "owner": "Owner",
     "you": "You",
+    "guest": "Guest",
     "nameOnly": "Just a name",
     "tookName": "Took the name “{{name}}”",
     "addNameLink": "+ Add a name",
@@ -497,7 +518,10 @@
     "removedTitle": "Removed",
     "letBackIn": "Let back in",
     "backInGroup": "{{name}} is back in the group",
-    "optionsFor": "Options for {{name}}"
+    "optionsFor": "Options for {{name}}",
+    "letInAgain": "Let in again",
+    "letInAgainHint": "Use this when {{name}} lost their phone. The name becomes free to tap on the new one.",
+    "letInAgainDone": "{{name}} can tap their name again"
   },
   "join": {
     "invitedTo": "You're invited to {{name}}",
@@ -506,8 +530,15 @@
     "areYou": "Are you one of these?",
     "imNew": "No, I'm new",
     "joined": "You joined {{name}}",
-    "signInHint": "Create an account or log in to join.",
-    "removed": "You were removed from {{name}}. Ask the owner to let you back in."
+    "removed": "You were removed from {{name}}. Ask the owner to let you back in.",
+    "guest": {
+      "whoAreYou": "Who are you? Tap your name:",
+      "whatsYourName": "What's your name?",
+      "imNew": "I'm new",
+      "haveAccount": "Have an account?",
+      "logInWithEmail": "Log in with email",
+      "logInNote": "After logging in you come back here and join."
+    }
   },
   "notFound": {
     "title": "Page not found",
