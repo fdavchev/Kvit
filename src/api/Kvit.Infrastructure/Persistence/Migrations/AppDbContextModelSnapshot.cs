@@ -599,6 +599,97 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Kvit.Domain.Entities.PersonalEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<long>("AmountMinor")
+                        .HasColumnType("bigint")
+                        .HasColumnName("amount_minor");
+
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id");
+
+                    b.Property<Guid>("ClientRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_request_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("currency");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<DateOnly>("EntryDate")
+                        .HasColumnType("date")
+                        .HasColumnName("entry_date");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<decimal>("MkdPerEur")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("numeric(10,4)")
+                        .HasColumnName("mkd_per_eur");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<DateOnly>("RateDate")
+                        .HasColumnType("date")
+                        .HasColumnName("rate_date");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_personal_entries");
+
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("ix_personal_entries_category_id");
+
+                    b.HasIndex("ClientRequestId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_personal_entries_client_request_id");
+
+                    b.HasIndex("UserId", "EntryDate")
+                        .HasDatabaseName("ix_personal_entries_user_id_entry_date");
+
+                    b.ToTable("personal_entries", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_personal_entries_amount_minor_positive", "amount_minor > 0");
+
+                            t.HasCheckConstraint("ck_personal_entries_currency", "currency IN ('MKD', 'EUR')");
+
+                            t.HasCheckConstraint("ck_personal_entries_kind", "kind IN ('Spending')");
+
+                            t.HasCheckConstraint("ck_personal_entries_mkd_per_eur_positive", "mkd_per_eur > 0");
+
+                            t.HasCheckConstraint("ck_personal_entries_note_length", "char_length(note) BETWEEN 1 AND 500");
+
+                            t.HasCheckConstraint("ck_personal_entries_spending_has_category", "kind <> 'Spending' OR category_id IS NOT NULL");
+                        });
+                });
+
             modelBuilder.Entity("Kvit.Domain.Entities.Settlement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1161,6 +1252,22 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_group_members_users_user_id");
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.PersonalEntry", b =>
+                {
+                    b.HasOne("Kvit.Domain.Entities.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_personal_entries_categories_category_id");
+
+                    b.HasOne("Kvit.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_personal_entries_users_user_id");
                 });
 
             modelBuilder.Entity("Kvit.Domain.Entities.Settlement", b =>

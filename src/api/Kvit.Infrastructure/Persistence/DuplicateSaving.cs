@@ -19,7 +19,7 @@ namespace Kvit.Infrastructure.Persistence
                 await DiscardAsync(context, cancellationToken);
                 throw new MemberChangedMeanwhileException(exception);
             }
-            catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, ExpenseConfiguration.ClientRequestIdIndexName, SettlementConfiguration.ClientRequestIdIndexName))
+            catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, ExpenseConfiguration.ClientRequestIdIndexName, SettlementConfiguration.ClientRequestIdIndexName, PersonalEntryConfiguration.ClientRequestIdIndexName))
             {
                 await DiscardAsync(context, cancellationToken);
                 throw new ClientRequestIdAlreadySavedException(exception);

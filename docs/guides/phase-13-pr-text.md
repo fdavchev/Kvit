@@ -30,7 +30,7 @@ First phase of Release 2 ("budget"). Adds personal spending (tap a category, typ
 ### Checklist
 - [x] Step 0: mockup and picks logged in DECISIONS
 - [x] Step 1: backend, custom categories (migration `PersonalCategories`)
-- [ ] Step 2: backend, personal entries (migration `PersonalEntries`)
+- [x] Step 2: backend, personal entries (migration `PersonalEntries`)
 - [ ] Step 3: frontend, categories (grid with "+ New", new-category sheet, Edit my categories)
 - [ ] Step 4: frontend, add, edit and delete spending
 - [ ] Step 5: frontend, Budget tab (not for guests)

@@ -1,0 +1,4 @@
+namespace Kvit.Contracts.PersonalEntries
+{
+    public sealed record PersonalEntryMonthResponse(string Month, IReadOnlyList<PersonalEntryRow> Entries, IReadOnlyList<PersonalCurrencyTotalRow> Totals);
+}

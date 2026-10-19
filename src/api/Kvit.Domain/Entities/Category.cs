@@ -71,6 +71,11 @@ namespace Kvit.Domain.Entities
             return OwnerUserId is null && ArchivedAt is null;
         }
 
+        public bool CanTagPersonalEntriesOf(Guid userId)
+        {
+            return (OwnerUserId is null || OwnerUserId == userId) && ArchivedAt is null;
+        }
+
         public string BuiltInKey()
         {
             return Key ?? throw new InvalidOperationException($"Category {Id} is a custom category without a key, but only built-in categories can be on a group expense.");
