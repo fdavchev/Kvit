@@ -57,7 +57,7 @@ namespace Kvit.Application.Commands.Invites
                 return guest.ToFailure<GuestJoinedDto>();
             }
 
-            Result<Guid> joined = await _joinGroup.Execute(inviteToken, guest.Value.Id, guest.Value.DisplayName, choice.ClaimMemberId, cancellationToken);
+            Result<Guid> joined = await _joinGroup.ExecuteForGuest(inviteToken, guest.Value.Id, guest.Value.DisplayName, choice.ClaimMemberId, cancellationToken);
             if (!joined.IsSuccess)
             {
                 return joined.ToFailure<GuestJoinedDto>();

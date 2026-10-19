@@ -57,20 +57,22 @@ namespace Kvit.Api.Tests.Groups
         }
 
         [Fact]
-        public async Task JoinAsGuest_TappingAFreeName_WritesMemberJoinedAndMemberClaimedByTheGuestAboutTheNameRow()
+        public async Task JoinAsGuest_TappingAFreeName_WritesOnlyOneMemberJoinedEventByTheGuestAboutTheNameRow()
         {
             GuestScene scene = await CreateSceneAsync();
+            Guid groupId = scene.Setup.GroupId;
+            int eventsBefore = await GroupRows.CountEventsAsync(_app, groupId);
 
             await AssertOkAsync(GroupRequests.JoinAsGuestAsync(scene.Guest, scene.Setup.InviteToken, claimMemberId: scene.FreeNameRowId));
 
             Guid guestId = await GuestIdAsync(scene.Guest);
-            Guid groupId = scene.Setup.GroupId;
-            Assert.Equal(1, await GroupRows.CountEventsOfTypeAsync(_app, groupId, "MemberJoined"));
-            Assert.Equal(1, await GroupRows.CountEventsOfTypeAsync(_app, groupId, "MemberClaimed"));
-            Assert.Equal(guestId.ToString(), await GroupRows.EventValueAsync(_app, groupId, "MemberJoined", "actor_user_id"));
-            Assert.Equal(guestId.ToString(), await GroupRows.EventValueAsync(_app, groupId, "MemberClaimed", "actor_user_id"));
-            Assert.Equal(scene.FreeNameRowId.ToString(), await GroupRows.EventValueAsync(_app, groupId, "MemberJoined", "member_id"));
-            Assert.Equal(scene.FreeNameRowId.ToString(), await GroupRows.EventValueAsync(_app, groupId, "MemberClaimed", "member_id"));
+            List<string?> guestEvents = await _app.QueryAsync(
+                "SELECT type || '|' || member_id::text || '|' || (data ->> 'name') FROM activity_events WHERE group_id = @group_id AND actor_user_id = @guest_id ORDER BY created_at",
+                new NpgsqlParameter("group_id", groupId),
+                new NpgsqlParameter("guest_id", guestId));
+            Assert.Equal([$"MemberJoined|{scene.FreeNameRowId}|{FreeName}"], guestEvents);
+            Assert.Equal(eventsBefore + 1, await GroupRows.CountEventsAsync(_app, groupId));
+            Assert.Equal(0, await GroupRows.CountEventsOfTypeAsync(_app, groupId, "MemberClaimed"));
         }
 
         [Fact]

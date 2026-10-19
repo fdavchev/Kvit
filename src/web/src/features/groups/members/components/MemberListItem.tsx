@@ -29,7 +29,7 @@ export function MemberListItem({
     if (member.isNameOnly) {
       return t('members.nameOnly')
     }
-    if (showsTakenName && member.claimedName !== null) {
+    if (showsTakenName && member.claimedName !== null && member.claimedName !== member.displayName) {
       return t('members.tookName', { name: member.claimedName })
     }
     return null

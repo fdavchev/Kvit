@@ -24,10 +24,29 @@ function claimedEvent(name: string, claimedName: string): ActivityEvent {
 }
 
 describe('activityLines for a person who took a name', () => {
-  it.each(languages)('says the person joined when the name they took is their own name, as for a guest who tapped a free name (%s)', async (language) => {
+  it.each(languages)('says the person joined when the name they took is their own name, as stored for a guest who tapped a free name before the server stopped writing this event for guests (%s)', async (language) => {
     const sentences = await sentencesOf(claimedEvent('Cveta', 'Cveta'), language)
 
     expect(sentences).toEqual([translated(language, 'activity.memberJoined', { member: 'Cveta' })])
+  })
+
+  it('still shows both stored lines of an older guest tap, the joined event and the same-name claim, instead of hiding one', async () => {
+    const i18n = await createI18n('en')
+    const joined = activityEventOf({
+      id: 'joined-event',
+      type: 'MemberJoined',
+      actorName: 'Cveta',
+      memberId: cvetaGuestMember.id,
+      data: { name: 'Cveta' },
+    })
+    const claimed = { ...claimedEvent('Cveta', 'Cveta'), id: 'claimed-event' }
+
+    const lines = activityLines([claimed, joined], { t: i18n.t, language: 'en', today: '2026-10-16', categories: [], expenses: [] })
+
+    expect(lines.map((line) => line.sentence)).toEqual([
+      translated('en', 'activity.memberJoined', { member: 'Cveta' }),
+      translated('en', 'activity.memberJoined', { member: 'Cveta' }),
+    ])
   })
 
   it.each(languages)('keeps "took the name" when the account name differs from the name that was taken (%s)', async (language) => {

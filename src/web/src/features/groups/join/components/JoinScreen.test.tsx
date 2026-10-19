@@ -7,7 +7,7 @@ import type { Me } from '@/core/services/me/meService'
 import { problemResponse, stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
 import { expectDisabledWhilePending } from '@/test/formTestHelpers'
 import { stubGoogleSignIn } from '@/test/googleTestHelpers'
-import { defaultGroupEmoji, testGroupId, testInviteToken } from '@/test/groupTestData'
+import { defaultGroupEmoji, groupNameMaxLength, testGroupId, testInviteToken } from '@/test/groupTestData'
 import {
   alreadyMemberInvitePreview,
   openInvitePreview,
@@ -503,10 +503,26 @@ describe('JoinScreen', () => {
 
   describe('the people in the group on the invite card', () => {
     const multiWordNames: string[] = ['Filip Davchev', 'Ana Maria Petrovska', 'Marko']
-    const noBreakLook: RegExp = /(^|\s)(whitespace-nowrap|text-nowrap)(\s|$)/
+    const neverWrapsAtAll: RegExp = /(^|\s)(whitespace-nowrap|text-nowrap)(\s|$)/
 
     function previewWithMembers(memberNames: string[]): AnswerFactory {
       return jsonAnswer({ ...openInvitePreview, memberNames })
+    }
+
+    function boxOf(name: string): HTMLElement {
+      const box = screen.getByText(name).parentElement
+      if (box === null) {
+        throw new Error(`The name ${name} on the invite card has no box around it`)
+      }
+      return box
+    }
+
+    function expectKeptWholeUnlessLongerThanALine(name: string): void {
+      const classes = Array.from(boxOf(name).classList)
+      expect(classes).toContain('inline-block')
+      expect(classes).toContain('max-w-full')
+      expect(classes).toContain('wrap-anywhere')
+      expect(boxOf(name).className).not.toMatch(neverWrapsAtAll)
     }
 
     it('shows each name of a member in its own element', async () => {
@@ -518,13 +534,43 @@ describe('JoinScreen', () => {
       }
     })
 
-    it('gives each name a no-break style so a name never wraps inside itself', async () => {
+    it('puts each name in a box that keeps it on one line and breaks it only when it is longer than a whole line', async () => {
       await renderJoin({ preview: previewWithMembers(multiWordNames) })
       await showsInviteCard()
 
       for (const name of multiWordNames) {
-        expect(screen.getByText(name).className).toMatch(noBreakLook)
+        expectKeptWholeUnlessLongerThanALine(name)
       }
+    })
+
+    it('keeps the comma inside the box of the name before it, so a line never starts with a comma', async () => {
+      await renderJoin({ preview: previewWithMembers(multiWordNames) })
+      await showsInviteCard()
+
+      expect(multiWordNames.map((name) => boxOf(name).textContent)).toEqual(['Filip Davchev,', 'Ana Maria Petrovska,', 'Marko'])
+      expect(boxOf('Filip Davchev').parentElement?.textContent).toBe(
+        `${translated('en', 'join.inGroup')}: Filip Davchev, Ana Maria Petrovska, Marko`,
+      )
+    })
+
+    it('lets a member name that is one very long word break anywhere instead of making the page wider than the phone', async () => {
+      const oneLongWord = 'W'.repeat(60)
+      await renderJoin({ visitor: null, preview: previewWithMembers(['Filip', oneLongWord]) })
+      await showsInviteCard()
+
+      expectKeptWholeUnlessLongerThanALine(oneLongWord)
+    })
+
+    it.each(languages)('lets a group name that is one very long word break anywhere in the invite heading (%s)', async (language) => {
+      const oneLongWord = 'G'.repeat(groupNameMaxLength)
+      await renderJoin({ language, visitor: null, preview: jsonAnswer({ ...openInvitePreview, name: oneLongWord }) })
+
+      const heading = await screen.findByRole('heading', {
+        level: 1,
+        name: translated(language, 'join.invitedTo', { name: oneLongWord }),
+      })
+
+      expect(Array.from(heading.classList)).toContain('wrap-anywhere')
     })
 
     it('shows the names in the order the server sent them', async () => {
@@ -546,19 +592,20 @@ describe('JoinScreen', () => {
       expect(screen.getAllByText('Marko')).toHaveLength(2)
     })
 
-    it('shows a single member name in its own element with the no-break style', async () => {
+    it('shows a single member name in its own box with no comma after it', async () => {
       await renderJoin({ preview: previewWithMembers(['Filip Davchev']) })
       await showsInviteCard()
 
-      expect(screen.getByText('Filip Davchev').className).toMatch(noBreakLook)
+      expectKeptWholeUnlessLongerThanALine('Filip Davchev')
+      expect(boxOf('Filip Davchev').textContent).toBe('Filip Davchev')
     })
 
-    it('shows the names in their own elements to a signed-out visitor too', async () => {
+    it('shows the names in their own boxes to a signed-out visitor too', async () => {
       await renderJoin({ visitor: null, preview: previewWithMembers(multiWordNames) })
       await showsInviteCard()
 
       for (const name of multiWordNames) {
-        expect(screen.getByText(name).className).toMatch(noBreakLook)
+        expectKeptWholeUnlessLongerThanALine(name)
       }
     })
 

@@ -160,6 +160,27 @@ describe('the Members screen with a guest in the group', () => {
       expect(within(nameLine as HTMLElement).getByText(cvetaGuestMember.displayName).className).toMatch(/(^|\s)break-words(\s|$)/)
     })
 
+    it.each(languages)('shows the owner only the Guest badge and no "took the name" line under a guest who tapped the free name that became their own name (%s)', async (language) => {
+      const tappedGuest = { ...cvetaGuestMember, claimedName: cvetaGuestMember.displayName }
+      await renderMembers({ language, members: { ...ownerViewMembers, members: [...ownerViewMembers.members, tappedGuest] } })
+
+      const guestRow = rowOf(cvetaGuestMember.displayName)
+
+      expect(within(guestRow).getByText(translated(language, 'members.guest'))).toBeTruthy()
+      expect(
+        within(guestRow).queryByText(translated(language, 'members.tookName', { name: cvetaGuestMember.displayName })),
+      ).toBeNull()
+      expect(within(rowOf(petarMember.displayName)).getByText(translated(language, 'members.tookName', { name: 'Darko' }))).toBeTruthy()
+    })
+
+    it('shows no "took the name" line either once that guest made an account and their name is still the name they tapped', async () => {
+      const upgradedGuest = { ...cvetaGuestMember, isGuest: false, claimedName: cvetaGuestMember.displayName }
+      await renderMembers({ members: { ...ownerViewMembers, members: [...ownerViewMembers.members, upgradedGuest] } })
+
+      expect(within(rowOf(cvetaGuestMember.displayName)).queryByText(/Took the name/)).toBeNull()
+      expect(screen.getAllByText(/Took the name/)).toHaveLength(1)
+    })
+
     it.each(languages)('shows the guest their own row with both the You and the Guest badge (%s)', async (language) => {
       await renderMembers({ language, asGuest: true, group: guestViewGroup, members: guestViewMembers })
 

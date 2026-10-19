@@ -249,6 +249,73 @@ namespace Kvit.Domain.Tests.Services.Groups
         }
 
         [Fact]
+        public async Task Execute_ASignedInPersonClaimsAPlainNameThatIsTheirOwnName_StillWritesMemberJoinedThenMemberClaimed()
+        {
+            await _joinGroup.Execute(GroupTestData.InviteToken, GroupTestData.StrangerId, "Grandma", _plainNameRow.Id, TestContext.Current.CancellationToken);
+
+            Assert.Equal([ActivityEventType.MemberJoined, ActivityEventType.MemberClaimed], _activityEvents.Added.Select(activityEvent => activityEvent.Type));
+        }
+
+        [Fact]
+        public async Task ExecuteForGuest_AGuestTapsAFreeName_PutsTheGuestOnTheNameRowAndAddsNoRowOfTheirOwn()
+        {
+            Result<Guid> result = await ExecuteForGuestAsync(_plainNameRow.Id);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(_group.Id, result.Value);
+            Assert.Equal(GroupTestData.StrangerId, _plainNameRow.UserId);
+            Assert.Equal(GroupTestData.Moment, _plainNameRow.ClaimedAt);
+            Assert.Equal("Grandma", _plainNameRow.Name);
+            Assert.Empty(_members.Added);
+        }
+
+        [Fact]
+        public async Task ExecuteForGuest_AGuestTapsAFreeName_WritesOnlyOneMemberJoinedEventForTheNameRow()
+        {
+            await ExecuteForGuestAsync(_plainNameRow.Id);
+
+            ActivityEvent joined = Assert.Single(_activityEvents.Added);
+            Assert.Equal(ActivityEventType.MemberJoined, joined.Type);
+            Assert.Equal(_plainNameRow.Id, joined.MemberId);
+            Assert.Equal(GroupTestData.StrangerId, joined.ActorUserId);
+            Assert.Equal(GroupTestData.Moment, joined.CreatedAt);
+            Assert.Equal("Grandma", ActivityEventData.Name(joined));
+        }
+
+        [Fact]
+        public async Task ExecuteForGuest_AGuestTapsAFreeName_WritesOneJoinedViaInviteUsageEvent()
+        {
+            await ExecuteForGuestAsync(_plainNameRow.Id);
+
+            UsageEvent usageEvent = Assert.Single(_usageEvents.Added);
+            Assert.Equal(UsageEventType.JoinedViaInvite, usageEvent.Type);
+            Assert.Equal(GroupTestData.StrangerId, usageEvent.UserId);
+        }
+
+        [Fact]
+        public async Task ExecuteForGuest_AGuestWithANewName_AddsTheirOwnRowAndWritesOneMemberJoinedEventForIt()
+        {
+            Result<Guid> result = await _joinGroup.ExecuteForGuest(GroupTestData.InviteToken, GroupTestData.StrangerId, JoinerName, null, TestContext.Current.CancellationToken);
+
+            Assert.True(result.IsSuccess);
+            GroupMember added = Assert.Single(_members.Added);
+            Assert.Equal(JoinerName, added.Name);
+            Assert.Null(added.ClaimedAt);
+            ActivityEvent joined = Assert.Single(_activityEvents.Added);
+            Assert.Equal(ActivityEventType.MemberJoined, joined.Type);
+            Assert.Equal(added.Id, joined.MemberId);
+        }
+
+        [Fact]
+        public async Task ExecuteForGuest_AnUnknownFreeName_FailsWith404MemberNotFoundAndWritesNothing()
+        {
+            Result<Guid> result = await ExecuteForGuestAsync(Guid.NewGuid());
+
+            ResultAssert.Failed(result, HttpStatusCode.NotFound, ResultCodes.MEMBER_NOT_FOUND);
+            AssertNothingWritten();
+        }
+
+        [Fact]
         public async Task Execute_ANewPersonClaimsAPlainName_WritesOneJoinedViaInviteUsageEvent()
         {
             await ExecuteAsync(GroupTestData.StrangerId, _plainNameRow.Id);
@@ -343,6 +410,11 @@ namespace Kvit.Domain.Tests.Services.Groups
         private Task<Result<Guid>> ExecuteAsync(Guid userId, Guid? claimMemberId)
         {
             return _joinGroup.Execute(GroupTestData.InviteToken, userId, JoinerName, claimMemberId, TestContext.Current.CancellationToken);
+        }
+
+        private Task<Result<Guid>> ExecuteForGuestAsync(Guid freeNameRowId)
+        {
+            return _joinGroup.ExecuteForGuest(GroupTestData.InviteToken, GroupTestData.StrangerId, "Grandma", freeNameRowId, TestContext.Current.CancellationToken);
         }
 
         private void AssertNothingWritten()
