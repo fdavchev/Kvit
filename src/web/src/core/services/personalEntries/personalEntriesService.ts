@@ -26,7 +26,7 @@ const personalEntryKinds: readonly PersonalEntryKind[] = ['Spending', 'Income']
 export interface PersonalEntry {
   id: string
   kind: PersonalEntryKind
-  category: PersonalCategory
+  category: PersonalCategory | null
   amountMinor: number
   currency: Currency
   entryDate: string
@@ -62,17 +62,25 @@ export interface PersonalEntryMonth {
   incomeTotals: PersonalIncomeTotal[]
 }
 
-export interface PersonalEntryFields {
-  categoryId: string
+interface PersonalEntryMoneyFields {
   amountMinor: number
   currency: Currency
   entryDate: string
   note: string | null
 }
 
-export interface NewPersonalEntry extends PersonalEntryFields {
-  clientRequestId: string
+export interface PersonalSpendingFields extends PersonalEntryMoneyFields {
+  kind: 'Spending'
+  categoryId: string
 }
+
+export interface PersonalIncomeFields extends PersonalEntryMoneyFields {
+  kind: 'Income'
+}
+
+export type PersonalEntryFields = PersonalSpendingFields | PersonalIncomeFields
+
+export type NewPersonalEntry = PersonalEntryFields & { clientRequestId: string }
 
 export async function getPersonalEntries(month: string): Promise<PersonalEntryMonth> {
   const what = 'the personal entries of the month'
@@ -104,10 +112,11 @@ export async function restorePersonalEntry(entryId: string): Promise<void> {
 function parseEntry(row: unknown): PersonalEntry {
   const what = 'a personal entry'
   const fields = readObject(row, what)
+  const kind = readOneOf(fields, 'kind', personalEntryKinds, what)
   return {
     id: readText(fields, 'id', what),
-    kind: readOneOf(fields, 'kind', personalEntryKinds, what),
-    category: readCategoryWithItsId(fields, what),
+    kind,
+    category: readEntryCategory(fields, kind, what),
     amountMinor: readCount(fields, 'amountMinor', what),
     currency: readOneOf(fields, 'currency', groupCurrencies, what),
     entryDate: readDate(fields, 'entryDate', what),
@@ -147,6 +156,20 @@ function parseCategoryTotal(row: unknown): PersonalCategoryTotal {
     totalMinor: readCount(fields, 'totalMinor', what),
     count: readCount(fields, 'count', what),
   }
+}
+
+function readEntryCategory(fields: Fields, kind: PersonalEntryKind, what: string): PersonalCategory | null {
+  const hasNoCategory = fields.category === null && fields.categoryId === null
+  if (kind === 'Income') {
+    if (!hasNoCategory) {
+      throw new Error(`Expected "category" and "categoryId" of ${what} of kind Income to be null`)
+    }
+    return null
+  }
+  if (fields.category === null || fields.categoryId === null) {
+    throw new Error(`Expected "category" and "categoryId" of ${what} of kind Spending to be set, got null`)
+  }
+  return readCategoryWithItsId(fields, what)
 }
 
 function readCategoryWithItsId(fields: Fields, what: string): PersonalCategory {

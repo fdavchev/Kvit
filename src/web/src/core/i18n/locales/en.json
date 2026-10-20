@@ -546,10 +546,19 @@
       "restored": "Restored",
       "dateHint": "Pick a date from the last 24 months, up to today."
     },
+    "add": {
+      "title": "What do you add?",
+      "spending": "Spending",
+      "income": "Income"
+    },
+    "income": {
+      "title": "New income",
+      "listTitle": "Income"
+    },
     "screen": {
       "spentThisMonth": "Spent this month",
       "emptyTitle": "Nothing spent this month",
-      "add": "Add spending",
+      "add": "Add",
       "months": "Month",
       "categoryTotals": "Totals by category",
       "entries": "Entries"

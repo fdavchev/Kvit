@@ -16,12 +16,13 @@ import { coffeeCategory, createdTeaCategory, personalFoodCategory } from '@/test
 import { personalCategoryCreatePost } from '@/test/personalCategoryTestHelpers'
 import { coffeeEntry, entryAnswerRow, lunchInEuroEntry, monthAnswerBody, octoberMonth } from '@/test/personalEntryTestData'
 import {
+  chooseSpending,
   createCategoryFromGrid,
   deleteButton,
   expectAmountToStayFocused,
   expectFocusBackOnNewTile,
+  findChoiceSheet,
   findDetailsSheet,
-  findPickSheet,
   openNewCategorySheetFromGrid,
   personalEntriesPost,
   waitForEveryDialogToClose,
@@ -94,23 +95,25 @@ describe('BudgetScreen adding and editing', () => {
       )
     })
 
-    it('opens the add sheet straight on the category grid, with no menu in between', async () => {
+    it('opens the "What do you add?" sheet, not the category grid, and no menu', async () => {
       await renderBudget()
       await findTotalCard()
 
       fireEvent.click(plusButton())
 
-      expect(await findPickSheet()).toBeTruthy()
+      expect(await findChoiceSheet()).toBeTruthy()
+      expect(screen.queryByRole('dialog', { name: translated('en', 'budget.entries.pickCategory') })).toBeNull()
       expect(screen.queryByRole('menu')).toBeNull()
     })
 
-    it('adds spending in 2 taps and 1 field: "+", category, amount, Save', async () => {
+    it('adds spending in 3 taps and 1 field from the open choice sheet: Spending, category, amount, Save', async () => {
       const { fetchMock } = await renderBudget({ answers: { [personalEntriesPost]: jsonAnswer(entryAnswerRow(coffeeEntry)) } })
       await findTotalCard()
       let taps = 0
 
       fireEvent.click(plusButton())
-      const pickSheet = await findPickSheet()
+      const pickSheet = await chooseSpending()
+      taps += 1
       fireEvent.click(await within(pickSheet).findByRole('button', { name: 'Coffee' }))
       taps += 1
       await findDetailsSheet(coffeeCategory)
@@ -121,7 +124,7 @@ describe('BudgetScreen adding and editing', () => {
       await waitFor(() => {
         expect(requestsOf(fetchMock, 'POST', '/api/personal/entries')).toHaveLength(1)
       })
-      expect(taps).toBe(2)
+      expect(taps).toBe(3)
     })
 
     it('focuses the amount after "+ New" saves a category, so typed digits land in it', async () => {
@@ -129,6 +132,7 @@ describe('BudgetScreen adding and editing', () => {
       await findTotalCard()
       plusButton().focus()
       fireEvent.click(plusButton())
+      await chooseSpending()
 
       await createCategoryFromGrid('Tea')
       await findDetailsSheet(createdTeaCategory)
@@ -144,6 +148,7 @@ describe('BudgetScreen adding and editing', () => {
       await findTotalCard()
       plusButton().focus()
       fireEvent.click(plusButton())
+      await chooseSpending()
       const opened = await openNewCategorySheetFromGrid()
 
       cancel(opened.newSheet)
@@ -166,7 +171,7 @@ describe('BudgetScreen adding and editing', () => {
       expect(within(list).getAllByRole('listitem')).toHaveLength(2)
 
       fireEvent.click(plusButton())
-      fireEvent.click(await within(await findPickSheet()).findByRole('button', { name: 'Coffee' }))
+      fireEvent.click(await within(await chooseSpending()).findByRole('button', { name: 'Coffee' }))
       await findDetailsSheet(coffeeCategory)
       typeAmount('90')
       fireEvent.click(saveButton())
@@ -182,7 +187,7 @@ describe('BudgetScreen adding and editing', () => {
       await renderBudget({ answers: { [personalEntriesPost]: jsonAnswer(entryAnswerRow(coffeeEntry)) } })
       await findTotalCard()
       fireEvent.click(plusButton())
-      fireEvent.click(await within(await findPickSheet()).findByRole('button', { name: 'Coffee' }))
+      fireEvent.click(await within(await chooseSpending()).findByRole('button', { name: 'Coffee' }))
       await findDetailsSheet(coffeeCategory)
       typeAmount('90')
       fireEvent.click(saveButton())
@@ -190,10 +195,10 @@ describe('BudgetScreen adding and editing', () => {
 
       fireEvent.click(plusButton())
 
-      expect(await findPickSheet()).toBeTruthy()
+      expect(await findChoiceSheet()).toBeTruthy()
     })
 
-    it('shows a round "Add spending" button in the page instead of the floating "+" on a desktop-sized window', async () => {
+    it('shows a round "Add spending" button in the page instead of the floating "+" on a desktop-sized window, and it opens the choice sheet too', async () => {
       stubDesktopScreen()
       await renderBudget()
       await findTotalCard()
@@ -204,7 +209,8 @@ describe('BudgetScreen adding and editing', () => {
       expect(button.className.split(/\s+/)).toEqual(expect.arrayContaining(['rounded-full', 'min-h-12', 'bg-primary']))
       expect(document.querySelector('[data-floating-add]')).toBeNull()
       fireEvent.click(button)
-      expect(await findPickSheet()).toBeTruthy()
+      expect(await findChoiceSheet()).toBeTruthy()
+      expect(screen.queryByRole('dialog', { name: translated('en', 'budget.entries.pickCategory') })).toBeNull()
     })
   })
 

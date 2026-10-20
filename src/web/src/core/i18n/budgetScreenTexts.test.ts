@@ -16,7 +16,7 @@ const prefix = 'budget.screen.'
 const budgetScreenTexts: BudgetScreenText[] = [
   { key: 'budget.screen.spentThisMonth', en: 'Spent this month', mk: 'Потрошено овој месец' },
   { key: 'budget.screen.emptyTitle', en: 'Nothing spent this month', mk: 'Овој месец нема трошоци' },
-  { key: 'budget.screen.add', en: 'Add spending', mk: 'Додај трошење' },
+  { key: 'budget.screen.add', en: 'Add', mk: 'Додај' },
   { key: 'budget.screen.months', en: 'Month', mk: 'Месец' },
   { key: 'budget.screen.categoryTotals', en: 'Totals by category', mk: 'Вкупно по категории' },
   { key: 'budget.screen.entries', en: 'Entries', mk: 'Внесови' },

@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { expect, vi } from 'vitest'
+import type { ReactElement } from 'react'
+import { expect, vi, type Mock } from 'vitest'
 import { endpoints } from '@/core/api/endpoints'
 import type { Language } from '@/core/i18n/language'
 import type { Me } from '@/core/services/me/meService'
@@ -39,33 +40,50 @@ export function personalEntryRestorePost(entryId: string): string {
 
 export const seededMonth = '2026-10'
 
-interface SheetOptions {
+export interface SheetOptions {
   entry?: PersonalEntry
   language?: Language
   me?: Me
   answers?: Record<string, AnswerFactory>
 }
 
-export async function renderSpendingSheet(options: SheetOptions = {}) {
+export async function renderSheet(element: ReactElement, onClose: Mock<() => void>, options: SheetOptions) {
   const language = options.language ?? 'en'
   const me = options.me ?? testMe
-  const onClose = vi.fn<() => void>()
   const fetchMock = stubFetchByRequest({
     [personalCategoriesGet]: categoryListAnswer(() => activePersonalCategories),
     ...options.answers,
   })
-  const rendered = await renderElementWithProviders(
-    <PersonalSpendingSheet entry={options.entry} onClose={onClose} />,
-    '/sheet',
-    {
-      language,
-      seedCache: (queryClient) => {
-        seedMe({ ...me, language })(queryClient)
-        queryClient.setQueryData(personalEntriesQueryKey(seededMonth), 'a month of entries')
-      },
+  const rendered = await renderElementWithProviders(element, '/sheet', {
+    language,
+    seedCache: (queryClient) => {
+      seedMe({ ...me, language })(queryClient)
+      queryClient.setQueryData(personalEntriesQueryKey(seededMonth), 'a month of entries')
     },
-  )
+  })
   return { ...rendered, fetchMock, onClose, language }
+}
+
+export async function renderSpendingSheet(options: SheetOptions = {}) {
+  const onClose = vi.fn<() => void>()
+  return renderSheet(<PersonalSpendingSheet entry={options.entry} onClose={onClose} />, onClose, options)
+}
+
+export async function findChoiceSheet(language: Language = 'en'): Promise<HTMLElement> {
+  return screen.findByRole('dialog', { name: translated(language, 'budget.add.title') })
+}
+
+export function choiceButton(sheet: HTMLElement, choice: 'spending' | 'income', language: Language = 'en'): HTMLElement {
+  return within(sheet).getByRole('button', { name: translated(language, `budget.add.${choice}`) })
+}
+
+export async function chooseSpending(language: Language = 'en'): Promise<HTMLElement> {
+  fireEvent.click(choiceButton(await findChoiceSheet(language), 'spending', language))
+  return findPickSheet(language)
+}
+
+export function repeatsChips(sheet: HTMLElement): HTMLElement[] {
+  return within(sheet).queryAllByRole('button', { name: /repeat/i })
 }
 
 export async function findPickSheet(language: Language = 'en'): Promise<HTMLElement> {

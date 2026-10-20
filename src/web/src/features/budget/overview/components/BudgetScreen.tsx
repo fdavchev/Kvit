@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { errorMessageKey } from '@/core/api/errors'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
-import type { PersonalEntry } from '@/core/services/personalEntries/personalEntriesService'
+import type { PersonalEntry, PersonalEntryKind } from '@/core/services/personalEntries/personalEntriesService'
+import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitError } from '@/shared/components/KvitError'
 import { KvitLoading } from '@/shared/components/KvitLoading'
@@ -12,10 +13,13 @@ import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
 import { useIsDesktop } from '@/shared/hooks/useIsDesktop'
 import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { currentMonthInTimeZone } from '@/shared/utils/calendarMonth'
+import { cn } from '@/shared/utils/cn'
 import { todayInTimeZone } from '@/shared/utils/formatDate'
 import { budgetMonths } from '../../budgetMonths'
+import { PersonalIncomeSheet } from '../../entries/components/PersonalIncomeSheet'
 import { PersonalSpendingSheet } from '../../entries/components/PersonalSpendingSheet'
 import { usePersonalEntries } from '../../entries/hooks/usePersonalEntries'
+import { BudgetAddChoiceSheet } from './BudgetAddChoiceSheet'
 import { BudgetFloatingAddButton, BudgetRoundAddButton } from './BudgetAddButton'
 import { BudgetTotalCard } from './BudgetTotalCard'
 import { CategoryTotals } from './CategoryTotals'
@@ -24,13 +28,15 @@ import { PersonalEntryListItem } from './PersonalEntryListItem'
 
 const receiptEmoji = '\u{1F9FE}'
 
+type AddingStep = 'choice' | PersonalEntryKind
+
 export function BudgetScreen() {
   const { t } = useTranslation()
   const me = useSignedInMe()
   const isDesktop = useIsDesktop()
   const [currentMonth] = useState<string>(() => currentMonthInTimeZone(me.timeZone, new Date()))
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth)
-  const [isAdding, setIsAdding] = useState<boolean>(false)
+  const [addingStep, setAddingStep] = useState<AddingStep | null>(null)
   const [openedEntry, setOpenedEntry] = useState<PersonalEntry | null>(null)
   const entriesQuery = usePersonalEntries(selectedMonth)
   const entriesRef = useListAnimation<HTMLUListElement>()
@@ -72,8 +78,16 @@ export function BudgetScreen() {
     const today = todayInTimeZone(me.timeZone, new Date())
     return (
       <>
-        <BudgetTotalCard totals={totals} />
-        <CategoryTotals totals={totals} />
+        {totals.length === 0 ? (
+          <p className={cn(balancesCardLook, 'mt-5 py-4 text-center font-semibold text-muted-foreground')}>
+            {t('budget.screen.emptyTitle')}
+          </p>
+        ) : (
+          <>
+            <BudgetTotalCard totals={totals} />
+            <CategoryTotals totals={totals} />
+          </>
+        )}
         <ul
           ref={entriesRef}
           aria-label={t('budget.screen.entries')}
@@ -97,13 +111,18 @@ export function BudgetScreen() {
         selectedMonth={selectedMonth}
         onSelect={setSelectedMonth}
       />
-      {isDesktop && <BudgetRoundAddButton onClick={() => setIsAdding(true)} />}
+      {isDesktop && <BudgetRoundAddButton onClick={() => setAddingStep('choice')} />}
       {renderMonth()}
-      {!isDesktop && <BudgetFloatingAddButton onClick={() => setIsAdding(true)} />}
-      {isAdding && <PersonalSpendingSheet onClose={() => setIsAdding(false)} />}
-      {openedEntry !== null && (
-        <PersonalSpendingSheet key={openedEntry.id} entry={openedEntry} onClose={() => setOpenedEntry(null)} />
-      )}
+      {!isDesktop && <BudgetFloatingAddButton onClick={() => setAddingStep('choice')} />}
+      {addingStep === 'choice' && <BudgetAddChoiceSheet onClose={setAddingStep} />}
+      {addingStep === 'Spending' && <PersonalSpendingSheet onClose={() => setAddingStep(null)} />}
+      {addingStep === 'Income' && <PersonalIncomeSheet onClose={() => setAddingStep(null)} />}
+      {openedEntry !== null &&
+        (openedEntry.kind === 'Income' ? (
+          <PersonalIncomeSheet key={openedEntry.id} entry={openedEntry} onClose={() => setOpenedEntry(null)} />
+        ) : (
+          <PersonalSpendingSheet key={openedEntry.id} entry={openedEntry} onClose={() => setOpenedEntry(null)} />
+        ))}
     </KvitScreen>
   )
 }

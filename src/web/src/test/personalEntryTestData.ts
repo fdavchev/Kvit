@@ -52,7 +52,35 @@ export const gymEntryWithArchivedCategory: PersonalEntry = {
 }
 
 export function entryAnswerRow(entry: PersonalEntry): Record<string, unknown> {
-  return { ...entry, categoryId: entry.category.id }
+  return { ...entry, categoryId: entry.category === null ? null : entry.category.id }
+}
+
+export const salaryIncomeEntry: PersonalEntry = {
+  id: 'f0000000-0000-4000-8000-000000000007',
+  kind: 'Income',
+  category: null,
+  amountMinor: 6500000,
+  currency: 'MKD',
+  entryDate: '2026-10-15',
+  note: 'Salary',
+  mkdPerEur: 61.5,
+  rateDate: '2026-10-14',
+  createdAt: '2026-10-15T07:00:00Z',
+  updatedAt: null,
+}
+
+export const untitledEuroIncomeEntry: PersonalEntry = {
+  id: 'f0000000-0000-4000-8000-000000000008',
+  kind: 'Income',
+  category: null,
+  amountMinor: 20000,
+  currency: 'EUR',
+  entryDate: '2026-10-19',
+  note: null,
+  mkdPerEur: 61.5,
+  rateDate: '2026-10-17',
+  createdAt: '2026-10-19T09:00:00Z',
+  updatedAt: null,
 }
 
 export const octoberMonth: PersonalEntryMonth = {
@@ -171,4 +199,35 @@ export const septemberWithArchivedCategory: PersonalEntryMonth = {
 
 export function emptyMonth(month: string): PersonalEntryMonth {
   return { month, entries: [], totals: [], incomeTotals: [] }
+}
+
+export const octoberWithSalary: PersonalEntryMonth = {
+  month: '2026-10',
+  entries: [coffeeEntry, lunchInEuroEntry, salaryIncomeEntry],
+  totals: octoberMonth.totals,
+  incomeTotals: [{ currency: 'MKD', totalMinor: 6500000, count: 1 }],
+}
+
+export const octoberWithTwoIncomes: PersonalEntryMonth = {
+  month: '2026-10',
+  entries: [untitledEuroIncomeEntry, coffeeEntry, salaryIncomeEntry],
+  totals: [octoberMonth.totals[0]],
+  incomeTotals: [
+    { currency: 'MKD', totalMinor: 6500000, count: 1 },
+    { currency: 'EUR', totalMinor: 20000, count: 1 },
+  ],
+}
+
+export const incomeOnlyOctober: PersonalEntryMonth = {
+  month: '2026-10',
+  entries: [salaryIncomeEntry],
+  totals: [],
+  incomeTotals: [{ currency: 'MKD', totalMinor: 6500000, count: 1 }],
+}
+
+export const euroIncomeOnlyOctober: PersonalEntryMonth = {
+  month: '2026-10',
+  entries: [untitledEuroIncomeEntry],
+  totals: [],
+  incomeTotals: [{ currency: 'EUR', totalMinor: 20000, count: 1 }],
 }

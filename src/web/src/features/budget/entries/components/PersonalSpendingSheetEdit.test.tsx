@@ -120,7 +120,7 @@ describe('PersonalSpendingSheet, editing', () => {
   })
 
   describe('saving', () => {
-    it('sends PUT with the changed amount and the other fields, without a request id', async () => {
+    it('sends PUT with kind Spending, the changed amount and the other fields, without a request id', async () => {
       const { fetchMock } = await renderSpendingSheet({
         entry: lunchInEuroEntry,
         answers: { [personalEntryPut(lunchInEuroEntry.id)]: jsonAnswer(entryAnswerRow(lunchInEuroEntry)) },
@@ -134,6 +134,7 @@ describe('PersonalSpendingSheet, editing', () => {
         expect(requestCount(fetchMock, 'PUT', `/api/personal/entries/${lunchInEuroEntry.id}`)).toBe(1)
       })
       expect(sentBody(fetchMock, 'PUT', `/api/personal/entries/${lunchInEuroEntry.id}`)).toEqual({
+        kind: 'Spending',
         categoryId: personalFoodCategory.id,
         amountMinor: 1420,
         currency: 'EUR',

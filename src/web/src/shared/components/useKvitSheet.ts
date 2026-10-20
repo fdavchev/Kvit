@@ -1,7 +1,7 @@
 import { useRef, type RefObject } from 'react'
 import type { KvitSheetActions } from './KvitSheet'
 
-interface KvitSheetControl {
+export interface KvitSheetControl {
   actionsRef: RefObject<KvitSheetActions | null>
   close: () => void
 }

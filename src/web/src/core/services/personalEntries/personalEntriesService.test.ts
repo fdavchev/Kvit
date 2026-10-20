@@ -9,6 +9,8 @@ import {
   lunchInEuroEntry,
   monthAnswerBody,
   octoberMonth,
+  octoberWithSalary,
+  salaryIncomeEntry,
 } from '@/test/personalEntryTestData'
 import {
   addPersonalEntry,
@@ -17,10 +19,12 @@ import {
   getPersonalEntries,
   restorePersonalEntry,
   type NewPersonalEntry,
-  type PersonalEntryFields,
+  type PersonalIncomeFields,
+  type PersonalSpendingFields,
 } from './personalEntriesService'
 
-const typedFields: PersonalEntryFields = {
+const typedFields: PersonalSpendingFields = {
+  kind: 'Spending',
   categoryId: coffeeCategory.id,
   amountMinor: 12000,
   currency: 'MKD',
@@ -28,9 +32,22 @@ const typedFields: PersonalEntryFields = {
   note: null,
 }
 
+const incomeFields: PersonalIncomeFields = {
+  kind: 'Income',
+  amountMinor: 6500000,
+  currency: 'MKD',
+  entryDate: '2026-10-15',
+  note: 'Salary',
+}
+
 const newEntry: NewPersonalEntry = {
   clientRequestId: '11111111-2222-4333-8444-555555555555',
   ...typedFields,
+}
+
+const newIncome: NewPersonalEntry = {
+  clientRequestId: '66666666-7777-4888-8999-000000000000',
+  ...incomeFields,
 }
 
 function withoutField(source: object, field: string): object {
@@ -39,6 +56,14 @@ function withoutField(source: object, field: string): object {
 
 function noContent(): Response {
   return new Response(null, { status: 204 })
+}
+
+async function errorMessageOf(promise: Promise<unknown>): Promise<string> {
+  const error = await captureError(promise)
+  if (!(error instanceof Error)) {
+    throw new Error('Expected the call to throw an Error')
+  }
+  return error.message
 }
 
 describe('getPersonalEntries', () => {
@@ -76,7 +101,7 @@ describe('getPersonalEntries', () => {
     expect(await getPersonalEntries('2026-08')).toEqual({ month: '2026-08', entries: [], totals: [], incomeTotals: [] })
   })
 
-  it.each(['month', 'entries', 'totals'])('throws an error naming "%s" when the answer lacks it', async (field) => {
+  it.each(['month', 'entries', 'totals', 'incomeTotals'])('throws an error naming "%s" when the answer lacks it', async (field) => {
     stubFetch(Response.json(withoutField(monthAnswerBody(octoberMonth), field)))
 
     await expect(getPersonalEntries('2026-10')).rejects.toThrow(field)
@@ -117,6 +142,73 @@ describe('getPersonalEntries', () => {
     await expect(getPersonalEntries('2026-10')).rejects.toThrow('categoryId')
   })
 
+  it('returns an income entry with a null category and keeps the income totals', async () => {
+    stubFetch(Response.json(monthAnswerBody(octoberWithSalary)))
+
+    const month = await getPersonalEntries('2026-10')
+
+    expect(month).toEqual(octoberWithSalary)
+    expect(month.entries[2].category).toBeNull()
+    expect(month.incomeTotals).toEqual([{ currency: 'MKD', totalMinor: 6500000, count: 1 }])
+  })
+
+  it('reads the JSON nulls of an income row as a null category', async () => {
+    const row = entryAnswerRow(salaryIncomeEntry)
+    stubFetch(Response.json({ month: '2026-10', entries: [row], totals: [], incomeTotals: [] }))
+
+    expect(row).toMatchObject({ kind: 'Income', category: null, categoryId: null })
+    expect((await getPersonalEntries('2026-10')).entries).toEqual([salaryIncomeEntry])
+  })
+
+  it('throws an error naming Spending and the category when a Spending row has no category', async () => {
+    const row = { ...entryAnswerRow(coffeeEntry), category: null, categoryId: null }
+    stubFetch(Response.json({ month: '2026-10', entries: [row], totals: [], incomeTotals: [] }))
+
+    const message = await errorMessageOf(getPersonalEntries('2026-10'))
+
+    expect(message).toMatch(/spending/i)
+    expect(message).toMatch(/category/i)
+  })
+
+  it.each([
+    ['a category and its id', { category: coffeeCategory, categoryId: coffeeCategory.id }],
+    ['only a category', { category: coffeeCategory, categoryId: null }],
+    ['only a category id', { category: null, categoryId: coffeeCategory.id }],
+  ])('throws an error naming Income and the category when an Income row has %s', async (_name, categoryFields) => {
+    const row = { ...entryAnswerRow(salaryIncomeEntry), ...categoryFields }
+    stubFetch(Response.json({ month: '2026-10', entries: [row], totals: [], incomeTotals: [] }))
+
+    const message = await errorMessageOf(getPersonalEntries('2026-10'))
+
+    expect(message).toMatch(/income/i)
+    expect(message).toMatch(/category/i)
+  })
+
+  it('throws an error naming "kind" when a row has a kind the app does not know', async () => {
+    const row = { ...entryAnswerRow(coffeeEntry), kind: 'Transfer' }
+    stubFetch(Response.json({ month: '2026-10', entries: [row], totals: [], incomeTotals: [] }))
+
+    await expect(getPersonalEntries('2026-10')).rejects.toThrow('kind')
+  })
+
+  it.each([
+    ['currency', 'USD'],
+    ['totalMinor', -1],
+    ['count', 1.5],
+  ])('throws an error naming "%s" when an income total has %j', async (field, value) => {
+    const incomeTotal = { currency: 'MKD', totalMinor: 6500000, count: 1, [field]: value }
+    stubFetch(Response.json({ ...monthAnswerBody(octoberMonth), incomeTotals: [incomeTotal] }))
+
+    await expect(getPersonalEntries('2026-10')).rejects.toThrow(field)
+  })
+
+  it.each(['currency', 'totalMinor', 'count'])('throws an error naming "%s" when an income total lacks it', async (field) => {
+    const incomeTotal = withoutField({ currency: 'MKD', totalMinor: 6500000, count: 1 }, field)
+    stubFetch(Response.json({ ...monthAnswerBody(octoberMonth), incomeTotals: [incomeTotal] }))
+
+    await expect(getPersonalEntries('2026-10')).rejects.toThrow(field)
+  })
+
   it.each([
     ['currency', 'USD'],
     ['totalMinor', -1],
@@ -152,7 +244,7 @@ describe('addPersonalEntry', () => {
     vi.unstubAllGlobals()
   })
 
-  it('sends POST /api/personal/entries with the request id, the category, the amount in minor units, the currency, the date and the note', async () => {
+  it('sends POST /api/personal/entries with the request id, kind Spending, the category, the amount in minor units, the currency, the date and the note', async () => {
     const fetchMock = stubFetch(Response.json(entryAnswerRow(coffeeEntry)))
 
     await addPersonalEntry(newEntry)
@@ -163,6 +255,7 @@ describe('addPersonalEntry', () => {
     expect(request.contentType).toBe('application/json')
     expect(request.body).toEqual({
       clientRequestId: newEntry.clientRequestId,
+      kind: 'Spending',
       categoryId: coffeeCategory.id,
       amountMinor: 12000,
       currency: 'MKD',
@@ -171,10 +264,35 @@ describe('addPersonalEntry', () => {
     })
   })
 
+  it('sends POST /api/personal/entries with kind Income and no categoryId key for an income', async () => {
+    const fetchMock = stubFetch(Response.json(entryAnswerRow(salaryIncomeEntry)))
+
+    await addPersonalEntry(newIncome)
+
+    const request = sentRequest(fetchMock)
+    expect(request.url).toBe('/api/personal/entries')
+    expect(request.method).toBe('POST')
+    expect(request.body).toEqual({
+      clientRequestId: newIncome.clientRequestId,
+      kind: 'Income',
+      amountMinor: 6500000,
+      currency: 'MKD',
+      entryDate: '2026-10-15',
+      note: 'Salary',
+    })
+    expect(Object.keys(request.body as object)).not.toContain('categoryId')
+  })
+
   it('returns the saved entry from the answer', async () => {
     stubFetch(Response.json(entryAnswerRow(coffeeEntry)))
 
     expect(await addPersonalEntry(newEntry)).toEqual(coffeeEntry)
+  })
+
+  it('returns the saved income from the answer, with a null category', async () => {
+    stubFetch(Response.json(entryAnswerRow(salaryIncomeEntry)))
+
+    expect(await addPersonalEntry(newIncome)).toEqual(salaryIncomeEntry)
   })
 
   it('throws an error naming "amountMinor" when the answer has no amount', async () => {
@@ -190,6 +308,14 @@ describe('addPersonalEntry', () => {
 
     expect(error).toMatchObject({ httpStatus: 400, errorCode: 'PERSONAL_ENTRY_CATEGORY_INVALID' })
   })
+
+  it('rethrows the refusal of an income with a category with its error code', async () => {
+    stubFetch(problemResponse(400, 'PERSONAL_ENTRY_INCOME_HAS_CATEGORY'))
+
+    const error = await captureError(addPersonalEntry(newIncome))
+
+    expect(error).toMatchObject({ httpStatus: 400, errorCode: 'PERSONAL_ENTRY_INCOME_HAS_CATEGORY' })
+  })
 })
 
 describe('editPersonalEntry', () => {
@@ -197,16 +323,43 @@ describe('editPersonalEntry', () => {
     vi.unstubAllGlobals()
   })
 
-  it('sends PUT /api/personal/entries/{id} with the fields and no request id', async () => {
+  it('sends PUT /api/personal/entries/{id} with kind Spending, the fields and no request id', async () => {
     const fetchMock = stubFetch(Response.json(entryAnswerRow(lunchInEuroEntry)))
-    const fields: PersonalEntryFields = { ...typedFields, currency: 'EUR', amountMinor: 1250, note: 'Lunch in Ohrid' }
+    const fields: PersonalSpendingFields = { ...typedFields, currency: 'EUR', amountMinor: 1250, note: 'Lunch in Ohrid' }
 
     await editPersonalEntry(lunchInEuroEntry.id, fields)
 
     const request = sentRequest(fetchMock)
     expect(request.url).toBe(`/api/personal/entries/${lunchInEuroEntry.id}`)
     expect(request.method).toBe('PUT')
-    expect(request.body).toEqual(fields)
+    expect(request.body).toEqual({
+      kind: 'Spending',
+      categoryId: coffeeCategory.id,
+      amountMinor: 1250,
+      currency: 'EUR',
+      entryDate: '2026-10-19',
+      note: 'Lunch in Ohrid',
+    })
+    expect(Object.keys(request.body as object)).not.toContain('clientRequestId')
+  })
+
+  it('sends PUT with kind Income, no categoryId key and no request id for an income', async () => {
+    const fetchMock = stubFetch(Response.json(entryAnswerRow(salaryIncomeEntry)))
+
+    await editPersonalEntry(salaryIncomeEntry.id, incomeFields)
+
+    const request = sentRequest(fetchMock)
+    expect(request.url).toBe(`/api/personal/entries/${salaryIncomeEntry.id}`)
+    expect(request.method).toBe('PUT')
+    expect(request.body).toEqual({
+      kind: 'Income',
+      amountMinor: 6500000,
+      currency: 'MKD',
+      entryDate: '2026-10-15',
+      note: 'Salary',
+    })
+    expect(Object.keys(request.body as object)).not.toContain('categoryId')
+    expect(Object.keys(request.body as object)).not.toContain('clientRequestId')
   })
 
   it('returns the changed entry from the answer', async () => {
@@ -215,12 +368,26 @@ describe('editPersonalEntry', () => {
     expect(await editPersonalEntry(lunchInEuroEntry.id, typedFields)).toEqual(lunchInEuroEntry)
   })
 
+  it('returns the changed income from the answer, with a null category', async () => {
+    stubFetch(Response.json(entryAnswerRow(salaryIncomeEntry)))
+
+    expect(await editPersonalEntry(salaryIncomeEntry.id, incomeFields)).toEqual(salaryIncomeEntry)
+  })
+
   it('rethrows a not-found refusal with its error code', async () => {
     stubFetch(problemResponse(404, 'PERSONAL_ENTRY_NOT_FOUND'))
 
     const error = await captureError(editPersonalEntry(coffeeEntry.id, typedFields))
 
     expect(error).toMatchObject({ httpStatus: 404, errorCode: 'PERSONAL_ENTRY_NOT_FOUND' })
+  })
+
+  it('rethrows the refusal to change the kind of an entry with its error code', async () => {
+    stubFetch(problemResponse(400, 'PERSONAL_ENTRY_KIND_CANNOT_CHANGE'))
+
+    const error = await captureError(editPersonalEntry(coffeeEntry.id, incomeFields))
+
+    expect(error).toMatchObject({ httpStatus: 400, errorCode: 'PERSONAL_ENTRY_KIND_CANNOT_CHANGE' })
   })
 })
 
