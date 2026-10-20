@@ -279,3 +279,89 @@ User A has 123,456,789 MKD and 1234567.89 EUR in October (`t5-tiles-360-en-US.pn
 | Bug 5 (long amounts: tiles, edit sheet, typing, group field) | PASS, VERIFIED by live run (7.4 to 9 px text at 360 px, see Observation 2) |
 | Happy path and double click | PASS, VERIFIED by live run |
 | New bugs | 7 (medium), 8 (low), 9 (low) |
+
+---
+
+# Re-check 2 (Bugs 7 and 8), 2026-10-20
+
+Run by the tester against the working tree of `feat/13-personal-spending` (the fixes in `useSidewaysScroll.ts` and `KvitSheet.tsx` were uncommitted). Nothing in the app was changed, nothing was committed or staged; only this section was added. Docker Desktop was open; `.\scripts\start-local.ps1 -NoBrowser` started everything and `-Stop` stopped it again ("Ports 5018 and 5173 are free").
+
+Labels: **VERIFIED by live run** (real headless Chromium, measured in the page, screenshots looked at), **NOT VERIFIED**. The automated suites (`dotnet test`, `npm test`, `npm run lint`, `npm run build`) were **not run**.
+
+How: Playwright for Python, headless Chromium, classic scrollbars drawn for the strip checks (`--hide-scrollbars` off). User A's saved session was reused (his Budget has about 40 entries, so the page is 2200 to 2450 px high and scrolls at every width tested). Scripts and screenshots (outside the repository): `C:\Users\Davchev\AppData\Local\Temp\claude\c--Users-Davchev-Projects-Kvit\32e619e6-68b1-4a88-afd6-ffb8e56303eb\scratchpad\` (`w7.py`, `w7b.py`, `w7c.py`, `w7e.py`, `f8.py`, `f9.py`, `f10.py`, `f11.py`, helpers `h3.py`, `lib8.py`); screenshots in `...\scratchpad\shots13c\`.
+
+## Bug 7: month strip and the mouse wheel -- PASS
+
+Wheel tested with the cursor over the strip, 120 px per click, 0.5 s between clicks. "Right end" = the strip as it opens (current month, `scrollLeft` = max).
+
+| Check | 1280x800 | 1920x1080 | 1024x768 | 1366x768 | 1440x900 | 768x900 | Label |
+|---|---|---|---|---|---|---|---|
+| (a) Strip at right end, wheel down x4: page scrolls | scrollY 0 -> 360 PASS | 0 -> 360 PASS | 0 -> 480 PASS | 0 -> 480 PASS | 0 -> 480 PASS | 0 -> 480 PASS | VERIFIED by live run |
+| (a2) Same with big wheel steps (500 x2) | 1000 PASS | 1000 PASS | 1000 PASS | 1000 PASS | 1000 PASS | 1000 PASS | VERIFIED by live run |
+| (b) Middle of strip: wheel down then up moves the strip, page stays | scrollLeft 700 -> 800 -> 700, scrollY 0 PASS | same PASS | same PASS | same PASS | same PASS | same PASS | VERIFIED by live run |
+| (c) Left end, page scrolled to 60, wheel up scrolls the page | 60 -> 0 PASS | 60 -> 0 PASS | 60 -> 0 PASS | 60 -> 0 PASS | 60 -> 0 PASS | 60 -> 0 PASS | VERIFIED by live run |
+| (d) Cursor off the strip, wheel scrolls the page | PASS | PASS | PASS | PASS | PASS | PASS | VERIFIED by live run |
+| (e) Fades: left end only the right fade (`data-more-after`), middle both, right end only the left fade (`data-more-before`) | PASS | PASS | PASS | PASS | PASS | PASS | VERIFIED by live run |
+| (e) No grey scrollbar under the strip (`offsetHeight` = `clientHeight`, `scrollbar-width: none`) | 56 = 56 PASS | 59 = 59 PASS | 54 = 54 PASS | 57 = 57 PASS | 57 = 57 PASS | 52 = 52 PASS | VERIFIED by live run |
+| (e) Touch drag at 360x740 (real touch events through the DevTools protocol, finger 150 px right, then 150 px left) | scrollLeft 1639 -> 1504 -> 1639 PASS; a finger drag up on the strip scrolls the page (scrollY 135), not the strip | | | | | | VERIFIED by live run |
+
+Screenshots looked at: `shots13c\f13-strip-1280-end.png`, `f13-strip-1280-mid.png` (left fade only / both fades, no scrollbar, pill fully visible).
+
+Remarks (not bugs of the fix):
+- Strip height is not exactly 56 everywhere: 52 at 360 and 768, 54 at 1024, 56 at 1280, 57 at 1366 and 1440, 59 at 1920. This is the same as before (first pass: 56 at 1280, 52 at 360); the point of the check was the bar (0 px).
+- At 1280x800 and 1920x1080 (fractional strip width) the FIRST wheel click with the cursor over the strip at the right end does not scroll the page (scrollY 0, `scrollLeft` 1470 -> 1469, `defaultPrevented` false, so the hook did not cancel it); clicks 2, 3, 4 scroll 120 px each. I switched the strip wheel listener off with an init script (`w7c.py nohook`) and got the identical sequence (0, 0, 120, 240), so this is Chrome's own behaviour with the headless wheel events, not the hook. Before the fix the page never scrolled at all at these widths (Bug 7). Not verified: whether a real mouse wheel also loses the first tick.
+- The DevTools `Input.synthesizeScrollGesture` touch gesture did not move the strip at all in this run (it did in the first re-check); manual `Input.dispatchTouchEvent` start/move/end drags work, so I used those. I treat the synthesized gesture as a tool quirk, not an app problem (not investigated further).
+
+## Bug 8: focus after cancelling "New category" -- PASS
+
+`document.activeElement` read 0.7 s after the cancel, then 8 to 12 Tab presses, each checked to still be inside the same open dialog.
+
+| Check | Result | Label |
+|---|---|---|
+| Budget "+" -> grid -> "+ New" -> Escape, 360x740 and 1280x800 | one dialog left (the grid), active element = the "+ New" tile (BUTTON "+ New", inside the grid dialog "What did you spend on?"); 12 Tabs all stay inside the grid dialog. PASS | VERIFIED by live run |
+| Same, cancelled by tapping the backdrop of the New sheet | identical: focus on "+ New", Tabs stay inside the grid. PASS | VERIFIED by live run |
+| Same after typing a name first, then Escape | identical. PASS | VERIFIED by live run |
+| Home -> "Personal spending" (360: "+" menu; 1280: the Personal spending item on the page) -> "+ New" -> Escape / backdrop / Escape after typing | identical on all 6 combinations at both sizes. PASS | VERIFIED by live run |
+| After SAVE of a new category the amount field has the focus, typing "7" shows 7 (Bug 1 not regressed) | Budget and Home, 360x740 and 1280x800: active element = amount INPUT (`inputmode=decimal`), value "7". PASS | VERIFIED by live run |
+| Cancel "Edit category" opened from "Edit my categories" (Escape and backdrop; Budget and Home; 360 and 1280) | 2 dialogs stay open, focus on the "Edit" button inside the "My categories" sheet, 8 Tabs stay inside it. PASS (8 of 8 combinations) | VERIFIED by live run |
+| Escape returns focus to the opener, with a mouse click and with focus + Enter: group add page chips "Date" (the date sheet), "Paid by", "Split", "Category" | focus is back on the very same chip each time (8 of 8). PASS | VERIFIED by live run |
+| Personal add sheet, amount stage: the date sheet opened from the "Today" chip | after Escape the add sheet stays open and focus is on the same "Today" chip inside it (mouse and keyboard). PASS | VERIFIED by live run |
+| Balances: "Record another payment" and "Mark paid" sheets | focus back on the same button (mouse and keyboard). PASS | VERIFIED by live run |
+| Members: member options sheet ("..." button) | focus back on the same "..." button (mouse and keyboard). PASS | VERIFIED by live run |
+| Guest settings: "Log out" sheet | focus back on the "Log out" button (mouse and keyboard). PASS | VERIFIED by live run |
+| Escape from the grid opened with the Budget "+" | focus back on the "Add spending" button. PASS | VERIFIED by live run |
+
+Screenshots: `shots13c\f8-budget-escape-360.png` (taken after the Tab presses, so the focus ring is on a later tile, not on "+ New"; the measured value above is from right after the cancel), `f9-after-save-budget-360.png`.
+
+Remark: Escape from the grid opened through the Home "+" menu (360 px) leaves the focus on the page (`BODY`), because the menu item that opened it is gone once the menu closes. Not caused by this fix as far as I can tell (nothing to return to); not verified whether it was the same before the fix. Low.
+
+## Quick regression -- PASS
+
+| Check | Result | Label |
+|---|---|---|
+| Add entry from Budget "+": category tap (Transport), type 21, Save | one `POST /api/personal/entries` (200), sheet closed, new row "Transport, Today, EUR 21.00" in the list. PASS | VERIFIED by live run |
+| Add entry from Home -> Personal spending: same | one `POST` (200), sheet closed, second row "Transport, Today, EUR 21.00" on Budget. PASS | VERIFIED by live run |
+| 360x740: sheet shows its title and Save | grid: title at y 50 to 72, sheet top 29; amount stage: title 425 to 473, Save 659 to 715 inside the 740 px window. PASS (`shots13c\f11-amount-360.png`) | VERIFIED by live run |
+| Console | no errors or warnings in any run (the log lists were empty) | VERIFIED by live run |
+
+## New bugs
+
+None found in this re-check (no Bug 10 or higher).
+
+## Throwaway data left in the local database (user A, `p13a1792417478@example.com`)
+- Four more custom categories made by the save tests ("Fzb...", "Fzh..." at 360 and at 1280), each with a 7 entry, plus two "Transport 21 EUR" entries from today. Nothing deleted.
+
+## NOT VERIFIED (could not check)
+- A real mouse wheel with Chrome smooth wheel scrolling (the tests send discrete wheel events); in particular whether the first wheel tick over the strip at the right end is also lost on a real mouse at 1280 and 1920 wide (see the remark above).
+- A real phone (touch momentum, on-screen keyboard), iOS Safari, Android Chrome, Firefox, screen readers (focus was read from `document.activeElement` only).
+- Settings sheets for a signed-in non-guest user were only checked through the guest "Log out" sheet (the same button and sheet).
+- The automated suites (`dotnet test`, `npm test`, `npm run lint`, `npm run build`).
+- Whether the Home-menu focus remark existed before the fixes.
+
+## Summary
+| Item | Result |
+|---|---|
+| Bug 7: wheel at the right end scrolls the page at 1280, 1920, 1024, 1366, 1440, 768; middle moves the strip; left end up scrolls page; off the strip scrolls; fades, no scrollbar, touch drag | PASS, VERIFIED by live run |
+| Bug 8: focus on "+ New" after Escape / backdrop, Tab trapped in the grid, Budget and Home; focus after Save; Edit category cancel; 8 other sheets Escape returns to opener | PASS, VERIFIED by live run |
+| Quick regression (add from Budget and Home, 360x740 title and Save) | PASS, VERIFIED by live run |
+| New bugs | none |

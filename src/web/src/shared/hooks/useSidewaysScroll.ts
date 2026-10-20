@@ -1,7 +1,7 @@
 import { useEffect, type RefObject } from 'react'
 
 const pixelsPerWheelLine = 16
-const roundingSlackPx = 1
+const roundingSlackPx = 2
 
 function wheelDistanceInPixels(event: WheelEvent, strip: HTMLElement): number {
   if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
@@ -33,12 +33,12 @@ export function useSidewaysScroll(stripRef: RefObject<HTMLElement | null>): void
       if (event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
         return
       }
-      const scrollLeftBefore = strip.scrollLeft
-      strip.scrollLeft = Math.min(lastScrollLeft(), Math.max(0, scrollLeftBefore + wheelDistanceInPixels(event, strip)))
-      if (strip.scrollLeft === scrollLeftBefore) {
+      const canMoveInWheelDirection = event.deltaY > 0 ? hasMoreAfter() : hasMoreBefore()
+      if (!canMoveInWheelDirection) {
         return
       }
       event.preventDefault()
+      strip.scrollLeft = Math.min(lastScrollLeft(), Math.max(0, strip.scrollLeft + wheelDistanceInPixels(event, strip)))
       markEdges()
     }
 

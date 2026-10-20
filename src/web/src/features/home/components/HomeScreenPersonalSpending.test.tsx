@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages, type Language } from '@/core/i18n/language'
-import { saveButton, typeAmount } from '@/test/expenseFormTestHelpers'
+import { dismissSheetByTappingBackdrop, saveButton, typeAmount } from '@/test/expenseFormTestHelpers'
 import { renderHome } from '@/test/homeTestHelpers'
 import { stubDesktopScreen } from '@/test/matchMediaTestHelpers'
 import { activePersonalCategories, coffeeCategory, createdTeaCategory } from '@/test/personalCategoryTestData'
@@ -10,8 +10,10 @@ import { coffeeEntry, entryAnswerRow } from '@/test/personalEntryTestData'
 import {
   createCategoryFromGrid,
   expectAmountToStayFocused,
+  expectFocusBackOnNewTile,
   findDetailsSheet,
   findPickSheet,
+  openNewCategorySheetFromGrid,
   personalEntriesPost,
   waitForEveryDialogToClose,
 } from '@/test/personalEntryTestHelpers'
@@ -105,6 +107,24 @@ describe('personal spending from the home screen', () => {
     await findDetailsSheet(createdTeaCategory)
 
     await expectAmountToStayFocused()
+  })
+
+  it.each([
+    ['Escape', (newSheet: HTMLElement) => fireEvent.keyDown(newSheet, { key: 'Escape' })],
+    ['a tap on the backdrop', () => dismissSheetByTappingBackdrop()],
+  ])('puts the focus back on "+ New" in the open grid when the new category is cancelled with %s', async (_name, cancel) => {
+    await renderHome({ answers: spendingAnswers })
+    const plus = await screen.findByRole('button', { name: translated('en', 'home.plus') })
+    plus.focus()
+    fireEvent.click(plus)
+    const item = within(screen.getByRole('menu')).getByRole('menuitem', { name: spendingName() })
+    item.focus()
+    fireEvent.click(item)
+    const opened = await openNewCategorySheetFromGrid()
+
+    cancel(opened.newSheet)
+
+    await expectFocusBackOnNewTile(opened)
   })
 
   it('closes the menu when the sheet opens and stays on Home after the save', async () => {

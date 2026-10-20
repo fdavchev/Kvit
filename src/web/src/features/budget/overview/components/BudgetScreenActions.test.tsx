@@ -10,7 +10,7 @@ import {
   plusButton,
   renderBudget,
 } from '@/test/budgetTestHelpers'
-import { amountField, saveButton, typeAmount } from '@/test/expenseFormTestHelpers'
+import { amountField, dismissSheetByTappingBackdrop, saveButton, typeAmount } from '@/test/expenseFormTestHelpers'
 import { stubDesktopScreen } from '@/test/matchMediaTestHelpers'
 import { coffeeCategory, createdTeaCategory, personalFoodCategory } from '@/test/personalCategoryTestData'
 import { personalCategoryCreatePost } from '@/test/personalCategoryTestHelpers'
@@ -19,8 +19,10 @@ import {
   createCategoryFromGrid,
   deleteButton,
   expectAmountToStayFocused,
+  expectFocusBackOnNewTile,
   findDetailsSheet,
   findPickSheet,
+  openNewCategorySheetFromGrid,
   personalEntriesPost,
   waitForEveryDialogToClose,
 } from '@/test/personalEntryTestHelpers'
@@ -131,6 +133,21 @@ describe('BudgetScreen adding and editing', () => {
       await findDetailsSheet(createdTeaCategory)
 
       await expectAmountToStayFocused()
+    })
+
+    it.each([
+      ['Escape', (newSheet: HTMLElement) => fireEvent.keyDown(newSheet, { key: 'Escape' })],
+      ['a tap on the backdrop', () => dismissSheetByTappingBackdrop()],
+    ])('puts the focus back on "+ New" in the open grid when the new category is cancelled with %s', async (_name, cancel) => {
+      await renderBudget()
+      await findTotalCard()
+      plusButton().focus()
+      fireEvent.click(plusButton())
+      const opened = await openNewCategorySheetFromGrid()
+
+      cancel(opened.newSheet)
+
+      await expectFocusBackOnNewTile(opened)
     })
 
     it('shows the new entry and the new totals after the save, from a fresh answer of the server', async () => {

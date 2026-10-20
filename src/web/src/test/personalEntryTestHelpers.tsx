@@ -90,6 +90,33 @@ export async function createCategoryFromGrid(name: string, language: Language = 
   fireEvent.click(saveButtonIn(newSheet, language))
 }
 
+export interface OpenedNewCategorySheet {
+  pickSheet: HTMLElement
+  newTile: HTMLElement
+  newSheet: HTMLElement
+}
+
+export async function openNewCategorySheetFromGrid(language: Language = 'en'): Promise<OpenedNewCategorySheet> {
+  const pickSheet = await findPickSheet(language)
+  const newTile = await within(pickSheet).findByRole('button', { name: translated(language, 'budget.categories.new') })
+  newTile.focus()
+  fireEvent.click(newTile)
+  const newSheet = await findSheet(language, 'budget.categories.newTitle')
+  await waitFor(() => {
+    expect(newSheet.contains(document.activeElement)).toBe(true)
+  })
+  return { pickSheet, newTile, newSheet }
+}
+
+export async function expectFocusBackOnNewTile(opened: OpenedNewCategorySheet, language: Language = 'en'): Promise<void> {
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog', { name: translated(language, 'budget.categories.newTitle') })).toBeNull()
+  })
+  await new Promise((resolve) => setTimeout(resolve, 50))
+  expect(opened.pickSheet.isConnected).toBe(true)
+  expect(document.activeElement).toBe(opened.newTile)
+}
+
 export async function expectAmountToStayFocused(language: Language = 'en'): Promise<void> {
   await waitFor(() => {
     expect(screen.queryByRole('dialog', { name: translated(language, 'budget.categories.newTitle') })).toBeNull()

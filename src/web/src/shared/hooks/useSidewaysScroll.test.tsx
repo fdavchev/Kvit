@@ -68,6 +68,45 @@ describe('useSidewaysScroll', () => {
       expect(isPageScrollStopped).toBe(false)
     })
 
+    it('lets the page scroll down when a fractional strip width keeps the end just short of the rounded last position', () => {
+      const { strip } = renderStrip(lastScrollLeft - 1)
+      const realLastScrollLeft = lastScrollLeft - 0.4
+      let position = lastScrollLeft - 1
+      Object.defineProperty(strip, 'scrollLeft', {
+        configurable: true,
+        get: () => Math.round(position),
+        set: (value: number) => {
+          position = Math.min(realLastScrollLeft, Math.max(0, value))
+        },
+      })
+
+      const isPageScrollStopped = turnWheel(strip, { deltaY: 100 })
+
+      expect(isPageScrollStopped).toBe(false)
+    })
+
+    it.each([
+      ['at the end, turning down', lastScrollLeft, 100],
+      ['at the start, turning up', 1, -100],
+    ])(
+      'lets the page scroll when the strip only jiggles by a pixel on every wheel turn (%s)',
+      (_name, scrollLeft, deltaY) => {
+        const { strip } = renderStrip(scrollLeft)
+        let position = scrollLeft
+        Object.defineProperty(strip, 'scrollLeft', {
+          configurable: true,
+          get: () => position,
+          set: () => {
+            position = position === scrollLeft ? scrollLeft - Math.sign(deltaY) : scrollLeft
+          },
+        })
+
+        const turns = [turnWheel(strip, { deltaY }), turnWheel(strip, { deltaY }), turnWheel(strip, { deltaY })]
+
+        expect(turns).toEqual([false, false, false])
+      },
+    )
+
     it('lets the page scroll when everything fits and there is nothing to scroll', () => {
       const { strip } = renderStrip(0, { content: stripWidth, strip: stripWidth })
 
