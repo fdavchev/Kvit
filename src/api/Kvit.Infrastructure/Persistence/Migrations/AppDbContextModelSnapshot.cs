@@ -771,6 +771,8 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_recurring_incomes_currency", "currency IN ('MKD', 'EUR')");
 
+                            t.HasCheckConstraint("ck_recurring_incomes_day_matches_frequency", "(frequency = 'Monthly' AND day_of_month IS NOT NULL AND day_of_week IS NULL) OR (frequency = 'Weekly' AND day_of_week IS NOT NULL AND day_of_month IS NULL)");
+
                             t.HasCheckConstraint("ck_recurring_incomes_day_of_month", "day_of_month IS NULL OR day_of_month BETWEEN 1 AND 31");
 
                             t.HasCheckConstraint("ck_recurring_incomes_day_of_week", "day_of_week IS NULL OR day_of_week BETWEEN 0 AND 6");
@@ -778,6 +780,8 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_recurring_incomes_ends_on_not_before_starts_on", "ends_on IS NULL OR ends_on >= starts_on");
 
                             t.HasCheckConstraint("ck_recurring_incomes_frequency", "frequency IN ('Monthly', 'Weekly')");
+
+                            t.HasCheckConstraint("ck_recurring_incomes_title_length", "title IS NULL OR char_length(title) BETWEEN 1 AND 60");
                         });
                 });
 

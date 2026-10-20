@@ -30,6 +30,11 @@ namespace Kvit.Infrastructure.Repositories
             return SingleOrNotFoundAsync(_context.PersonalEntries, userId, entryId, cancellationToken);
         }
 
+        public Task<bool> AnyFromRecurringIncomeAsync(Guid recurringIncomeId, CancellationToken cancellationToken)
+        {
+            return _context.PersonalEntries.AnyAsync(entry => entry.RecurringIncomeId == recurringIncomeId, cancellationToken);
+        }
+
         private static async Task<Result<PersonalEntry>> SingleOrNotFoundAsync(IQueryable<PersonalEntry> entries, Guid userId, Guid entryId, CancellationToken cancellationToken)
         {
             PersonalEntry? entry = await entries.SingleOrDefaultAsync(candidate => candidate.Id == entryId && candidate.UserId == userId, cancellationToken);

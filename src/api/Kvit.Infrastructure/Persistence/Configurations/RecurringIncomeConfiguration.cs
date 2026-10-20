@@ -20,6 +20,10 @@ namespace Kvit.Infrastructure.Persistence.Configurations
                 table.HasCheckConstraint("ck_recurring_incomes_day_of_month", $"day_of_month IS NULL OR day_of_month BETWEEN 1 AND {RecurringIncome.LastDayOfMonth}");
                 table.HasCheckConstraint("ck_recurring_incomes_day_of_week", $"day_of_week IS NULL OR day_of_week BETWEEN 0 AND {RecurringIncome.LastDayOfWeek}");
                 table.HasCheckConstraint("ck_recurring_incomes_ends_on_not_before_starts_on", "ends_on IS NULL OR ends_on >= starts_on");
+                table.HasCheckConstraint(
+                    "ck_recurring_incomes_day_matches_frequency",
+                    $"(frequency = '{nameof(RecurringIncomeFrequency.Monthly)}' AND day_of_month IS NOT NULL AND day_of_week IS NULL) OR (frequency = '{nameof(RecurringIncomeFrequency.Weekly)}' AND day_of_week IS NOT NULL AND day_of_month IS NULL)");
+                table.HasCheckConstraint("ck_recurring_incomes_title_length", $"title IS NULL OR char_length(title) BETWEEN 1 AND {RecurringIncomeFields.TitleMaxLength}");
             });
 
             builder.Property(recurringIncome => recurringIncome.Currency).HasConversion<string>();

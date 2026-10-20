@@ -33,6 +33,13 @@ namespace Kvit.Domain.Entities
             return Create(input, utcToday, currentEntryDate);
         }
 
+        public static DateOnly EarliestDateOn(DateOnly utcToday)
+        {
+            DateOnly firstDayOfUtcMonth = new(utcToday.Year, utcToday.Month, 1);
+
+            return firstDayOfUtcMonth.AddMonths(-(AllowedMonths - 1)).AddDays(-TimeZoneToleranceDays);
+        }
+
         private static Result<IncomeFields> Create(IncomeInput input, DateOnly utcToday, DateOnly? currentEntryDate)
         {
             Result<Currency> currency = ExpenseFields.CheckCurrency(input.Currency, ResultCodes.PERSONAL_ENTRY_CURRENCY_INVALID);
@@ -69,11 +76,9 @@ namespace Kvit.Domain.Entities
                 return Result.Ok(keptDate);
             }
 
-            DateOnly firstDayOfUtcMonth = new(utcToday.Year, utcToday.Month, 1);
-            DateOnly earliestDate = firstDayOfUtcMonth.AddMonths(-(AllowedMonths - 1)).AddDays(-TimeZoneToleranceDays);
             DateOnly latestDate = utcToday.AddDays(TimeZoneToleranceDays);
 
-            return ExpenseFields.CheckDate(dateText, earliestDate, latestDate, ResultCodes.PERSONAL_ENTRY_DATE_INVALID);
+            return ExpenseFields.CheckDate(dateText, EarliestDateOn(utcToday), latestDate, ResultCodes.PERSONAL_ENTRY_DATE_INVALID);
         }
     }
 }

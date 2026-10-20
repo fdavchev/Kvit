@@ -35,6 +35,11 @@ namespace Kvit.Domain.Tests.Fakes
             return Task.FromResult(SingleOrNotFound(_entries, userId, entryId));
         }
 
+        public Task<bool> AnyFromRecurringIncomeAsync(Guid recurringIncomeId, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(_entries.Any(entry => entry.RecurringIncomeId == recurringIncomeId));
+        }
+
         private static Result<PersonalEntry> SingleOrNotFound(IEnumerable<PersonalEntry> entries, Guid userId, Guid entryId)
         {
             PersonalEntry? entry = entries.SingleOrDefault(candidate => candidate.Id == entryId && candidate.UserId == userId);

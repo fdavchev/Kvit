@@ -30,7 +30,7 @@ Second phase of Release 2 ("budget"). Adds personal income: added once, or repea
 ### Checklist
 - [x] Step 0: mockups, picks logged in DECISIONS
 - [x] Step 1: backend, income once and the migration
-- [ ] Step 2: backend, repeating income (create, list, edit, stop)
+- [x] Step 2: backend, repeating income (create, list, edit, stop, restart)
 - [ ] Step 3: backend, lazy generation with same-moment, month-end and time zone tests
 - [ ] Step 4: frontend, "Spending or Income?" sheet and add income once
 - [ ] Step 5: frontend, repeating income (Repeats and Ends chips, the row and the list)
@@ -40,4 +40,4 @@ Second phase of Release 2 ("budget"). Adds personal income: added once, or repea
 - [ ] CI green
 
 ## Later pushes: one-line commit subjects
-- Step 2: (next)
+- Step 2: Add repeating income: create, list, edit, stop and restart, with the RecurringIncomeRules migration.
