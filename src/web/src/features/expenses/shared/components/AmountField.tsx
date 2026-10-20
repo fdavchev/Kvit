@@ -15,6 +15,19 @@ interface AmountFieldProps {
 
 const otherCurrency: Record<Currency, Currency> = { MKD: 'EUR', EUR: 'MKD' }
 
+const longestTextAtBiggestSize = 7
+const longestTextAtMiddleSize = 10
+
+function amountTextSize(amountText: string): string {
+  if (amountText.length <= longestTextAtBiggestSize) {
+    return 'text-5xl'
+  }
+  if (amountText.length <= longestTextAtMiddleSize) {
+    return 'text-4xl'
+  }
+  return 'text-3xl'
+}
+
 export function AmountField({ amountText, currency, onAmountTextChange, onCurrencyChange, invalid = false }: AmountFieldProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
@@ -38,8 +51,9 @@ export function AmountField({ amountText, currency, onAmountTextChange, onCurren
         aria-invalid={isAmountInvalid}
         onChange={(event) => onAmountTextChange(event.target.value)}
         className={cn(
-          '-mx-0.5 w-full min-w-0 flex-1 rounded-[14px] border-2 border-transparent bg-transparent py-0.5 text-5xl font-extrabold tracking-[-0.02em] text-foreground placeholder:text-muted-foreground focus-visible:outline-offset-0 aria-invalid:border-destructive',
-          onCurrencyChange === undefined ? 'pl-3 text-left' : 'text-right',
+          '-mx-0.5 w-full min-w-0 flex-1 rounded-[14px] border-2 border-transparent bg-transparent px-3 py-0.5 font-extrabold tracking-[-0.02em] text-foreground placeholder:text-muted-foreground focus-visible:outline-offset-0 aria-invalid:border-destructive',
+          amountTextSize(amountText),
+          onCurrencyChange === undefined ? 'text-left' : 'text-right',
         )}
       />
       {onCurrencyChange === undefined ? (

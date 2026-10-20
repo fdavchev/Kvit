@@ -12,10 +12,13 @@ import {
 } from '@/test/budgetTestHelpers'
 import { amountField, saveButton, typeAmount } from '@/test/expenseFormTestHelpers'
 import { stubDesktopScreen } from '@/test/matchMediaTestHelpers'
-import { coffeeCategory, personalFoodCategory } from '@/test/personalCategoryTestData'
+import { coffeeCategory, createdTeaCategory, personalFoodCategory } from '@/test/personalCategoryTestData'
+import { personalCategoryCreatePost } from '@/test/personalCategoryTestHelpers'
 import { coffeeEntry, entryAnswerRow, lunchInEuroEntry, monthAnswerBody, octoberMonth } from '@/test/personalEntryTestData'
 import {
+  createCategoryFromGrid,
   deleteButton,
+  expectAmountToStayFocused,
   findDetailsSheet,
   findPickSheet,
   personalEntriesPost,
@@ -116,6 +119,18 @@ describe('BudgetScreen adding and editing', () => {
         expect(requestsOf(fetchMock, 'POST', '/api/personal/entries')).toHaveLength(1)
       })
       expect(taps).toBe(2)
+    })
+
+    it('focuses the amount after "+ New" saves a category, so typed digits land in it', async () => {
+      await renderBudget({ answers: { [personalCategoryCreatePost]: jsonAnswer(createdTeaCategory) } })
+      await findTotalCard()
+      plusButton().focus()
+      fireEvent.click(plusButton())
+
+      await createCategoryFromGrid('Tea')
+      await findDetailsSheet(createdTeaCategory)
+
+      await expectAmountToStayFocused()
     })
 
     it('shows the new entry and the new totals after the save, from a fresh answer of the server', async () => {

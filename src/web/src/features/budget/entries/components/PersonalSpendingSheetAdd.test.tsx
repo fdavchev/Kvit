@@ -2,7 +2,6 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
-import type { PersonalCategory } from '@/core/services/personalCategories/personalCategoriesService'
 import { kvitGlassPanelLook } from '@/shared/components/kvitGlassLooks'
 import {
   addDays,
@@ -15,7 +14,7 @@ import {
   typeAmount,
   yesterdayChip,
 } from '@/test/expenseFormTestHelpers'
-import { coffeeCategory, personalFoodCategory } from '@/test/personalCategoryTestData'
+import { coffeeCategory, createdTeaCategory, personalFoodCategory } from '@/test/personalCategoryTestData'
 import {
   findSheet,
   personalCategoryCreatePost,
@@ -37,6 +36,11 @@ import {
   waitForEveryDialogToClose,
 } from '@/test/personalEntryTestHelpers'
 import { jsonAnswer, networkFailureAnswer, requestsOf } from '@/test/requestTestHelpers'
+import {
+  expectSaveOutsideScrollingFields,
+  expectTitleOutsideScrollingBody,
+  sheetBodyOf,
+} from '@/test/sheetScrollTestHelpers'
 import { testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
 
@@ -45,17 +49,6 @@ vi.mock('sonner', async () => (await import('@/test/sonnerMock')).sonnerMock)
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const savedAnswer = { [personalEntriesPost]: jsonAnswer(entryAnswerRow(coffeeEntry)) }
 const sentPosts = (fetchMock: Parameters<typeof requestsOf>[0]) => requestsOf(fetchMock, 'POST', '/api/personal/entries')
-
-const createdTea: PersonalCategory = {
-  id: 'd0000000-0000-4000-8000-000000000009',
-  key: null,
-  name: 'Tea',
-  emoji: '\u{1F375}',
-  color: 'green',
-  sortOrder: 103,
-  isCustom: true,
-  archived: false,
-}
 
 describe('PersonalSpendingSheet, adding', () => {
   beforeEach(() => {
@@ -91,6 +84,25 @@ describe('PersonalSpendingSheet, adding', () => {
       expect(within(sheet).queryByRole('button', { name: personalCategoryLabel('en', personalFoodCategory) })).toBeNull()
     })
 
+    it('scrolls a long category grid inside the sheet, with the title kept in view', async () => {
+      await renderSpendingSheet()
+
+      const sheet = await findPickSheet()
+      const tile = await within(sheet).findByRole('button', { name: 'Coffee' })
+
+      expect(sheetBodyOf(sheet).contains(tile)).toBe(true)
+      expectTitleOutsideScrollingBody(sheet, translated('en', 'budget.entries.pickCategory'))
+    })
+
+    it('keeps the category and Save in view while the amount, chips and note scroll on a short window', async () => {
+      await renderSpendingSheet()
+
+      const sheet = await pickCategory(coffeeCategory)
+
+      expectTitleOutsideScrollingBody(sheet, 'Coffee')
+      expectSaveOutsideScrollingFields(sheet, amountField(), saveButton())
+    })
+
     it('shows the picked category in the header with its tile, and the header is not a button', async () => {
       await renderSpendingSheet()
 
@@ -103,7 +115,7 @@ describe('PersonalSpendingSheet, adding', () => {
     })
 
     it('goes on to the amount with the new category right after "+ New" is saved', async () => {
-      await renderSpendingSheet({ answers: { [personalCategoryCreatePost]: jsonAnswer(createdTea) } })
+      await renderSpendingSheet({ answers: { [personalCategoryCreatePost]: jsonAnswer(createdTeaCategory) } })
       const pickSheet = await findPickSheet()
       fireEvent.click(await within(pickSheet).findByRole('button', { name: translated('en', 'budget.categories.new') }))
       const newSheet = await findSheet('en', 'budget.categories.newTitle')
@@ -111,7 +123,7 @@ describe('PersonalSpendingSheet, adding', () => {
       fireEvent.change(sheetField(newSheet, 'en', 'budget.categories.name'), { target: { value: 'Tea' } })
       fireEvent.click(saveButtonIn(newSheet))
 
-      expect(await findDetailsSheet(createdTea)).toBeTruthy()
+      expect(await findDetailsSheet(createdTeaCategory)).toBeTruthy()
       expect(amountField()).toBeTruthy()
     })
   })

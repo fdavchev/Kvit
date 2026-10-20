@@ -1,4 +1,5 @@
-import { useId } from 'react'
+import { useId, useRef } from 'react'
+import { useSidewaysScroll } from '@/shared/hooks/useSidewaysScroll'
 import { cn } from '@/shared/utils/cn'
 import { kvitChipLook } from './kvitChipLook'
 
@@ -27,13 +28,15 @@ export function KvitChoiceChips<Value extends string>({
   optionsClassName,
 }: KvitChoiceChipsProps<Value>) {
   const labelId = useId()
+  const optionsRef = useRef<HTMLDivElement>(null)
+  useSidewaysScroll(optionsRef)
 
   return (
     <div role="group" aria-labelledby={labelId} className="flex flex-col">
       <span id={labelId} className={cn('mb-2 text-[0.9375rem] font-bold', labelClassName)}>
         {label}
       </span>
-      <div className={cn('flex flex-wrap gap-2', optionsClassName)}>
+      <div ref={optionsRef} className={cn('flex flex-wrap gap-2', optionsClassName)}>
         {options.map((option) => (
           <button
             key={option.value}

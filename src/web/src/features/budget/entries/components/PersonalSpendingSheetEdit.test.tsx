@@ -34,6 +34,7 @@ import {
   requestCount,
   requestsOf,
 } from '@/test/requestTestHelpers'
+import { expectSaveOutsideScrollingFields, expectTitleOutsideScrollingBody } from '@/test/sheetScrollTestHelpers'
 import { testMe } from '@/test/testMe'
 import { pressToastAction, toastShownWithText } from '@/test/toastTestHelpers'
 import { translated } from '@/test/translated'
@@ -67,6 +68,16 @@ describe('PersonalSpendingSheet, editing', () => {
       expect(shownCurrency(sheet, 'MKD', language)).toBeTruthy()
       expect(dateChip(sheet, translated(language, 'expenses.today'))).toBeTruthy()
       expect(screen.queryByRole('dialog', { name: translated(language, 'budget.entries.pickCategory') })).toBeNull()
+    })
+
+    it('keeps the category, Save and Delete in view while the amount, chips and note scroll on a short window', async () => {
+      await renderSpendingSheet({ entry: lunchInEuroEntry })
+
+      const sheet = await findDetailsSheet(personalFoodCategory)
+
+      expectTitleOutsideScrollingBody(sheet, translated('en', 'categories.food'))
+      expectSaveOutsideScrollingFields(sheet, amountField(), saveButton())
+      expectSaveOutsideScrollingFields(sheet, amountField(), deleteButton(sheet))
     })
 
     it('fills in a EUR entry with cents, its date and its note, with the note open', async () => {

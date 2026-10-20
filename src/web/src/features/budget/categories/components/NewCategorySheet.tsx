@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   personalCategoryColors,
@@ -24,9 +25,11 @@ export function NewCategorySheet({ onCreated, onClose }: NewCategorySheetProps) 
   const { t } = useTranslation()
   const sheet = useKvitSheet()
   const create = useCreatePersonalCategory()
+  const hasHandedOnRef = useRef<boolean>(false)
 
   function submit(fields: PersonalCategoryFields): void {
     create.save(fields, (category) => {
+      hasHandedOnRef.current = true
       sheet.close()
       onCreated(category)
     })
@@ -41,6 +44,7 @@ export function NewCategorySheet({ onCreated, onClose }: NewCategorySheetProps) 
       error={create.error}
       onSubmit={submit}
       onClose={onClose}
+      returnsFocusOnClose={() => !hasHandedOnRef.current}
     />
   )
 }

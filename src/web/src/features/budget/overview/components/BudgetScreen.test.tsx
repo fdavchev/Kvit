@@ -1,6 +1,8 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages, type Language } from '@/core/i18n/language'
+import type { PersonalEntryMonth } from '@/core/services/personalEntries/personalEntriesService'
+import indexCss from '@/index.css?raw'
 import { formatMoney, currencyLabel, type Currency } from '@/shared/utils/formatMoney'
 import {
   budgetNow,
@@ -12,6 +14,7 @@ import {
   renderBudget,
 } from '@/test/budgetTestHelpers'
 import { plainSpaces } from '@/test/expenseTestHelpers'
+import { blockAfter } from '@/test/indexCssColors'
 import { personalCategoryLabel } from '@/test/personalCategoryTestHelpers'
 import {
   archivedGymCategory,
@@ -27,6 +30,22 @@ import {
 } from '@/test/personalEntryTestData'
 import { requestCount } from '@/test/requestTestHelpers'
 import { translated } from '@/test/translated'
+
+const longAmountsMonth: PersonalEntryMonth = {
+  ...mkdOnlyMonth,
+  totals: [
+    {
+      currency: 'MKD',
+      totalMinor: 12345678900,
+      categories: [{ category: personalGroceriesCategory, totalMinor: 12345678900, count: 1 }],
+    },
+    {
+      currency: 'EUR',
+      totalMinor: 123456789,
+      categories: [{ category: personalFoodCategory, totalMinor: 123456789, count: 1 }],
+    },
+  ],
+}
 
 function money(amountMinor: number, currency: Currency, language: Language = 'en'): string {
   return plainSpaces(formatMoney(amountMinor, currency, language))
@@ -78,6 +97,30 @@ describe('BudgetScreen', () => {
         language === 'en' ? ['Aug', 'Sep', 'Oct'] : ['авг', 'сеп', 'окт'],
       )
       expect(buttons.filter((button) => button.getAttribute('aria-pressed') === 'true')).toEqual([buttons.at(-1)])
+    })
+
+    it('hides the scrollbar of the strip and scrolls it sideways with an up-and-down mouse wheel', async () => {
+      await renderBudget()
+      await findTotalCard()
+      const strip = monthStrip()
+      Object.defineProperty(strip, 'scrollWidth', { configurable: true, value: 1600 })
+      Object.defineProperty(strip, 'clientWidth', { configurable: true, value: 400 })
+      Object.defineProperty(strip, 'scrollLeft', { configurable: true, writable: true, value: 1200 })
+
+      fireEvent.wheel(strip, { deltaY: -100 })
+
+      expect(strip.className.split(/\s+/)).toEqual(expect.arrayContaining(['overflow-x-auto', 'sideways-scroll']))
+      expect(strip.scrollLeft).toBe(1100)
+    })
+
+    it('draws the rounded background on a frame around the strip, so the faded edges do not fade the background', async () => {
+      await renderBudget()
+      await findTotalCard()
+
+      const strip = monthStrip()
+
+      expect(strip.className.split(/\s+/)).not.toContain('bg-card')
+      expect(strip.parentElement?.className.split(/\s+/)).toEqual(expect.arrayContaining(['rounded-full', 'bg-card']))
     })
 
     it('shows the year on January of this year, where the year changes', async () => {
@@ -282,6 +325,31 @@ describe('BudgetScreen', () => {
       await findTotalCard()
 
       expect(within(categoryTotalsRegion()).getByRole('list').className.split(/\s+/)).toContain('grid-cols-4')
+    })
+
+    it.each(languages)('keeps a long amount in one piece on one line, shrunk to fit the tile, with its currency (%s)', async (language) => {
+      await renderBudget({ language, months: [longAmountsMonth] })
+      await findTotalCard(language)
+
+      const tiles = within(categoryTotalsRegion(language)).getAllByRole('listitem')
+
+      expect(tiles).toHaveLength(2)
+      for (const tile of tiles) {
+        const amount = tile.querySelector<HTMLElement>('[data-tile-amount]')
+        expect(tile.className.split(/\s+/)).toContain('@container')
+        expect(amount?.className.split(/\s+/)).toContain('fit-amount')
+        expect(amount?.className.split(/\s+/)).not.toContain('break-words')
+        expect(amount?.style.getPropertyValue('--amount-length')).toBe(String(amount?.textContent?.length))
+      }
+      expect(textOf(tiles[0])).toContain(money(12345678900, 'MKD', language))
+      expect(textOf(tiles[1])).toContain(money(123456789, 'EUR', language))
+    })
+
+    it('shrinks the tile amount by the width of its tile and its length, never above the normal size', () => {
+      const fitAmount = blockAfter(indexCss, '@utility fit-amount')
+
+      expect(fitAmount).toContain('white-space: nowrap;')
+      expect(fitAmount).toContain('font-size: min(1em, calc(100cqi / (var(--amount-length) * var(--average-glyph-width))));')
     })
   })
 

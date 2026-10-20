@@ -59,6 +59,17 @@ export const archivedGymCategory: CustomPersonalCategory = {
   archived: true,
 }
 
+export const createdTeaCategory: CustomPersonalCategory = {
+  id: 'd0000000-0000-4000-8000-000000000009',
+  key: null,
+  name: 'Tea',
+  emoji: '\u{1F375}',
+  color: 'green',
+  sortOrder: 103,
+  isCustom: true,
+  archived: false,
+}
+
 export const activePersonalCategories: PersonalCategory[] = [
   personalFoodCategory,
   personalGroceriesCategory,

@@ -4,10 +4,12 @@ import { languages, type Language } from '@/core/i18n/language'
 import { saveButton, typeAmount } from '@/test/expenseFormTestHelpers'
 import { renderHome } from '@/test/homeTestHelpers'
 import { stubDesktopScreen } from '@/test/matchMediaTestHelpers'
-import { activePersonalCategories, coffeeCategory } from '@/test/personalCategoryTestData'
-import { categoryListAnswer, personalCategoriesGet } from '@/test/personalCategoryTestHelpers'
+import { activePersonalCategories, coffeeCategory, createdTeaCategory } from '@/test/personalCategoryTestData'
+import { categoryListAnswer, personalCategoriesGet, personalCategoryCreatePost } from '@/test/personalCategoryTestHelpers'
 import { coffeeEntry, entryAnswerRow } from '@/test/personalEntryTestData'
 import {
+  createCategoryFromGrid,
+  expectAmountToStayFocused,
   findDetailsSheet,
   findPickSheet,
   personalEntriesPost,
@@ -88,6 +90,21 @@ describe('personal spending from the home screen', () => {
       expect(requestsOf(fetchMock, 'POST', '/api/personal/entries')).toHaveLength(1)
     })
     expect(taps).toBe(4)
+  })
+
+  it('focuses the amount after "+ New" saves a category, so typed digits land in it', async () => {
+    await renderHome({ answers: { ...spendingAnswers, [personalCategoryCreatePost]: jsonAnswer(createdTeaCategory) } })
+    const plus = await screen.findByRole('button', { name: translated('en', 'home.plus') })
+    plus.focus()
+    fireEvent.click(plus)
+    const item = within(screen.getByRole('menu')).getByRole('menuitem', { name: spendingName() })
+    item.focus()
+    fireEvent.click(item)
+
+    await createCategoryFromGrid('Tea')
+    await findDetailsSheet(createdTeaCategory)
+
+    await expectAmountToStayFocused()
   })
 
   it('closes the menu when the sheet opens and stays on Home after the save', async () => {

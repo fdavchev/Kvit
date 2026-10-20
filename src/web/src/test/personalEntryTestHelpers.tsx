@@ -8,8 +8,16 @@ import type { PersonalEntry } from '@/core/services/personalEntries/personalEntr
 import { PersonalSpendingSheet } from '@/features/budget/entries/components/PersonalSpendingSheet'
 import { personalEntriesQueryKey } from '@/features/budget/entries/personalEntryCache'
 import { currencyLabel, type Currency } from '@/shared/utils/formatMoney'
+import { amountField } from './expenseFormTestHelpers'
 import { activePersonalCategories } from './personalCategoryTestData'
-import { categoryListAnswer, personalCategoriesGet, personalCategoryLabel } from './personalCategoryTestHelpers'
+import {
+  categoryListAnswer,
+  findSheet,
+  personalCategoriesGet,
+  personalCategoryLabel,
+  saveButtonIn,
+  sheetField,
+} from './personalCategoryTestHelpers'
 import { renderElementWithProviders } from './renderWithProviders'
 import { stubFetchByRequest, type AnswerFactory } from './requestTestHelpers'
 import { seedMe, testMe } from './testMe'
@@ -72,6 +80,22 @@ export async function pickCategory(category: PersonalCategory, language: Languag
   const pickSheet = await findPickSheet(language)
   fireEvent.click(await within(pickSheet).findByRole('button', { name: personalCategoryLabel(language, category) }))
   return findDetailsSheet(category, language)
+}
+
+export async function createCategoryFromGrid(name: string, language: Language = 'en'): Promise<void> {
+  const pickSheet = await findPickSheet(language)
+  fireEvent.click(await within(pickSheet).findByRole('button', { name: translated(language, 'budget.categories.new') }))
+  const newSheet = await findSheet(language, 'budget.categories.newTitle')
+  fireEvent.change(sheetField(newSheet, language, 'budget.categories.name'), { target: { value: name } })
+  fireEvent.click(saveButtonIn(newSheet, language))
+}
+
+export async function expectAmountToStayFocused(language: Language = 'en'): Promise<void> {
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog', { name: translated(language, 'budget.categories.newTitle') })).toBeNull()
+  })
+  await new Promise((resolve) => setTimeout(resolve, 50))
+  expect(document.activeElement).toBe(amountField(language))
 }
 
 export function dateChip(sheet: HTMLElement, name: string): HTMLElement {

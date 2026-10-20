@@ -17,6 +17,7 @@ interface CategoryFieldsSheetProps {
   error: Error | null
   onSubmit: (fields: PersonalCategoryFields) => void
   onClose: () => void
+  returnsFocusOnClose?: () => boolean
 }
 
 type FieldName = keyof PersonalCategoryFields
@@ -42,6 +43,7 @@ export function CategoryFieldsSheet({
   error,
   onSubmit,
   onClose,
+  returnsFocusOnClose,
 }: CategoryFieldsSheetProps) {
   const { t } = useTranslation()
   const [fields, setFields] = useState<PersonalCategoryFields>(initialFields)
@@ -62,7 +64,7 @@ export function CategoryFieldsSheet({
   }
 
   return (
-    <KvitSheet title={title} onClose={onClose} actionsRef={actionsRef}>
+    <KvitSheet title={title} onClose={onClose} actionsRef={actionsRef} returnsFocusOnClose={returnsFocusOnClose}>
       <KvitForm
         submitLabel={t('groupSettings.save')}
         isPending={isPending}
@@ -101,7 +103,7 @@ export function CategoryFieldsSheet({
             value={fields.emoji}
             onChange={(emoji) => change('emoji', emoji)}
             chipClassName="min-w-12 flex-none px-2.5 text-[1.3rem]"
-            optionsClassName="-mx-1 flex-nowrap overflow-x-auto px-1 pb-1"
+            optionsClassName="sideways-scroll -mx-1 flex-nowrap overflow-x-auto px-1 pb-1"
           />
         </div>
         <CategoryColorPicker

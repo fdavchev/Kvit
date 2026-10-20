@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import type { PersonalCurrencyTotal } from '@/core/services/personalEntries/personalEntriesService'
@@ -45,16 +45,25 @@ function CurrencyTotals({ total, label }: CurrencyTotalsProps) {
 
   const grid = (
     <ul className={kvitCategoryGridLook}>
-      {total.categories.map((row) => (
-        <li
-          key={row.category.id}
-          className="flex min-w-0 flex-col items-center gap-1 py-1 text-center text-xs leading-tight"
-        >
-          <KvitEmojiTile emoji={row.category.emoji} background={categoryColor(row.category)} />
-          <span className="w-full font-semibold break-words">{personalCategoryName(row.category, t)}</span>
-          <span className="w-full font-bold break-words">{formatMoney(row.totalMinor, total.currency, language)}</span>
-        </li>
-      ))}
+      {total.categories.map((row) => {
+        const amount = formatMoney(row.totalMinor, total.currency, language)
+        return (
+          <li
+            key={row.category.id}
+            className="@container flex min-w-0 flex-col items-center gap-1 py-1 text-center text-xs leading-tight"
+          >
+            <KvitEmojiTile emoji={row.category.emoji} background={categoryColor(row.category)} />
+            <span className="w-full font-semibold break-words">{personalCategoryName(row.category, t)}</span>
+            <span
+              data-tile-amount=""
+              className="fit-amount w-full font-bold"
+              style={{ '--amount-length': amount.length } as CSSProperties}
+            >
+              {amount}
+            </span>
+          </li>
+        )
+      })}
     </ul>
   )
 

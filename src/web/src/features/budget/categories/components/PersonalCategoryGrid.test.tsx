@@ -32,6 +32,7 @@ import {
   stubFetchByRequest,
   type AnswerFactory,
 } from '@/test/requestTestHelpers'
+import { expectSaveOutsideScrollingFields, expectTitleOutsideScrollingBody } from '@/test/sheetScrollTestHelpers'
 import { loadingLook } from '@/test/skeletonTestHelpers'
 import { translated } from '@/test/translated'
 import { PersonalCategoryGrid } from './PersonalCategoryGrid'
@@ -228,6 +229,15 @@ describe('PersonalCategoryGrid', () => {
       expect(name.maxLength).toBe(30)
     })
 
+    it('keeps the title and Save in view on a short window, scrolling only the fields', async () => {
+      await renderGrid()
+
+      const sheet = await openNewSheet()
+
+      expectTitleOutsideScrollingBody(sheet, translated('en', 'budget.categories.newTitle'))
+      expectSaveOutsideScrollingFields(sheet, sheetField(sheet, 'en', 'budget.categories.name'), saveButtonIn(sheet))
+    })
+
     it('creates a category with 1 field and 2 taps: "+ New", type the name, Save, using the default emoji and colour', async () => {
       const { fetchMock } = await renderGrid()
 
@@ -366,6 +376,23 @@ describe('PersonalCategoryGrid', () => {
       for (const pick of picks) {
         expect(Array.from(pick.classList)).toEqual(expect.arrayContaining(['min-h-11', 'min-w-12']))
       }
+    })
+
+    it('hides the scrollbar of the quick picks and scrolls them sideways with an up-and-down mouse wheel', async () => {
+      await renderGrid()
+      const sheet = await openNewSheet()
+      const row = within(emojiPickGroup(sheet, 'en')).getAllByRole('button')[0].parentElement
+      if (row === null) {
+        throw new Error('The quick picks have no row around them')
+      }
+      Object.defineProperty(row, 'scrollWidth', { configurable: true, value: 1200 })
+      Object.defineProperty(row, 'clientWidth', { configurable: true, value: 320 })
+      Object.defineProperty(row, 'scrollLeft', { configurable: true, writable: true, value: 0 })
+
+      fireEvent.wheel(row, { deltaY: 100 })
+
+      expect(row.className.split(/\s+/)).toContain('sideways-scroll')
+      expect(row.scrollLeft).toBe(100)
     })
 
     it('puts a tapped quick pick into the emoji field and sends it', async () => {
