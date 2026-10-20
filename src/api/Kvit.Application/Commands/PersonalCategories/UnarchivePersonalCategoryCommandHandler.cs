@@ -20,7 +20,10 @@ namespace Kvit.Application.Commands.PersonalCategories
                 return userId;
             }
 
-            return await _unitOfWork.RunInTransactionAsync(() => _unarchiveCategory.Execute(userId.Value, command.CategoryId, cancellationToken), cancellationToken);
+            return await _unitOfWork.RunInTransactionOrRefuseIfCategoryNameWasTakenAsync(
+                () => _unarchiveCategory.Execute(userId.Value, command.CategoryId, cancellationToken),
+                refused => refused,
+                cancellationToken);
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using Kvit.Api.Tests.Auth;
@@ -133,9 +134,9 @@ namespace Kvit.Api.Tests.PersonalEntries
         public async Task List_TotalsOfOtherMonths_AreNotCounted()
         {
             SignedInUser user = await _app.SignUpAsync();
-            await PersonalEntrySteps.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, 100_000, entryDate: "2026-10-31"));
-            await PersonalEntrySteps.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, 70_000, entryDate: "2026-11-01"));
-            await PersonalEntrySteps.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, 40_000, entryDate: "2026-09-30"));
+            await AddOnAsync(user, "2026-10-31", 100_000);
+            await AddOnAsync(user, "2026-11-01", 70_000);
+            await AddOnAsync(user, "2026-09-30", 40_000);
 
             JsonElement mkd = Assert.Single((await PersonalEntrySteps.MonthAsync(user.Client)).GetProperty("totals").EnumerateArray());
 
@@ -211,6 +212,32 @@ namespace Kvit.Api.Tests.PersonalEntries
             await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_MONTH_INVALID);
         }
 
+        [Theory]
+        [InlineData("9999-12")]
+        [InlineData("0001-01")]
+        [InlineData("1999-12")]
+        public async Task List_MonthOutsideTheSupportedRange_Answers400MonthInvalid(string month)
+        {
+            SignedInUser user = await _app.SignUpAsync();
+
+            HttpResponseMessage response = await PersonalEntryRequests.ListAsync(user.Client, month);
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_MONTH_INVALID);
+        }
+
+        [Theory]
+        [InlineData("2000-01")]
+        [InlineData("9999-11")]
+        public async Task List_MonthOnTheEdgesOfTheSupportedRange_Answers200WithNoEntries(string month)
+        {
+            SignedInUser user = await _app.SignUpAsync();
+
+            JsonElement body = await PersonalEntrySteps.MonthAsync(user.Client, month);
+
+            Assert.Equal(month, body.GetProperty("month").GetString());
+            Assert.Empty(body.GetProperty("entries").EnumerateArray());
+        }
+
         [Fact]
         public async Task List_WithoutAMonth_Answers400MonthInvalid()
         {
@@ -229,9 +256,12 @@ namespace Kvit.Api.Tests.PersonalEntries
                 category.GetProperty("count").GetInt32()))];
         }
 
-        private static Task<Guid> AddOnAsync(SignedInUser user, string entryDate)
+        private async Task<Guid> AddOnAsync(SignedInUser user, string entryDate, long amountMinor = PersonalEntryRequests.OneThousandMkd)
         {
-            return PersonalEntrySteps.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, entryDate: entryDate));
+            Guid entryId = await PersonalEntrySteps.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, amountMinor));
+            await PersonalEntrySteps.SetEntryDateAsync(_app, entryId, DateOnly.ParseExact(entryDate, "yyyy-MM-dd", CultureInfo.InvariantCulture));
+
+            return entryId;
         }
     }
 }

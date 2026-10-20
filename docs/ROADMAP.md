@@ -199,7 +199,7 @@ Release 1 accepted 2026-10-16. Filip put this BACKLOG "must do" before Phase 13.
 - [x] **Done 2026-10-19 (VERIFIED by automated test: frontend 8391; not seen in a browser).** Step 4: frontend, add, edit and delete spending (entry point: Home "+")
 - [x] **Done 2026-10-19 (VERIFIED by automated test: frontend 8527; not seen in a browser).** Step 5: frontend, Budget tab (`/budget`, month strip, totals, entries; not for guests)
 - [x] **Done 2026-10-20 (VERIFIED by live run, headless Chromium, local stack; 9 bugs found in the passes, 8 fixed, Bug 4 in BACKLOG; frontend 8581).** Step 6: desktop layout and the 360 px browser pass
-- [ ] Step 7: code review, report, guide, first-push texts
+- [x] **Done 2026-10-20 (VERIFIED by automated test: backend 4169, frontend 8631; the review fixes are not yet seen in a browser).** Step 7: code review (8 findings fixed), report `reports/2026-10-20-phase-13-personal-spending.md`, guide `guides/phase-13-personal-spending.md`, first-push texts `guides/phase-13-pr-text.md`
 - [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the 2 migrations on Neon)
 
 ## Later phases

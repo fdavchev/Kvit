@@ -7,6 +7,8 @@ namespace Kvit.Infrastructure.Persistence.Configurations
 {
     public class CategoryConfiguration : IEntityTypeConfiguration<Category>
     {
+        public const string ActiveNameIndexName = "ix_categories_owner_user_id_active_lower_name";
+
         public void Configure(EntityTypeBuilder<Category> builder)
         {
             builder.ToTable("categories", table =>

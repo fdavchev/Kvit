@@ -15,13 +15,17 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
     {
         private readonly FakePersonalEntryRepository _entries = new();
         private readonly FakeCategoryRepository _categories = new();
+        private readonly FakeExchangeRateRepository _rates = new();
+        private readonly FakeExchangeRateSource _rateSource = new();
         private readonly AddPersonalEntry _addPersonalEntry;
         private readonly Category _pets = CategoryTestData.NewCustom("Pets", 11);
 
         public AddPersonalEntryTests()
         {
             _categories.Seed(_pets);
-            _addPersonalEntry = new AddPersonalEntry(_entries, _categories, new FixedTimeProvider(PersonalEntryTestData.Moment));
+            PersonalEntryTestData.SeedRate(_rates, PersonalEntryTestData.Rate);
+            FixedTimeProvider timeProvider = new(PersonalEntryTestData.Moment);
+            _addPersonalEntry = new AddPersonalEntry(_entries, _categories, PersonalEntryTestData.CurrentRateFrom(_rates, _rateSource, timeProvider), timeProvider);
         }
 
         [Fact]
@@ -46,13 +50,65 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
         }
 
         [Fact]
-        public async Task Execute_ValidInput_SavesTheGivenRate()
+        public async Task Execute_ValidInput_SavesTheCurrentRate()
         {
             await ExecuteAsync(PersonalEntryTestData.UserId, Guid.CreateVersion7(), PersonalEntryTestData.Input(_pets.Id));
 
             PersonalEntry added = Assert.Single(_entries.Added);
             Assert.Equal(PersonalEntryTestData.Rate.MkdPerEur, added.MkdPerEur);
             Assert.Equal(PersonalEntryTestData.Rate.RateDate, added.RateDate);
+        }
+
+        [Fact]
+        public async Task Execute_ValidInputWhileTheNewestRateIsStale_AsksTheSourceAndSavesItsRate()
+        {
+            SeedStaleRate();
+            _rateSource.AnswerWith(PersonalEntryTestData.UtcToday, 61.9000m);
+
+            await ExecuteAsync(PersonalEntryTestData.UserId, Guid.CreateVersion7(), PersonalEntryTestData.Input(_pets.Id));
+
+            PersonalEntry added = Assert.Single(_entries.Added);
+            Assert.Equal([PersonalEntryTestData.UtcToday], _rateSource.RequestedDates);
+            Assert.Equal(61.9000m, added.MkdPerEur);
+        }
+
+        [Fact]
+        public async Task Execute_ClientRequestIdAlreadySavedByTheCallerWhileTheNewestRateIsStale_ReturnsThatEntryWithoutAskingTheSource()
+        {
+            PersonalEntry earlier = PersonalEntryTestData.NewSpending(_pets.Id);
+            _entries.Seed(earlier);
+            SeedStaleRate();
+            _rateSource.FailWith("NBRM is down");
+
+            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, earlier.ClientRequestId, PersonalEntryTestData.Input(_pets.Id));
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(earlier.Id, result.Value);
+            Assert.Empty(_rateSource.RequestedDates);
+        }
+
+        [Fact]
+        public async Task Execute_InvalidFieldWhileTheNewestRateIsStale_FailsWithoutAskingTheSource()
+        {
+            SeedStaleRate();
+
+            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, Guid.CreateVersion7(), PersonalEntryTestData.Input(_pets.Id, 0));
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE);
+            Assert.Empty(_rateSource.RequestedDates);
+        }
+
+        [Fact]
+        public async Task Execute_ClientRequestIdOfTheCallersDeletedEntry_FailsWithClientRequestIdUsedAndAddsNothing()
+        {
+            PersonalEntry earlier = PersonalEntryTestData.NewSpending(_pets.Id);
+            earlier.Delete(PersonalEntryTestData.Moment);
+            _entries.Seed(earlier);
+
+            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, earlier.ClientRequestId, PersonalEntryTestData.Input(_pets.Id));
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_CLIENT_REQUEST_ID_USED);
+            Assert.Empty(_entries.Added);
         }
 
         [Fact]
@@ -130,9 +186,14 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
             Assert.Empty(_entries.Added);
         }
 
+        private void SeedStaleRate()
+        {
+            _rates.Seed(PersonalEntryTestData.Rate.RateDate, PersonalEntryTestData.Rate.MkdPerEur, PersonalEntryTestData.Moment.AddHours(-9));
+        }
+
         private Task<Result<Guid>> ExecuteAsync(Guid userId, Guid clientRequestId, PersonalEntryInput input)
         {
-            return _addPersonalEntry.Execute(userId, clientRequestId, input, PersonalEntryTestData.Rate, TestContext.Current.CancellationToken);
+            return _addPersonalEntry.Execute(userId, clientRequestId, input, TestContext.Current.CancellationToken);
         }
     }
 }

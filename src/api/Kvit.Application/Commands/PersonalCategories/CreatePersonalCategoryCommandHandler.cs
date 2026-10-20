@@ -22,7 +22,10 @@ namespace Kvit.Application.Commands.PersonalCategories
                 return userId.ToFailure<PersonalCategoryRow>();
             }
 
-            Result<Guid> created = await _unitOfWork.RunInTransactionAsync(() => _createCategory.Execute(userId.Value, command.Name, command.Emoji, command.Color, cancellationToken), cancellationToken);
+            Result<Guid> created = await _unitOfWork.RunInTransactionOrRefuseIfCategoryNameWasTakenAsync(
+                () => _createCategory.Execute(userId.Value, command.Name, command.Emoji, command.Color, cancellationToken),
+                refused => refused.ToFailure<Guid>(),
+                cancellationToken);
             if (!created.IsSuccess)
             {
                 return created.ToFailure<PersonalCategoryRow>();

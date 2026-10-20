@@ -111,10 +111,14 @@
     "PERSONAL_ENTRY_NOT_FOUND": "Овој запис не постои или е избришан.",
     "PERSONAL_ENTRY_CATEGORY_INVALID": "Избери една од твоите категории.",
     "PERSONAL_ENTRY_CLIENT_REQUEST_ID_USED": "Ова барање веќе е искористено за друго.",
-    "PERSONAL_ENTRY_DATE_INVALID": "Избери датум од 2000 до една година однапред.",
+    "PERSONAL_ENTRY_DATE_INVALID": "Избери датум од последните 24 месеци, најдоцна денес.",
     "PERSONAL_ENTRY_NOT_DELETED": "Овој запис не е избришан.",
     "PERSONAL_ENTRY_RESTORE_EXPIRED": "Овој запис е избришан пред повеќе од 5 дена и не може да се врати.",
     "PERSONAL_ENTRY_MONTH_INVALID": "Овој месец не може да се прикаже. Избери друг месец.",
+    "PERSONAL_ENTRY_CURRENCY_INVALID": "Избери MKD или EUR.",
+    "PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE": "Износот мора да е поголем од 0.",
+    "PERSONAL_ENTRY_AMOUNT_TOO_LARGE": "Овој износ е премногу голем.",
+    "PERSONAL_ENTRY_NOTE_INVALID": "Белешката може да има најмногу 500 знаци.",
     "SETTLEMENT_NOT_FOUND": "Ова плаќање не постои или е избришано.",
     "SETTLEMENT_NOT_ALLOWED": "Не можеш да го направиш ова со ова плаќање.",
     "SETTLEMENT_NOT_PENDING": "Ова плаќање веќе не чека одговор.",
@@ -523,7 +527,8 @@
       "homeItem": "Лично трошење",
       "pickCategory": "На што потроши?",
       "deleted": "Избришано",
-      "restored": "Вратено"
+      "restored": "Вратено",
+      "dateHint": "Избери датум од последните 24 месеци, најдоцна денес."
     },
     "screen": {
       "spentThisMonth": "Потрошено овој месец",

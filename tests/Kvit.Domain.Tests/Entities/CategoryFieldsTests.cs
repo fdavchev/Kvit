@@ -89,8 +89,68 @@ namespace Kvit.Domain.Tests.Entities
         [Fact]
         public void Create_EmojiOf16Units_Succeeds()
         {
-            string emoji = new('x', 16);
+            string emoji = string.Concat(Enumerable.Repeat(CategoryTestData.ValidEmoji, 8));
 
+            Result<CategoryFields> result = CategoryFields.Create(CategoryTestData.ValidName, emoji, CategoryTestData.ValidColor);
+
+            Assert.Equal(16, emoji.Length);
+            Assert.Equal(emoji, result.Value.Emoji);
+        }
+
+        [Fact]
+        public void Create_EmojiOf16UnitsWithSurroundingSpaces_SucceedsBecauseTheLengthIsCountedAfterTrimming()
+        {
+            string emoji = string.Concat(Enumerable.Repeat(CategoryTestData.ValidEmoji, 8));
+
+            Result<CategoryFields> result = CategoryFields.Create(CategoryTestData.ValidName, $"  {emoji} \t", CategoryTestData.ValidColor);
+
+            Assert.Equal(emoji, result.Value.Emoji);
+        }
+
+        [Fact]
+        public void Create_EmojiWithSurroundingSpaces_KeepsTheTrimmedEmoji()
+        {
+            Result<CategoryFields> result = CategoryFields.Create(CategoryTestData.ValidName, " \U0001F43E ", CategoryTestData.ValidColor);
+
+            Assert.Equal("\U0001F43E", result.Value.Emoji);
+        }
+
+        [Theory]
+        [InlineData("\U0001F3F7️")]
+        [InlineData("☕")]
+        [InlineData("\U0001F37A")]
+        [InlineData("\U0001F355")]
+        [InlineData("\U0001F3E0")]
+        [InlineData("\U0001F697")]
+        [InlineData("⛽")]
+        [InlineData("✈️")]
+        [InlineData("\U0001F455")]
+        [InlineData("\U0001F484")]
+        [InlineData("\U0001F487")]
+        [InlineData("\U0001F3CB️")]
+        [InlineData("\U0001F4DA")]
+        [InlineData("\U0001F3AE")]
+        [InlineData("\U0001F3B5")]
+        [InlineData("\U0001F4F1")]
+        [InlineData("\U0001F4A1")]
+        [InlineData("\U0001F436")]
+        [InlineData("\U0001F476")]
+        [InlineData("\U0001F393")]
+        public void Create_EachOfTheTwentyQuickPickEmojis_Succeeds(string emoji)
+        {
+            Result<CategoryFields> result = CategoryFields.Create(CategoryTestData.ValidName, emoji, CategoryTestData.ValidColor);
+
+            Assert.Equal(emoji, result.Value.Emoji);
+        }
+
+        [Theory]
+        [InlineData("\U0001F1F2\U0001F1F0")]
+        [InlineData("1️⃣")]
+        [InlineData("#️⃣")]
+        [InlineData("\U0001F468‍\U0001F469‍\U0001F467")]
+        [InlineData("\U0001F44D\U0001F3FD")]
+        public void Create_FlagKeycapZwjSequenceOrSkinToneEmoji_Succeeds(string emoji)
+        {
             Result<CategoryFields> result = CategoryFields.Create(CategoryTestData.ValidName, emoji, CategoryTestData.ValidColor);
 
             Assert.Equal(emoji, result.Value.Emoji);
@@ -102,6 +162,32 @@ namespace Kvit.Domain.Tests.Entities
         [InlineData("\t")]
         [InlineData("xxxxxxxxxxxxxxxxx")]
         public void Create_EmptyBlankOrLongerThan16UnitsEmoji_FailsWithEmojiInvalid(string emoji)
+        {
+            Result<CategoryFields> result = CategoryFields.Create(CategoryTestData.ValidName, emoji, CategoryTestData.ValidColor);
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.CATEGORY_EMOJI_INVALID);
+        }
+
+        [Fact]
+        public void Create_EmojiOf17Units_FailsWithEmojiInvalid()
+        {
+            string emoji = string.Concat(Enumerable.Repeat(CategoryTestData.ValidEmoji, 8)) + "☕";
+
+            Result<CategoryFields> result = CategoryFields.Create(CategoryTestData.ValidName, emoji, CategoryTestData.ValidColor);
+
+            Assert.Equal(17, emoji.Length);
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.CATEGORY_EMOJI_INVALID);
+        }
+
+        [Theory]
+        [InlineData("abc")]
+        [InlineData(" x ")]
+        [InlineData("x")]
+        [InlineData("1")]
+        [InlineData("?!")]
+        [InlineData("a b")]
+        [InlineData("#$%&*+")]
+        public void Create_EmojiOfOnlyPlainAsciiLettersDigitsOrPunctuation_FailsWithEmojiInvalid(string emoji)
         {
             Result<CategoryFields> result = CategoryFields.Create(CategoryTestData.ValidName, emoji, CategoryTestData.ValidColor);
 

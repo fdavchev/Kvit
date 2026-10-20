@@ -12,7 +12,11 @@ const calendarMonthPattern = /^(\d{4})-(\d{2})$/
 const englishShortMonthFormat = new Intl.DateTimeFormat('en-US', { month: 'short', timeZone: 'UTC' })
 
 export function currentMonthInTimeZone(timeZone: string, now: Date): string {
-  return todayInTimeZone(timeZone, now).slice(0, 7)
+  return monthOfDate(todayInTimeZone(timeZone, now))
+}
+
+export function monthOfDate(date: string): string {
+  return date.slice(0, 7)
 }
 
 export function addMonths(month: string, count: number): string {

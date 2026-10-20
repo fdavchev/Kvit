@@ -44,6 +44,25 @@ namespace Kvit.Api.Tests.Expenses
         }
 
         [Fact]
+        public async Task Add_RepeatOfASavedAddWhileTheNewestRateIsStale_AnswersTheSavedExpenseWithoutAskingTheRateSource()
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            ExpenseInput input = ExpenseInputs.Equal(ExpenseInputs.OneThousandMkd, ExpenseInputs.Mkd, group.OwnerRowId, group.OwnerRowId, group.MemberRowId);
+            Guid clientRequestId = Guid.CreateVersion7();
+            await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.Zero);
+            Guid expenseId = await _app.AddExpenseAsync(group.Owner, group.GroupId, input, clientRequestId);
+            await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.FromHours(20));
+            _app.RateSource.Fail();
+
+            HttpResponseMessage response = await ExpenseRequests.AddAsync(group.Owner.Client, group.GroupId, input, clientRequestId);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(expenseId, (await AuthRequests.ReadJsonAsync(response)).GetProperty("id").GetGuid());
+            Assert.Empty(_app.RateSource.RequestedDates);
+            Assert.Equal(1, await ExpenseRows.CountExpensesAsync(_app, group.GroupId));
+        }
+
+        [Fact]
         public async Task Add_SameClientRequestIdWithOtherFields_AnswersTheFirstExpenseUnchanged()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();

@@ -4,6 +4,7 @@ using Kvit.Domain.Expenses;
 using Kvit.Domain.Interfaces;
 using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
+using Kvit.Domain.Services.ExchangeRates;
 using Kvit.Domain.Services.Groups;
 
 namespace Kvit.Domain.Services.Expenses
@@ -17,9 +18,10 @@ namespace Kvit.Domain.Services.Expenses
         IUsageEventRepository _usageEvents,
         CancelClosingOnChange _cancelClosingOnChange,
         FinishPaidOneBill _finishPaidOneBill,
+        GetCurrentExchangeRate _getCurrentExchangeRate,
         TimeProvider _timeProvider)
     {
-        public async Task<Result<Guid>> Execute(Guid groupId, Guid userId, Guid clientRequestId, ExpenseInput input, ExchangeRateSnapshot rate, CancellationToken cancellationToken)
+        public async Task<Result<Guid>> Execute(Guid groupId, Guid userId, Guid clientRequestId, ExpenseInput input, CancellationToken cancellationToken)
         {
             Result<Group> found = await _groups.FindForMemberAsync(groupId, userId, cancellationToken);
             if (!found.IsSuccess)
@@ -71,7 +73,13 @@ namespace Kvit.Domain.Services.Expenses
                 return shares.ToFailure<Guid>();
             }
 
-            Expense expense = Expense.Create(groupId, fields.Value, input.PaidByMemberId, shares.Value, rate, userId, clientRequestId, now);
+            Result<ExchangeRateSnapshot> rate = await _getCurrentExchangeRate.Execute(cancellationToken);
+            if (!rate.IsSuccess)
+            {
+                return rate.ToFailure<Guid>();
+            }
+
+            Expense expense = Expense.Create(groupId, fields.Value, input.PaidByMemberId, shares.Value, rate.Value, userId, clientRequestId, now);
             _expenses.Add(expense);
             _activityEvents.Add(ActivityEvent.ExpenseAdded(groupId, userId, expense.Id, expense.Title, expense.AmountMinor, expense.Currency, now));
             _usageEvents.Add(UsageEvent.ExpenseAdded(userId, now));

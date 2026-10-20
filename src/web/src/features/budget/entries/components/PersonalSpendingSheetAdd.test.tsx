@@ -6,12 +6,15 @@ import { kvitGlassPanelLook } from '@/shared/components/kvitGlassLooks'
 import {
   addDays,
   amountField,
+  dateField,
+  doneButton,
   invalidAmountTextCases,
   isDisabled,
   saveButton,
   sentBody,
   todayChip,
   typeAmount,
+  typeDate,
   yesterdayChip,
 } from '@/test/expenseFormTestHelpers'
 import { coffeeCategory, createdTeaCategory, personalFoodCategory } from '@/test/personalCategoryTestData'
@@ -444,6 +447,78 @@ describe('PersonalSpendingSheet, adding', () => {
         expect(sentPosts(fetchMock)).toHaveLength(1)
       })
       expect(sentBody(fetchMock, 'POST', '/api/personal/entries')).toMatchObject({ entryDate: addDays('2026-10-19', -1) })
+    })
+
+    it.each([
+      ['Europe/Skopje', '2026-10-19T10:00:00Z', '2024-11-01', '2026-10-19'],
+      ['Europe/Skopje', '2026-10-31T23:30:00Z', '2024-12-01', '2026-11-01'],
+      ['America/New_York', '2026-11-01T02:00:00Z', '2024-11-01', '2026-10-31'],
+    ])(
+      'limits the date box to the 24 months of the Budget strip up to today (%s at %s)',
+      async (timeZone, now, earliest, today) => {
+        vi.useFakeTimers({ toFake: ['Date'] })
+        vi.setSystemTime(new Date(now))
+        await renderSpendingSheet({ me: { ...testMe, timeZone } })
+        const sheet = await pickCategory(coffeeCategory)
+
+        fireEvent.click(dateChip(sheet, translated('en', 'expenses.today')))
+        const dateSheet = await screen.findByRole('dialog', { name: translated('en', 'expense.pickDate') })
+
+        expect(dateField(dateSheet).min).toBe(earliest)
+        expect(dateField(dateSheet).max).toBe(today)
+      },
+    )
+
+    it.each(languages)('shows the hint for the last 24 months up to today, not the expense hint (%s)', async (language) => {
+      await renderSpendingSheet({ language })
+      const sheet = await pickCategory(coffeeCategory, language)
+
+      fireEvent.click(dateChip(sheet, translated(language, 'expenses.today')))
+      const dateSheet = await screen.findByRole('dialog', { name: translated(language, 'expense.pickDate') })
+
+      expect(within(dateSheet).getByText(translated(language, 'budget.entries.dateHint'))).toBeTruthy()
+      expect(within(dateSheet).queryByText(translated(language, 'expense.dateHint'))).toBeNull()
+    })
+
+    it.each([
+      ['2024-10-31', false],
+      ['2024-11-01', true],
+      ['2026-10-19', true],
+      ['2026-10-20', false],
+      ['2000-01-01', false],
+    ])('lets Done apply the typed date %s only inside that range: %s', async (typedDate, canApply) => {
+      vi.useFakeTimers({ toFake: ['Date'] })
+      vi.setSystemTime(new Date('2026-10-19T10:00:00Z'))
+      await renderSpendingSheet()
+      const sheet = await pickCategory(coffeeCategory)
+
+      fireEvent.click(dateChip(sheet, translated('en', 'expenses.today')))
+      const dateSheet = await screen.findByRole('dialog', { name: translated('en', 'expense.pickDate') })
+      typeDate(dateSheet, typedDate)
+
+      expect(isDisabled(doneButton(dateSheet))).toBe(!canApply)
+    })
+
+    it('saves an entry on the first day of the oldest month the strip shows', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] })
+      vi.setSystemTime(new Date('2026-10-19T10:00:00Z'))
+      const { fetchMock } = await renderSpendingSheet({ answers: savedAnswer })
+      const sheet = await pickCategory(coffeeCategory)
+      typeAmount('120')
+
+      fireEvent.click(dateChip(sheet, translated('en', 'expenses.today')))
+      const dateSheet = await screen.findByRole('dialog', { name: translated('en', 'expense.pickDate') })
+      typeDate(dateSheet, '2024-11-01')
+      fireEvent.click(doneButton(dateSheet))
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog', { name: translated('en', 'expense.pickDate') })).toBeNull()
+      })
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(sentPosts(fetchMock)).toHaveLength(1)
+      })
+      expect(sentBody(fetchMock, 'POST', '/api/personal/entries')).toMatchObject({ entryDate: '2024-11-01' })
     })
 
     it('gives the date chip a 44 px tap height', async () => {

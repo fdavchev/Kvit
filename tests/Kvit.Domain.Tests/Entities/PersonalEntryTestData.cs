@@ -1,7 +1,10 @@
+using System.Globalization;
 using Kvit.Domain.Entities;
 using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.PersonalEntries;
 using Kvit.Domain.Results;
+using Kvit.Domain.Services.ExchangeRates;
+using Kvit.Domain.Tests.Fakes;
 
 namespace Kvit.Domain.Tests.Entities
 {
@@ -34,6 +37,24 @@ namespace Kvit.Domain.Tests.Entities
         public static PersonalEntry NewSpending(Guid categoryId, Guid? userId = null, string currency = Mkd, long amountMinor = OneThousandMkd)
         {
             return PersonalEntry.CreateSpending(userId ?? UserId, Fields(categoryId, amountMinor, currency), Rate, Guid.CreateVersion7(), Moment);
+        }
+
+        public static PersonalEntry OldSpending(Guid categoryId, DateOnly entryDate)
+        {
+            string entryDateText = entryDate.ToString(ExpenseFields.DateFormat, CultureInfo.InvariantCulture);
+            Result<PersonalEntryFields> fields = PersonalEntryFields.CreateForEdit(Input(categoryId, entryDate: entryDateText), UtcToday, entryDate);
+
+            return PersonalEntry.CreateSpending(UserId, fields.Value, Rate, Guid.CreateVersion7(), Moment);
+        }
+
+        public static GetCurrentExchangeRate CurrentRateFrom(FakeExchangeRateRepository rates, FakeExchangeRateSource source, TimeProvider timeProvider)
+        {
+            return new GetCurrentExchangeRate(rates, source, new ExchangeRateRefreshGate(timeProvider), timeProvider, new RecordingLogger<GetCurrentExchangeRate>());
+        }
+
+        public static void SeedRate(FakeExchangeRateRepository rates, ExchangeRateSnapshot rate)
+        {
+            rates.Seed(rate.RateDate, rate.MkdPerEur, rate.FetchedAt);
         }
     }
 }

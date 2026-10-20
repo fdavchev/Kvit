@@ -1,3 +1,4 @@
+using System.Globalization;
 using Kvit.Domain.MoneyRules;
 using Kvit.Domain.PersonalEntries;
 using Kvit.Domain.Results;
@@ -6,6 +7,9 @@ namespace Kvit.Domain.Entities
 {
     public sealed class PersonalEntryFields
     {
+        public const int AllowedMonths = 24;
+        public const int TimeZoneToleranceDays = 1;
+
         private PersonalEntryFields(Guid categoryId, Money amount, DateOnly entryDate, string? note)
         {
             CategoryId = categoryId;
@@ -24,31 +28,55 @@ namespace Kvit.Domain.Entities
 
         public static Result<PersonalEntryFields> Create(PersonalEntryInput input, DateOnly utcToday)
         {
-            Result<Currency> currency = ExpenseFields.CheckCurrency(input.Currency);
+            return Create(input, utcToday, null);
+        }
+
+        public static Result<PersonalEntryFields> CreateForEdit(PersonalEntryInput input, DateOnly utcToday, DateOnly currentEntryDate)
+        {
+            return Create(input, utcToday, currentEntryDate);
+        }
+
+        private static Result<PersonalEntryFields> Create(PersonalEntryInput input, DateOnly utcToday, DateOnly? currentEntryDate)
+        {
+            Result<Currency> currency = ExpenseFields.CheckCurrency(input.Currency, ResultCodes.PERSONAL_ENTRY_CURRENCY_INVALID);
             if (!currency.IsSuccess)
             {
                 return currency.ToFailure<PersonalEntryFields>();
             }
 
-            Result<Money> amount = ExpenseFields.CheckAmount(input.AmountMinor, currency.Value);
+            Result<Money> amount = ExpenseFields.CheckAmount(input.AmountMinor, currency.Value, ResultCodes.PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE, ResultCodes.PERSONAL_ENTRY_AMOUNT_TOO_LARGE);
             if (!amount.IsSuccess)
             {
                 return amount.ToFailure<PersonalEntryFields>();
             }
 
-            Result<DateOnly> entryDate = ExpenseFields.CheckDate(input.EntryDate, utcToday, ResultCodes.PERSONAL_ENTRY_DATE_INVALID);
+            Result<DateOnly> entryDate = CheckEntryDate(input.EntryDate, utcToday, currentEntryDate);
             if (!entryDate.IsSuccess)
             {
                 return entryDate.ToFailure<PersonalEntryFields>();
             }
 
-            Result<string?> note = ExpenseFields.CheckNote(input.Note);
+            Result<string?> note = ExpenseFields.CheckNote(input.Note, ResultCodes.PERSONAL_ENTRY_NOTE_INVALID);
             if (!note.IsSuccess)
             {
                 return note.ToFailure<PersonalEntryFields>();
             }
 
             return Result.Ok(new PersonalEntryFields(input.CategoryId, amount.Value, entryDate.Value, note.Value));
+        }
+
+        private static Result<DateOnly> CheckEntryDate(string dateText, DateOnly utcToday, DateOnly? currentEntryDate)
+        {
+            if (currentEntryDate is DateOnly keptDate && dateText == keptDate.ToString(ExpenseFields.DateFormat, CultureInfo.InvariantCulture))
+            {
+                return Result.Ok(keptDate);
+            }
+
+            DateOnly firstDayOfUtcMonth = new(utcToday.Year, utcToday.Month, 1);
+            DateOnly earliestDate = firstDayOfUtcMonth.AddMonths(-(AllowedMonths - 1)).AddDays(-TimeZoneToleranceDays);
+            DateOnly latestDate = utcToday.AddDays(TimeZoneToleranceDays);
+
+            return ExpenseFields.CheckDate(dateText, earliestDate, latestDate, ResultCodes.PERSONAL_ENTRY_DATE_INVALID);
         }
     }
 }

@@ -1,6 +1,5 @@
 using System.Net;
 using Kvit.Domain.Entities;
-using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.MoneyRules;
 using Kvit.Domain.PersonalEntries;
 using Kvit.Domain.Results;
@@ -18,6 +17,8 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
 
         private readonly FakePersonalEntryRepository _entries = new();
         private readonly FakeCategoryRepository _categories = new();
+        private readonly FakeExchangeRateRepository _rates = new();
+        private readonly FakeExchangeRateSource _rateSource = new();
         private readonly EditPersonalEntry _editPersonalEntry;
         private readonly Category _pets = CategoryTestData.NewCustom("Pets", 11);
         private readonly Category _kids = CategoryTestData.NewCustom("Kids", 12);
@@ -28,7 +29,9 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
             _categories.Seed(_pets, _kids);
             _entry = PersonalEntryTestData.NewSpending(_pets.Id);
             _entries.Seed(_entry);
-            _editPersonalEntry = new EditPersonalEntry(_entries, _categories, new FixedTimeProvider(Later));
+            PersonalEntryTestData.SeedRate(_rates, PersonalEntryTestData.Rate);
+            FixedTimeProvider timeProvider = new(Later);
+            _editPersonalEntry = new EditPersonalEntry(_entries, _categories, PersonalEntryTestData.CurrentRateFrom(_rates, _rateSource, timeProvider), timeProvider);
         }
 
         [Fact]
@@ -47,7 +50,9 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
         [Fact]
         public async Task Execute_SameCurrency_KeepsTheSavedRate()
         {
-            Result result = await ExecuteAsync(_entry.Id, PersonalEntryTestData.Input(_pets.Id, 200_000), PersonalEntryTestData.NewerRate);
+            PersonalEntryTestData.SeedRate(_rates, PersonalEntryTestData.NewerRate);
+
+            Result result = await ExecuteAsync(_entry.Id, PersonalEntryTestData.Input(_pets.Id, 200_000));
 
             Assert.True(result.IsSuccess);
             Assert.Equal(PersonalEntryTestData.Rate.MkdPerEur, _entry.MkdPerEur);
@@ -55,9 +60,22 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
         }
 
         [Fact]
+        public async Task Execute_SameCurrencyWhileTheNewestRateIsStale_NeverAsksTheSource()
+        {
+            SeedStaleRate();
+
+            Result result = await ExecuteAsync(_entry.Id, PersonalEntryTestData.Input(_pets.Id, 200_000));
+
+            Assert.True(result.IsSuccess);
+            Assert.Empty(_rateSource.RequestedDates);
+        }
+
+        [Fact]
         public async Task Execute_CurrencyChanged_SavesTheCurrentRate()
         {
-            Result result = await ExecuteAsync(_entry.Id, PersonalEntryTestData.Input(_pets.Id, 1_000, "EUR"), PersonalEntryTestData.NewerRate);
+            PersonalEntryTestData.SeedRate(_rates, PersonalEntryTestData.NewerRate);
+
+            Result result = await ExecuteAsync(_entry.Id, PersonalEntryTestData.Input(_pets.Id, 1_000, "EUR"));
 
             Assert.True(result.IsSuccess);
             Assert.Equal(Currency.EUR, _entry.Currency);
@@ -66,9 +84,57 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
         }
 
         [Fact]
-        public async Task Execute_CurrencyChangedWithoutACurrentRate_ThrowsBecauseTheCurrencyChangedMeanwhile()
+        public async Task Execute_CurrencyChangedWhileTheNewestRateIsStale_AsksTheSourceAndSavesItsRate()
         {
-            await Assert.ThrowsAsync<InvalidOperationException>(() => ExecuteAsync(_entry.Id, PersonalEntryTestData.Input(_pets.Id, 1_000, "EUR")));
+            SeedStaleRate();
+            _rateSource.AnswerWith(PersonalEntryTestData.UtcToday, 61.9000m);
+
+            Result result = await ExecuteAsync(_entry.Id, PersonalEntryTestData.Input(_pets.Id, 1_000, "EUR"));
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal([PersonalEntryTestData.UtcToday], _rateSource.RequestedDates);
+            Assert.Equal(61.9000m, _entry.MkdPerEur);
+            Assert.Equal(PersonalEntryTestData.UtcToday, _entry.RateDate);
+        }
+
+        [Fact]
+        public async Task Execute_EntryWhoseCurrencyWasChangedByAnotherRequestMeanwhile_SavesTheCurrentRateForTheRequestedCurrency()
+        {
+            PersonalEntry changedMeanwhile = PersonalEntryTestData.NewSpending(_pets.Id, currency: "EUR", amountMinor: 1_000);
+            _entries.Seed(changedMeanwhile);
+            PersonalEntryTestData.SeedRate(_rates, PersonalEntryTestData.NewerRate);
+
+            Result result = await ExecuteAsync(changedMeanwhile.Id, PersonalEntryTestData.Input(_pets.Id, 120_000, "MKD"));
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(Currency.MKD, changedMeanwhile.Currency);
+            Assert.Equal(PersonalEntryTestData.NewerRate.MkdPerEur, changedMeanwhile.MkdPerEur);
+        }
+
+        [Fact]
+        public async Task Execute_KeepsADateOlderThanTheLast24Months_Succeeds()
+        {
+            PersonalEntry old = PersonalEntryTestData.OldSpending(_pets.Id, new DateOnly(2023, 5, 4));
+            _entries.Seed(old);
+
+            Result result = await ExecuteAsync(old.Id, PersonalEntryTestData.Input(_pets.Id, 300_000, entryDate: "2023-05-04"));
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(300_000, old.AmountMinor);
+            Assert.Equal(new DateOnly(2023, 5, 4), old.EntryDate);
+        }
+
+        [Fact]
+        public async Task Execute_MovesAnOldDateToAnotherDateOutsideTheLast24Months_FailsWithDateInvalidAndChangesNothing()
+        {
+            PersonalEntry old = PersonalEntryTestData.OldSpending(_pets.Id, new DateOnly(2023, 5, 4));
+            _entries.Seed(old);
+
+            Result result = await ExecuteAsync(old.Id, PersonalEntryTestData.Input(_pets.Id, 300_000, entryDate: "2023-05-05"));
+
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_DATE_INVALID);
+            Assert.Equal(PersonalEntryTestData.OneThousandMkd, old.AmountMinor);
+            Assert.Null(old.UpdatedAt);
         }
 
         [Fact]
@@ -109,7 +175,7 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
         [Fact]
         public async Task Execute_EntryOfAnotherUser_FailsWith404NotFoundAndChangesNothing()
         {
-            Result result = await _editPersonalEntry.Execute(PersonalEntryTestData.OtherUserId, _entry.Id, PersonalEntryTestData.Input(_pets.Id, 300_000), null, TestContext.Current.CancellationToken);
+            Result result = await _editPersonalEntry.Execute(PersonalEntryTestData.OtherUserId, _entry.Id, PersonalEntryTestData.Input(_pets.Id, 300_000), TestContext.Current.CancellationToken);
 
             ResultAssert.Failed(result, HttpStatusCode.NotFound, ResultCodes.PERSONAL_ENTRY_NOT_FOUND);
             AssertEntryUnchanged();
@@ -130,7 +196,7 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
         {
             Result result = await ExecuteAsync(_entry.Id, PersonalEntryTestData.Input(_pets.Id, 0));
 
-            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.EXPENSE_AMOUNT_NOT_POSITIVE);
+            ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE);
             AssertEntryUnchanged();
         }
 
@@ -149,9 +215,14 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
             Assert.Null(_entry.UpdatedAt);
         }
 
-        private Task<Result> ExecuteAsync(Guid entryId, PersonalEntryInput input, ExchangeRateSnapshot? currentRate = null)
+        private void SeedStaleRate()
         {
-            return _editPersonalEntry.Execute(PersonalEntryTestData.UserId, entryId, input, currentRate, TestContext.Current.CancellationToken);
+            _rates.Seed(PersonalEntryTestData.Rate.RateDate, PersonalEntryTestData.Rate.MkdPerEur, Later.AddHours(-9));
+        }
+
+        private Task<Result> ExecuteAsync(Guid entryId, PersonalEntryInput input)
+        {
+            return _editPersonalEntry.Execute(PersonalEntryTestData.UserId, entryId, input, TestContext.Current.CancellationToken);
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using Kvit.Domain.Entities;
 using Kvit.Domain.MoneyRules;
@@ -45,22 +46,22 @@ namespace Kvit.Domain.Tests.Entities
         }
 
         [Fact]
-        public void Create_NoteOf501Characters_FailsWithTheExpenseNoteCode()
+        public void Create_NoteOf501Characters_FailsWithThePersonalEntryNoteCode()
         {
             Result<PersonalEntryFields> fields = Create(PersonalEntryTestData.Input(CategoryId, note: new string('a', ExpenseFields.NoteMaxLength + 1)));
 
-            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.EXPENSE_NOTE_INVALID);
+            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_NOTE_INVALID);
         }
 
         [Theory]
         [InlineData("USD")]
         [InlineData("mkd")]
         [InlineData("")]
-        public void Create_UnknownCurrency_FailsWithTheExpenseCurrencyCode(string currency)
+        public void Create_UnknownCurrency_FailsWithThePersonalEntryCurrencyCode(string currency)
         {
             Result<PersonalEntryFields> fields = Create(PersonalEntryTestData.Input(CategoryId, currency: currency));
 
-            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.EXPENSE_CURRENCY_INVALID);
+            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_CURRENCY_INVALID);
         }
 
         [Theory]
@@ -70,7 +71,7 @@ namespace Kvit.Domain.Tests.Entities
         {
             Result<PersonalEntryFields> fields = Create(PersonalEntryTestData.Input(CategoryId, amountMinor));
 
-            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.EXPENSE_AMOUNT_NOT_POSITIVE);
+            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE);
         }
 
         [Fact]
@@ -78,7 +79,7 @@ namespace Kvit.Domain.Tests.Entities
         {
             Result<PersonalEntryFields> fields = Create(PersonalEntryTestData.Input(CategoryId, ExpenseFields.AmountMaxMinorUnits + 1, "EUR"));
 
-            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.EXPENSE_AMOUNT_TOO_LARGE);
+            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_AMOUNT_TOO_LARGE);
         }
 
         [Fact]
@@ -98,9 +99,11 @@ namespace Kvit.Domain.Tests.Entities
         }
 
         [Theory]
-        [InlineData("2000-01-01")]
-        [InlineData("2027-10-20")]
-        public void Create_DateOnTheEdgesOfTheAllowedRange_IsAccepted(string entryDate)
+        [InlineData("2024-10-31")]
+        [InlineData("2024-11-01")]
+        [InlineData("2026-10-19")]
+        [InlineData("2026-10-20")]
+        public void Create_DateOnTheEdgesOfTheLast24MonthsUpToTomorrowInUtc_IsAccepted(string entryDate)
         {
             Result<PersonalEntryFields> fields = Create(PersonalEntryTestData.Input(CategoryId, entryDate: entryDate));
 
@@ -108,8 +111,11 @@ namespace Kvit.Domain.Tests.Entities
         }
 
         [Theory]
+        [InlineData("2024-10-30")]
+        [InlineData("2026-10-21")]
+        [InlineData("2000-01-01")]
         [InlineData("1999-12-31")]
-        [InlineData("2027-10-21")]
+        [InlineData("2027-10-20")]
         [InlineData("2026-13-01")]
         [InlineData("18.10.2026")]
         [InlineData("2026-10-18T00:00:00")]
@@ -121,12 +127,66 @@ namespace Kvit.Domain.Tests.Entities
             ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_DATE_INVALID);
         }
 
+        [Theory]
+        [InlineData("2026-03-01", "2024-03-31", "2024-03-30")]
+        [InlineData("2026-01-31", "2024-01-31", "2024-01-30")]
+        [InlineData("2026-12-31", "2024-12-31", "2024-12-30")]
+        public void Create_EarliestDate_IsTheDayBeforeTheFirstOfTheMonth23MonthsBeforeTheUtcMonth(string utcToday, string earliestAccepted, string latestRefused)
+        {
+            DateOnly today = DateOnly.ParseExact(utcToday, ExpenseFields.DateFormat, CultureInfo.InvariantCulture);
+
+            Result<PersonalEntryFields> accepted = PersonalEntryFields.Create(PersonalEntryTestData.Input(CategoryId, entryDate: earliestAccepted), today);
+            Result<PersonalEntryFields> refused = PersonalEntryFields.Create(PersonalEntryTestData.Input(CategoryId, entryDate: latestRefused), today);
+
+            Assert.True(accepted.IsSuccess);
+            ResultAssert.Failed(refused, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_DATE_INVALID);
+        }
+
+        [Fact]
+        public void CreateForEdit_KeepingADateThatIsNowOutsideTheRange_IsAccepted()
+        {
+            DateOnly keptDate = new(2023, 5, 4);
+
+            Result<PersonalEntryFields> fields = PersonalEntryFields.CreateForEdit(PersonalEntryTestData.Input(CategoryId, entryDate: "2023-05-04"), PersonalEntryTestData.UtcToday, keptDate);
+
+            Assert.True(fields.IsSuccess);
+            Assert.Equal(keptDate, fields.Value.EntryDate);
+        }
+
+        [Fact]
+        public void CreateForEdit_ChangingTheDateToAnotherDateOutsideTheRange_FailsWithThePersonalEntryDateCode()
+        {
+            Result<PersonalEntryFields> fields = PersonalEntryFields.CreateForEdit(PersonalEntryTestData.Input(CategoryId, entryDate: "2023-05-05"), PersonalEntryTestData.UtcToday, new DateOnly(2023, 5, 4));
+
+            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_DATE_INVALID);
+        }
+
+        [Theory]
+        [InlineData("2024-10-31")]
+        [InlineData("2026-10-20")]
+        public void CreateForEdit_ChangingTheDateToTheEdgesOfTheRange_IsAccepted(string entryDate)
+        {
+            Result<PersonalEntryFields> fields = PersonalEntryFields.CreateForEdit(PersonalEntryTestData.Input(CategoryId, entryDate: entryDate), PersonalEntryTestData.UtcToday, new DateOnly(2023, 5, 4));
+
+            Assert.True(fields.IsSuccess);
+        }
+
+        [Theory]
+        [InlineData("2024-10-30")]
+        [InlineData("2026-10-21")]
+        public void CreateForEdit_ChangingARecentDateToJustOutsideTheRange_FailsWithThePersonalEntryDateCode(string entryDate)
+        {
+            Result<PersonalEntryFields> fields = PersonalEntryFields.CreateForEdit(PersonalEntryTestData.Input(CategoryId, entryDate: entryDate), PersonalEntryTestData.UtcToday, new DateOnly(2026, 10, 18));
+
+            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_DATE_INVALID);
+        }
+
         [Fact]
         public void Create_SeveralInvalidFields_ReportsTheCurrencyFirstLikeExpenses()
         {
             Result<PersonalEntryFields> fields = Create(PersonalEntryTestData.Input(CategoryId, 0, "USD", "bad", new string('a', 501)));
 
-            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.EXPENSE_CURRENCY_INVALID);
+            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_CURRENCY_INVALID);
         }
 
         [Fact]
@@ -134,7 +194,7 @@ namespace Kvit.Domain.Tests.Entities
         {
             Result<PersonalEntryFields> fields = Create(PersonalEntryTestData.Input(CategoryId, 0, "MKD", "bad"));
 
-            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.EXPENSE_AMOUNT_NOT_POSITIVE);
+            ResultAssert.Failed(fields, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE);
         }
 
         private static Result<PersonalEntryFields> Create(PersonalEntryInput input)

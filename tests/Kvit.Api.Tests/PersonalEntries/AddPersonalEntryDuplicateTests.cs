@@ -67,12 +67,48 @@ namespace Kvit.Api.Tests.PersonalEntries
             SignedInUser user = await _app.SignUpAsync();
             Guid clientRequestId = Guid.CreateVersion7();
             HttpResponseMessage rejected = await PersonalEntryRequests.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, currency: "USD"), clientRequestId);
-            await ProblemResponse.AssertAsync(rejected, HttpStatusCode.BadRequest, ResultCodes.EXPENSE_CURRENCY_INVALID);
+            await ProblemResponse.AssertAsync(rejected, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_CURRENCY_INVALID);
 
             HttpResponseMessage response = await PersonalEntryRequests.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId), clientRequestId);
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Equal(1, await PersonalEntrySteps.CountOfUserAsync(_app, user.UserId));
+        }
+
+        [Fact]
+        public async Task Add_RepeatOfASavedAddWhileTheNewestRateIsStale_AnswersTheSavedEntryWithoutAskingTheRateSource()
+        {
+            SignedInUser user = await _app.SignUpAsync();
+            EntryInput input = EntryInput.Of(PersonalEntryRequests.BuiltInFoodId);
+            Guid clientRequestId = Guid.CreateVersion7();
+            await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.Zero);
+            Guid entryId = await PersonalEntrySteps.AddAsync(user.Client, input, clientRequestId);
+            await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.FromHours(20));
+            _app.RateSource.Fail();
+
+            HttpResponseMessage response = await PersonalEntryRequests.AddAsync(user.Client, input, clientRequestId);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(entryId, (await AuthRequests.ReadJsonAsync(response)).GetProperty("id").GetGuid());
+            Assert.Empty(_app.RateSource.RequestedDates);
+        }
+
+        [Fact]
+        public async Task Add_RepeatAfterTheSavedEntryWasDeleted_Answers400ClientRequestIdUsedAndSavesNothingNew()
+        {
+            SignedInUser user = await _app.SignUpAsync();
+            EntryInput input = EntryInput.Of(PersonalEntryRequests.BuiltInFoodId);
+            Guid clientRequestId = Guid.CreateVersion7();
+            Guid entryId = await PersonalEntrySteps.AddAsync(user.Client, input, clientRequestId);
+            HttpResponseMessage deleted = await PersonalEntryRequests.DeleteAsync(user.Client, entryId);
+            Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
+            string before = await PersonalEntrySteps.SnapshotAsync(_app);
+
+            HttpResponseMessage response = await PersonalEntryRequests.AddAsync(user.Client, input, clientRequestId);
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_CLIENT_REQUEST_ID_USED);
+            Assert.Equal(before, await PersonalEntrySteps.SnapshotAsync(_app));
+            Assert.Empty(await PersonalEntrySteps.EntryIdsOfMonthAsync(user.Client));
         }
 
         [Fact]

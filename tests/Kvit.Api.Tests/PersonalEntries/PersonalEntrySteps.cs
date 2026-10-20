@@ -77,6 +77,14 @@ namespace Kvit.Api.Tests.PersonalEntries
             return int.Parse(Assert.Single(counts)!);
         }
 
+        public static Task SetEntryDateAsync(MigratedDatabase database, Guid entryId, DateOnly entryDate)
+        {
+            return database.ExecuteAsync(
+                "UPDATE personal_entries SET entry_date = @entry_date WHERE id = @id",
+                new NpgsqlParameter("entry_date", entryDate),
+                new NpgsqlParameter("id", entryId));
+        }
+
         public static Task SetDeletedAtAsync(MigratedDatabase database, Guid entryId, DateTimeOffset deletedAt)
         {
             return database.ExecuteAsync(

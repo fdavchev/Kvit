@@ -29,6 +29,11 @@ namespace Kvit.Infrastructure.Persistence
                 await DiscardAsync(context, cancellationToken);
                 throw new ActiveDayAlreadySavedException(exception);
             }
+            catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, CategoryConfiguration.ActiveNameIndexName))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new CategoryNameAlreadySavedException(exception);
+            }
         }
 
         private static bool IsUniqueViolationOf(DbUpdateException exception, params string[] indexNames)

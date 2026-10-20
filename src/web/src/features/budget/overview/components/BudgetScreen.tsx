@@ -11,8 +11,9 @@ import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
 import { useIsDesktop } from '@/shared/hooks/useIsDesktop'
 import { useListAnimation } from '@/shared/hooks/useListAnimation'
-import { currentMonthInTimeZone, recentMonths } from '@/shared/utils/calendarMonth'
+import { currentMonthInTimeZone } from '@/shared/utils/calendarMonth'
 import { todayInTimeZone } from '@/shared/utils/formatDate'
+import { budgetMonths } from '../../budgetMonths'
 import { PersonalSpendingSheet } from '../../entries/components/PersonalSpendingSheet'
 import { usePersonalEntries } from '../../entries/hooks/usePersonalEntries'
 import { BudgetFloatingAddButton, BudgetRoundAddButton } from './BudgetAddButton'
@@ -21,7 +22,6 @@ import { CategoryTotals } from './CategoryTotals'
 import { MonthStrip } from './MonthStrip'
 import { PersonalEntryListItem } from './PersonalEntryListItem'
 
-const shownMonthCount = 24
 const receiptEmoji = '\u{1F9FE}'
 
 export function BudgetScreen() {
@@ -92,7 +92,7 @@ export function BudgetScreen() {
       <div className="min-h-12" />
       <KvitScreenTitle>{t('nav.budget')}</KvitScreenTitle>
       <MonthStrip
-        months={recentMonths(currentMonth, shownMonthCount)}
+        months={budgetMonths(currentMonth)}
         currentMonth={currentMonth}
         selectedMonth={selectedMonth}
         onSelect={setSelectedMonth}

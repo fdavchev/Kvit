@@ -4,7 +4,7 @@ import {
   type PersonalEntry,
   type PersonalEntryFields,
 } from '@/core/services/personalEntries/personalEntriesService'
-import { useSaveOnce } from '../../categories/hooks/useSaveOnce'
+import type { SaveOnce } from '../../categories/hooks/useSaveOnce'
 import { refreshPersonalEntries } from '../personalEntryCache'
 import type { PersonalEntryRun } from './useAddPersonalEntry'
 
@@ -13,18 +13,17 @@ export interface PersonalEntryEdit {
   fields: PersonalEntryFields
 }
 
-export function useEditPersonalEntry(): PersonalEntryRun<PersonalEntryEdit> {
+export function useEditPersonalEntry(oneAtATime: SaveOnce): PersonalEntryRun<PersonalEntryEdit> {
   const queryClient = useQueryClient()
-  const saving = useSaveOnce()
   const mutation = useMutation<PersonalEntry, Error, PersonalEntryEdit>({
     mutationFn: ({ entryId, fields }) => editPersonalEntry(entryId, fields),
     onSuccess: () => refreshPersonalEntries(queryClient),
-    onSettled: saving.finish,
+    onSettled: oneAtATime.finish,
   })
 
   return {
     run: (edit, onDone, onRefused) => {
-      if (saving.tryStart()) {
+      if (oneAtATime.tryStart()) {
         mutation.mutate(edit, { onSuccess: onDone, onError: onRefused })
       }
     },

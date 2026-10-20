@@ -1,6 +1,5 @@
 using Kvit.Domain.Entities;
 using Kvit.Domain.Interfaces;
-using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 
 namespace Kvit.Domain.Tests.Fakes
@@ -34,13 +33,6 @@ namespace Kvit.Domain.Tests.Fakes
         public Task<Result<PersonalEntry>> FindOwnedIncludingDeletedAsync(Guid userId, Guid entryId, CancellationToken cancellationToken)
         {
             return Task.FromResult(SingleOrNotFound(_entries, userId, entryId));
-        }
-
-        public Task<Currency?> FindCurrencyAsync(Guid userId, Guid entryId, CancellationToken cancellationToken)
-        {
-            PersonalEntry? entry = _entries.SingleOrDefault(candidate => candidate.Id == entryId && candidate.UserId == userId && candidate.DeletedAt is null);
-
-            return Task.FromResult(entry?.Currency);
         }
 
         private static Result<PersonalEntry> SingleOrNotFound(IEnumerable<PersonalEntry> entries, Guid userId, Guid entryId)

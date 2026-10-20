@@ -3,6 +3,7 @@ using Kvit.Application.Dispatching;
 using Kvit.Application.Queries.Me;
 using Kvit.Contracts.PersonalCategories;
 using Kvit.Contracts.PersonalEntries;
+using Kvit.Domain.Entities;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,8 @@ namespace Kvit.Application.Queries.PersonalEntries
         AppDbContext _context) : IQueryHandler<GetPersonalEntriesQuery, PersonalEntryMonthResponse>
     {
         public const string MonthFormat = "yyyy-MM";
+
+        private static readonly DateOnly LastMonthWithANextMonth = new(DateOnly.MaxValue.Year, DateOnly.MaxValue.Month - 1, 1);
 
         public async Task<Result<PersonalEntryMonthResponse>> Handle(GetPersonalEntriesQuery query, CancellationToken cancellationToken)
         {
@@ -48,6 +51,11 @@ namespace Kvit.Application.Queries.PersonalEntries
             if (!DateOnly.TryParseExact(month, MonthFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly firstDay))
             {
                 return Result.Failure<DateOnly>($"'{month}' is not a month in the form {MonthFormat}, such as 2026-10.", ResultCodes.PERSONAL_ENTRY_MONTH_INVALID);
+            }
+
+            if (firstDay < ExpenseFields.EarliestDate || firstDay > LastMonthWithANextMonth)
+            {
+                return Result.Failure<DateOnly>($"The month {month} is outside the supported range {ExpenseFields.EarliestDate.ToString(MonthFormat, CultureInfo.InvariantCulture)} to {LastMonthWithANextMonth.ToString(MonthFormat, CultureInfo.InvariantCulture)}.", ResultCodes.PERSONAL_ENTRY_MONTH_INVALID);
             }
 
             return Result.Ok(firstDay);

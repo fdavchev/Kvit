@@ -18,6 +18,11 @@ const budgetEntryTexts: BudgetEntryText[] = [
   { key: 'budget.entries.pickCategory', en: 'What did you spend on?', mk: 'На што потроши?' },
   { key: 'budget.entries.deleted', en: 'Deleted', mk: 'Избришано' },
   { key: 'budget.entries.restored', en: 'Restored', mk: 'Вратено' },
+  {
+    key: 'budget.entries.dateHint',
+    en: 'Pick a date from the last 24 months, up to today.',
+    mk: 'Избери датум од последните 24 месеци, најдоцна денес.',
+  },
 ]
 
 const reusedTexts: BudgetEntryText[] = [

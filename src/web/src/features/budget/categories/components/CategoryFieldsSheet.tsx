@@ -60,7 +60,7 @@ export function CategoryFieldsSheet({
 
   function submit(): void {
     setChangedSinceSave(nothingChanged)
-    onSubmit(fields)
+    onSubmit({ ...fields, emoji: fields.emoji.trim() })
   }
 
   return (

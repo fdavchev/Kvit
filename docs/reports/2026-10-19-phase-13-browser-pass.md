@@ -365,3 +365,87 @@ None found in this re-check (no Bug 10 or higher).
 | Bug 8: focus on "+ New" after Escape / backdrop, Tab trapped in the grid, Budget and Home; focus after Save; Edit category cancel; 8 other sheets Escape returns to opener | PASS, VERIFIED by live run |
 | Quick regression (add from Budget and Home, 360x740 title and Save) | PASS, VERIFIED by live run |
 | New bugs | none |
+
+---
+
+# Re-check 3 (code review fixes), 2026-10-20
+
+Run by the tester against the working tree of `feat/13-personal-spending` (the code review fixes were uncommitted). Nothing in the app was changed, nothing was committed or staged; only this section was added. Docker Desktop was open; the database container was already running, `.\scripts\start-local.ps1 -NoBrowser` started API and website, and `-Stop` stopped everything at the end ("Ports 5018 and 5173 are free", database data kept).
+
+Labels: **VERIFIED by live run** (real headless Chromium or direct API calls from the signed-in browser session against the local app, result read and, for screens, looked at in a screenshot), **NOT VERIFIED**. The automated suites (`dotnet test`, `npm test`, `npm run lint`, `npm run build`) were **not run** in this re-check.
+
+## How it was run
+- Migration check: the index `ix_categories_owner_user_id_active_lower_name` was already in the local database (`pg_indexes`), so `PersonalCategoryNameUnique` was applied; I applied nothing.
+- Playwright for Python, headless Chromium only. Windows: 360x740 and 1280x800, English (`en-US`) and Macedonian (`mk-MK`), light and dark.
+- A NEW test user was signed up for a clean Budget: `p13c1792484422@example.com` / `Passw0rdA` ("Cvetan Gamma", time zone Europe/Berlin). The group checks and the Home-path check used user A ("Ohrid trip").
+- Dates: local date 2026-10-20 (UTC 08:20). The strip is Nov 2024 to Oct 2026 (24 pills), so the first day of the oldest month is 2024-11-01 (the picker `min`) and today is 2026-10-20 (the picker `max`).
+- Scripts and screenshots (79 files, outside the repository): `C:\Users\Davchev\AppData\Local\Temp\claude\c--Users-Davchev-Projects-Kvit\32e619e6-68b1-4a88-afd6-ffb8e56303eb\scratchpad\` (`a13.py`, `d13a.py`, `d13b.py`, `t13c.py`, `c13d.py`, `e13a.py` to `e13e.py`, `r13.py`, `g13.py`, `x13a.py` to `x13c.py`, `p13.py`, `r13b.py`, `r13c.py`); screenshots in `...\scratchpad\shots13d\`.
+
+## Results table
+| # | Check | Result | Label |
+|---|---|---|---|
+| 1a | Date sheet of the add sheet, 360 and 1280, EN/MK, light/dark: the date input has `min` 2024-11-01 and `max` 2026-10-20. Typing 2024-10-31, 2026-10-21, 2027-01-01 or 1999-01-01 leaves "Done" disabled; 2024-11-01, 2026-10-19 and 2026-10-20 enable it | PASS | VERIFIED by live run |
+| 1b | The native calendar pop-up (greyed days) and the browser's arrow-key stepping: an arrow key can step the field past the limit (value 2026-10-21, `rangeOverflow` true), but "Done" stays disabled, so it cannot be applied. The pop-up is not drawn in headless screenshots | PASS for "cannot be applied"; the pop-up look NOT VERIFIED | VERIFIED by live run / NOT VERIFIED |
+| 1c | Direct API, add: 2024-10-29 and 2024-10-30 refused `PERSONAL_ENTRY_DATE_INVALID`; 2024-10-31 accepted (the documented one-day edge); 2024-11-01, 2025-06-15, 2026-10-19 (yesterday), 2026-10-20 (today), 2026-10-21 (UTC today + 1, by design) accepted; 2026-10-22, 2027-10-19, 2030-01-01, 1999-12-31 refused | PASS | VERIFIED by live run |
+| 1d | Entry saved through the sheet on 2024-11-01 (360 EN light; 1280 MK dark; 360 MK dark): POST 200 with `entryDate` 2024-11-01; the oldest pill "Nov 2024" shows it; "Spent this month" and the category tiles add up (1 + 5 = 6 MKD, then 13 and 16 as more were added); the row reads "1 Nov 2024" | PASS | VERIFIED by live run |
+| 1e | Editing keeps the date: edit of the 1 Nov 2024 entry (amount to 9) PUT 200 with `entryDate` 2024-11-01; edit of an entry dated 21 Oct (one day ahead of the user's today, made by API) saves without error; through the API an entry set (in the database) to 2020-05-05 saves with the same date (200), a changed date outside the range is refused (400), a changed date inside the range is accepted | PASS | VERIFIED by live run |
+| 1f | Group expense date picker unchanged: `min` 2000-01-01, `max` today + 365 (2027-10-20), 2027-10-21 disabled; the real server still answers EXPENSE_DATE_INVALID for 1999 and today + 2 years and accepts today + 1 year | PASS | VERIFIED by live run |
+| 2 | Date error texts shown in the sheet (route-faked 400, add and edit, 360 and 1280): English "Pick a date from the last 24 months, up to today." and Macedonian "Избери датум од последните 24 месеци, најдоцна денес." read well, sit above Save, and the date chip gets the red edge (`aria-invalid`, red border). The Macedonian text wraps to two lines at 360, nothing cut | PASS | VERIFIED by live run |
+| 3a | Slow API (3 s on POST/PUT/DELETE of `/api/personal/entries`), Save in flight in the edit sheet: Save, Delete, the date chip, the Note chip and the Category chip are `disabled`, opacity 0.5, `pointer-events: none`; real mouse clicks on each of them do nothing (dialog count stays 1, no extra request); a double tap on Save sends ONE PUT; the sheet closes after the answer. Light and dark, EN and MK, 360 and 1280 | PASS | VERIFIED by live run |
+| 3b | Delete in flight: the same five controls are disabled and dimmed; clicks on Save, the date chip, the Category chip and a second click on Delete do nothing; one DELETE; the sheet closes with the "Deleted" toast; Undo sends the restore | PASS | VERIFIED by live run |
+| 3c | Add sheet with Save in flight (360 EN dark): date and Note chips and Save disabled and dimmed; a double tap sends one POST | PASS | VERIFIED by live run |
+| 3d | After a refused save (faked 400 `PERSONAL_ENTRY_NOTE_INVALID` on the PUT): the note box has the red edge and the message sits above Save; Delete is enabled again (opacity 1) and works (one DELETE, sheet closes, Undo restores). EN/MK, light/dark, 360 and 1280 | PASS | VERIFIED by live run |
+| 4a | Emoji "  🐶 " (spaces around): the request body carries "🐶" and the stored emoji is "🐶" | PASS | VERIFIED by live run |
+| 4b | Emoji "abc" (run in English, 360 light): 400, "Pick an emoji.", red edge on the emoji field only (the name field is not red), the red edge goes away when the emoji is edited. Also refused: "a", "1", spaces only. Accepted by design: "é", "ж", "‼️", "〰️", "🏳️‍🌈", 8 smileys; a 17th character cannot be typed (max 16). The Macedonian text of this error was NOT shown live (only the English run) | PASS (EN); MK display NOT VERIFIED | VERIFIED by live run / NOT VERIFIED |
+| 4c | All 20 quick picks (the default tag plus 19) saved: 20 of 20 POST 200 with exactly that emoji in the body | PASS | VERIFIED by live run |
+| 5a | Duplicate names through the sheet: "Pets" then "pets" and "PETS " refused; "Храна" then "храна" and "ХРАНА" refused; "ПЕТС" then "петс" and "Петс" refused; "Кафе" then "кафе" refused. English: "You already have a category with this name."; Macedonian: «Веќе имаш категорија со ова име.»; name box red, message above Save. 360 EN light and 360 MK dark | PASS | VERIFIED by live run |
+| 5b | Archive "Pets" (Edit my categories), then create a new "Pets": works (200). Bring the old one back: refused with an error toast of the same text (EN and MK); the old one stays archived (afterwards the list has one active and one archived "Pets") | PASS | VERIFIED by live run |
+| 5c | Same-moment duplicates: 12 rounds of three parallel POSTs ("Race..." / "RACE..." and "Гонка..." / "ГОНКА..."); every round gave exactly one 200 and two 400 `CATEGORY_NAME_TAKEN`, never a 500. (This does not show whether the C# check or the index caught them.) | PASS | VERIFIED by live run |
+| 6 | Month list, direct API with the session cookie: `month=9999-12` 400 `PERSONAL_ENTRY_MONTH_INVALID`; `1999-12` 400; `2026-13` 400; `abc` 400; `9999-11`, `2000-01`, `2026-10` 200 | PASS | VERIFIED by live run |
+| 7a | New personal codes by direct API: currency USD gives `PERSONAL_ENTRY_CURRENCY_INVALID`; amount 0 and -5 give `PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE`; 10^15 gives `PERSONAL_ENTRY_AMOUNT_TOO_LARGE`; a 501-char note gives `PERSONAL_ENTRY_NOTE_INVALID`; MKD 101 still gives `MONEY_NOT_ON_CURRENCY_STEP` | PASS | VERIFIED by live run |
+| 7b | The same codes (plus `PERSONAL_ENTRY_DATE_INVALID` and `MONEY_NOT_ON_CURRENCY_STEP`) route-faked in the add and the edit sheet, 360 EN light, 360 MK dark, 1280 MK light, 1280 EN dark (48 combinations): the translated text shows (no raw key, no "RAW ENGLISH DETAIL" from the response body, no English in MK), it sits above Save, and the red edge goes to the amount for currency, not-positive, too-large and not-on-step, to the note for the note code, and to the date chip for the date code | PASS (48 of 48) | VERIFIED by live run |
+| 8a | Add from Budget "+" and from Home "+" > Personal spending (360 EN light and 1280 MK dark), double click on Save: one POST 200 each, sheet closed | PASS | VERIFIED by live run |
+| 8b | Edit, Delete, Undo (see 1e, 3a, 3b, 3d) | PASS | VERIFIED by live run |
+| 8c | Group expense (user A, "Ohrid trip", 360 EN light and MK dark): saved for real (POST 200, back on the group page); faked `EXPENSE_AMOUNT_NOT_POSITIVE`, `_AMOUNT_TOO_LARGE`, `_CURRENCY_INVALID`, `_NOTE_INVALID`, `_DATE_INVALID` show their own translated texts ("Pick a date between 2000 and one year from now." / «Избери датум од 2000 до една година однапред.» for the date); the real server still answers the `EXPENSE_*` codes for the group endpoint | PASS | VERIFIED by live run |
+| 9 | Console: no app errors or warnings in any run except the browser's own "Failed to load resource ... 400" lines for refused requests I caused, and the app's own `console.error("A personal category action failed ...")` when "Bring back" is refused (intended; the toast shows too) | PASS | VERIFIED by live run |
+
+## NEW bugs found in this re-check
+
+**Bug 10 (low): the date sheet of personal spending still says "Any date, up to one year ahead."**
+- Where: `src/web/src/features/expenses/shared/components/DateSheet.tsx`, the hint line under the date field (`t('expense.dateHint')`; text in `src/web/src/core/i18n/locales/en.json` line 350 and `mk.json` line 350). The personal sheet passes `earliestDate` and `latestDate`, but the hint is the fixed expense text.
+- What I saw: open Budget "+", pick a category, tap the date chip: the sheet shows "Any date, up to one year ahead." (Macedonian «Било кој датум, до една година однапред.»), while the field allows only 1 Nov 2024 to today. Screenshots `shots13d\a1-datesheet-360-en-light.png`, `shots13d\a1-datesheet-360-mk-dark.png`.
+- Expected: a hint that matches the limits for personal spending (for example the new `PERSONAL_ENTRY_DATE_INVALID` wording); the group sheet keeps its text.
+- Steps: sign in, `/budget`, "+", any category, tap the date chip.
+- Severity: low (misleading text only; the picker and the server enforce the real range).
+
+## Observations (not bugs)
+1. While a save or delete is running, the amount box and the MKD/EUR toggle in the personal sheet stay enabled and at full colour (only Save, Delete and the three chips are dimmed). A person can still type in the amount during the wait; the request already sent is not affected.
+2. A typed date outside the range only disables "Done" without a message (same as before for expenses).
+3. The group expense form shows no red edge on the amount or note when the server refuses (only the text); the personal sheet does. The group files were not changed in this work (only `DateSheet.tsx`), so this is not new.
+4. The server accepts dates one day beyond the strip on both sides (2024-10-31 and UTC today + 1) by design. An entry dated 2024-10-31 (made by direct API call) sits under no pill of the strip and cannot be reached from the screen; the browser cannot produce such a date.
+5. In one MK run my script reported "петс2" as created: that was a stale response in my script (nothing was saved, the database has no "петс2"; a re-run of the same kind of names gave 400 for "петс", "Петс" and "кафе"). Not an app problem.
+
+## Throwaway data left in the local database
+- User C (`p13c1792484422@example.com`): dozens of custom categories (Dog1, Em1x, Pick1-x, Pets1/Pets2 (one archived each), Храна1/2, ПЕТС1 to 4, Кафе3/4, Race and Гонка rounds) and about 15 entries between 2024-11-01 and today. One entry was set to 2020-05-05 in the database to test the old-date edit and was then moved to 2024-11-01 by the API test.
+- User A: two 50 MKD group expenses in "Ohrid trip" from the group tests, one more 50 MKD expense dated 2027-10-20 from the API test, and four "Groceries 17" personal entries from the double-click tests.
+
+## NOT VERIFIED (could not check)
+- The native browser date pop-up (greyed days outside the range) and other browsers; the picker was checked through the input's `min`/`max`, the disabled "Done" and typed values.
+- The Macedonian "Pick an emoji." text shown live (only the English run); the locale file has «Избери емоџи.».
+- A real phone, iOS Safari, Firefox, a screen reader; a real slow network (the 3 s wait was a route delay).
+- Whether the Cyrillic same-moment refusal comes from the database index or the C# check; Neon's `lc_ctype`; the migration on Neon.
+- A person west of UTC right after a new UTC month begins (documented edge); other time zones (only Europe/Berlin).
+- The automated suites (not run in this re-check).
+
+## Summary
+| Item | Result |
+|---|---|
+| 1 Date limits (picker, API, oldest pill and totals, edit keeps date, group picker unchanged) | PASS, VERIFIED by live run (native pop-up NOT VERIFIED) |
+| 2 Date error texts EN and MK | PASS, VERIFIED by live run |
+| 3 Save/Delete in flight, double tap, refusal then Delete | PASS, VERIFIED by live run |
+| 4 Emoji trim, "abc", 20 quick picks | PASS, VERIFIED by live run (MK text of the emoji error NOT VERIFIED) |
+| 5 Duplicate names, archive, bring back, same-moment | PASS, VERIFIED by live run |
+| 6 Month list 9999-12 and 1999-12 | PASS, VERIFIED by live run |
+| 7 New personal error codes (API and sheet, EN/MK) | PASS, VERIFIED by live run |
+| 8 Regression (Budget/Home add, edit, delete, Undo, group expense) | PASS, VERIFIED by live run |
+| New bugs | Bug 10 (low): date sheet hint says "Any date, up to one year ahead." |

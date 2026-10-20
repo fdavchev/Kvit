@@ -37,6 +37,8 @@ namespace Kvit.Api.Tests.PersonalCategories
         [InlineData("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", PersonalCategoryRequests.DefaultEmoji, PersonalCategoryRequests.DefaultColor, ResultCodes.CATEGORY_NAME_INVALID)]
         [InlineData(PersonalCategoryRequests.DefaultName, "", PersonalCategoryRequests.DefaultColor, ResultCodes.CATEGORY_EMOJI_INVALID)]
         [InlineData(PersonalCategoryRequests.DefaultName, "xxxxxxxxxxxxxxxxx", PersonalCategoryRequests.DefaultColor, ResultCodes.CATEGORY_EMOJI_INVALID)]
+        [InlineData(PersonalCategoryRequests.DefaultName, "abc", PersonalCategoryRequests.DefaultColor, ResultCodes.CATEGORY_EMOJI_INVALID)]
+        [InlineData(PersonalCategoryRequests.DefaultName, " x ", PersonalCategoryRequests.DefaultColor, ResultCodes.CATEGORY_EMOJI_INVALID)]
         [InlineData(PersonalCategoryRequests.DefaultName, PersonalCategoryRequests.DefaultEmoji, "black", ResultCodes.CATEGORY_COLOR_INVALID)]
         public async Task Update_InvalidField_Answers400WithItsCodeAndChangesNothing(string name, string emoji, string color, string expectedErrorCode)
         {

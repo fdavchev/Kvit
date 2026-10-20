@@ -47,7 +47,7 @@ namespace Kvit.Domain.Entities
             DateOnly utcToday,
             int titleMaxLength)
         {
-            Result<Currency> checkedCurrency = CheckCurrency(currency);
+            Result<Currency> checkedCurrency = CheckCurrency(currency, ResultCodes.EXPENSE_CURRENCY_INVALID);
             if (!checkedCurrency.IsSuccess)
             {
                 return checkedCurrency.ToFailure<ExpenseFields>();
@@ -59,7 +59,7 @@ namespace Kvit.Domain.Entities
                 return Result.Failure<ExpenseFields>($"'{splitType}' is not a split type. Use one of: {string.Join(", ", splitTypeNames)}.", ResultCodes.EXPENSE_SPLIT_TYPE_INVALID);
             }
 
-            Result<Money> amount = CheckAmount(amountMinor, checkedCurrency.Value);
+            Result<Money> amount = CheckAmount(amountMinor, checkedCurrency.Value, ResultCodes.EXPENSE_AMOUNT_NOT_POSITIVE, ResultCodes.EXPENSE_AMOUNT_TOO_LARGE);
             if (!amount.IsSuccess)
             {
                 return amount.ToFailure<ExpenseFields>();
@@ -77,7 +77,7 @@ namespace Kvit.Domain.Entities
                 return Result.Failure<ExpenseFields>($"The title must have at most {titleMaxLength} characters; it has {trimmedTitle.Length}.", ResultCodes.EXPENSE_TITLE_INVALID);
             }
 
-            Result<string?> trimmedNote = CheckNote(note);
+            Result<string?> trimmedNote = CheckNote(note, ResultCodes.EXPENSE_NOTE_INVALID);
             if (!trimmedNote.IsSuccess)
             {
                 return trimmedNote.ToFailure<ExpenseFields>();
@@ -93,27 +93,27 @@ namespace Kvit.Domain.Entities
             return trimmed.Length == 0 ? null : trimmed;
         }
 
-        public static Result<Currency> CheckCurrency(string currency)
+        public static Result<Currency> CheckCurrency(string currency, string invalidCurrencyCode)
         {
             string[] currencyNames = Enum.GetNames<Currency>();
             if (!currencyNames.Contains(currency, StringComparer.Ordinal))
             {
-                return Result.Failure<Currency>($"'{currency}' is not a supported currency. Use one of: {string.Join(", ", currencyNames)}.", ResultCodes.EXPENSE_CURRENCY_INVALID);
+                return Result.Failure<Currency>($"'{currency}' is not a supported currency. Use one of: {string.Join(", ", currencyNames)}.", invalidCurrencyCode);
             }
 
             return Result.Ok(Enum.Parse<Currency>(currency));
         }
 
-        public static Result<Money> CheckAmount(long amountMinor, Currency currency)
+        public static Result<Money> CheckAmount(long amountMinor, Currency currency, string notPositiveCode, string tooLargeCode)
         {
             if (amountMinor <= 0)
             {
-                return Result.Failure<Money>($"The amount must be more than 0; got {amountMinor} minor units.", ResultCodes.EXPENSE_AMOUNT_NOT_POSITIVE);
+                return Result.Failure<Money>($"The amount must be more than 0; got {amountMinor} minor units.", notPositiveCode);
             }
 
             if (amountMinor > AmountMaxMinorUnits)
             {
-                return Result.Failure<Money>($"The amount must be at most {AmountMaxMinorUnits} minor units; got {amountMinor}.", ResultCodes.EXPENSE_AMOUNT_TOO_LARGE);
+                return Result.Failure<Money>($"The amount must be at most {AmountMaxMinorUnits} minor units; got {amountMinor}.", tooLargeCode);
             }
 
             return Money.Create(amountMinor, currency);
@@ -121,14 +121,18 @@ namespace Kvit.Domain.Entities
 
         public static Result<DateOnly> CheckDate(string dateText, DateOnly utcToday, string invalidDateCode)
         {
-            DateOnly latestDate = utcToday.AddDays(DateMaxDaysAhead);
-            string allowedRange = $"from {EarliestDate.ToString(DateFormat, CultureInfo.InvariantCulture)} to {latestDate.ToString(DateFormat, CultureInfo.InvariantCulture)}";
+            return CheckDate(dateText, EarliestDate, utcToday.AddDays(DateMaxDaysAhead), invalidDateCode);
+        }
+
+        public static Result<DateOnly> CheckDate(string dateText, DateOnly earliestDate, DateOnly latestDate, string invalidDateCode)
+        {
+            string allowedRange = $"from {earliestDate.ToString(DateFormat, CultureInfo.InvariantCulture)} to {latestDate.ToString(DateFormat, CultureInfo.InvariantCulture)}";
             if (!DateOnly.TryParseExact(dateText, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date))
             {
                 return Result.Failure<DateOnly>($"'{dateText}' is not a date in the form {DateFormat}; pick a date {allowedRange}.", invalidDateCode);
             }
 
-            if (date < EarliestDate || date > latestDate)
+            if (date < earliestDate || date > latestDate)
             {
                 return Result.Failure<DateOnly>($"The date {dateText} is outside the allowed range {allowedRange}.", invalidDateCode);
             }
@@ -136,12 +140,12 @@ namespace Kvit.Domain.Entities
             return Result.Ok(date);
         }
 
-        public static Result<string?> CheckNote(string? note)
+        public static Result<string?> CheckNote(string? note, string invalidNoteCode)
         {
             string? trimmedNote = TrimToNull(note);
             if (trimmedNote is not null && trimmedNote.Length > NoteMaxLength)
             {
-                return Result.Failure<string?>($"The note must have at most {NoteMaxLength} characters; it has {trimmedNote.Length}.", ResultCodes.EXPENSE_NOTE_INVALID);
+                return Result.Failure<string?>($"The note must have at most {NoteMaxLength} characters; it has {trimmedNote.Length}.", invalidNoteCode);
             }
 
             return Result.Ok(trimmedNote);

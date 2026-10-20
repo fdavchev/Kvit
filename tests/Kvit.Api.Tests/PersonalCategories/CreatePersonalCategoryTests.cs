@@ -54,6 +54,17 @@ namespace Kvit.Api.Tests.PersonalCategories
         }
 
         [Fact]
+        public async Task Create_EmojiWithSurroundingSpaces_StoresTheTrimmedEmoji()
+        {
+            SignedInUser user = await _app.SignUpAsync();
+
+            HttpResponseMessage response = await PersonalCategoryRequests.CreateAsync(user.Client, "Pets", " \U0001F43E  ", "teal");
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("\U0001F43E", (await AuthRequests.ReadJsonAsync(response)).GetProperty("emoji").GetString());
+        }
+
+        [Fact]
         public async Task Create_TwoUsers_EachStartAt11()
         {
             SignedInUser first = await _app.SignUpAsync();
@@ -72,6 +83,8 @@ namespace Kvit.Api.Tests.PersonalCategories
         [InlineData(PersonalCategoryRequests.DefaultName, "", PersonalCategoryRequests.DefaultColor, ResultCodes.CATEGORY_EMOJI_INVALID)]
         [InlineData(PersonalCategoryRequests.DefaultName, " ", PersonalCategoryRequests.DefaultColor, ResultCodes.CATEGORY_EMOJI_INVALID)]
         [InlineData(PersonalCategoryRequests.DefaultName, "xxxxxxxxxxxxxxxxx", PersonalCategoryRequests.DefaultColor, ResultCodes.CATEGORY_EMOJI_INVALID)]
+        [InlineData(PersonalCategoryRequests.DefaultName, "abc", PersonalCategoryRequests.DefaultColor, ResultCodes.CATEGORY_EMOJI_INVALID)]
+        [InlineData(PersonalCategoryRequests.DefaultName, " x ", PersonalCategoryRequests.DefaultColor, ResultCodes.CATEGORY_EMOJI_INVALID)]
         [InlineData(PersonalCategoryRequests.DefaultName, PersonalCategoryRequests.DefaultEmoji, "", ResultCodes.CATEGORY_COLOR_INVALID)]
         [InlineData(PersonalCategoryRequests.DefaultName, PersonalCategoryRequests.DefaultEmoji, "black", ResultCodes.CATEGORY_COLOR_INVALID)]
         [InlineData(PersonalCategoryRequests.DefaultName, PersonalCategoryRequests.DefaultEmoji, "Teal", ResultCodes.CATEGORY_COLOR_INVALID)]

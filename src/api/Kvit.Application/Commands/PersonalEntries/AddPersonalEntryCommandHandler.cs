@@ -4,16 +4,13 @@ using Kvit.Application.Queries.Me;
 using Kvit.Application.Queries.PersonalEntries;
 using Kvit.Contracts.PersonalEntries;
 using Kvit.Contracts.Persistence;
-using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Results;
-using Kvit.Domain.Services.ExchangeRates;
 using Kvit.Domain.Services.PersonalEntries;
 
 namespace Kvit.Application.Commands.PersonalEntries
 {
     public sealed class AddPersonalEntryCommandHandler(
         IDispatcher _dispatcher,
-        GetCurrentExchangeRate _getCurrentExchangeRate,
         AddPersonalEntry _addPersonalEntry,
         IUnitOfWork _unitOfWork) : ICommandHandler<AddPersonalEntryCommand, PersonalEntryRow>
     {
@@ -25,14 +22,8 @@ namespace Kvit.Application.Commands.PersonalEntries
                 return userId.ToFailure<PersonalEntryRow>();
             }
 
-            Result<ExchangeRateSnapshot> rate = await _getCurrentExchangeRate.Execute(cancellationToken);
-            if (!rate.IsSuccess)
-            {
-                return rate.ToFailure<PersonalEntryRow>();
-            }
-
             Result<Guid> added = await _unitOfWork.RunInTransactionOnceMoreIfClientRequestIdWasTakenAsync(
-                () => _addPersonalEntry.Execute(userId.Value, command.ClientRequestId, command.Input, rate.Value, cancellationToken),
+                () => _addPersonalEntry.Execute(userId.Value, command.ClientRequestId, command.Input, cancellationToken),
                 cancellationToken);
             if (!added.IsSuccess)
             {

@@ -1,6 +1,5 @@
 using Kvit.Domain.Entities;
 using Kvit.Domain.Interfaces;
-using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -29,15 +28,6 @@ namespace Kvit.Infrastructure.Repositories
         public Task<Result<PersonalEntry>> FindOwnedIncludingDeletedAsync(Guid userId, Guid entryId, CancellationToken cancellationToken)
         {
             return SingleOrNotFoundAsync(_context.PersonalEntries, userId, entryId, cancellationToken);
-        }
-
-        public Task<Currency?> FindCurrencyAsync(Guid userId, Guid entryId, CancellationToken cancellationToken)
-        {
-            return _context.PersonalEntries
-                .AsNoTracking()
-                .Where(entry => entry.Id == entryId && entry.UserId == userId && entry.DeletedAt == null)
-                .Select(entry => (Currency?)entry.Currency)
-                .SingleOrDefaultAsync(cancellationToken);
         }
 
         private static async Task<Result<PersonalEntry>> SingleOrNotFoundAsync(IQueryable<PersonalEntry> entries, Guid userId, Guid entryId, CancellationToken cancellationToken)

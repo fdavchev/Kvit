@@ -139,13 +139,15 @@ namespace Kvit.Api.Tests.PersonalEntries
         }
 
         [Theory]
-        [InlineData(0, "MKD", "2026-10-04", ResultCodes.EXPENSE_AMOUNT_NOT_POSITIVE)]
-        [InlineData(-100, "MKD", "2026-10-04", ResultCodes.EXPENSE_AMOUNT_NOT_POSITIVE)]
-        [InlineData(1_000_000_000_000, "EUR", "2026-10-04", ResultCodes.EXPENSE_AMOUNT_TOO_LARGE)]
+        [InlineData(0, "MKD", "2026-10-04", ResultCodes.PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE)]
+        [InlineData(-100, "MKD", "2026-10-04", ResultCodes.PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE)]
+        [InlineData(1_000_000_000_000, "EUR", "2026-10-04", ResultCodes.PERSONAL_ENTRY_AMOUNT_TOO_LARGE)]
         [InlineData(150, "MKD", "2026-10-04", ResultCodes.MONEY_NOT_ON_CURRENCY_STEP)]
-        [InlineData(100_000, "USD", "2026-10-04", ResultCodes.EXPENSE_CURRENCY_INVALID)]
+        [InlineData(100_000, "USD", "2026-10-04", ResultCodes.PERSONAL_ENTRY_CURRENCY_INVALID)]
         [InlineData(100_000, "MKD", "1999-12-31", ResultCodes.PERSONAL_ENTRY_DATE_INVALID)]
-        [InlineData(100_000, "MKD", "2027-10-07", ResultCodes.PERSONAL_ENTRY_DATE_INVALID)]
+        [InlineData(100_000, "MKD", "2024-10-30", ResultCodes.PERSONAL_ENTRY_DATE_INVALID)]
+        [InlineData(100_000, "MKD", "2026-10-07", ResultCodes.PERSONAL_ENTRY_DATE_INVALID)]
+        [InlineData(100_000, "MKD", "2027-10-06", ResultCodes.PERSONAL_ENTRY_DATE_INVALID)]
         [InlineData(100_000, "MKD", "04.10.2026", ResultCodes.PERSONAL_ENTRY_DATE_INVALID)]
         public async Task Add_InvalidField_Answers400WithItsCodeAndWritesNothing(long amountMinor, string currency, string entryDate, string expectedErrorCode)
         {
@@ -157,24 +159,29 @@ namespace Kvit.Api.Tests.PersonalEntries
             Assert.Equal(0, await PersonalEntrySteps.CountOfUserAsync(_app, user.UserId));
         }
 
-        [Fact]
-        public async Task Add_DateOneYearAndOneDayAhead_IsAcceptedLikeExpenses()
+        [Theory]
+        [InlineData("2024-10-31")]
+        [InlineData("2024-11-01")]
+        [InlineData("2026-10-05")]
+        [InlineData("2026-10-06")]
+        public async Task Add_DateOnTheEdgesOfTheLast24MonthsUpToTomorrowInUtc_IsAccepted(string entryDate)
         {
             SignedInUser user = await _app.SignUpAsync();
 
-            HttpResponseMessage response = await PersonalEntryRequests.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, entryDate: "2027-10-06"));
+            HttpResponseMessage response = await PersonalEntryRequests.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, entryDate: entryDate));
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(entryDate, (await AuthRequests.ReadJsonAsync(response)).GetProperty("entryDate").GetString());
         }
 
         [Fact]
-        public async Task Add_NoteOf501Characters_Answers400ExpenseNoteInvalid()
+        public async Task Add_NoteOf501Characters_Answers400PersonalEntryNoteInvalid()
         {
             SignedInUser user = await _app.SignUpAsync();
 
             HttpResponseMessage response = await PersonalEntryRequests.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, note: new string('a', 501)));
 
-            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, ResultCodes.EXPENSE_NOTE_INVALID);
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_NOTE_INVALID);
         }
 
         [Fact]

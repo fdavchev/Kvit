@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
-import { amountField, saveButton, sentBody, typeAmount } from '@/test/expenseFormTestHelpers'
+import { amountField, isDisabled, saveButton, sentBody, typeAmount } from '@/test/expenseFormTestHelpers'
 import { archivedGymCategory, coffeeCategory, personalFoodCategory } from '@/test/personalCategoryTestData'
 import { personalCategoryLabel } from '@/test/personalCategoryTestHelpers'
 import {
@@ -29,6 +29,7 @@ import {
 } from '@/test/personalEntryTestHelpers'
 import {
   jsonAnswer,
+  neverAnswer,
   noContentAnswer,
   problemAnswer,
   requestCount,
@@ -176,6 +177,21 @@ describe('PersonalSpendingSheet, editing', () => {
         categoryId: archivedGymCategory.id,
         amountMinor: 160000,
       })
+    })
+
+    it('keeps a date older than the Budget strip when it is saved without changing it', async () => {
+      const oldEntry = { ...coffeeEntry, entryDate: '2023-05-04' }
+      const { fetchMock } = await renderSpendingSheet({
+        entry: oldEntry,
+        answers: { [coffeePut]: jsonAnswer(entryAnswerRow(oldEntry)) },
+      })
+      await findDetailsSheet(coffeeCategory)
+
+      typeAmount('150')
+      fireEvent.click(saveButton())
+
+      await waitForEveryDialogToClose()
+      expect(sentBody(fetchMock, 'PUT', coffeeUrl)).toMatchObject({ entryDate: '2023-05-04', amountMinor: 15000 })
     })
 
     it('sends one PUT when Save is tapped twice quickly', async () => {
@@ -328,6 +344,108 @@ describe('PersonalSpendingSheet, editing', () => {
       })
       expect(onClose).not.toHaveBeenCalled()
       expect(screen.getByRole('dialog')).toBeTruthy()
+    })
+  })
+
+  describe('one action at a time', () => {
+    function formOf(button: HTMLElement): HTMLFormElement {
+      const form = button.closest('form')
+      if (form === null) {
+        throw new Error('Save is not inside a form')
+      }
+      return form
+    }
+
+    it('disables Delete, the chips and Save while a save is on its way, and sends no DELETE', async () => {
+      const { fetchMock } = await renderSpendingSheet({
+        entry: coffeeEntry,
+        answers: { [coffeePut]: neverAnswer(), [personalEntryDelete(coffeeEntry.id)]: noContentAnswer() },
+      })
+      const sheet = await findDetailsSheet(coffeeCategory)
+
+      fireEvent.click(saveButton())
+      await waitFor(() => {
+        expect(isDisabled(deleteButton(sheet))).toBe(true)
+      })
+      fireEvent.click(deleteButton(sheet))
+
+      expect(isDisabled(saveButton())).toBe(true)
+      expect(isDisabled(categoryChip(sheet))).toBe(true)
+      expect(isDisabled(dateChip(sheet, translated('en', 'expenses.today')))).toBe(true)
+      expect(requestCount(fetchMock, 'DELETE', coffeeUrl)).toBe(0)
+    })
+
+    it('disables Save, the chips and Delete while a delete is on its way, and sends no PUT even when the form is submitted', async () => {
+      const { fetchMock } = await renderSpendingSheet({
+        entry: coffeeEntry,
+        answers: { [personalEntryDelete(coffeeEntry.id)]: neverAnswer(), [coffeePut]: jsonAnswer(entryAnswerRow(coffeeEntry)) },
+      })
+      const sheet = await findDetailsSheet(coffeeCategory)
+
+      fireEvent.click(deleteButton(sheet))
+      await waitFor(() => {
+        expect(isDisabled(saveButton())).toBe(true)
+      })
+      fireEvent.submit(formOf(saveButton()))
+
+      expect(isDisabled(deleteButton(sheet))).toBe(true)
+      expect(isDisabled(categoryChip(sheet))).toBe(true)
+      expect(isDisabled(dateChip(sheet, translated('en', 'expenses.today')))).toBe(true)
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      expect(requestCount(fetchMock, 'PUT', coffeeUrl)).toBe(0)
+    })
+
+    it('sends only the save when Save and Delete are pressed in the same moment', async () => {
+      const { fetchMock } = await renderSpendingSheet({
+        entry: coffeeEntry,
+        answers: { [coffeePut]: neverAnswer(), [personalEntryDelete(coffeeEntry.id)]: noContentAnswer() },
+      })
+      const sheet = await findDetailsSheet(coffeeCategory)
+      const deleteNow = deleteButton(sheet)
+
+      fireEvent.submit(formOf(saveButton()))
+      fireEvent.click(deleteNow)
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'PUT', coffeeUrl)).toBe(1)
+      })
+      expect(requestCount(fetchMock, 'DELETE', coffeeUrl)).toBe(0)
+    })
+
+    it('sends only the delete when Delete and Save are pressed in the same moment', async () => {
+      const { fetchMock } = await renderSpendingSheet({
+        entry: coffeeEntry,
+        answers: { [personalEntryDelete(coffeeEntry.id)]: neverAnswer(), [coffeePut]: jsonAnswer(entryAnswerRow(coffeeEntry)) },
+      })
+      const sheet = await findDetailsSheet(coffeeCategory)
+      const form = formOf(saveButton())
+
+      fireEvent.click(deleteButton(sheet))
+      fireEvent.submit(form)
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'DELETE', coffeeUrl)).toBe(1)
+      })
+      expect(requestCount(fetchMock, 'PUT', coffeeUrl)).toBe(0)
+    })
+
+    it('lets Delete work again after a refused save', async () => {
+      const { fetchMock } = await renderSpendingSheet({
+        entry: coffeeEntry,
+        answers: {
+          [coffeePut]: problemAnswer(400, 'PERSONAL_ENTRY_AMOUNT_TOO_LARGE'),
+          [personalEntryDelete(coffeeEntry.id)]: noContentAnswer(),
+        },
+      })
+      const sheet = await findDetailsSheet(coffeeCategory)
+
+      fireEvent.click(saveButton())
+      await screen.findByRole('alert')
+      fireEvent.click(deleteButton(sheet))
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'DELETE', coffeeUrl)).toBe(1)
+      })
     })
   })
 

@@ -25,7 +25,9 @@ import { cn } from '@/shared/utils/cn'
 import { todayInTimeZone } from '@/shared/utils/formatDate'
 import type { Currency } from '@/shared/utils/formatMoney'
 import { moneyInputText, parseMoneyInput } from '@/shared/utils/parseMoneyInput'
+import { earliestBudgetDate } from '../../budgetMonths'
 import { PersonalCategoryGrid } from '../../categories/components/PersonalCategoryGrid'
+import { useSaveOnce } from '../../categories/hooks/useSaveOnce'
 import { useAddPersonalEntry } from '../hooks/useAddPersonalEntry'
 import { useDeletePersonalEntry } from '../hooks/useDeletePersonalEntry'
 import { useEditPersonalEntry } from '../hooks/useEditPersonalEntry'
@@ -44,15 +46,20 @@ type FieldName = 'amount' | 'date' | 'note' | 'category'
 const entryNotFoundCode = 'PERSONAL_ENTRY_NOT_FOUND'
 
 const refusedCodesOf: Record<FieldName, readonly string[]> = {
-  amount: ['EXPENSE_AMOUNT_NOT_POSITIVE', 'EXPENSE_AMOUNT_TOO_LARGE', 'MONEY_NOT_ON_CURRENCY_STEP', 'EXPENSE_CURRENCY_INVALID'],
+  amount: [
+    'PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE',
+    'PERSONAL_ENTRY_AMOUNT_TOO_LARGE',
+    'MONEY_NOT_ON_CURRENCY_STEP',
+    'PERSONAL_ENTRY_CURRENCY_INVALID',
+  ],
   date: ['PERSONAL_ENTRY_DATE_INVALID'],
-  note: ['EXPENSE_NOTE_INVALID'],
+  note: ['PERSONAL_ENTRY_NOTE_INVALID'],
   category: ['PERSONAL_ENTRY_CATEGORY_INVALID'],
 }
 
 const nothingChanged: Record<FieldName, boolean> = { amount: false, date: false, note: false, category: false }
 
-const chipLook = cn(kvitChipLook, 'gap-1.5 aria-invalid:border-destructive')
+const chipLook = cn(kvitChipLook, 'gap-1.5 aria-invalid:border-destructive disabled:pointer-events-none disabled:opacity-50')
 
 export function PersonalSpendingSheet({ entry, onClose }: PersonalSpendingSheetProps) {
   const { t } = useTranslation()
@@ -60,9 +67,10 @@ export function PersonalSpendingSheet({ entry, onClose }: PersonalSpendingSheetP
   const me = useSignedInMe()
   const queryClient = useQueryClient()
   const sheet = useKvitSheet()
-  const add = useAddPersonalEntry()
-  const edit = useEditPersonalEntry()
-  const remove = useDeletePersonalEntry()
+  const oneAtATime = useSaveOnce()
+  const add = useAddPersonalEntry(oneAtATime)
+  const edit = useEditPersonalEntry(oneAtATime)
+  const remove = useDeletePersonalEntry(oneAtATime)
   const restore = useRestorePersonalEntry()
   const initialNote = entry?.note ?? ''
   const [clientRequestId] = useState<string>(() => crypto.randomUUID())
@@ -80,6 +88,7 @@ export function PersonalSpendingSheet({ entry, onClose }: PersonalSpendingSheetP
   const [changedSinceSave, setChangedSinceSave] = useState<Record<FieldName, boolean>>(nothingChanged)
 
   const amountMinor = parseMoneyInput(amountText, currency)
+  const isBusy = add.isPending || edit.isPending || remove.isPending
   const saveError = entry === undefined ? add.error : edit.error
   const shownError = saveError !== null && !hasErrorCode(saveError, entryNotFoundCode) ? saveError : null
 
@@ -171,13 +180,13 @@ export function PersonalSpendingSheet({ entry, onClose }: PersonalSpendingSheetP
     return (
       <KvitForm
         submitLabel={t('groupSettings.save')}
-        isPending={add.isPending || edit.isPending}
+        isPending={isBusy}
         canSubmit={amountMinor !== null}
         errorMessage={shownError === null ? null : t(errorMessageKey(shownError))}
         onSubmit={submit}
         footer={
           entry !== undefined && (
-            <KvitButton variant="danger" disabled={remove.isPending} onClick={() => deleteNow(entry)}>
+            <KvitButton variant="danger" disabled={isBusy} onClick={() => deleteNow(entry)}>
               {t('expense.delete')}
             </KvitButton>
           )
@@ -197,12 +206,18 @@ export function PersonalSpendingSheet({ entry, onClose }: PersonalSpendingSheetP
           }}
         />
         <div className="flex flex-wrap gap-2">
-          <button type="button" aria-invalid={isRefused('date')} className={chipLook} onClick={() => setIsDateOpen(true)}>
+          <button
+            type="button"
+            aria-invalid={isRefused('date')}
+            disabled={isBusy}
+            className={chipLook}
+            onClick={() => setIsDateOpen(true)}
+          >
             <span aria-hidden="true">📅</span>
             {expenseDayText(entryDate, today, language, t)}
           </button>
           {!isNoteOpen && (
-            <button type="button" className={chipLook} onClick={() => setIsNoteOpen(true)}>
+            <button type="button" disabled={isBusy} className={chipLook} onClick={() => setIsNoteOpen(true)}>
               <span aria-hidden="true">📝</span>
               {t('expense.note')}
             </button>
@@ -211,6 +226,7 @@ export function PersonalSpendingSheet({ entry, onClose }: PersonalSpendingSheetP
             <button
               type="button"
               aria-invalid={isRefused('category')}
+              disabled={isBusy}
               className={chipLook}
               onClick={() => setIsPickingCategory(true)}
             >
@@ -253,6 +269,9 @@ export function PersonalSpendingSheet({ entry, onClose }: PersonalSpendingSheetP
         <DateSheet
           expenseDate={entryDate}
           today={today}
+          earliestDate={earliestBudgetDate(today)}
+          latestDate={today}
+          hint={t('budget.entries.dateHint')}
           onPick={(pickedDate) => {
             setEntryDate(pickedDate)
             markChanged('date')

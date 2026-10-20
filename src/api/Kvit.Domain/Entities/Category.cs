@@ -44,6 +44,11 @@ namespace Kvit.Domain.Entities
             return Result.NotFound<T>($"Category {categoryId} is not one of your own categories.", ResultCodes.CATEGORY_NOT_FOUND);
         }
 
+        public static Result NameTakenMeanwhile()
+        {
+            return Result.Failure("Another of your active categories got the same name, ignoring letter case, at the same moment; nothing was saved.", ResultCodes.CATEGORY_NAME_TAKEN);
+        }
+
         public void Update(CategoryFields fields)
         {
             Name = fields.Name;

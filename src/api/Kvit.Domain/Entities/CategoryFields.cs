@@ -30,9 +30,15 @@ namespace Kvit.Domain.Entities
                 return Result.Failure<CategoryFields>($"The category name must have 1 to {NameMaxLength} characters.", ResultCodes.CATEGORY_NAME_INVALID);
             }
 
-            if (string.IsNullOrWhiteSpace(emoji) || emoji.Length > EmojiMaxLength)
+            string trimmedEmoji = emoji.Trim();
+            if (trimmedEmoji.Length == 0 || trimmedEmoji.Length > EmojiMaxLength)
             {
                 return Result.Failure<CategoryFields>($"The category emoji must have 1 to {EmojiMaxLength} characters.", ResultCodes.CATEGORY_EMOJI_INVALID);
+            }
+
+            if (trimmedEmoji.EnumerateRunes().All(rune => rune.IsAscii))
+            {
+                return Result.Failure<CategoryFields>($"'{trimmedEmoji}' is not an emoji: it has only plain letters, digits or punctuation.", ResultCodes.CATEGORY_EMOJI_INVALID);
             }
 
             if (!Colors.Contains(color, StringComparer.Ordinal))
@@ -40,7 +46,7 @@ namespace Kvit.Domain.Entities
                 return Result.Failure<CategoryFields>($"'{color}' is not a category color. Use one of: {string.Join(", ", Colors)}.", ResultCodes.CATEGORY_COLOR_INVALID);
             }
 
-            return Result.Ok(new CategoryFields(trimmedName, emoji, color));
+            return Result.Ok(new CategoryFields(trimmedName, trimmedEmoji, color));
         }
     }
 }

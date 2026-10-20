@@ -43,6 +43,27 @@ namespace Kvit.Api.Tests.Expenses
         }
 
         [Fact]
+        public async Task OneBill_RepeatOfASavedBillWhileTheNewestRateIsStale_AnswersTheSavedBillWithoutAskingTheRateSource()
+        {
+            SignedInUser caller = await _app.SignUpAsync();
+            OneBillInput input = OneBillInput.EqualAmongEveryone(ExpenseInputs.OneThousandMkd, ExpenseInputs.Mkd, "Marko");
+            Guid clientRequestId = Guid.CreateVersion7();
+            await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.Zero);
+            (Guid groupId, Guid expenseId) = await _app.CreateOneBillAsync(caller, input, clientRequestId);
+            await _app.PrepareRatesAsync(ScriptedExchangeRateSource.DefaultRateDate, ScriptedExchangeRateSource.DefaultRate, TimeSpan.FromHours(20));
+            _app.RateSource.Fail();
+
+            HttpResponseMessage response = await ExpenseRequests.OneBillAsync(caller.Client, input, clientRequestId);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            JsonElement body = await AuthRequests.ReadJsonAsync(response);
+            Assert.Equal(groupId, body.GetProperty("groupId").GetGuid());
+            Assert.Equal(expenseId, body.GetProperty("expenseId").GetGuid());
+            Assert.Empty(_app.RateSource.RequestedDates);
+            Assert.Equal(1, await GroupRows.CountGroupsOwnedByAsync(_app, caller.UserId));
+        }
+
+        [Fact]
         public async Task OneBill_SameClientRequestIdWithOtherFields_AnswersTheFirstBillUnchanged()
         {
             SignedInUser caller = await _app.SignUpAsync();

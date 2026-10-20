@@ -64,6 +64,11 @@ namespace Kvit.Domain.Entities
             return Result.Failure<T>($"The request id {clientRequestId} was already used by another person.", ResultCodes.PERSONAL_ENTRY_CLIENT_REQUEST_ID_USED);
         }
 
+        public static Result<T> ClientRequestIdUsedByDeletedEntry<T>(Guid clientRequestId, Guid deletedEntryId)
+        {
+            return Result.Failure<T>($"The request id {clientRequestId} already saved personal entry {deletedEntryId}, which was deleted since; nothing was saved again.", ResultCodes.PERSONAL_ENTRY_CLIENT_REQUEST_ID_USED);
+        }
+
         public static DateTimeOffset RestorableUntil(DateTimeOffset deletedAt)
         {
             return Expense.RestorableUntil(deletedAt);

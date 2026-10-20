@@ -1,5 +1,4 @@
 using Kvit.Domain.Entities;
-using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 
 namespace Kvit.Domain.Interfaces
@@ -13,7 +12,5 @@ namespace Kvit.Domain.Interfaces
         Task<Result<PersonalEntry>> FindOwnedAsync(Guid userId, Guid entryId, CancellationToken cancellationToken);
 
         Task<Result<PersonalEntry>> FindOwnedIncludingDeletedAsync(Guid userId, Guid entryId, CancellationToken cancellationToken);
-
-        Task<Currency?> FindCurrencyAsync(Guid userId, Guid entryId, CancellationToken cancellationToken);
     }
 }

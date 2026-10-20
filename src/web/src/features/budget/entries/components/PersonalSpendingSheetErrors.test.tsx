@@ -26,12 +26,12 @@ interface RefusalCase {
 }
 
 const refusalCases: RefusalCase[] = [
-  { errorCode: 'EXPENSE_AMOUNT_NOT_POSITIVE', status: 400, field: 'amount' },
-  { errorCode: 'EXPENSE_AMOUNT_TOO_LARGE', status: 400, field: 'amount' },
+  { errorCode: 'PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE', status: 400, field: 'amount' },
+  { errorCode: 'PERSONAL_ENTRY_AMOUNT_TOO_LARGE', status: 400, field: 'amount' },
   { errorCode: 'MONEY_NOT_ON_CURRENCY_STEP', status: 400, field: 'amount' },
-  { errorCode: 'EXPENSE_CURRENCY_INVALID', status: 400, field: 'amount' },
+  { errorCode: 'PERSONAL_ENTRY_CURRENCY_INVALID', status: 400, field: 'amount' },
   { errorCode: 'PERSONAL_ENTRY_DATE_INVALID', status: 400, field: 'date' },
-  { errorCode: 'EXPENSE_NOTE_INVALID', status: 400, field: 'note' },
+  { errorCode: 'PERSONAL_ENTRY_NOTE_INVALID', status: 400, field: 'note' },
   { errorCode: 'PERSONAL_ENTRY_CATEGORY_INVALID', status: 400, field: 'category' },
   { errorCode: 'PERSONAL_ENTRY_CLIENT_REQUEST_ID_USED', status: 400, field: null },
   { errorCode: 'GUEST_NOT_ALLOWED', status: 403, field: null },
@@ -99,7 +99,7 @@ describe('PersonalSpendingSheet, refused saves', () => {
   })
 
   it('takes the red edge off the amount once the amount is changed', async () => {
-    await saveRefusedEntry('EXPENSE_AMOUNT_TOO_LARGE', 400)
+    await saveRefusedEntry('PERSONAL_ENTRY_AMOUNT_TOO_LARGE', 400)
 
     typeAmount('130')
 
@@ -107,7 +107,7 @@ describe('PersonalSpendingSheet, refused saves', () => {
   })
 
   it('takes the red edge off the amount once the currency is changed', async () => {
-    const { sheet } = await saveRefusedEntry('EXPENSE_CURRENCY_INVALID', 400)
+    const { sheet } = await saveRefusedEntry('PERSONAL_ENTRY_CURRENCY_INVALID', 400)
 
     fireEvent.click(shownCurrency(sheet, 'MKD'))
 
@@ -115,7 +115,7 @@ describe('PersonalSpendingSheet, refused saves', () => {
   })
 
   it('takes the red edge off the note once the note is changed', async () => {
-    const { sheet } = await saveRefusedEntry('EXPENSE_NOTE_INVALID', 400)
+    const { sheet } = await saveRefusedEntry('PERSONAL_ENTRY_NOTE_INVALID', 400)
 
     const note = within(sheet).getByLabelText(translated('en', 'expense.note'))
     fireEvent.change(note, { target: { value: 'shorter' } })
@@ -134,7 +134,7 @@ describe('PersonalSpendingSheet, refused saves', () => {
   })
 
   it('lets Save be tapped again after a refusal and sends a second request', async () => {
-    const { fetchMock } = await saveRefusedEntry('EXPENSE_AMOUNT_TOO_LARGE', 400)
+    const { fetchMock } = await saveRefusedEntry('PERSONAL_ENTRY_AMOUNT_TOO_LARGE', 400)
 
     typeAmount('130')
     fireEvent.click(saveButton())

@@ -410,6 +410,20 @@ describe('PersonalCategoryGrid', () => {
       expect(sentCreates(fetchMock)[0].body).toMatchObject({ emoji: coffeeEmoji })
     })
 
+    it('sends a typed emoji without the spaces around it', async () => {
+      const { fetchMock } = await renderGrid()
+
+      const sheet = await openNewSheet()
+      typeName(sheet, 'Magic')
+      fireEvent.change(sheetField(sheet, 'en', 'budget.categories.emoji'), { target: { value: `  ${unicornEmoji} ` } })
+      fireEvent.click(saveButtonIn(sheet))
+
+      await waitFor(() => {
+        expect(sentCreates(fetchMock)).toHaveLength(1)
+      })
+      expect(sentCreates(fetchMock)[0].body).toMatchObject({ emoji: unicornEmoji })
+    })
+
     it('sends an emoji typed into the field', async () => {
       const { fetchMock } = await renderGrid()
 

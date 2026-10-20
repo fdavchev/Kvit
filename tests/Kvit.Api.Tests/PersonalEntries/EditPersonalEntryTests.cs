@@ -104,6 +104,61 @@ namespace Kvit.Api.Tests.PersonalEntries
             Assert.Equal(before, await PersonalEntrySteps.SnapshotAsync(_app));
         }
 
+        [Theory]
+        [InlineData("2024-10-30")]
+        [InlineData("2026-10-07")]
+        public async Task Edit_DateMovedJustOutsideTheLast24MonthsUpToTomorrowInUtc_Answers400PersonalEntryDateInvalid(string entryDate)
+        {
+            SignedInUser user = await _app.SignUpAsync();
+            Guid entryId = await PersonalEntrySteps.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId));
+
+            HttpResponseMessage response = await PersonalEntryRequests.EditAsync(user.Client, entryId, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, entryDate: entryDate));
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_DATE_INVALID);
+        }
+
+        [Theory]
+        [InlineData("2024-10-31")]
+        [InlineData("2026-10-06")]
+        public async Task Edit_DateMovedToTheEdgesOfTheAllowedRange_Answers200(string entryDate)
+        {
+            SignedInUser user = await _app.SignUpAsync();
+            Guid entryId = await PersonalEntrySteps.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId));
+
+            HttpResponseMessage response = await PersonalEntryRequests.EditAsync(user.Client, entryId, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, entryDate: entryDate));
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Edit_KeepingADateThatTimeHasMovedOutOfTheLast24Months_Answers200WithTheNewAmount()
+        {
+            SignedInUser user = await _app.SignUpAsync();
+            Guid entryId = await PersonalEntrySteps.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId));
+            await PersonalEntrySteps.SetEntryDateAsync(_app, entryId, new DateOnly(2023, 5, 4));
+
+            HttpResponseMessage response = await PersonalEntryRequests.EditAsync(user.Client, entryId, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, 300_000, entryDate: "2023-05-04"));
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            JsonElement body = await AuthRequests.ReadJsonAsync(response);
+            Assert.Equal("2023-05-04", body.GetProperty("entryDate").GetString());
+            Assert.Equal(300_000, body.GetProperty("amountMinor").GetInt64());
+        }
+
+        [Fact]
+        public async Task Edit_MovingAnOldDateToAnotherOldDate_Answers400PersonalEntryDateInvalidAndChangesNothing()
+        {
+            SignedInUser user = await _app.SignUpAsync();
+            Guid entryId = await PersonalEntrySteps.AddAsync(user.Client, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId));
+            await PersonalEntrySteps.SetEntryDateAsync(_app, entryId, new DateOnly(2023, 5, 4));
+            string before = await PersonalEntrySteps.SnapshotAsync(_app);
+
+            HttpResponseMessage response = await PersonalEntryRequests.EditAsync(user.Client, entryId, EntryInput.Of(PersonalEntryRequests.BuiltInFoodId, 300_000, entryDate: "2023-05-05"));
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_DATE_INVALID);
+            Assert.Equal(before, await PersonalEntrySteps.SnapshotAsync(_app));
+        }
+
         [Fact]
         public async Task Edit_DeletedEntry_Answers404NotFound()
         {

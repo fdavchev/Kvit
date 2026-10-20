@@ -25,7 +25,8 @@ First phase of Release 2 ("budget"). Adds personal spending (tap a category, typ
 ### Database changes
 - Migration `PersonalCategories` (Step 1): owner link, index and a colour check on `categories`.
 - Migration `PersonalEntries` (Step 2): the new `personal_entries` table.
-- CI applies both on Neon after the merge.
+- Migration `PersonalCategoryNameUnique` (code review): no two active categories with the same name (letter case ignored) for one person.
+- CI applies all three on Neon after the merge.
 
 ### Checklist
 - [x] Step 0: mockup and picks logged in DECISIONS
@@ -35,7 +36,7 @@ First phase of Release 2 ("budget"). Adds personal spending (tap a category, typ
 - [x] Step 4: frontend, add, edit and delete spending
 - [x] Step 5: frontend, Budget tab (not for guests)
 - [x] Step 6: desktop layout and the 360 px browser pass (EN/MK, light/dark)
-- [ ] Step 7: code review fixes, report and guide
+- [x] Step 7: code review fixes, report and guide
 - [ ] CI green
 
 ## Later pushes: one-line commit subjects
@@ -43,5 +44,7 @@ First phase of Release 2 ("budget"). Adds personal spending (tap a category, typ
 - Step 3: Add the personal category grid with a new-category sheet and Edit my categories.
 - Step 4: Add the add, edit and delete spending sheet.
 - Step 5: Add the Budget tab with month strip, totals and entries.
-- Step 6: Fix the desktop layout and the 360 px browser pass findings.
-- Step 7: Fix the Phase 13 code review findings and record where Phase 13 stopped.
+- Step 6: Fix the Phase 13 browser pass findings: sheet height, focus, scrollbar and long amounts.
+- Step 6b: Fix the month strip mouse wheel and the focus after cancelling New category.
+- Step 7: Fix the Phase 13 code review findings: date range, races, emoji check and own error codes.
+- Step 7b: Record where Phase 13 stopped: report, guide, roadmap and status.
