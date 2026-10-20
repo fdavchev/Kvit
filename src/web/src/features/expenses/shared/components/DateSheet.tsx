@@ -9,20 +9,30 @@ import { addDays, isCalendarDate } from '@/shared/utils/formatDate'
 interface DateSheetProps {
   expenseDate: string
   today: string
+  earliestDate?: string
+  latestDate?: string
+  hint?: string
   onPick: (expenseDate: string) => void
   onClose: () => void
 }
 
-const earliestDate = '2000-01-01'
-const daysAhead = 365
+const expenseEarliestDate = '2000-01-01'
+const expenseDaysAhead = 365
 
-export function DateSheet({ expenseDate, today, onPick, onClose }: DateSheetProps) {
+export function DateSheet({
+  expenseDate,
+  today,
+  earliestDate = expenseEarliestDate,
+  latestDate = addDays(today, expenseDaysAhead),
+  hint,
+  onPick,
+  onClose,
+}: DateSheetProps) {
   const { t } = useTranslation()
   const sheet = useKvitSheet()
   const fieldId = useId()
   const [typedDate, setTypedDate] = useState<string>(expenseDate)
   const yesterday = addDays(today, -1)
-  const latestDate = addDays(today, daysAhead)
   const canApplyTypedDate: boolean =
     isCalendarDate(typedDate) && typedDate >= earliestDate && typedDate <= latestDate
 
@@ -64,7 +74,7 @@ export function DateSheet({ expenseDate, today, onPick, onClose }: DateSheetProp
           onChange={(event) => setTypedDate(event.target.value)}
           className="min-h-14 w-full rounded-[14px] border-2 border-field-border-raised bg-field px-4 text-[1.0625rem] font-semibold text-field-foreground focus:border-field-border-focus focus-visible:outline-offset-0"
         />
-        <p className="mt-2 text-[0.9375rem] text-muted-foreground">{t('expense.dateHint')}</p>
+        <p className="mt-2 text-[0.9375rem] text-muted-foreground">{hint ?? t('expense.dateHint')}</p>
       </div>
       <KvitButton disabled={!canApplyTypedDate} onClick={() => pick(typedDate)}>
         {t('expense.done')}

@@ -1,4 +1,5 @@
 using Kvit.Contracts.Persistence;
+using Kvit.Domain.Entities;
 using Kvit.Domain.Results;
 
 namespace Kvit.Application.Persistence
@@ -31,6 +32,19 @@ namespace Kvit.Application.Persistence
             catch (ClientRequestIdAlreadySavedException)
             {
                 return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
+            }
+        }
+
+        public static async Task<TResult> RunInTransactionOrRefuseIfCategoryNameWasTakenAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, Func<Result, TResult> refusal, CancellationToken cancellationToken)
+            where TResult : Result
+        {
+            try
+            {
+                return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
+            }
+            catch (CategoryNameAlreadySavedException)
+            {
+                return refusal(Category.NameTakenMeanwhile());
             }
         }
 

@@ -167,7 +167,8 @@ The speed screen (DECISIONS "Speed details"):
 
 # Release 2 (budget), summary
 - **Budget tab, `/budget`:** this month's spending vs. limits, with progress bars per category; your share of group expenses included automatically.
-- **Add personal spending:** tap a category → type the amount → **Save**. **2 taps, 1 field.** "+ new category" sits right in the grid.
+- **Add personal spending:** tap a category → type the amount → **Save**. **2 taps, 1 field.** "+ new category" sits right in the grid and opens the new-category sheet at once. Starts from the Budget tab "+" and from the Home "+" list ("Personal spending"). The currency of the last entry is the default. Tap an entry to edit or delete it (Undo). Not for guests (Phase 13 mockup picks, 2026-10-19; see DECISIONS).
+- **Budget tab, Phase 13:** month strip, a centred big-total card labelled "Spent this month" (MKD and EUR apart, the EUR line without a "+"), a grid of category tiles with their totals, the entries. "Edit my categories" (rename, archive, bring back) sits under the grid.
 - **Add income:** once, or repeating (monthly on day N, or weekly).
 - **Categories and limits:** custom categories (personal only) and monthly limits.
 - **Monthly summary:** totals per category and month vs. month.

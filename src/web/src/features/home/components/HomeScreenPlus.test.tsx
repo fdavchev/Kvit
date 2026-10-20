@@ -50,18 +50,19 @@ describe('the plus button on the home screen', () => {
     expect(screen.queryByRole('button', { name: translated('en', 'home.plus') })).toBeNull()
   })
 
-  it('opens a menu with the three items, the first one naming the group of the plus target', async () => {
+  it('opens a menu with the four items, the first one naming the group of the plus target', async () => {
     await renderHome()
 
     const menu = await openPlusMenu()
 
     const items = within(menu).getAllByRole('menuitem')
-    expect(items).toHaveLength(3)
+    expect(items).toHaveLength(4)
     expect(items[0]).toBe(
       within(menu).getByRole('menuitem', { name: translated('en', 'home.plusAddTo', { group: 'Greece trip' }) }),
     )
     expect(items[1]).toBe(within(menu).getByRole('menuitem', { name: translated('en', 'home.plusNewOneBill') }))
     expect(items[2]).toBe(within(menu).getByRole('menuitem', { name: translated('en', 'home.plusAnotherGroup') }))
+    expect(items[3]).toBe(within(menu).getByRole('menuitem', { name: translated('en', 'budget.entries.homeItem') }))
   })
 
   it.each(languages)('has no New group item, because a group is made only in the Groups section, in %s', async (language) => {
@@ -105,15 +106,16 @@ describe('the plus button on the home screen', () => {
     })
   })
 
-  it('has only two items, with no Add to, when the server sends no plus target', async () => {
+  it('has only three items, with no Add to, when the server sends no plus target', async () => {
     await renderHome({ dashboard: dashboardOf({ plusTarget: null }) })
 
     const menu = await openPlusMenu()
 
     const items = within(menu).getAllByRole('menuitem')
-    expect(items).toHaveLength(2)
+    expect(items).toHaveLength(3)
     expect(items[0]).toBe(within(menu).getByRole('menuitem', { name: translated('en', 'home.plusNewOneBill') }))
     expect(items[1]).toBe(within(menu).getByRole('menuitem', { name: translated('en', 'home.plusAnotherGroup') }))
+    expect(items[2]).toBe(within(menu).getByRole('menuitem', { name: translated('en', 'budget.entries.homeItem') }))
     expect(within(menu).queryByRole('menuitem', { name: /Greece trip/ })).toBeNull()
   })
 

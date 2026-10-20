@@ -21,6 +21,17 @@ namespace Kvit.Domain.Interfaces
             return Result.Ok(category.BuiltInKey());
         }
 
+        public static async Task<Result> CheckPersonalEntryCategoryAsync(this ICategoryRepository categories, Guid userId, Guid categoryId, CancellationToken cancellationToken)
+        {
+            Category? category = await categories.FindAsync(categoryId, cancellationToken);
+            if (category is null || !category.CanTagPersonalEntriesOf(userId))
+            {
+                return Result.Failure($"Category {categoryId} is neither a built-in category nor one of your own active categories.", ResultCodes.PERSONAL_ENTRY_CATEGORY_INVALID);
+            }
+
+            return Result.Ok();
+        }
+
         public static async Task<string> StoredKeyAsync(this ICategoryRepository categories, Guid? categoryId, CancellationToken cancellationToken)
         {
             if (categoryId is not Guid id)

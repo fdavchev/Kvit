@@ -1,7 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+import { sheetBodyOf } from '@/test/sheetScrollTestHelpers'
+import { KvitForm } from './KvitForm'
 import { KvitSheet } from './KvitSheet'
 import { kvitGlassPanelLook } from './kvitGlassLooks'
+import { useKvitSheet } from './useKvitSheet'
 
 const title = 'Add a name'
 
@@ -32,6 +36,10 @@ function backdropOf(sheet: HTMLElement): HTMLElement {
 
 function popupClassTokens(): string[] {
   return screen.getByRole('dialog').className.split(/\s+/)
+}
+
+function sheetBody(): HTMLElement {
+  return sheetBodyOf(screen.getByRole('dialog'))
 }
 
 function hasTokenStartingWith(tokens: string[], prefix: string): boolean {
@@ -67,6 +75,106 @@ describe('KvitSheet', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('dialog').contains(document.activeElement)).toBe(true)
+    })
+  })
+
+  describe('the focus after closing', () => {
+    function SheetWithFieldOpener({ returnsFocusOnClose }: { returnsFocusOnClose?: () => boolean }) {
+      const [isOpen, setIsOpen] = useState<boolean>(false)
+      return (
+        <>
+          <button type="button" onClick={() => setIsOpen(true)}>
+            opener
+          </button>
+          <button type="button">other button</button>
+          {isOpen && (
+            <KvitSheet title={title} onClose={() => setIsOpen(false)} returnsFocusOnClose={returnsFocusOnClose}>
+              <label>
+                Name
+                <input autoFocus />
+              </label>
+            </KvitSheet>
+          )}
+        </>
+      )
+    }
+
+    async function openFromOpener(): Promise<HTMLElement> {
+      const opener = screen.getByRole('button', { name: 'opener' })
+      opener.focus()
+      fireEvent.click(opener)
+      await waitFor(() => {
+        expect(document.activeElement).toBe(screen.getByLabelText('Name'))
+      })
+      return opener
+    }
+
+    async function closeWithEscape(): Promise<void> {
+      fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      await letPendingTimersRun()
+    }
+
+    it('puts the focus back on the button that opened it, even when a field inside took the focus on open', async () => {
+      render(<SheetWithFieldOpener />)
+      const opener = await openFromOpener()
+
+      await closeWithEscape()
+
+      expect(document.activeElement).toBe(opener)
+    })
+
+    it('leaves the focus where it is when something outside the sheet took it before the sheet closed', async () => {
+      function SheetThatMovesFocusOut() {
+        const [isOpen, setIsOpen] = useState<boolean>(false)
+        const sheet = useKvitSheet()
+        return (
+          <>
+            <button type="button" onClick={() => setIsOpen(true)}>
+              opener
+            </button>
+            <button type="button">other button</button>
+            {isOpen && (
+              <KvitSheet title={title} onClose={() => setIsOpen(false)} actionsRef={sheet.actionsRef}>
+                <label>
+                  Name
+                  <input autoFocus />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    screen.getByRole('button', { name: 'other button', hidden: true }).focus()
+                    sheet.close()
+                  }}
+                >
+                  move away
+                </button>
+              </KvitSheet>
+            )}
+          </>
+        )
+      }
+      render(<SheetThatMovesFocusOut />)
+      await openFromOpener()
+
+      fireEvent.click(screen.getByRole('button', { name: 'move away' }))
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      await letPendingTimersRun()
+
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'other button' }))
+    })
+
+    it('leaves the focus alone when the sheet says not to return it', async () => {
+      render(<SheetWithFieldOpener returnsFocusOnClose={() => false} />)
+      await openFromOpener()
+
+      await closeWithEscape()
+
+      expect(document.activeElement).toBe(document.body)
     })
   })
 
@@ -167,5 +275,60 @@ describe('KvitSheet', () => {
 
     expect(backdropTokens).toContain('bg-black/50')
     expect(hasTokenStartingWith(backdropTokens, 'backdrop-blur')).toBe(false)
+  })
+
+  it('never grows taller than the visible window and leaves a gap at the top', () => {
+    renderSheet()
+
+    expect(popupClassTokens()).toContain('max-h-[calc(100dvh_-_max(1.5rem,env(safe-area-inset-top)))]')
+  })
+
+  it('keeps the title out of the scrolling part, so it stays reachable', () => {
+    renderSheet()
+
+    const body = sheetBody()
+
+    expect(body.textContent).toContain('sheet content')
+    expect(body.textContent).not.toContain(title)
+    expect(screen.getByRole('dialog').firstElementChild?.textContent).toBe(title)
+  })
+
+  it('scrolls its content inside the sheet without scrolling the page behind it', () => {
+    renderSheet()
+
+    expect(sheetBody().className.split(/\s+/)).toEqual(
+      expect.arrayContaining(['min-h-0', 'overflow-y-auto', 'overscroll-contain']),
+    )
+  })
+
+  it('keeps the bottom safe-area padding inside the scrolling part, so the last item can scroll clear of it', () => {
+    renderSheet()
+
+    expect(popupClassTokens()).not.toContain('pb-[max(24px,env(safe-area-inset-bottom))]')
+    expect(sheetBody().className.split(/\s+/)).toContain('pb-[max(24px,env(safe-area-inset-bottom))]')
+  })
+
+  it('keeps the main button of a form in view while only the fields scroll', () => {
+    render(
+      <KvitSheet title={title} onClose={() => {}}>
+        <KvitForm submitLabel="Save" isPending={false} errorMessage={null} onSubmit={() => {}}>
+          <label>
+            Name
+            <input />
+          </label>
+        </KvitForm>
+      </KvitSheet>,
+    )
+
+    const form = sheetBody().querySelector('form')
+    const fields = screen.getByLabelText('Name').closest('label')?.parentElement
+    const save = screen.getByRole('button', { name: 'Save' })
+
+    expect(form?.parentElement).toBe(sheetBody())
+    expect(form?.className.split(/\s+/)).toContain('in-data-kvit-sheet-body:min-h-0')
+    expect(fields?.className.split(/\s+/)).toEqual(
+      expect.arrayContaining(['in-data-kvit-sheet-body:min-h-0', 'in-data-kvit-sheet-body:overflow-y-auto']),
+    )
+    expect(fields?.contains(save)).toBe(false)
   })
 })

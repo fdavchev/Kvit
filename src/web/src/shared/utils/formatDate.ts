@@ -8,7 +8,7 @@ const englishDayMonthYearFormat = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
 })
 
-const macedonianShortMonths: readonly string[] = [
+export const macedonianShortMonths: readonly string[] = [
   'јан',
   'фев',
   'мар',

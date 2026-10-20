@@ -6,6 +6,7 @@ import { MakeAccountScreen } from '@/features/auth/makeAccount/components/MakeAc
 import { SetPasswordScreen } from '@/features/auth/setPassword/components/SetPasswordScreen'
 import { SignUpScreen } from '@/features/auth/signUp/components/SignUpScreen'
 import { WelcomeScreen } from '@/features/auth/welcome/components/WelcomeScreen'
+import { BudgetScreen } from '@/features/budget/overview/components/BudgetScreen'
 import { AddExpenseScreen } from '@/features/expenses/add/components/AddExpenseScreen'
 import { RecentlyDeletedExpensesScreen } from '@/features/expenses/deleted/components/RecentlyDeletedExpensesScreen'
 import { ExpenseDetailScreen } from '@/features/expenses/detail/components/ExpenseDetailScreen'
@@ -52,6 +53,10 @@ export const routeObjects: RouteObject[] = [
               { path: routes.dashboard, element: <HomeScreen /> },
               { path: routes.groups, element: <GroupsScreen /> },
               { path: routes.recentlyDeletedGroups, element: <RecentlyDeletedScreen /> },
+              {
+                element: <RequireAccount />,
+                children: [{ path: routes.budget, element: <BudgetScreen /> }],
+              },
               { path: routes.settings, element: <SettingsScreen /> },
             ],
           },

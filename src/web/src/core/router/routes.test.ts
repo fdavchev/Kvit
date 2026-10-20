@@ -15,6 +15,7 @@ describe('routes', () => {
     ['newGroupGroup', '/groups/new/group'],
     ['newBill', '/groups/new/bill'],
     ['recentlyDeletedGroups', '/groups/recently-deleted'],
+    ['budget', '/budget'],
   ] as const)('has the route %s at %s', (name, path) => {
     expect(routes[name]).toBe(path)
   })

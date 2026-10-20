@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { useIsGuest } from '@/core/auth/useIsGuest'
+import { PersonalSpendingSheet } from '@/features/budget/entries/components/PersonalSpendingSheet'
 import { kvitGlassButtonLook, kvitGlassPanelLook } from '@/shared/components/kvitGlassLooks'
 import { useToastsAboveElement } from '@/shared/hooks/useToastsAboveElement'
 import { cn } from '@/shared/utils/cn'
-import { homePlusItems, type HomePlusMenuTarget } from '../homePlusItems'
+import { homePlusItemKey, homePlusItems, type HomePlusMenuTarget } from '../homePlusItems'
 
 interface HomePlusMenuProps {
   target: HomePlusMenuTarget | null
@@ -19,6 +20,7 @@ export function HomePlusMenu({ target }: HomePlusMenuProps) {
   const { t } = useTranslation()
   const isGuest = useIsGuest()
   const [isOpen, setIsOpen] = useState<boolean>(false)
+  const [isSpendingOpen, setIsSpendingOpen] = useState<boolean>(false)
   const menuAreaRef = useRef<HTMLDivElement>(null)
   const floatingAreaRef = useRef<HTMLDivElement>(null)
   useToastsAboveElement(floatingAreaRef)
@@ -49,6 +51,11 @@ export function HomePlusMenu({ target }: HomePlusMenuProps) {
     setIsOpen(false)
   }
 
+  function openSpending(): void {
+    setIsOpen(false)
+    setIsSpendingOpen(true)
+  }
+
   return (
     <div ref={floatingAreaRef} className="pointer-events-none sticky bottom-[calc(var(--bottom-bar-height)+16px)] z-10 mt-auto flex justify-end pt-4">
       <div ref={menuAreaRef} className="pointer-events-auto relative">
@@ -60,18 +67,24 @@ export function HomePlusMenu({ target }: HomePlusMenuProps) {
               kvitGlassPanelLook,
             )}
           >
-            {homePlusItems(target, isGuest, t).map((item) => (
-              <Link
-                key={item.to}
-                role="menuitem"
-                to={item.to}
-                className={item.isMain ? mainItemLook : plainItemLook}
-                onClick={close}
-              >
-                <span aria-hidden="true" className="w-6 text-center">{item.icon}</span>
-                <span className="wrap-anywhere">{item.label}</span>
-              </Link>
-            ))}
+            {homePlusItems(target, isGuest, t).map((item) => {
+              const content = (
+                <>
+                  <span aria-hidden="true" className="w-6 text-center">{item.icon}</span>
+                  <span className="wrap-anywhere">{item.label}</span>
+                </>
+              )
+              const look = item.isMain ? mainItemLook : plainItemLook
+              return item.kind === 'link' ? (
+                <Link key={homePlusItemKey(item)} role="menuitem" to={item.to} className={look} onClick={close}>
+                  {content}
+                </Link>
+              ) : (
+                <button key={homePlusItemKey(item)} type="button" role="menuitem" className={cn(look, 'text-left')} onClick={openSpending}>
+                  {content}
+                </button>
+              )
+            })}
           </div>
         )}
         <button
@@ -85,6 +98,7 @@ export function HomePlusMenu({ target }: HomePlusMenuProps) {
           <span aria-hidden="true">{isOpen ? '×' : '+'}</span>
         </button>
       </div>
+      {isSpendingOpen && <PersonalSpendingSheet onClose={() => setIsSpendingOpen(false)} />}
     </div>
   )
 }

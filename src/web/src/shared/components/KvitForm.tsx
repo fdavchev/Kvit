@@ -29,9 +29,11 @@ export function KvitForm({
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-7">
-      <div className="flex flex-col gap-[18px]">{children}</div>
-      <div className="flex flex-col gap-3">
+    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-7 in-data-kvit-sheet-body:min-h-0">
+      <div className="flex flex-col gap-[18px] in-data-kvit-sheet-body:-mx-5 in-data-kvit-sheet-body:-my-1.5 in-data-kvit-sheet-body:min-h-0 in-data-kvit-sheet-body:overflow-y-auto in-data-kvit-sheet-body:overscroll-contain in-data-kvit-sheet-body:px-5 in-data-kvit-sheet-body:py-1.5">
+        {children}
+      </div>
+      <div className="flex flex-none flex-col gap-3">
         {errorMessage !== null && <KvitInlineError message={errorMessage} />}
         <KvitButton type="submit" className={submitClassName} disabled={isPending || !canSubmit}>
           {submitLabel}

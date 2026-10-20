@@ -10,7 +10,7 @@ import type { Me } from '@/core/services/me/meService'
 import { requestCountTo, stubFetch, stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
 import { stubDesktopScreen } from '@/test/matchMediaTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
-import { testMe } from '@/test/testMe'
+import { seedMe, testGuestMe, testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
 import { BottomBarLayout } from './BottomBarLayout'
 import { RequireAuth } from './RequireAuth'
@@ -23,6 +23,7 @@ const routeTable: RouteObject[] = [
       { path: routes.dashboard, element: <p>home page</p> },
       { path: routes.groups, element: <p>groups page</p> },
       { path: routes.recentlyDeletedGroups, element: <p>recently deleted page</p> },
+      { path: routes.budget, element: <p>budget page</p> },
       { path: routes.settings, element: <p>settings page</p> },
     ],
   },
@@ -32,8 +33,22 @@ const routeTable: RouteObject[] = [
 const tabs: [string, string, string][] = [
   ['nav.home', routes.dashboard, 'home page'],
   ['nav.groups', routes.groups, 'groups page'],
+  ['nav.budget', routes.budget, 'budget page'],
   ['nav.settings', routes.settings, 'settings page'],
 ]
+
+function renderLayoutAt(path: string, options: { language?: Language; me?: Me } = {}) {
+  return renderRoutesWithProviders(routeTable, path, {
+    language: options.language,
+    seedCache: seedMe(options.me ?? testMe),
+  })
+}
+
+function pillWidthFor(tabCount: number): string {
+  const probe = document.createElement('span')
+  probe.style.width = `calc((100% - 0.5rem) / ${tabCount})`
+  return probe.style.width
+}
 
 function bar(): HTMLElement {
   return screen.getByRole('navigation')
@@ -49,28 +64,43 @@ describe('BottomBarLayout', () => {
   })
 
   it.each(tabs)('shows the page of the route and the bar at %s', async (_key, path, pageText) => {
-    await renderRoutesWithProviders(routeTable, path)
+    await renderLayoutAt(path)
 
     expect(screen.getByText(pageText)).toBeTruthy()
     expect(bar()).toBeTruthy()
   })
 
   it('shows the bar and the page of Recently deleted', async () => {
-    await renderRoutesWithProviders(routeTable, routes.recentlyDeletedGroups)
+    await renderLayoutAt(routes.recentlyDeletedGroups)
 
     expect(screen.getByText('recently deleted page')).toBeTruthy()
     expect(bar()).toBeTruthy()
   })
 
   it('shows no bar on a route outside the layout', async () => {
-    await renderRoutesWithProviders(routeTable, routes.newGroup)
+    await renderLayoutAt(routes.newGroup)
 
     expect(screen.getByText('new group page')).toBeTruthy()
     expect(screen.queryByRole('navigation')).toBeNull()
   })
 
-  it.each(languages)('has exactly three tabs, Home, Groups and Settings, in the translated names (%s)', async (language) => {
-    await renderRoutesWithProviders(routeTable, routes.groups, { language })
+  it.each(languages)('has exactly four tabs, Home, Groups, Budget and Settings, in the translated names (%s)', async (language) => {
+    await renderLayoutAt(routes.groups, { language })
+
+    const names = within(bar())
+      .getAllByRole('link')
+      .map((link) => link.textContent)
+
+    expect(names).toEqual([
+      translated(language, 'nav.home'),
+      translated(language, 'nav.groups'),
+      translated(language, 'nav.budget'),
+      translated(language, 'nav.settings'),
+    ])
+  })
+
+  it.each(languages)('has no Budget tab for a guest, only Home, Groups and Settings (%s)', async (language) => {
+    await renderLayoutAt(routes.groups, { language, me: { ...testGuestMe, language } })
 
     const names = within(bar())
       .getAllByRole('link')
@@ -83,12 +113,31 @@ describe('BottomBarLayout', () => {
     ])
   })
 
+  it('sizes the pill to a third of the bar for a guest, who has three tabs', async () => {
+    await renderLayoutAt(routes.settings, { me: testGuestMe })
+
+    const pill = bar().querySelector<HTMLElement>('[data-tab-pill]')
+
+    expect(pill?.style.width).toBe(pillWidthFor(3))
+    expect(pill?.style.transform).toBe('translateX(200%)')
+  })
+
+  it('sizes the pill to a quarter of the bar for a person with an account, who has four tabs', async () => {
+    await renderLayoutAt(routes.budget)
+
+    const pill = bar().querySelector<HTMLElement>('[data-tab-pill]')
+
+    expect(pill?.style.width).toBe(pillWidthFor(4))
+    expect(pill?.style.transform).toBe('translateX(200%)')
+  })
+
   it.each([
     ['nav.home', routes.dashboard],
     ['nav.groups', routes.groups],
+    ['nav.budget', routes.budget],
     ['nav.settings', routes.settings],
   ])('sends the %s tab to %s', async (key, path) => {
-    await renderRoutesWithProviders(routeTable, routes.groups)
+    await renderLayoutAt(routes.groups)
 
     expect(tab('en', key).getAttribute('href')).toBe(path)
   })
@@ -97,9 +146,10 @@ describe('BottomBarLayout', () => {
     [routes.dashboard, 'nav.home'],
     [routes.groups, 'nav.groups'],
     [routes.recentlyDeletedGroups, 'nav.groups'],
+    [routes.budget, 'nav.budget'],
     [routes.settings, 'nav.settings'],
   ])('marks only one tab as the current page at %s: %s', async (path, currentKey) => {
-    await renderRoutesWithProviders(routeTable, path)
+    await renderLayoutAt(path)
 
     for (const [key] of tabs) {
       expect(tab('en', key).getAttribute('aria-current')).toBe(key === currentKey ? 'page' : null)
@@ -107,7 +157,7 @@ describe('BottomBarLayout', () => {
   })
 
   it('draws the bar after the page so it sits under it', async () => {
-    await renderRoutesWithProviders(routeTable, routes.groups)
+    await renderLayoutAt(routes.groups)
 
     const page = screen.getByText('groups page')
 
@@ -115,7 +165,7 @@ describe('BottomBarLayout', () => {
   })
 
   it('keeps the same pill and moves it under the pressed tab, so it slides instead of jumping', async () => {
-    const { router } = await renderRoutesWithProviders(routeTable, routes.groups)
+    const { router } = await renderLayoutAt(routes.groups)
     const pillBefore = bar().querySelector<HTMLElement>('[data-tab-pill]')
 
     fireEvent.click(tab('en', 'nav.settings'))
@@ -125,13 +175,13 @@ describe('BottomBarLayout', () => {
     })
     expect(pillBefore?.isConnected).toBe(true)
     expect(bar().querySelector('[data-tab-pill]')).toBe(pillBefore)
-    expect(pillBefore?.style.transform).toBe('translateX(200%)')
+    expect(pillBefore?.style.transform).toBe('translateX(300%)')
   })
 
   it('shows no bottom bar on a desktop-sized window, only the page', async () => {
     stubDesktopScreen()
 
-    await renderRoutesWithProviders(routeTable, routes.groups)
+    await renderLayoutAt(routes.groups)
 
     expect(screen.getByText('groups page')).toBeTruthy()
     expect(screen.queryByRole('navigation')).toBeNull()
@@ -139,7 +189,7 @@ describe('BottomBarLayout', () => {
   })
 
   it('keeps the bar and changes the page when a tab is pressed', async () => {
-    const { router } = await renderRoutesWithProviders(routeTable, routes.groups)
+    const { router } = await renderLayoutAt(routes.groups)
 
     fireEvent.click(tab('en', 'nav.settings'))
 
@@ -260,7 +310,7 @@ describe('BottomBarLayout Updating… note', () => {
   })
 
   it('keeps the empty top slot when no note is shown, so the page keeps its place in the tree', async () => {
-    await renderRoutesWithProviders(routeTable, routes.groups)
+    await renderLayoutAt(routes.groups)
 
     const slot = document.querySelector('[data-updating-note-slot]')
     if (slot === null) {

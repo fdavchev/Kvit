@@ -18,6 +18,7 @@
   "nav": {
     "home": "Home",
     "groups": "Groups",
+    "budget": "Budget",
     "settings": "Settings"
   },
   "errors": {
@@ -102,6 +103,22 @@
     "EXPENSE_CATEGORY_INVALID": "Pick a category from the list.",
     "EXPENSE_AMOUNT_TOO_LARGE": "This amount is too large.",
     "EXPENSE_CLIENT_REQUEST_ID_USED": "This request was already used for something else.",
+    "CATEGORY_NOT_FOUND": "This category no longer exists.",
+    "CATEGORY_NAME_INVALID": "Enter a name (up to 30 characters).",
+    "CATEGORY_NAME_TAKEN": "You already have a category with this name.",
+    "CATEGORY_EMOJI_INVALID": "Pick an emoji.",
+    "CATEGORY_COLOR_INVALID": "Pick one of the colours.",
+    "PERSONAL_ENTRY_NOT_FOUND": "This entry doesn't exist or was deleted.",
+    "PERSONAL_ENTRY_CATEGORY_INVALID": "Pick one of your categories.",
+    "PERSONAL_ENTRY_CLIENT_REQUEST_ID_USED": "This request was already used for something else.",
+    "PERSONAL_ENTRY_DATE_INVALID": "Pick a date from the last 24 months, up to today.",
+    "PERSONAL_ENTRY_NOT_DELETED": "This entry is not deleted.",
+    "PERSONAL_ENTRY_RESTORE_EXPIRED": "This entry was deleted more than 5 days ago and can't be restored.",
+    "PERSONAL_ENTRY_MONTH_INVALID": "This month can't be shown. Pick another month.",
+    "PERSONAL_ENTRY_CURRENCY_INVALID": "Pick MKD or EUR.",
+    "PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE": "The amount must be more than 0.",
+    "PERSONAL_ENTRY_AMOUNT_TOO_LARGE": "This amount is too large.",
+    "PERSONAL_ENTRY_NOTE_INVALID": "The note can have up to 500 characters.",
     "SETTLEMENT_NOT_FOUND": "This payment doesn't exist or was deleted.",
     "SETTLEMENT_NOT_ALLOWED": "You can't do this with this payment.",
     "SETTLEMENT_NOT_PENDING": "This payment is no longer waiting for an answer.",
@@ -475,6 +492,52 @@
     "health": "Health",
     "gifts": "Gifts",
     "other": "Other"
+  },
+  "budget": {
+    "categories": {
+      "new": "New",
+      "editMine": "Edit my categories",
+      "mineTitle": "My categories",
+      "newTitle": "New category",
+      "editTitle": "Edit category",
+      "name": "Name",
+      "namePlaceholder": "Coffee",
+      "emoji": "Emoji",
+      "emojiPicks": "Quick emoji picks",
+      "color": "Colour",
+      "colors": {
+        "orange": "Orange",
+        "green": "Green",
+        "yellow": "Yellow",
+        "blue": "Blue",
+        "pink": "Pink",
+        "purple": "Purple",
+        "slate": "Slate",
+        "red": "Red",
+        "teal": "Teal",
+        "gray": "Grey"
+      },
+      "archive": "Archive",
+      "archivedToast": "Archived: {{name}}",
+      "archivedHeading": "Archived ({{count}})",
+      "bringBack": "Bring back",
+      "emptyMine": "You have no categories of your own yet. Tap “+ New” to make one."
+    },
+    "entries": {
+      "homeItem": "Personal spending",
+      "pickCategory": "What did you spend on?",
+      "deleted": "Deleted",
+      "restored": "Restored",
+      "dateHint": "Pick a date from the last 24 months, up to today."
+    },
+    "screen": {
+      "spentThisMonth": "Spent this month",
+      "emptyTitle": "Nothing spent this month",
+      "add": "Add spending",
+      "months": "Month",
+      "categoryTotals": "Totals by category",
+      "entries": "Entries"
+    }
   },
   "addName": {
     "title": "Add a name",

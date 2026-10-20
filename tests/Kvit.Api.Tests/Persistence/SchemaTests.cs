@@ -30,6 +30,7 @@ namespace Kvit.Api.Tests.Persistence
                 "expenses",
                 "group_members",
                 "groups",
+                "personal_entries",
                 "role_claims",
                 "roles",
                 "settlements",

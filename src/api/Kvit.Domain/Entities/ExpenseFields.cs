@@ -47,10 +47,10 @@ namespace Kvit.Domain.Entities
             DateOnly utcToday,
             int titleMaxLength)
         {
-            string[] currencyNames = Enum.GetNames<Currency>();
-            if (!currencyNames.Contains(currency, StringComparer.Ordinal))
+            Result<Currency> checkedCurrency = CheckCurrency(currency, ResultCodes.EXPENSE_CURRENCY_INVALID);
+            if (!checkedCurrency.IsSuccess)
             {
-                return Result.Failure<ExpenseFields>($"'{currency}' is not a supported currency. Use one of: {string.Join(", ", currencyNames)}.", ResultCodes.EXPENSE_CURRENCY_INVALID);
+                return checkedCurrency.ToFailure<ExpenseFields>();
             }
 
             string[] splitTypeNames = Enum.GetNames<SplitType>();
@@ -59,13 +59,13 @@ namespace Kvit.Domain.Entities
                 return Result.Failure<ExpenseFields>($"'{splitType}' is not a split type. Use one of: {string.Join(", ", splitTypeNames)}.", ResultCodes.EXPENSE_SPLIT_TYPE_INVALID);
             }
 
-            Result<Money> amount = CheckAmount(amountMinor, Enum.Parse<Currency>(currency));
+            Result<Money> amount = CheckAmount(amountMinor, checkedCurrency.Value, ResultCodes.EXPENSE_AMOUNT_NOT_POSITIVE, ResultCodes.EXPENSE_AMOUNT_TOO_LARGE);
             if (!amount.IsSuccess)
             {
                 return amount.ToFailure<ExpenseFields>();
             }
 
-            Result<DateOnly> date = CheckDate(expenseDate, utcToday);
+            Result<DateOnly> date = CheckDate(expenseDate, utcToday, ResultCodes.EXPENSE_DATE_INVALID);
             if (!date.IsSuccess)
             {
                 return date.ToFailure<ExpenseFields>();
@@ -77,13 +77,13 @@ namespace Kvit.Domain.Entities
                 return Result.Failure<ExpenseFields>($"The title must have at most {titleMaxLength} characters; it has {trimmedTitle.Length}.", ResultCodes.EXPENSE_TITLE_INVALID);
             }
 
-            string? trimmedNote = TrimToNull(note);
-            if (trimmedNote is not null && trimmedNote.Length > NoteMaxLength)
+            Result<string?> trimmedNote = CheckNote(note, ResultCodes.EXPENSE_NOTE_INVALID);
+            if (!trimmedNote.IsSuccess)
             {
-                return Result.Failure<ExpenseFields>($"The note must have at most {NoteMaxLength} characters; it has {trimmedNote.Length}.", ResultCodes.EXPENSE_NOTE_INVALID);
+                return trimmedNote.ToFailure<ExpenseFields>();
             }
 
-            return Result.Ok(new ExpenseFields(trimmedTitle, trimmedNote, amount.Value, date.Value, categoryId, Enum.Parse<SplitType>(splitType)));
+            return Result.Ok(new ExpenseFields(trimmedTitle, trimmedNote.Value, amount.Value, date.Value, categoryId, Enum.Parse<SplitType>(splitType)));
         }
 
         public static string? TrimToNull(string? text)
@@ -93,36 +93,62 @@ namespace Kvit.Domain.Entities
             return trimmed.Length == 0 ? null : trimmed;
         }
 
-        private static Result<Money> CheckAmount(long amountMinor, Currency currency)
+        public static Result<Currency> CheckCurrency(string currency, string invalidCurrencyCode)
+        {
+            string[] currencyNames = Enum.GetNames<Currency>();
+            if (!currencyNames.Contains(currency, StringComparer.Ordinal))
+            {
+                return Result.Failure<Currency>($"'{currency}' is not a supported currency. Use one of: {string.Join(", ", currencyNames)}.", invalidCurrencyCode);
+            }
+
+            return Result.Ok(Enum.Parse<Currency>(currency));
+        }
+
+        public static Result<Money> CheckAmount(long amountMinor, Currency currency, string notPositiveCode, string tooLargeCode)
         {
             if (amountMinor <= 0)
             {
-                return Result.Failure<Money>($"The expense amount must be more than 0; got {amountMinor} minor units.", ResultCodes.EXPENSE_AMOUNT_NOT_POSITIVE);
+                return Result.Failure<Money>($"The amount must be more than 0; got {amountMinor} minor units.", notPositiveCode);
             }
 
             if (amountMinor > AmountMaxMinorUnits)
             {
-                return Result.Failure<Money>($"The expense amount must be at most {AmountMaxMinorUnits} minor units; got {amountMinor}.", ResultCodes.EXPENSE_AMOUNT_TOO_LARGE);
+                return Result.Failure<Money>($"The amount must be at most {AmountMaxMinorUnits} minor units; got {amountMinor}.", tooLargeCode);
             }
 
             return Money.Create(amountMinor, currency);
         }
 
-        private static Result<DateOnly> CheckDate(string expenseDate, DateOnly utcToday)
+        public static Result<DateOnly> CheckDate(string dateText, DateOnly utcToday, string invalidDateCode)
         {
-            DateOnly latestDate = utcToday.AddDays(DateMaxDaysAhead);
-            string allowedRange = $"from {EarliestDate.ToString(DateFormat, CultureInfo.InvariantCulture)} to {latestDate.ToString(DateFormat, CultureInfo.InvariantCulture)}";
-            if (!DateOnly.TryParseExact(expenseDate, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date))
+            return CheckDate(dateText, EarliestDate, utcToday.AddDays(DateMaxDaysAhead), invalidDateCode);
+        }
+
+        public static Result<DateOnly> CheckDate(string dateText, DateOnly earliestDate, DateOnly latestDate, string invalidDateCode)
+        {
+            string allowedRange = $"from {earliestDate.ToString(DateFormat, CultureInfo.InvariantCulture)} to {latestDate.ToString(DateFormat, CultureInfo.InvariantCulture)}";
+            if (!DateOnly.TryParseExact(dateText, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date))
             {
-                return Result.Failure<DateOnly>($"'{expenseDate}' is not a date in the form {DateFormat}; pick a date {allowedRange}.", ResultCodes.EXPENSE_DATE_INVALID);
+                return Result.Failure<DateOnly>($"'{dateText}' is not a date in the form {DateFormat}; pick a date {allowedRange}.", invalidDateCode);
             }
 
-            if (date < EarliestDate || date > latestDate)
+            if (date < earliestDate || date > latestDate)
             {
-                return Result.Failure<DateOnly>($"The expense date {expenseDate} is outside the allowed range {allowedRange}.", ResultCodes.EXPENSE_DATE_INVALID);
+                return Result.Failure<DateOnly>($"The date {dateText} is outside the allowed range {allowedRange}.", invalidDateCode);
             }
 
             return Result.Ok(date);
+        }
+
+        public static Result<string?> CheckNote(string? note, string invalidNoteCode)
+        {
+            string? trimmedNote = TrimToNull(note);
+            if (trimmedNote is not null && trimmedNote.Length > NoteMaxLength)
+            {
+                return Result.Failure<string?>($"The note must have at most {NoteMaxLength} characters; it has {trimmedNote.Length}.", invalidNoteCode);
+            }
+
+            return Result.Ok(trimmedNote);
         }
     }
 }

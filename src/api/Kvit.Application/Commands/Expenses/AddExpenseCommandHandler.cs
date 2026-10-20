@@ -3,9 +3,7 @@ using Kvit.Application.Persistence;
 using Kvit.Application.Queries.Expenses;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Expenses;
-using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Results;
-using Kvit.Domain.Services.ExchangeRates;
 using Kvit.Domain.Services.Expenses;
 
 namespace Kvit.Application.Commands.Expenses
@@ -13,7 +11,6 @@ namespace Kvit.Application.Commands.Expenses
     public sealed class AddExpenseCommandHandler(
         ICurrentUserProvider _currentUserProvider,
         IDispatcher _dispatcher,
-        GetCurrentExchangeRate _getCurrentExchangeRate,
         AddExpense _addExpense,
         GroupWriteTransaction _groupWrite) : ICommandHandler<AddExpenseCommand, ExpenseDetailResponse>
     {
@@ -25,16 +22,10 @@ namespace Kvit.Application.Commands.Expenses
                 return userId.ToFailure<ExpenseDetailResponse>();
             }
 
-            Result<ExchangeRateSnapshot> rate = await _getCurrentExchangeRate.Execute(cancellationToken);
-            if (!rate.IsSuccess)
-            {
-                return rate.ToFailure<ExpenseDetailResponse>();
-            }
-
             Result<Guid> added = await _groupWrite.RunOnceMoreIfClientRequestIdWasTakenAsync(
                 command.GroupId,
                 userId.Value,
-                () => _addExpense.Execute(command.GroupId, userId.Value, command.ClientRequestId, command.Input, rate.Value, cancellationToken),
+                () => _addExpense.Execute(command.GroupId, userId.Value, command.ClientRequestId, command.Input, cancellationToken),
                 cancellationToken);
             if (!added.IsSuccess)
             {

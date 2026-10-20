@@ -42,6 +42,7 @@ function expectedItems(language: Language, withTarget: boolean): string[] {
   const items = [
     translated(language, 'home.plusNewOneBill'),
     translated(language, 'home.plusAnotherGroup'),
+    translated(language, 'budget.entries.homeItem'),
   ]
   return withTarget ? [translated(language, 'home.plusAddTo', { group: 'Greece trip' }), ...items] : items
 }
@@ -104,7 +105,7 @@ describe('HomePlusMenu', () => {
   })
 
   describe('the list', () => {
-    it.each(languages)('has exactly three items in the order Add to the group, New One bill, Another group in %s', async (language) => {
+    it.each(languages)('has exactly four items in the order Add to the group, New One bill, Another group, Personal spending in %s', async (language) => {
       await renderMenu(language)
 
       const menu = openMenu(language)
@@ -112,7 +113,7 @@ describe('HomePlusMenu', () => {
       expectItemsInOrder(menu, expectedItems(language, true))
     })
 
-    it.each(languages)('has no Add to item, and so two items, when there is no target in %s', async (language) => {
+    it.each(languages)('has no Add to item, and so three items, when there is no target in %s', async (language) => {
       await renderMenu(language, null)
 
       const menu = openMenu(language)

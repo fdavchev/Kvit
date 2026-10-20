@@ -10,11 +10,3 @@ export function categoryOf(categories: readonly Category[], categoryId: string |
   }
   return category
 }
-
-export function categoryNameKey(category: Category): string {
-  return `categories.${category.key}`
-}
-
-export function categoryColor(category: Category): string {
-  return `var(--category-${category.color})`
-}

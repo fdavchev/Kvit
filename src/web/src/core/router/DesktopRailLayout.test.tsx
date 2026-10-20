@@ -7,7 +7,7 @@ import { dashboardPath, fullDashboard, greeceGroupId } from '@/test/dashboardTes
 import { stubDesktopScreen } from '@/test/matchMediaTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import { jsonAnswer, noContentAnswer, requestCount, stubFetchByRequest } from '@/test/requestTestHelpers'
-import { seedMe, testMe } from '@/test/testMe'
+import { seedMe, testGuestMe, testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
 import { BottomBarLayout } from './BottomBarLayout'
 import { RequireAuth } from './RequireAuth'
@@ -22,6 +22,7 @@ const routeTable: RouteObject[] = [
         children: [
           { path: routes.dashboard, element: <p>home page</p> },
           { path: routes.groups, element: <p>groups page</p> },
+          { path: routes.budget, element: <p>budget page</p> },
           { path: routes.settings, element: <p>settings page</p> },
         ],
       },
@@ -64,7 +65,7 @@ describe('DesktopRailLayout on a desktop-sized window', () => {
     vi.unstubAllGlobals()
   })
 
-  it('shows the left menu with the brand, Home, Groups and Settings, and the page next to it', async () => {
+  it('shows the left menu with the brand, Home, Groups, Budget and Settings, and the page next to it', async () => {
     stubDesktopScreen()
 
     await renderAt(routes.groups)
@@ -74,8 +75,34 @@ describe('DesktopRailLayout on a desktop-sized window', () => {
     expect(railLinkNames()).toEqual([
       translated('en', 'nav.home'),
       translated('en', 'nav.groups'),
+      translated('en', 'nav.budget'),
       translated('en', 'nav.settings'),
     ])
+  })
+
+  it('shows no Budget in the left menu of a guest', async () => {
+    stubDesktopScreen()
+
+    await renderAt(routes.groups, seedMe(testGuestMe))
+
+    await screen.findByText('groups page')
+    expect(railLinkNames()).toEqual([
+      translated('en', 'nav.home'),
+      translated('en', 'nav.groups'),
+      translated('en', 'nav.settings'),
+    ])
+  })
+
+  it('marks Budget as the current page in the left menu at the Budget tab', async () => {
+    stubDesktopScreen()
+
+    await renderAt(routes.budget)
+
+    await screen.findByText('budget page')
+    const current = within(rail())
+      .getAllByRole('link')
+      .filter((link) => link.getAttribute('aria-current') === 'page')
+    expect(current.map((link) => link.textContent)).toEqual([translated('en', 'nav.budget')])
   })
 
   it('shows no bottom tab bar, so no phone space is kept for it at the bottom', async () => {
@@ -117,7 +144,7 @@ describe('DesktopRailLayout on a desktop-sized window', () => {
     await screen.findByText('groups page')
     const greece = within(rail()).getByRole('link', { name: 'Greece trip' })
     expect(greece.getAttribute('href')).toBe(routes.group(greeceGroupId))
-    expect(railLinkNames()).toHaveLength(3 + fullDashboard.groups.length)
+    expect(railLinkNames()).toHaveLength(4 + fullDashboard.groups.length)
     expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(0)
   })
 
@@ -127,7 +154,7 @@ describe('DesktopRailLayout on a desktop-sized window', () => {
     const { fetchMock } = await renderAt(routes.groups)
 
     await screen.findByText('groups page')
-    expect(railLinkNames()).toHaveLength(3)
+    expect(railLinkNames()).toHaveLength(4)
     expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(0)
   })
 

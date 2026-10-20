@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next'
 import type { Category } from '@/core/services/categories/categoriesService'
-import { categoryNameKey } from './expenseCategories'
+import { categoryNameKey } from '@/shared/utils/categoryLooks'
 
 export const noValueText = '—'
 

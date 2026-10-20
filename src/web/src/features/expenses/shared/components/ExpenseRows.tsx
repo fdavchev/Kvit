@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import type { Category } from '@/core/services/categories/categoriesService'
-import { addDays, formatExpenseDay } from '@/shared/utils/formatDate'
+import { categoryNameKey } from '@/shared/utils/categoryLooks'
 import type { Currency } from '@/shared/utils/formatMoney'
-import { categoryNameKey, categoryOf } from '../expenseCategories'
+import { categoryOf } from '../expenseCategories'
+import { expenseDayText } from '../expenseDayText'
 import { personLabel, personOf, type ExpensePerson } from '../expensePeople'
 import { noValueText } from '../expenseTitle'
 import type { SplitDraft } from '../splitDraft'
@@ -57,16 +58,6 @@ export function ExpenseRows({
   const { language } = useLanguage()
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
   const category = categoryOf(categories, categoryId)
-
-  function dateText(): string {
-    if (expenseDate === today) {
-      return t('expenses.today')
-    }
-    if (expenseDate === addDays(today, -1)) {
-      return t('expenses.yesterday')
-    }
-    return formatExpenseDay(expenseDate, today, language)
-  }
 
   function splitText(): string {
     if (splitDraft.splitType !== 'Equal') {
@@ -128,7 +119,7 @@ export function ExpenseRows({
         onOpen={() => setOpenSheet('paidBy')}
       />
       <FormRow label={t('expense.split')} value={splitText()} onOpen={() => setOpenSheet('split')} />
-      <FormRow label={t('expense.date')} value={dateText()} onOpen={() => setOpenSheet('date')} />
+      <FormRow label={t('expense.date')} value={expenseDayText(expenseDate, today, language, t)} onOpen={() => setOpenSheet('date')} />
       <FormRow
         label={t('expense.category')}
         value={category === null ? noValueText : `${category.emoji} ${t(categoryNameKey(category))}`}

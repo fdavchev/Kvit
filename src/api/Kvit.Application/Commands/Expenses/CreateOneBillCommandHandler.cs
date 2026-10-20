@@ -5,17 +5,14 @@ using Kvit.Contracts.Expenses;
 using Kvit.Contracts.Me;
 using Kvit.Contracts.Persistence;
 using Kvit.Domain.Accounts;
-using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Expenses;
 using Kvit.Domain.Results;
-using Kvit.Domain.Services.ExchangeRates;
 using Kvit.Domain.Services.Expenses;
 
 namespace Kvit.Application.Commands.Expenses
 {
     public sealed class CreateOneBillCommandHandler(
         IDispatcher _dispatcher,
-        GetCurrentExchangeRate _getCurrentExchangeRate,
         CreateOneBill _createOneBill,
         IUnitOfWork _unitOfWork) : ICommandHandler<CreateOneBillCommand, OneBillResponse>
     {
@@ -33,14 +30,8 @@ namespace Kvit.Application.Commands.Expenses
                 return notGuest.ToFailure<OneBillResponse>();
             }
 
-            Result<ExchangeRateSnapshot> rate = await _getCurrentExchangeRate.Execute(cancellationToken);
-            if (!rate.IsSuccess)
-            {
-                return rate.ToFailure<OneBillResponse>();
-            }
-
             Result<OneBillCreated> created = await _unitOfWork.RunInTransactionOnceMoreIfClientRequestIdWasTakenAsync(
-                () => _createOneBill.Execute(me.Value.Id, me.Value.DisplayName, command.ClientRequestId, command.Input, rate.Value, cancellationToken),
+                () => _createOneBill.Execute(me.Value.Id, me.Value.DisplayName, command.ClientRequestId, command.Input, cancellationToken),
                 cancellationToken);
             if (!created.IsSuccess)
             {

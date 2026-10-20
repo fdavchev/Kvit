@@ -75,8 +75,8 @@ export async function waitForSheetToClose(): Promise<void> {
 }
 
 export function dismissSheetByTappingBackdrop(): void {
-  const backdrop = document.querySelector<HTMLElement>('[role="presentation"][data-open]')
-  if (backdrop === null) {
+  const backdrop = Array.from(document.querySelectorAll<HTMLElement>('[role="presentation"][data-open]')).at(-1)
+  if (backdrop === undefined) {
     throw new Error('Found no open sheet backdrop to tap')
   }
   fireEvent.pointerDown(backdrop)
