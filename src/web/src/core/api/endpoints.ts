@@ -28,6 +28,12 @@ export const endpoints = {
   personalEntriesOfMonth: (month: string) => `/api/personal/entries?month=${month}`,
   personalEntry: (entryId: string) => `/api/personal/entries/${entryId}`,
   personalEntryRestore: (entryId: string) => `/api/personal/entries/${entryId}/restore`,
+  recurringIncomes: '/api/personal/recurring-incomes',
+  recurringIncomesCatchUp: '/api/personal/recurring-incomes/catch-up',
+  recurringIncome: (recurringIncomeId: string) => `/api/personal/recurring-incomes/${recurringIncomeId}`,
+  recurringIncomeStop: (recurringIncomeId: string) => `/api/personal/recurring-incomes/${recurringIncomeId}/stop`,
+  recurringIncomeRestart: (recurringIncomeId: string) =>
+    `/api/personal/recurring-incomes/${recurringIncomeId}/restart`,
   group: (groupId: string) => `/api/groups/${groupId}`,
   groupActivity: (groupId: string) => `/api/groups/${groupId}/activity`,
   groupRestore: (groupId: string) => `/api/groups/${groupId}/restore`,

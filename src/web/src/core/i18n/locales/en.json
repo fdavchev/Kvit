@@ -553,7 +553,44 @@
     },
     "income": {
       "title": "New income",
-      "listTitle": "Income"
+      "listTitle": "Income",
+      "repeatsNever": "Repeats: Never",
+      "repeatsMonthly": "Repeats: Monthly",
+      "repeatsWeekly": "Repeats: Weekly",
+      "startsOn": "Starts: {{day}}",
+      "endsNever": "Ends: never",
+      "endsOn": "Ends: {{day}}",
+      "endsTitle": "When does it end?",
+      "endsOptionNever": "Never",
+      "endsIn3Months": "In 3 months",
+      "endsIn6Months": "In 6 months",
+      "endsIn1Year": "In 1 year",
+      "endsPickDate": "Pick a date…",
+      "startDateHint": "Pick a start date from the last 24 months, up to one year ahead.",
+      "endDateHint": "Pick an end date from the start, up to 10 years later."
+    },
+    "recurring": {
+      "title": "Repeating income",
+      "rowCount": "Repeating income · {{count}}",
+      "rowNone": "Repeating income · none yet",
+      "more_one": "+{{count}} more",
+      "more_other": "+{{count}} more",
+      "monthly": "Every month on the {{ordinal}}",
+      "weekly": "Every week on {{weekday}}",
+      "next": "next {{day}}",
+      "stop": "Stop",
+      "stopped": "Stopped",
+      "empty": "No repeating income yet",
+      "newButton": "+ New repeating income",
+      "weekdays": {
+        "sunday": "Sunday",
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday"
+      }
     },
     "screen": {
       "spentThisMonth": "Spent this month",

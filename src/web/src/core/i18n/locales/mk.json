@@ -553,7 +553,44 @@
     },
     "income": {
       "title": "Нов приход",
-      "listTitle": "Приход"
+      "listTitle": "Приход",
+      "repeatsNever": "Се повторува: никогаш",
+      "repeatsMonthly": "Се повторува: месечно",
+      "repeatsWeekly": "Се повторува: неделно",
+      "startsOn": "Почнува: {{day}}",
+      "endsNever": "Завршува: никогаш",
+      "endsOn": "Завршува: {{day}}",
+      "endsTitle": "Кога завршува?",
+      "endsOptionNever": "Никогаш",
+      "endsIn3Months": "За 3 месеци",
+      "endsIn6Months": "За 6 месеци",
+      "endsIn1Year": "За 1 година",
+      "endsPickDate": "Избери датум…",
+      "startDateHint": "Избери почеток од последните 24 месеци, најдоцна една година однапред.",
+      "endDateHint": "Избери крај од почетокот, најмногу 10 години подоцна."
+    },
+    "recurring": {
+      "title": "Редовен приход",
+      "rowCount": "Редовен приход · {{count}}",
+      "rowNone": "Редовен приход · сѐ уште нема",
+      "more_one": "уште {{count}}",
+      "more_other": "уште {{count}}",
+      "monthly": "Месечно, на {{ordinal}}",
+      "weekly": "Неделно: {{weekday}}",
+      "next": "следно {{day}}",
+      "stop": "Запри",
+      "stopped": "Запрено",
+      "empty": "Сѐ уште немаш редовен приход",
+      "newButton": "+ Нов редовен приход",
+      "weekdays": {
+        "sunday": "Недела",
+        "monday": "Понеделник",
+        "tuesday": "Вторник",
+        "wednesday": "Среда",
+        "thursday": "Четврток",
+        "friday": "Петок",
+        "saturday": "Сабота"
+      }
     },
     "screen": {
       "spentThisMonth": "Потрошено овој месец",

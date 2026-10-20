@@ -4,6 +4,7 @@ import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitSheet } from '@/shared/components/KvitSheet'
 import { kvitChipLook } from '@/shared/components/kvitChipLook'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
+import { cn } from '@/shared/utils/cn'
 import { addDays, isCalendarDate } from '@/shared/utils/formatDate'
 
 interface DateSheetProps {
@@ -18,6 +19,7 @@ interface DateSheetProps {
 
 const expenseEarliestDate = '2000-01-01'
 const expenseDaysAhead = 365
+const dayChipLook = cn(kvitChipLook, 'disabled:pointer-events-none disabled:opacity-50')
 
 export function DateSheet({
   expenseDate,
@@ -33,8 +35,8 @@ export function DateSheet({
   const fieldId = useId()
   const [typedDate, setTypedDate] = useState<string>(expenseDate)
   const yesterday = addDays(today, -1)
-  const canApplyTypedDate: boolean =
-    isCalendarDate(typedDate) && typedDate >= earliestDate && typedDate <= latestDate
+  const isAllowed = (date: string): boolean => date >= earliestDate && date <= latestDate
+  const canApplyTypedDate: boolean = isCalendarDate(typedDate) && isAllowed(typedDate)
 
   function pick(pickedDate: string): void {
     onPick(pickedDate)
@@ -47,16 +49,18 @@ export function DateSheet({
         <button
           type="button"
           aria-pressed={expenseDate === today}
+          disabled={!isAllowed(today)}
           onClick={() => pick(today)}
-          className={kvitChipLook}
+          className={dayChipLook}
         >
           {t('expenses.today')}
         </button>
         <button
           type="button"
           aria-pressed={expenseDate === yesterday}
+          disabled={!isAllowed(yesterday)}
           onClick={() => pick(yesterday)}
-          className={kvitChipLook}
+          className={dayChipLook}
         >
           {t('expenses.yesterday')}
         </button>

@@ -25,6 +25,7 @@ import {
   plainSpaces,
 } from './expenseTestHelpers'
 import { testGroup } from './groupTestData'
+import { catchUpAnswer, catchUpPost, recurringIncomesGet, recurringListAnswer } from './recurringIncomeTestData'
 import { ownerViewMembers } from './memberTestData'
 import { renderRoutesWithProviders } from './renderWithProviders'
 import {
@@ -67,6 +68,8 @@ export function stubGroupApp(options: GroupAppOptions = {}): Mock<typeof fetch> 
     [`GET ${balancesPath}`]: jsonAnswer(options.balances ?? noExpensesYetBalances),
     [`GET ${settlementsPath}`]: jsonAnswer({ settlements: options.settlements ?? [] }),
     [`GET ${expensePathOf(hotelExpenseId)}`]: jsonAnswer(hotelDetail),
+    [recurringIncomesGet]: recurringListAnswer([]),
+    [catchUpPost]: catchUpAnswer(0),
     ...options.answers,
   })
 }

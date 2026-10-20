@@ -1,5 +1,5 @@
 import type { Language } from '@/core/i18n/language'
-import { macedonianShortMonths, todayInTimeZone } from './formatDate'
+import { isCalendarDate, macedonianShortMonths, todayInTimeZone } from './formatDate'
 
 interface CalendarMonth {
   year: number
@@ -26,6 +26,17 @@ export function addMonths(month: string, count: number): string {
     year: Math.floor(movedIndex / monthsPerYear),
     monthIndex: movedIndex % monthsPerYear,
   })
+}
+
+export function addMonthsToDate(date: string, count: number): string {
+  if (!isCalendarDate(date)) {
+    throw new Error(`Expected a calendar date like 2026-10-06, got "${date}"`)
+  }
+  const movedMonth = addMonths(monthOfDate(date), count)
+  const { year, monthIndex } = readCalendarMonth(movedMonth)
+  const lastDayOfMovedMonth = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate()
+  const day = Math.min(Number(date.slice(8, 10)), lastDayOfMovedMonth)
+  return `${movedMonth}-${String(day).padStart(2, '0')}`
 }
 
 export function recentMonths(lastMonth: string, count: number): string[] {

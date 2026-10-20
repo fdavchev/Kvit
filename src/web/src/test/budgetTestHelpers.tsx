@@ -1,13 +1,16 @@
 import { screen, within } from '@testing-library/react'
+import { StrictMode } from 'react'
 import { endpoints } from '@/core/api/endpoints'
 import type { Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import type { Me } from '@/core/services/me/meService'
 import type { PersonalEntryMonth } from '@/core/services/personalEntries/personalEntriesService'
+import type { RecurringIncome } from '@/core/services/recurringIncomes/recurringIncomesService'
 import { BudgetScreen } from '@/features/budget/overview/components/BudgetScreen'
 import { activePersonalCategories } from './personalCategoryTestData'
 import { categoryListAnswer, personalCategoriesGet } from './personalCategoryTestHelpers'
 import { monthAnswerBody, octoberMonth } from './personalEntryTestData'
+import { catchUpAnswer, catchUpPost, recurringIncomesGet, recurringListAnswer } from './recurringIncomeTestData'
 import { renderElementWithProviders } from './renderWithProviders'
 import { jsonAnswer, stubFetchByRequest, type AnswerFactory } from './requestTestHelpers'
 import { seedMe, testMe } from './testMe'
@@ -31,7 +34,9 @@ interface BudgetOptions {
   language?: Language
   me?: Me
   months?: readonly PersonalEntryMonth[]
+  recurringIncomes?: readonly RecurringIncome[]
   answers?: Record<string, AnswerFactory>
+  isStrictMode?: boolean
 }
 
 export async function renderBudget(options: BudgetOptions = {}) {
@@ -41,9 +46,12 @@ export async function renderBudget(options: BudgetOptions = {}) {
     'GET /api/me': jsonAnswer(me),
     [personalCategoriesGet]: categoryListAnswer(() => activePersonalCategories),
     ...monthAnswers(options.months ?? [octoberMonth]),
+    [recurringIncomesGet]: recurringListAnswer(options.recurringIncomes ?? []),
+    [catchUpPost]: catchUpAnswer(0),
     ...options.answers,
   })
-  const rendered = await renderElementWithProviders(<BudgetScreen />, routes.budget, {
+  const screenElement = options.isStrictMode === true ? <StrictMode><BudgetScreen /></StrictMode> : <BudgetScreen />
+  const rendered = await renderElementWithProviders(screenElement, routes.budget, {
     language,
     seedCache: seedMe(me),
   })

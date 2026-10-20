@@ -7,7 +7,7 @@ import { translated } from './translated'
 
 export async function renderIncomeSheet(options: SheetOptions = {}) {
   const onClose = vi.fn<() => void>()
-  return renderSheet(<PersonalIncomeSheet entry={options.entry} onClose={onClose} />, onClose, options)
+  return renderSheet(<PersonalIncomeSheet entry={options.entry} recurringIncome={options.recurringIncome} onClose={onClose} />, onClose, options)
 }
 
 export async function findIncomeSheet(language: Language = 'en'): Promise<HTMLElement> {

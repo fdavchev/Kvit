@@ -24,7 +24,9 @@ import { useDeletePersonalEntry } from './useDeletePersonalEntry'
 import { useEditPersonalEntry } from './useEditPersonalEntry'
 import { useRestorePersonalEntry } from './useRestorePersonalEntry'
 
-export type PersonalEntryFieldName = 'amount' | 'date' | 'note' | 'category'
+export type PersonalEntryFieldName = 'amount' | 'date' | 'note' | 'category' | 'ends'
+
+export type PersonalEntryStart = Pick<PersonalEntry, 'amountMinor' | 'currency' | 'entryDate' | 'note'>
 
 export type PersonalEntryKindFields = Pick<PersonalSpendingFields, 'kind' | 'categoryId'> | Pick<PersonalIncomeFields, 'kind'>
 
@@ -49,7 +51,11 @@ export interface PersonalEntryFormState {
   openNote: () => void
   setIsDateOpen: (isOpen: boolean) => void
   markChanged: (field: PersonalEntryFieldName) => void
+  isChangedSinceSave: (field: PersonalEntryFieldName) => boolean
+  clearChangedMarks: () => void
   isRefused: (field: PersonalEntryFieldName) => boolean
+  closeAfterSave: (savedCurrency: Currency) => void
+  closeBecauseGone: (error: Error) => void
   save: (kindFields: PersonalEntryKindFields) => void
   deleteEntry: (deleted: PersonalEntry) => void
 }
@@ -66,11 +72,21 @@ const refusedCodesOf: Record<PersonalEntryFieldName, readonly string[]> = {
   date: ['PERSONAL_ENTRY_DATE_INVALID'],
   note: ['PERSONAL_ENTRY_NOTE_INVALID'],
   category: ['PERSONAL_ENTRY_CATEGORY_INVALID'],
+  ends: [],
 }
 
-const nothingChanged: Record<PersonalEntryFieldName, boolean> = { amount: false, date: false, note: false, category: false }
+const nothingChanged: Record<PersonalEntryFieldName, boolean> = {
+  amount: false,
+  date: false,
+  note: false,
+  category: false,
+  ends: false,
+}
 
-export function usePersonalEntryForm(entry: PersonalEntry | undefined): PersonalEntryFormState {
+export function usePersonalEntryForm(
+  entry: PersonalEntry | undefined,
+  start: PersonalEntryStart | undefined = entry,
+): PersonalEntryFormState {
   const { t } = useTranslation()
   const me = useSignedInMe()
   const queryClient = useQueryClient()
@@ -80,14 +96,14 @@ export function usePersonalEntryForm(entry: PersonalEntry | undefined): Personal
   const edit = useEditPersonalEntry(oneAtATime)
   const remove = useDeletePersonalEntry(oneAtATime)
   const restore = useRestorePersonalEntry()
-  const initialNote = entry?.note ?? ''
+  const initialNote = start?.note ?? ''
   const [clientRequestId] = useState<string>(() => crypto.randomUUID())
   const [today] = useState<string>(() => todayInTimeZone(me.timeZone, new Date()))
   const [amountText, setAmountText] = useState<string>(
-    entry === undefined ? '' : moneyInputText(entry.amountMinor, entry.currency),
+    start === undefined ? '' : moneyInputText(start.amountMinor, start.currency),
   )
-  const [currency, setCurrency] = useState<Currency>(() => entry?.currency ?? readLastEntryCurrency(me.id))
-  const [entryDate, setEntryDate] = useState<string>(entry?.entryDate ?? today)
+  const [currency, setCurrency] = useState<Currency>(() => start?.currency ?? readLastEntryCurrency(me.id))
+  const [entryDate, setEntryDate] = useState<string>(start?.entryDate ?? today)
   const [note, setNote] = useState<string>(initialNote)
   const [isNoteOpen, setIsNoteOpen] = useState<boolean>(initialNote !== '')
   const [isDateOpen, setIsDateOpen] = useState<boolean>(false)
@@ -101,7 +117,7 @@ export function usePersonalEntryForm(entry: PersonalEntry | undefined): Personal
     setChangedSinceSave((current) => ({ ...current, [field]: true }))
   }
 
-  function closeBecauseEntryIsGone(error: Error): void {
+  function closeBecauseGone(error: Error): void {
     toast.error(t(errorMessageKey(error)))
     void refreshPersonalEntries(queryClient)
     sheet.close()
@@ -109,8 +125,14 @@ export function usePersonalEntryForm(entry: PersonalEntry | undefined): Personal
 
   function handleSaveRefusal(error: Error): void {
     if (hasErrorCode(error, entryNotFoundCode)) {
-      closeBecauseEntryIsGone(error)
+      closeBecauseGone(error)
     }
+  }
+
+  function closeAfterSave(savedCurrency: Currency): void {
+    saveLastEntryCurrency(me.id, savedCurrency)
+    toast.success(t('groupSettings.saved'))
+    sheet.close()
   }
 
   function save(kindFields: PersonalEntryKindFields): void {
@@ -119,11 +141,7 @@ export function usePersonalEntryForm(entry: PersonalEntry | undefined): Personal
     }
     setChangedSinceSave(nothingChanged)
     const fields: PersonalEntryFields = { ...kindFields, amountMinor, currency, entryDate, note: textOrNull(note) }
-    const onDone = (): void => {
-      saveLastEntryCurrency(me.id, fields.currency)
-      toast.success(t('groupSettings.saved'))
-      sheet.close()
-    }
+    const onDone = (): void => closeAfterSave(fields.currency)
     if (entry === undefined) {
       add.run({ clientRequestId, ...fields }, onDone, handleSaveRefusal)
     } else {
@@ -155,7 +173,7 @@ export function usePersonalEntryForm(entry: PersonalEntry | undefined): Personal
       },
       (error) => {
         if (hasErrorCode(error, entryNotFoundCode)) {
-          closeBecauseEntryIsGone(error)
+          closeBecauseGone(error)
           return
         }
         toast.error(t(errorMessageKey(error)))
@@ -196,7 +214,11 @@ export function usePersonalEntryForm(entry: PersonalEntry | undefined): Personal
     openNote: () => setIsNoteOpen(true),
     setIsDateOpen,
     markChanged,
+    isChangedSinceSave: (field) => changedSinceSave[field],
+    clearChangedMarks: () => setChangedSinceSave(nothingChanged),
     isRefused: (field) => refusedCodesOf[field].some((code) => hasErrorCode(shownError, code)) && !changedSinceSave[field],
+    closeAfterSave,
+    closeBecauseGone,
     save,
     deleteEntry,
   }

@@ -73,14 +73,15 @@ describe('PersonalIncomeSheet, adding', () => {
       expect(amountField().inputMode).toBe('numeric')
     })
 
-    it('shows no category grid, no category chip and no Repeats chip', async () => {
+    it('shows no category grid and no category chip, but one Repeats chip saying Never', async () => {
       await renderIncomeSheet()
 
       const sheet = await findIncomeSheet()
 
       expect(screen.queryByRole('dialog', { name: translated('en', 'budget.entries.pickCategory') })).toBeNull()
       expect(within(sheet).queryByRole('button', { name: translated('en', 'expense.category') })).toBeNull()
-      expect(repeatsChips(sheet)).toHaveLength(0)
+      expect(repeatsChips(sheet)).toHaveLength(1)
+      expect(within(sheet).getByRole('button', { name: translated('en', 'budget.income.repeatsNever') })).toBe(repeatsChips(sheet)[0])
       expect(within(sheet).queryByRole('heading', { name: 'Coffee' })).toBeNull()
     })
 

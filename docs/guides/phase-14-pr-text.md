@@ -35,7 +35,7 @@ Second phase of Release 2 ("budget"). Adds personal income: added once, or repea
 - [x] Step 2: backend, repeating income (create, list, edit, stop, restart)
 - [x] Step 3: backend, lazy generation with same-moment, month-end and time zone tests
 - [x] Step 4: frontend, "Spending or Income?" sheet and add income once
-- [ ] Step 5: frontend, repeating income (Repeats and Ends chips, the row and the list)
+- [x] Step 5: frontend, repeating income (Repeats and Ends chips, the row and the list)
 - [ ] Step 6: frontend, Budget tab with the Left card
 - [ ] Step 7: desktop layout and the 360 px browser pass (EN/MK, light/dark)
 - [ ] Step 8: code review fixes, report and guide
@@ -45,3 +45,4 @@ Second phase of Release 2 ("budget"). Adds personal income: added once, or repea
 - Step 2: Add repeating income: create, list, edit, stop and restart, with the RecurringIncomeRules migration.
 - Step 3: Add lazy income generation: the catch-up endpoint, next dates and the GeneratedIncomeEntries migration.
 - Step 4: Add the Spending or Income sheet and the income sheet to the Budget tab.
+- Step 5: Add repeating income to the Budget tab: Repeats and Ends chips, the row, the list and the catch-up.

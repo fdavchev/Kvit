@@ -38,6 +38,16 @@ const macedonianLongMonths: readonly string[] = [
   'декември',
 ]
 
+interface OrdinalEndings {
+  byLastDigit: Readonly<Partial<Record<number, string>>>
+  other: string
+}
+
+const ordinalEndings: Record<Language, OrdinalEndings> = {
+  en: { byLastDigit: { 1: 'st', 2: 'nd', 3: 'rd' }, other: 'th' },
+  mk: { byLastDigit: { 1: 'ви', 2: 'ри', 7: 'ми', 8: 'ми' }, other: 'ти' },
+}
+
 const minuteMs = 60_000
 const hourMs = 60 * minuteMs
 const dayMs = 24 * hourMs
@@ -109,6 +119,24 @@ export function formatHowLongAgo(
     return countedText(t, 'time.days', Math.floor(elapsedMs / dayMs), language)
   }
   return formatExpenseDay(todayInTimeZone(timeZone, moment), todayInTimeZone(timeZone, now), language)
+}
+
+export function formatDayOrdinal(day: number, language: Language): string {
+  if (!Number.isSafeInteger(day) || day < 1 || day > 31) {
+    throw new Error(`Expected a day of the month from 1 to 31, got ${day}`)
+  }
+  const isTeen = day >= 11 && day <= 19
+  const endings = ordinalEndings[language]
+  const ending = isTeen ? endings.other : (endings.byLastDigit[day % 10] ?? endings.other)
+  return language === 'mk' ? `${day}-${ending}` : `${day}${ending}`
+}
+
+export function weekdayOfDate(date: string): number {
+  return readCalendarDate(date).getUTCDay()
+}
+
+export function dayOfMonthOfDate(date: string): number {
+  return readCalendarDate(date).getUTCDate()
 }
 
 export function addDays(date: string, days: number): string {

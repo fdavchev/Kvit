@@ -12,16 +12,40 @@ import { earliestBudgetDate } from '../../budgetMonths'
 import type { PersonalEntryFormState } from '../hooks/usePersonalEntryForm'
 import { personalEntryChipLook } from '../personalEntryChipLook'
 
+export interface PersonalEntryDateWindow {
+  earliestDate: string
+  latestDate: string
+  hint: string
+}
+
 interface PersonalEntryFormProps {
   form: PersonalEntryFormState
   onSubmit: () => void
   extraChip?: ReactNode
+  belowChips?: ReactNode
+  footer?: ReactNode
+  dateChipText?: (dayText: string) => string
+  dateWindow?: PersonalEntryDateWindow
 }
 
-export function PersonalEntryForm({ form, onSubmit, extraChip }: PersonalEntryFormProps) {
+export function PersonalEntryForm({
+  form,
+  onSubmit,
+  extraChip,
+  belowChips,
+  footer,
+  dateChipText,
+  dateWindow,
+}: PersonalEntryFormProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const { entry } = form
+  const dayText = expenseDayText(form.entryDate, form.today, language, t)
+  const shownDateWindow = dateWindow ?? {
+    earliestDate: earliestBudgetDate(form.today),
+    latestDate: form.today,
+    hint: t('budget.entries.dateHint'),
+  }
 
   return (
     <>
@@ -32,11 +56,14 @@ export function PersonalEntryForm({ form, onSubmit, extraChip }: PersonalEntryFo
         errorMessage={form.shownError === null ? null : t(errorMessageKey(form.shownError))}
         onSubmit={onSubmit}
         footer={
-          entry !== undefined && (
-            <KvitButton variant="danger" disabled={form.isBusy} onClick={() => form.deleteEntry(entry)}>
-              {t('expense.delete')}
-            </KvitButton>
-          )
+          <>
+            {entry !== undefined && (
+              <KvitButton variant="danger" disabled={form.isBusy} onClick={() => form.deleteEntry(entry)}>
+                {t('expense.delete')}
+              </KvitButton>
+            )}
+            {footer}
+          </>
         }
       >
         <AmountField
@@ -55,7 +82,7 @@ export function PersonalEntryForm({ form, onSubmit, extraChip }: PersonalEntryFo
             onClick={() => form.setIsDateOpen(true)}
           >
             <span aria-hidden="true">📅</span>
-            {expenseDayText(form.entryDate, form.today, language, t)}
+            {dateChipText === undefined ? dayText : dateChipText(dayText)}
           </button>
           {!form.isNoteOpen && (
             <button type="button" disabled={form.isBusy} className={personalEntryChipLook} onClick={form.openNote}>
@@ -65,6 +92,7 @@ export function PersonalEntryForm({ form, onSubmit, extraChip }: PersonalEntryFo
           )}
           {extraChip}
         </div>
+        {belowChips}
         {form.isNoteOpen && (
           <NoteField
             value={form.note}
@@ -78,9 +106,9 @@ export function PersonalEntryForm({ form, onSubmit, extraChip }: PersonalEntryFo
         <DateSheet
           expenseDate={form.entryDate}
           today={form.today}
-          earliestDate={earliestBudgetDate(form.today)}
-          latestDate={form.today}
-          hint={t('budget.entries.dateHint')}
+          earliestDate={shownDateWindow.earliestDate}
+          latestDate={shownDateWindow.latestDate}
+          hint={shownDateWindow.hint}
           onPick={form.changeEntryDate}
           onClose={() => form.setIsDateOpen(false)}
         />

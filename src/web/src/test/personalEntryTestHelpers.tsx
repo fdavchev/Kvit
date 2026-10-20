@@ -6,6 +6,7 @@ import type { Language } from '@/core/i18n/language'
 import type { Me } from '@/core/services/me/meService'
 import type { PersonalCategory } from '@/core/services/personalCategories/personalCategoriesService'
 import type { PersonalEntry } from '@/core/services/personalEntries/personalEntriesService'
+import type { RecurringIncome } from '@/core/services/recurringIncomes/recurringIncomesService'
 import { PersonalSpendingSheet } from '@/features/budget/entries/components/PersonalSpendingSheet'
 import { personalEntriesQueryKey } from '@/features/budget/entries/personalEntryCache'
 import { currencyLabel, type Currency } from '@/shared/utils/formatMoney'
@@ -42,6 +43,7 @@ export const seededMonth = '2026-10'
 
 export interface SheetOptions {
   entry?: PersonalEntry
+  recurringIncome?: RecurringIncome
   language?: Language
   me?: Me
   answers?: Record<string, AnswerFactory>
