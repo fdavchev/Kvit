@@ -30,6 +30,8 @@ namespace Kvit.Domain.Entities
 
         public string? Note { get; private set; }
 
+        public Guid? RecurringIncomeId { get; private set; }
+
         public Guid ClientRequestId { get; private set; }
 
         public DateTimeOffset CreatedAt { get; private set; }
@@ -40,16 +42,16 @@ namespace Kvit.Domain.Entities
 
         public static PersonalEntry CreateSpending(Guid userId, PersonalEntryFields fields, ExchangeRateSnapshot rate, Guid clientRequestId, DateTimeOffset createdAt)
         {
-            PersonalEntry entry = new()
-            {
-                Id = Guid.CreateVersion7(),
-                UserId = userId,
-                Kind = PersonalEntryKind.Spending,
-                ClientRequestId = clientRequestId,
-                CreatedAt = createdAt,
-            };
+            PersonalEntry entry = New(userId, PersonalEntryKind.Spending, rate, clientRequestId, createdAt);
             entry.ApplyFields(fields);
-            entry.SaveRate(rate);
+
+            return entry;
+        }
+
+        public static PersonalEntry CreateIncome(Guid userId, IncomeFields fields, ExchangeRateSnapshot rate, Guid clientRequestId, DateTimeOffset createdAt)
+        {
+            PersonalEntry entry = New(userId, PersonalEntryKind.Income, rate, clientRequestId, createdAt);
+            entry.ApplyFields(fields);
 
             return entry;
         }
@@ -74,8 +76,41 @@ namespace Kvit.Domain.Entities
             return Expense.RestorableUntil(deletedAt);
         }
 
+        public Result<Guid> AnswerToRepeatBy(Guid userId)
+        {
+            if (UserId != userId)
+            {
+                return ClientRequestIdUsed<Guid>(ClientRequestId);
+            }
+
+            if (DeletedAt is not null)
+            {
+                return ClientRequestIdUsedByDeletedEntry<Guid>(ClientRequestId, Id);
+            }
+
+            return Result.Ok(Id);
+        }
+
+        public Result CheckKindIs(PersonalEntryKind kind)
+        {
+            if (Kind != kind)
+            {
+                return Result.Failure($"Personal entry {Id} is {Kind} and cannot be changed to {kind}.", ResultCodes.PERSONAL_ENTRY_KIND_CANNOT_CHANGE);
+            }
+
+            return Result.Ok();
+        }
+
         public void Update(PersonalEntryFields fields, DateTimeOffset updatedAt)
         {
+            ThrowUnlessKindIs(PersonalEntryKind.Spending);
+            ApplyFields(fields);
+            UpdatedAt = updatedAt;
+        }
+
+        public void Update(IncomeFields fields, DateTimeOffset updatedAt)
+        {
+            ThrowUnlessKindIs(PersonalEntryKind.Income);
             ApplyFields(fields);
             UpdatedAt = updatedAt;
         }
@@ -108,13 +143,46 @@ namespace Kvit.Domain.Entities
             return Result.Ok();
         }
 
+        private static PersonalEntry New(Guid userId, PersonalEntryKind kind, ExchangeRateSnapshot rate, Guid clientRequestId, DateTimeOffset createdAt)
+        {
+            PersonalEntry entry = new()
+            {
+                Id = Guid.CreateVersion7(),
+                UserId = userId,
+                Kind = kind,
+                ClientRequestId = clientRequestId,
+                CreatedAt = createdAt,
+            };
+            entry.SaveRate(rate);
+
+            return entry;
+        }
+
+        private void ThrowUnlessKindIs(PersonalEntryKind kind)
+        {
+            if (Kind != kind)
+            {
+                throw new InvalidOperationException($"Personal entry {Id} is {Kind}; it cannot take the fields of {kind}.");
+            }
+        }
+
         private void ApplyFields(PersonalEntryFields fields)
         {
             CategoryId = fields.CategoryId;
-            AmountMinor = fields.Amount.MinorUnits;
-            Currency = fields.Amount.Currency;
-            EntryDate = fields.EntryDate;
-            Note = fields.Note;
+            ApplyAmountDateAndNote(fields.Amount, fields.EntryDate, fields.Note);
+        }
+
+        private void ApplyFields(IncomeFields fields)
+        {
+            ApplyAmountDateAndNote(fields.Amount, fields.EntryDate, fields.Note);
+        }
+
+        private void ApplyAmountDateAndNote(Money amount, DateOnly entryDate, string? note)
+        {
+            AmountMinor = amount.MinorUnits;
+            Currency = amount.Currency;
+            EntryDate = entryDate;
+            Note = note;
         }
     }
 }

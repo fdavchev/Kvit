@@ -119,6 +119,8 @@
     "PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE": "The amount must be more than 0.",
     "PERSONAL_ENTRY_AMOUNT_TOO_LARGE": "This amount is too large.",
     "PERSONAL_ENTRY_NOTE_INVALID": "The note can have up to 500 characters.",
+    "PERSONAL_ENTRY_INCOME_HAS_CATEGORY": "Income has no category.",
+    "PERSONAL_ENTRY_KIND_CANNOT_CHANGE": "An entry cannot change between spending and income.",
     "SETTLEMENT_NOT_FOUND": "This payment doesn't exist or was deleted.",
     "SETTLEMENT_NOT_ALLOWED": "You can't do this with this payment.",
     "SETTLEMENT_NOT_PENDING": "This payment is no longer waiting for an answer.",

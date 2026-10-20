@@ -46,6 +46,7 @@ const octoberWithNewCoffee: PersonalEntryMonth = {
       categories: [{ category: personalFoodCategory, totalMinor: 1250, count: 1 }],
     },
   ],
+  incomeTotals: [],
 }
 
 function liveOctober(): { answer: () => Response; next: (month: PersonalEntryMonth) => void } {

@@ -18,7 +18,7 @@ namespace Kvit.Domain.Services.PersonalEntries
             PersonalEntry? earlier = await _entries.FindByClientRequestIdAsync(clientRequestId, cancellationToken);
             if (earlier is not null)
             {
-                return AnswerForEarlier(earlier, userId, clientRequestId);
+                return earlier.AnswerToRepeatBy(userId);
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();
@@ -46,19 +46,31 @@ namespace Kvit.Domain.Services.PersonalEntries
             return Result.Ok(entry.Id);
         }
 
-        private static Result<Guid> AnswerForEarlier(PersonalEntry earlier, Guid userId, Guid clientRequestId)
+        public async Task<Result<Guid>> Execute(Guid userId, Guid clientRequestId, IncomeInput input, CancellationToken cancellationToken)
         {
-            if (earlier.UserId != userId)
+            PersonalEntry? earlier = await _entries.FindByClientRequestIdAsync(clientRequestId, cancellationToken);
+            if (earlier is not null)
             {
-                return PersonalEntry.ClientRequestIdUsed<Guid>(clientRequestId);
+                return earlier.AnswerToRepeatBy(userId);
             }
 
-            if (earlier.DeletedAt is not null)
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            Result<IncomeFields> fields = IncomeFields.Create(input, DateOnly.FromDateTime(now.UtcDateTime));
+            if (!fields.IsSuccess)
             {
-                return PersonalEntry.ClientRequestIdUsedByDeletedEntry<Guid>(clientRequestId, earlier.Id);
+                return fields.ToFailure<Guid>();
             }
 
-            return Result.Ok(earlier.Id);
+            Result<ExchangeRateSnapshot> rate = await _getCurrentExchangeRate.Execute(cancellationToken);
+            if (!rate.IsSuccess)
+            {
+                return rate.ToFailure<Guid>();
+            }
+
+            PersonalEntry entry = PersonalEntry.CreateIncome(userId, fields.Value, rate.Value, clientRequestId, now);
+            _entries.Add(entry);
+
+            return Result.Ok(entry.Id);
         }
     }
 }

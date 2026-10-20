@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using Kvit.Domain.Results;
 using Xunit;
 
 namespace Kvit.Api.Tests.PersonalEntries
@@ -15,7 +16,13 @@ namespace Kvit.Api.Tests.PersonalEntries
         public static readonly Guid BuiltInFoodId = Guid.Parse("c47e9a10-5f3b-4d2e-9a61-000000000001");
         public static readonly Guid BuiltInTransportId = Guid.Parse("c47e9a10-5f3b-4d2e-9a61-000000000003");
 
-        public static readonly string[] EntryFieldNames = ["amountMinor", "category", "categoryId", "createdAt", "currency", "entryDate", "id", "mkdPerEur", "note", "rateDate", "updatedAt"];
+        public const string IncomeKind = "Income";
+        public const string SpendingKind = "Spending";
+        public const string IncomeHasCategoryCode = ResultCodes.PERSONAL_ENTRY_INCOME_HAS_CATEGORY;
+        public const string IncomeTotalAmountProperty = "totalMinor";
+        public const string KindCannotChangeCode = ResultCodes.PERSONAL_ENTRY_KIND_CANNOT_CHANGE;
+
+        public static readonly string[] EntryFieldNames = ["amountMinor", "category", "categoryId", "createdAt", "currency", "entryDate", "id", "kind", "mkdPerEur", "note", "rateDate", "updatedAt"];
 
         public static TheoryData<string> AllEndpoints => ["list", "add", "edit", "delete", "restore"];
 
@@ -65,6 +72,62 @@ namespace Kvit.Api.Tests.PersonalEntries
                     note = input.Note,
                 },
                 TestContext.Current.CancellationToken);
+        }
+
+        public static Task<HttpResponseMessage> AddIncomeAsync(HttpClient client, IncomeEntryInput input, Guid? clientRequestId = null)
+        {
+            return AddWithBodyAsync(
+                client,
+                new
+                {
+                    clientRequestId = clientRequestId ?? Guid.CreateVersion7(),
+                    kind = IncomeKind,
+                    amountMinor = input.AmountMinor,
+                    currency = input.Currency,
+                    entryDate = input.EntryDate,
+                    note = input.Note,
+                });
+        }
+
+        public static Task<HttpResponseMessage> AddIncomeWithCategoryAsync(HttpClient client, IncomeEntryInput input, Guid categoryId)
+        {
+            return AddWithBodyAsync(
+                client,
+                new
+                {
+                    clientRequestId = Guid.CreateVersion7(),
+                    kind = IncomeKind,
+                    categoryId,
+                    amountMinor = input.AmountMinor,
+                    currency = input.Currency,
+                    entryDate = input.EntryDate,
+                    note = input.Note,
+                });
+        }
+
+        public static Task<HttpResponseMessage> EditIncomeAsync(HttpClient client, Guid entryId, IncomeEntryInput input)
+        {
+            return EditWithBodyAsync(
+                client,
+                entryId,
+                new
+                {
+                    kind = IncomeKind,
+                    amountMinor = input.AmountMinor,
+                    currency = input.Currency,
+                    entryDate = input.EntryDate,
+                    note = input.Note,
+                });
+        }
+
+        public static Task<HttpResponseMessage> AddWithBodyAsync(HttpClient client, object body)
+        {
+            return client.PostAsJsonAsync(EntriesPath, body, TestContext.Current.CancellationToken);
+        }
+
+        public static Task<HttpResponseMessage> EditWithBodyAsync(HttpClient client, Guid entryId, object body)
+        {
+            return client.PutAsJsonAsync(PathOf(entryId), body, TestContext.Current.CancellationToken);
         }
 
         public static Task<HttpResponseMessage> DeleteAsync(HttpClient client, Guid entryId)

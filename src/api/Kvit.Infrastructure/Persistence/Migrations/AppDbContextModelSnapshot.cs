@@ -653,6 +653,10 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnType("date")
                         .HasColumnName("rate_date");
 
+                    b.Property<Guid?>("RecurringIncomeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recurring_income_id");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -671,6 +675,10 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_personal_entries_client_request_id");
 
+                    b.HasIndex("RecurringIncomeId", "EntryDate")
+                        .IsUnique()
+                        .HasDatabaseName("ix_personal_entries_recurring_income_id_entry_date");
+
                     b.HasIndex("UserId", "EntryDate")
                         .HasDatabaseName("ix_personal_entries_user_id_entry_date");
 
@@ -680,13 +688,96 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_personal_entries_currency", "currency IN ('MKD', 'EUR')");
 
-                            t.HasCheckConstraint("ck_personal_entries_kind", "kind IN ('Spending')");
+                            t.HasCheckConstraint("ck_personal_entries_kind", "kind IN ('Spending', 'Income')");
 
                             t.HasCheckConstraint("ck_personal_entries_mkd_per_eur_positive", "mkd_per_eur > 0");
 
                             t.HasCheckConstraint("ck_personal_entries_note_length", "char_length(note) BETWEEN 1 AND 500");
 
                             t.HasCheckConstraint("ck_personal_entries_spending_has_category", "kind <> 'Spending' OR category_id IS NOT NULL");
+                        });
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.RecurringIncome", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<long>("AmountMinor")
+                        .HasColumnType("bigint")
+                        .HasColumnName("amount_minor");
+
+                    b.Property<Guid>("ClientRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_request_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("currency");
+
+                    b.Property<int?>("DayOfMonth")
+                        .HasColumnType("integer")
+                        .HasColumnName("day_of_month");
+
+                    b.Property<int?>("DayOfWeek")
+                        .HasColumnType("integer")
+                        .HasColumnName("day_of_week");
+
+                    b.Property<DateOnly?>("EndsOn")
+                        .HasColumnType("date")
+                        .HasColumnName("ends_on");
+
+                    b.Property<string>("Frequency")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("frequency");
+
+                    b.Property<DateOnly>("StartsOn")
+                        .HasColumnType("date")
+                        .HasColumnName("starts_on");
+
+                    b.Property<DateTimeOffset?>("StoppedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("stopped_at");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_recurring_incomes");
+
+                    b.HasIndex("ClientRequestId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_recurring_incomes_client_request_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_recurring_incomes_user_id");
+
+                    b.ToTable("recurring_incomes", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_recurring_incomes_amount_minor_positive", "amount_minor > 0");
+
+                            t.HasCheckConstraint("ck_recurring_incomes_currency", "currency IN ('MKD', 'EUR')");
+
+                            t.HasCheckConstraint("ck_recurring_incomes_day_of_month", "day_of_month IS NULL OR day_of_month BETWEEN 1 AND 31");
+
+                            t.HasCheckConstraint("ck_recurring_incomes_day_of_week", "day_of_week IS NULL OR day_of_week BETWEEN 0 AND 6");
+
+                            t.HasCheckConstraint("ck_recurring_incomes_ends_on_not_before_starts_on", "ends_on IS NULL OR ends_on >= starts_on");
+
+                            t.HasCheckConstraint("ck_recurring_incomes_frequency", "frequency IN ('Monthly', 'Weekly')");
                         });
                 });
 
@@ -1262,12 +1353,28 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_personal_entries_categories_category_id");
 
+                    b.HasOne("Kvit.Domain.Entities.RecurringIncome", null)
+                        .WithMany()
+                        .HasForeignKey("RecurringIncomeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_personal_entries_recurring_incomes_recurring_income_id");
+
                     b.HasOne("Kvit.Infrastructure.Auth.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_personal_entries_users_user_id");
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.RecurringIncome", b =>
+                {
+                    b.HasOne("Kvit.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_recurring_incomes_users_user_id");
                 });
 
             modelBuilder.Entity("Kvit.Domain.Entities.Settlement", b =>

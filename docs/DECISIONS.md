@@ -1,5 +1,20 @@
 ﻿# Decisions
 
+## 2026-10-20: Phase 14 (income, once and repeating), in progress
+Branch `feat/14-income`. Plan: `C:\Users\Davchev\.claude\plans\filip-wants-to-run-foamy-crystal.md`. Mockups: `docs/design/2026-10-20-phase-14/` (`index.html`, `round2.html`, `round3.html`).
+**Filip's picks (2026-10-20):**
+- **Where income starts = C:** the "+" on the Budget tab opens a small bottom sheet that asks "Spending or Income?". Spending then goes to the category grid (+, Spending, category, Save = 3 taps + 1 field, one more than Phase 13), income opens the income sheet with no category (+, Income, Save = 2 taps + 1 field). *Rejected:* A (a switch inside the sheet), B (a second "+ Income" button), C2 (an "Income" tile in the category grid, which would have kept spending at 2 taps; I recommended it for speed and Filip kept C).
+- **Income sheet = the round-1 look:** amount focused, MKD ⇄ EUR (the last used currency is the default), a date chip (Today), an optional title chip ("Salary"), a "🔁 Repeats" chip that cycles Never, Monthly, Weekly. For Monthly or Weekly an "⏹ Ends" chip appears; tapping it lets the person **choose when it ends**: Never, in 3 months, in 6 months, in 1 year, or a picked date. Ending is optional. *Rejected:* the round-2 sheet looks (a chip that opens a list, a three-way switch, an On/Off switch).
+- **Budget tab = one card (3B):** "Left this month" (income minus spending) with Income and Spent below it. MKD and EUR are never added together.
+- **Repeating income list = slim row (3A):** one row under the card, "Repeating income · N ›" with a hint such as "Salary, Flat rent +1 more". With 1 or 2 repeating incomes it opens a sheet; with **3 or more it opens its own screen**. Each income shows its name, amount, rhythm and next date, with Edit and Stop. *Rejected:* green-edge cards on the Budget tab (B), a line inside the big card (C), a button only (D).
+- **Row at zero (my recommendation, taken because Filip said "think about that idea", not yet confirmed by him):** the row stays visible when there are none, as "Repeating income · none yet ›", and opens the list with an empty state and a "+ New repeating income" button that opens the income sheet with Repeats already on Monthly. This gives a second way to create one and the only place to find them again.
+**Defaults I take until Filip says otherwise (he has not answered these):**
+- Repeating dates: the start may be in the past, but entries are never written for a month older than the oldest month on the Budget strip (24 months). A start in the future is allowed up to one year ahead and its entries appear when their day comes. Income once uses the Phase 13 rule (the last 24 months up to today).
+- Edit changes only the entries that come from now on. Stop sets the end date to today. Entries already created stay as they are. Deleting one created entry does not bring it back (the deleted row still holds that date).
+- Future and planned payments stay in the BACKLOG, not in this phase.
+- The Home "+" list gets no "Income" item for now.
+- Lazy generation is triggered by `POST /api/personal/recurring-incomes/catch-up` when the Budget tab opens and after a repeating income is saved (no GET ever changes anything). A created entry saves the newest stored rate on or before its date (the oldest stored one if none), and generation never calls NBRM.
+
 ## 2026-10-20: Phase 13 (personal spending + custom categories): done, the rules that stay
 The whole Phase 13 decision log (Filip's mockup picks, the Step 1 to 6 notes, the browser-pass choices, the code review fixes, rejected alternatives) moved word for word to the end of `reports/2026-10-20-phase-13-personal-spending.md`, section "Decisions and rejected alternatives". What stays true:
 - **Guests have no Budget:** no tab, no Home item, `/budget` redirects a guest to Settings, the API answers 403 `GUEST_NOT_ALLOWED` on every personal endpoint (personal data lives on the user, and a guest on a lost phone could not reach it).

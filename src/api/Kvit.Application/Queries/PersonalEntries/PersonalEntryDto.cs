@@ -1,10 +1,12 @@
+using Kvit.Domain.Entities;
 using Kvit.Domain.MoneyRules;
 
 namespace Kvit.Application.Queries.PersonalEntries
 {
     public sealed record PersonalEntryDto(
         Guid Id,
-        Guid CategoryId,
+        PersonalEntryKind Kind,
+        Guid? CategoryId,
         long AmountMinor,
         Currency Currency,
         DateOnly EntryDate,

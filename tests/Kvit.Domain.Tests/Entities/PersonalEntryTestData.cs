@@ -34,6 +34,23 @@ namespace Kvit.Domain.Tests.Entities
             return fields.Value;
         }
 
+        public static IncomeInput IncomeInputOf(long amountMinor = OneThousandMkd, string currency = Mkd, string entryDate = EntryDate, string? note = null)
+        {
+            return new IncomeInput(amountMinor, currency, entryDate, note);
+        }
+
+        public static IncomeFields IncomeFieldsOf(long amountMinor = OneThousandMkd, string currency = Mkd, string entryDate = EntryDate, string? note = null)
+        {
+            Result<IncomeFields> fields = IncomeFields.Create(IncomeInputOf(amountMinor, currency, entryDate, note), UtcToday);
+
+            return fields.Value;
+        }
+
+        public static PersonalEntry NewIncome(Guid? userId = null, string currency = Mkd, long amountMinor = OneThousandMkd)
+        {
+            return PersonalEntry.CreateIncome(userId ?? UserId, IncomeFieldsOf(amountMinor, currency), Rate, Guid.CreateVersion7(), Moment);
+        }
+
         public static PersonalEntry NewSpending(Guid categoryId, Guid? userId = null, string currency = Mkd, long amountMinor = OneThousandMkd)
         {
             return PersonalEntry.CreateSpending(userId ?? UserId, Fields(categoryId, amountMinor, currency), Rate, Guid.CreateVersion7(), Moment);

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit Phase 14: income mockup, round 2</title>
+<style>
+:root{--bg:#ffd9a8;--fg:#3d2610;--card:#fff1dc;--primary:#b54a00;--pf:#fff;--line:#9c6f47;--field:#fff;--pill:#fff;--pos:#1d6b2e;--posbg:#d9efd6;--mut:#7a3300}
+body.dark{--bg:#1f1816;--fg:#fff1dc;--card:#2c2220;--primary:#ffd9a8;--pf:#1f1816;--line:#72625c;--field:#161110;--pill:#d9b48a;--pos:#7fd18c;--posbg:#24382a;--mut:#ffd9a8}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:#888;color:#222;padding:16px}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:16px;margin:24px 0 8px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.bar button{font:inherit;padding:8px 12px;border-radius:999px;border:2px solid #444;background:#fff;cursor:pointer}
+.bar button.on{background:#222;color:#fff}
+.phones{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.phone{width:360px;min-height:430px;background:var(--bg);color:var(--fg);border-radius:16px;padding:12px;position:relative;overflow:hidden}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+.center{text-align:center}.pos{color:var(--pos)}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:10px}
+.amount{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:28px;font-weight:700;display:flex;justify-content:space-between}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.chip{border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:var(--bg);cursor:pointer}.chip.on{background:var(--pill);color:#3d2610;font-weight:700}
+.save{width:100%;padding:14px;border-radius:12px;border:0;background:var(--primary);color:var(--pf);font:700 16px system-ui}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.tile{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;font-size:12px}
+.tile.inc{border:2px solid var(--pos);color:var(--pos);font-weight:700}
+.note{background:#fff;color:#222;border-radius:8px;padding:8px 10px;margin:6px 0;font-size:14px;max-width:360px}
+.seg{display:flex;background:var(--bg);border-radius:999px;padding:3px}.seg span{flex:1;text-align:center;padding:8px;border-radius:999px;cursor:pointer}.seg .sel{background:var(--pill);color:#3d2610;font-weight:700}
+.btn{border:1px solid var(--line);border-radius:999px;padding:8px 14px;background:var(--bg);color:var(--fg);font:inherit;cursor:pointer}
+.btn.danger{color:#b71f1f;border-color:#b71f1f}body.dark .btn.danger{color:#ff8a80;border-color:#ff8a80}
+.big{font-size:20px;font-weight:700}
+.icon{width:40px;height:40px;border-radius:10px;background:var(--posbg);display:grid;place-items:center;font-size:20px}
+.hide{display:none}
+.day{width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:14px}.day.on{background:var(--pill);color:#3d2610;font-weight:700}
+</style>
+</head>
+<body>
+<h1>Kvit Phase 14: income, round 2 (nothing is built)</h1>
+<div class="bar"><button id="light" class="on">Light</button><button id="dark">Dark</button></div>
+
+<h2>1. Where income starts: your C against a faster C</h2>
+<div class="phones">
+  <div class="phone"><b>C (your pick): "+" asks first</b>
+    <div class="sheet"><div class="center"><b>What do you add?</b></div>
+      <div class="chips" style="justify-content:center"><span class="chip">💸 Spending</span><span class="chip">💰 Income</span></div></div>
+    <div class="note">Spending: +, Spending, category, Save = <b>3 taps + 1 field</b> (today 2). Income: +, Income, Save = <b>2 taps + 1 field</b>.</div></div>
+  <div class="phone"><b>C2: "Income" is the first tile of the category grid</b>
+    <div class="sheet"><div class="center"><b>What did you spend on?</b></div><br>
+      <div class="tiles"><div class="tile inc">💰<br>Income</div><div class="tile">🍕<br>Food</div><div class="tile">🚌<br>Transport</div><div class="tile">🏠<br>Home</div><div class="tile">🎬<br>Fun</div><div class="tile">👕<br>Clothes</div><div class="tile">🏷️<br>Other</div><div class="tile" style="border-style:dashed">＋<br>New</div></div></div>
+    <div class="note">Spending stays <b>2 taps + 1 field</b>. Income: +, Income tile, Save = <b>2 taps + 1 field</b>. The green outlined tile stands apart from the categories.</div></div>
+</div>
+
+<h2>2. The "Repeats" part of the income sheet: three looks</h2>
+<div class="bar" id="q2"><button data-v="A" class="on">A: chip opens a small list</button><button data-v="B">B: three buttons in the sheet</button><button data-v="C">C: switch "Repeat this" + details</button></div>
+<div class="phones">
+  <div class="phone" style="min-height:520px"><div class="center"><b>New income</b></div><div class="sheet" id="p2"></div></div>
+  <div class="note" id="p2note"></div>
+</div>
+
+<h2>3. The "Repeating income" card: three looks (yours wrapped badly)</h2>
+<div class="bar" id="q3"><button data-v="A" class="on">A: stacked rows</button><button data-v="B">B: tap the row, options in a sheet</button><button data-v="C">C: icon + status line</button></div>
+<div class="phones">
+  <div class="phone" id="p3"></div>
+  <div class="note" id="p3note"></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+function pick(id,fn){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on'));b.classList.add('on');fn(b.dataset.v)})}
+$('#light').onclick=()=>{document.body.classList.remove('dark');$('#light').classList.add('on');$('#dark').classList.remove('on')};
+$('#dark').onclick=()=>{document.body.classList.add('dark');$('#dark').classList.add('on');$('#light').classList.remove('on')};
+const amountBox='<div class="amount"><span>30,000</span><span>MKD ⇄</span></div>';
+function q2(v){
+  let h=amountBox,n='';
+  if(v==='A'){h+='<div class="chips"><span class="chip">📅 Today</span><span class="chip">📝 Salary</span><span class="chip on">🔁 Monthly ▾</span></div><div class="card" style="margin:0 0 10px"><div class="chips" style="margin:0"><span class="chip">Never</span><span class="chip on">Monthly</span><span class="chip">Weekly</span></div></div><div class="note" style="background:var(--bg);color:var(--fg)">Every month on the 20th. Ends: never.</div>';
+   n='<b>A.</b> One "Repeats" chip. Tapping it opens the three choices right under it. Income once: nothing extra to tap. Repeating: +2 taps. The end date is a separate chip that appears only after you choose Monthly or Weekly.'}
+  if(v==='B'){h+='<div class="chips"><span class="chip">📅 Today</span><span class="chip">📝 Salary</span></div><div style="margin:6px 0">Repeats</div><div class="seg"><span class="sel">Never</span><span>Monthly</span><span>Weekly</span></div>';
+   n='<b>B.</b> A three-way switch always visible. Repeating = <b>+1 tap</b> (the fewest). The sheet is a bit taller. When you pick Monthly the date chip says "Starts" and a small line says "Every month on the 20th".'}
+  if(v==='C'){h+='<div class="chips"><span class="chip">📅 Today</span><span class="chip">📝 Salary</span></div><div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0"><span>🔁 Repeat this income</span><span class="chip on">On</span></div><div class="card" style="margin:0 0 10px"><div class="seg"><span class="sel">Monthly</span><span>Weekly</span></div><div style="margin-top:8px">Every month on the 20th</div><div style="margin-top:8px"><span class="chip">⏹ Ends: never</span></div></div>';
+   n='<b>C.</b> A switch like a phone setting; the details open under it. Clear, but repeating = <b>+2 taps</b> and the sheet gets tall at 360 px with the keyboard open.'}
+  h+='<br><button class="save">Save</button>';
+  $('#p2').innerHTML=h;$('#p2note').innerHTML=n;
+}
+pick('q2',q2);q2('A');
+function q3(v){
+  let h='',n='';
+  if(v==='A'){h='<div class="card"><b>Repeating income</b><div class="row" style="padding:10px 0"><div class="big">Salary</div><div>30,000 ден. · every month on the 1st</div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn">Edit</button><button class="btn danger">Stop</button></div></div></div>';
+   n='<b>A.</b> Each repeating income is its own block: name, amount and rhythm on separate lines, then two real buttons. Nothing wraps. Takes more height per income.'}
+  if(v==='B'){h='<div class="card"><b>Repeating income</b><div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;gap:8px"><div><div class="big">Salary</div><div>every month on the 1st</div></div><div class="big pos">+30,000 ден. ›</div></div></div>';
+   n='<b>B.</b> Like the entries list: tap the row to open a sheet with Edit and Stop. The card is quiet and short, 1 tap more to reach Edit or Stop (2 taps). Stop is rare, so this is fine.'}
+  if(v==='C'){h='<div class="card"><b>Repeating income</b><div style="display:flex;gap:12px;align-items:center;padding:12px 0"><div class="icon">💰</div><div style="flex:1"><div class="big">Salary</div><div style="font-size:14px">30,000 ден. · every month on the 1st</div><div style="font-size:13px;color:var(--pos)">Next: 1 Nov · Ends: never</div></div><button class="btn">⋯</button></div></div>';
+   n='<b>C.</b> Icon, name, one amount and rhythm line, plus "Next: 1 Nov" so you can see it works. A "⋯" button opens Edit and Stop (2 taps).'}
+  $('#p3').innerHTML='<div class="center"><b>Budget</b></div>'+h;$('#p3note').innerHTML=n;
+}
+pick('q3',q3);q3('A');
+</script>
+</body>
+</html>

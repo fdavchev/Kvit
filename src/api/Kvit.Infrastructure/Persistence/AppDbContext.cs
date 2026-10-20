@@ -32,6 +32,8 @@ namespace Kvit.Infrastructure.Persistence
 
         public DbSet<PersonalEntry> PersonalEntries => Set<PersonalEntry>();
 
+        public DbSet<RecurringIncome> RecurringIncomes => Set<RecurringIncome>();
+
         public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
         protected override void OnModelCreating(ModelBuilder builder)

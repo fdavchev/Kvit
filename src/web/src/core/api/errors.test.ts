@@ -65,6 +65,8 @@ const mappedErrorCodes = [
   'PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE',
   'PERSONAL_ENTRY_AMOUNT_TOO_LARGE',
   'PERSONAL_ENTRY_NOTE_INVALID',
+  'PERSONAL_ENTRY_INCOME_HAS_CATEGORY',
+  'PERSONAL_ENTRY_KIND_CANNOT_CHANGE',
 ]
 
 const errorTexts: Record<'en' | 'mk', Record<string, unknown>> = {

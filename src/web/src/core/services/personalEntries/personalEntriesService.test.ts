@@ -63,7 +63,7 @@ describe('getPersonalEntries', () => {
   })
 
   it('keeps an entry whose category is archived, with the archived category row', async () => {
-    stubFetch(Response.json({ month: '2026-09', entries: [entryAnswerRow(gymEntryWithArchivedCategory)], totals: [] }))
+    stubFetch(Response.json({ month: '2026-09', entries: [entryAnswerRow(gymEntryWithArchivedCategory)], totals: [], incomeTotals: [] }))
 
     const month = await getPersonalEntries('2026-09')
 
@@ -71,9 +71,9 @@ describe('getPersonalEntries', () => {
   })
 
   it('returns an empty month when the server has nothing', async () => {
-    stubFetch(Response.json({ month: '2026-08', entries: [], totals: [] }))
+    stubFetch(Response.json({ month: '2026-08', entries: [], totals: [], incomeTotals: [] }))
 
-    expect(await getPersonalEntries('2026-08')).toEqual({ month: '2026-08', entries: [], totals: [] })
+    expect(await getPersonalEntries('2026-08')).toEqual({ month: '2026-08', entries: [], totals: [], incomeTotals: [] })
   })
 
   it.each(['month', 'entries', 'totals'])('throws an error naming "%s" when the answer lacks it', async (field) => {
@@ -83,7 +83,7 @@ describe('getPersonalEntries', () => {
   })
 
   it.each(Object.keys(entryAnswerRow(coffeeEntry)))('throws an error naming "%s" when an entry lacks it', async (field) => {
-    stubFetch(Response.json({ month: '2026-10', entries: [withoutField(entryAnswerRow(coffeeEntry), field)], totals: [] }))
+    stubFetch(Response.json({ month: '2026-10', entries: [withoutField(entryAnswerRow(coffeeEntry), field)], totals: [], incomeTotals: [] }))
 
     await expect(getPersonalEntries('2026-10')).rejects.toThrow(field)
   })
@@ -98,21 +98,21 @@ describe('getPersonalEntries', () => {
     ['rateDate', null],
     ['updatedAt', 'later'],
   ])('throws an error naming "%s" when an entry has %j', async (field, value) => {
-    stubFetch(Response.json({ month: '2026-10', entries: [{ ...entryAnswerRow(coffeeEntry), [field]: value }], totals: [] }))
+    stubFetch(Response.json({ month: '2026-10', entries: [{ ...entryAnswerRow(coffeeEntry), [field]: value }], totals: [], incomeTotals: [] }))
 
     await expect(getPersonalEntries('2026-10')).rejects.toThrow(field)
   })
 
   it('throws an error naming "color" when the category of an entry has a colour the app does not know', async () => {
     const row = { ...entryAnswerRow(coffeeEntry), category: { ...coffeeCategory, color: 'brown' } }
-    stubFetch(Response.json({ month: '2026-10', entries: [row], totals: [] }))
+    stubFetch(Response.json({ month: '2026-10', entries: [row], totals: [], incomeTotals: [] }))
 
     await expect(getPersonalEntries('2026-10')).rejects.toThrow('color')
   })
 
   it('throws an error naming "categoryId" when it is not the id of the category the entry carries', async () => {
     const row = { ...entryAnswerRow(coffeeEntry), categoryId: archivedGymCategory.id }
-    stubFetch(Response.json({ month: '2026-10', entries: [row], totals: [] }))
+    stubFetch(Response.json({ month: '2026-10', entries: [row], totals: [], incomeTotals: [] }))
 
     await expect(getPersonalEntries('2026-10')).rejects.toThrow('categoryId')
   })
@@ -132,7 +132,7 @@ describe('getPersonalEntries', () => {
   it.each(['categoryId', 'category', 'totalMinor', 'count'])('throws an error naming "%s" when a category total lacks it', async (field) => {
     const row = { categoryId: coffeeCategory.id, category: coffeeCategory, totalMinor: 12000, count: 1 }
     const total = { currency: 'MKD', totalMinor: 12000, categories: [withoutField(row, field)] }
-    stubFetch(Response.json({ month: '2026-10', entries: [], totals: [total] }))
+    stubFetch(Response.json({ month: '2026-10', entries: [], totals: [total], incomeTotals: [] }))
 
     await expect(getPersonalEntries('2026-10')).rejects.toThrow(field)
   })

@@ -1,16 +1,15 @@
 # Status: Kvit
 
-_Last updated: 2026-10-20 (Phase 13 built, browser-checked and code-reviewed; waiting for Filip's last commit, push, CI and merge)_
+_Last updated: 2026-10-20 (Phase 14 Step 0 done: mockups and Filip's picks logged; no code written yet)_
 
 ## Where we stopped
-- Release 1 was accepted on 2026-10-16. Phases 12 and 12b are merged.
-- Branch: `feat/13-personal-spending`. Phase 13 (personal spending + custom categories, first phase of Release 2) is built: custom categories, personal entries, the Budget tab (`/budget`), the add/edit/delete sheet, the Home "+" item "Personal spending", guests excluded. Three migrations: `PersonalCategories`, `PersonalEntries`, `PersonalCategoryNameUnique`.
-- Report: `docs/reports/2026-10-20-phase-13-personal-spending.md` (decision log at its end); browser pass: `docs/reports/2026-10-19-phase-13-browser-pass.md`; guide: `docs/guides/phase-13-personal-spending.md`; first-push texts: `docs/guides/phase-13-pr-text.md`.
+- Release 1 was accepted on 2026-10-16. Phases 12, 12b and 13 are merged (Phase 13 = PR #17).
+- Branch: `feat/14-income` (from `main`). Phase 14 (income, once and repeating) is in Step 0: three mockup rounds in `docs/design/2026-10-20-phase-14/`, Filip's picks and my defaults in `docs/DECISIONS.md` (top section), steps in `docs/ROADMAP.md`, first-push texts in `docs/guides/phase-14-pr-text.md`. Prompt: `docs/guides/phase-14-income-prompt.md`; plan: `C:\Users\Davchev\.claude\plans\filip-wants-to-run-foamy-crystal.md`.
+- Phase 13 report: `docs/reports/2026-10-20-phase-13-personal-spending.md`; guide: `docs/guides/phase-13-personal-spending.md`.
 
 ## Next step
-1. Filip: run `dotnet ef database update` (the third migration is new), commit the last round (code review fixes + docs), push, check that CI is green, and merge (CI applies the 3 migrations on Neon).
-2. Optional first: a browser re-check of the code review fixes (date picker limits, Save/Delete dimming) by the tester; and Filip tries the app with `docs/guides/phase-13-personal-spending.md`.
-3. Then Phase 14 (income, once and repeating). Its prompt is not written yet.
+1. Filip: answer the open Phase 14 questions (row visible at 0, the date and edit rules, no Home "+" Income item, future and planned payments out), and commit the Step 0 docs.
+2. Step 1: backend, income once and the `Income` migration (ask Filip before the coder run; Docker Desktop open).
 
 ## Then
 - Filip, once on the real site: one real EUR expense (first real NBRM call), a real Google picture in a circle, the Google button inside the Log in sheet and "Make an account", the invite link on his phone, and a read of the Macedonian drafts of Phases 9 to 13.

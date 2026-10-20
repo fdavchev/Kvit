@@ -202,8 +202,19 @@ Release 1 accepted 2026-10-16. Filip put this BACKLOG "must do" before Phase 13.
 - [x] **Done 2026-10-20 (VERIFIED by automated test: backend 4169, frontend 8631; the review fixes are not yet seen in a browser).** Step 7: code review (8 findings fixed), report `reports/2026-10-20-phase-13-personal-spending.md`, guide `guides/phase-13-personal-spending.md`, first-push texts `guides/phase-13-pr-text.md`
 - [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the 2 migrations on Neon)
 
+## Phase 14: Income, once and repeating · `feat/14-income`
+- [x] Step 0: mockups (three rounds) and Filip's picks (2026-10-20, `DECISIONS.md`)
+- [x] **Done 2026-10-20 (VERIFIED by automated test: backend 4354, frontend 8651; no UI yet).** Step 1: backend, income once and the `Income` migration (also created the empty `recurring_incomes` table)
+- [ ] Step 2: backend, repeating income (create, list, edit, stop)
+- [ ] Step 3: backend, lazy generation (same-moment, month-end, time zones)
+- [ ] Step 4: frontend, "Spending or Income?" sheet and add income once
+- [ ] Step 5: frontend, repeating income (Repeats and Ends chips, the row and the list)
+- [ ] Step 6: frontend, Budget tab with the Left card
+- [ ] Step 7: desktop layout and the 360 px browser pass
+- [ ] Step 8: code review, report, guide
+- [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the migration on Neon)
+
 ## Later phases
-- Phase 14: income, once and repeating (lazy)
 - Phase 15: budget share per group, budget currency, limits, monthly summary
 - Phase 16: possible duplicates, group totals per category, group spending plan
 

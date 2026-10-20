@@ -4,6 +4,8 @@ using Kvit.Application.Queries.Me;
 using Kvit.Application.Queries.PersonalEntries;
 using Kvit.Contracts.PersonalEntries;
 using Kvit.Contracts.Persistence;
+using Kvit.Domain.Entities;
+using Kvit.Domain.PersonalEntries;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.PersonalEntries;
 
@@ -23,7 +25,7 @@ namespace Kvit.Application.Commands.PersonalEntries
             }
 
             Result edited = await _unitOfWork.RunInTransactionAsync(
-                () => _editPersonalEntry.Execute(userId.Value, command.EntryId, command.Input, cancellationToken),
+                () => EditAsync(userId.Value, command, cancellationToken),
                 cancellationToken);
             if (!edited.IsSuccess)
             {
@@ -31,6 +33,27 @@ namespace Kvit.Application.Commands.PersonalEntries
             }
 
             return await _dispatcher.Query<GetPersonalEntryQuery, PersonalEntryRow>(new GetPersonalEntryQuery(command.EntryId), cancellationToken);
+        }
+
+        private Task<Result> EditAsync(Guid userId, EditPersonalEntryCommand command, CancellationToken cancellationToken)
+        {
+            return command.Kind switch
+            {
+                PersonalEntryKind.Spending => _editPersonalEntry.Execute(userId, command.EntryId, command.Input, cancellationToken),
+                PersonalEntryKind.Income => EditIncomeAsync(userId, command, cancellationToken),
+                _ => throw new InvalidOperationException($"Editing a personal entry of kind {command.Kind} is not supported."),
+            };
+        }
+
+        private async Task<Result> EditIncomeAsync(Guid userId, EditPersonalEntryCommand command, CancellationToken cancellationToken)
+        {
+            Result<IncomeInput> income = command.Input.ToIncomeInput();
+            if (!income.IsSuccess)
+            {
+                return income;
+            }
+
+            return await _editPersonalEntry.Execute(userId, command.EntryId, income.Value, cancellationToken);
         }
     }
 }

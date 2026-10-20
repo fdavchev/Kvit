@@ -11,6 +11,7 @@ import {
 
 export const coffeeEntry: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000001',
+  kind: 'Spending',
   category: coffeeCategory,
   amountMinor: 12000,
   currency: 'MKD',
@@ -24,6 +25,7 @@ export const coffeeEntry: PersonalEntry = {
 
 export const lunchInEuroEntry: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000002',
+  kind: 'Spending',
   category: personalFoodCategory,
   amountMinor: 1250,
   currency: 'EUR',
@@ -37,6 +39,7 @@ export const lunchInEuroEntry: PersonalEntry = {
 
 export const gymEntryWithArchivedCategory: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000003',
+  kind: 'Spending',
   category: archivedGymCategory,
   amountMinor: 150000,
   currency: 'MKD',
@@ -67,6 +70,7 @@ export const octoberMonth: PersonalEntryMonth = {
       categories: [{ category: personalFoodCategory, totalMinor: 1250, count: 1 }],
     },
   ],
+  incomeTotals: [],
 }
 
 export function monthAnswerBody(month: PersonalEntryMonth): Record<string, unknown> {
@@ -77,11 +81,13 @@ export function monthAnswerBody(month: PersonalEntryMonth): Record<string, unkno
       ...total,
       categories: total.categories.map((row) => ({ ...row, categoryId: row.category.id })),
     })),
+    incomeTotals: month.incomeTotals,
   }
 }
 
 export const groceriesEntry: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000004',
+  kind: 'Spending',
   category: personalGroceriesCategory,
   amountMinor: 123400,
   currency: 'MKD',
@@ -95,6 +101,7 @@ export const groceriesEntry: PersonalEntry = {
 
 export const secondCoffeeEntry: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000005',
+  kind: 'Spending',
   category: coffeeCategory,
   amountMinor: 15000,
   currency: 'MKD',
@@ -119,10 +126,12 @@ export const mkdOnlyMonth: PersonalEntryMonth = {
       ],
     },
   ],
+  incomeTotals: [],
 }
 
 export const euroDinnerEntry: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000006',
+  kind: 'Spending',
   category: personalFoodCategory,
   amountMinor: 4250,
   currency: 'EUR',
@@ -144,6 +153,7 @@ export const euroOnlyAugust: PersonalEntryMonth = {
       categories: [{ category: personalFoodCategory, totalMinor: 4250, count: 1 }],
     },
   ],
+  incomeTotals: [],
 }
 
 export const septemberWithArchivedCategory: PersonalEntryMonth = {
@@ -156,8 +166,9 @@ export const septemberWithArchivedCategory: PersonalEntryMonth = {
       categories: [{ category: archivedGymCategory, totalMinor: 150000, count: 1 }],
     },
   ],
+  incomeTotals: [],
 }
 
 export function emptyMonth(month: string): PersonalEntryMonth {
-  return { month, entries: [], totals: [] }
+  return { month, entries: [], totals: [], incomeTotals: [] }
 }

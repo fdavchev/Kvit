@@ -119,6 +119,8 @@
     "PERSONAL_ENTRY_AMOUNT_NOT_POSITIVE": "Износот мора да е поголем од 0.",
     "PERSONAL_ENTRY_AMOUNT_TOO_LARGE": "Овој износ е премногу голем.",
     "PERSONAL_ENTRY_NOTE_INVALID": "Белешката може да има најмногу 500 знаци.",
+    "PERSONAL_ENTRY_INCOME_HAS_CATEGORY": "Приходот нема категорија.",
+    "PERSONAL_ENTRY_KIND_CANNOT_CHANGE": "Ставката не може да се смени од трошок во приход или обратно.",
     "SETTLEMENT_NOT_FOUND": "Ова плаќање не постои или е избришано.",
     "SETTLEMENT_NOT_ALLOWED": "Не можеш да го направиш ова со ова плаќање.",
     "SETTLEMENT_NOT_PENDING": "Ова плаќање веќе не чека одговор.",

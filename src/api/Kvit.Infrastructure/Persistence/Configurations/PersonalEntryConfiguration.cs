@@ -28,6 +28,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
 
             builder.HasIndex(entry => entry.ClientRequestId).HasDatabaseName(ClientRequestIdIndexName).IsUnique();
             builder.HasIndex(entry => new { entry.UserId, entry.EntryDate });
+            builder.HasIndex(entry => new { entry.RecurringIncomeId, entry.EntryDate }).IsUnique();
 
             builder.HasOne<AppUser>()
                 .WithMany()
@@ -37,6 +38,11 @@ namespace Kvit.Infrastructure.Persistence.Configurations
             builder.HasOne<Category>()
                 .WithMany()
                 .HasForeignKey(entry => entry.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne<RecurringIncome>()
+                .WithMany()
+                .HasForeignKey(entry => entry.RecurringIncomeId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

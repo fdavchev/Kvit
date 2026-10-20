@@ -19,8 +19,13 @@ import {
 } from '@/core/services/readFields'
 import type { Currency } from '@/shared/utils/formatMoney'
 
+export type PersonalEntryKind = 'Spending' | 'Income'
+
+const personalEntryKinds: readonly PersonalEntryKind[] = ['Spending', 'Income']
+
 export interface PersonalEntry {
   id: string
+  kind: PersonalEntryKind
   category: PersonalCategory
   amountMinor: number
   currency: Currency
@@ -44,10 +49,17 @@ export interface PersonalCurrencyTotal {
   categories: PersonalCategoryTotal[]
 }
 
+export interface PersonalIncomeTotal {
+  currency: Currency
+  totalMinor: number
+  count: number
+}
+
 export interface PersonalEntryMonth {
   month: string
   entries: PersonalEntry[]
   totals: PersonalCurrencyTotal[]
+  incomeTotals: PersonalIncomeTotal[]
 }
 
 export interface PersonalEntryFields {
@@ -69,6 +81,7 @@ export async function getPersonalEntries(month: string): Promise<PersonalEntryMo
     month: readText(fields, 'month', what),
     entries: readList(fields, 'entries', what).map(parseEntry),
     totals: readList(fields, 'totals', what).map(parseCurrencyTotal),
+    incomeTotals: readList(fields, 'incomeTotals', what).map(parseIncomeTotal),
   }
 }
 
@@ -93,6 +106,7 @@ function parseEntry(row: unknown): PersonalEntry {
   const fields = readObject(row, what)
   return {
     id: readText(fields, 'id', what),
+    kind: readOneOf(fields, 'kind', personalEntryKinds, what),
     category: readCategoryWithItsId(fields, what),
     amountMinor: readCount(fields, 'amountMinor', what),
     currency: readOneOf(fields, 'currency', groupCurrencies, what),
@@ -112,6 +126,16 @@ function parseCurrencyTotal(row: unknown): PersonalCurrencyTotal {
     currency: readOneOf(fields, 'currency', groupCurrencies, what),
     totalMinor: readCount(fields, 'totalMinor', what),
     categories: readList(fields, 'categories', what).map(parseCategoryTotal),
+  }
+}
+
+function parseIncomeTotal(row: unknown): PersonalIncomeTotal {
+  const what = 'a currency total of personal income'
+  const fields = readObject(row, what)
+  return {
+    currency: readOneOf(fields, 'currency', groupCurrencies, what),
+    totalMinor: readCount(fields, 'totalMinor', what),
+    count: readCount(fields, 'count', what),
   }
 }
 

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit Phase 14: income mockup, round 3</title>
+<style>
+:root{--bg:#ffd9a8;--fg:#3d2610;--card:#fff1dc;--primary:#b54a00;--pf:#fff;--line:#9c6f47;--field:#fff;--pill:#fff;--pos:#1d6b2e;--posbg:#d9efd6;--neg:#b71f1f}
+body.dark{--bg:#1f1816;--fg:#fff1dc;--card:#2c2220;--primary:#ffd9a8;--pf:#1f1816;--line:#72625c;--field:#161110;--pill:#d9b48a;--pos:#7fd18c;--posbg:#24382a;--neg:#ff8a80}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:#888;color:#222;padding:16px}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:16px;margin:24px 0 8px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.bar button{font:inherit;padding:8px 12px;border-radius:999px;border:2px solid #444;background:#fff;cursor:pointer}
+.bar button.on{background:#222;color:#fff}
+.phones{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.phone{width:360px;height:620px;background:var(--bg);color:var(--fg);border-radius:16px;padding:12px;position:relative;overflow:hidden}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+.center{text-align:center}.big{font-size:32px;font-weight:700}.pos{color:var(--pos)}.neg{color:var(--neg)}
+.row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}
+.strip{display:flex;gap:6px;overflow:hidden}.strip span{padding:6px 12px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}.strip .sel{background:var(--pill);color:#3d2610;font-weight:700}
+.fab{position:absolute;right:16px;bottom:16px;width:56px;height:56px;border-radius:50%;background:var(--primary);color:var(--pf);font-size:30px;border:0}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:14px;box-shadow:0 -6px 20px rgba(0,0,0,.25)}
+.amount{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:28px;font-weight:700;display:flex;justify-content:space-between}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.chip{border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:var(--bg);color:var(--fg);font:inherit;cursor:pointer}.chip.on{background:var(--pill);color:#3d2610;font-weight:700}
+.save{width:100%;padding:14px;border-radius:12px;border:0;background:var(--primary);color:var(--pf);font:700 16px system-ui}
+.btn{border:1px solid var(--line);border-radius:999px;padding:10px 16px;background:var(--bg);color:var(--fg);font:inherit;cursor:pointer}
+.btn.danger{color:var(--neg);border-color:var(--neg)}
+.note{background:#fff;color:#222;border-radius:8px;padding:8px 10px;margin:6px 0;font-size:14px;max-width:360px}
+.hint{background:var(--bg);color:var(--fg);border-radius:8px;padding:8px 10px;font-size:14px}
+.hide{display:none}
+.shade{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.badge{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--posbg);color:var(--pos)}
+</style>
+</head>
+<body>
+<h1>Kvit Phase 14: income, round 3 (nothing is built)</h1>
+<div class="bar"><button id="light" class="on" onclick="theme(false)">Light</button><button id="dark" onclick="theme(true)">Dark</button></div>
+
+<h2>2. The income sheet (as in round 1). Tap the Repeats chip, it cycles Never, Monthly, Weekly</h2>
+<div class="phones">
+  <div class="phone">
+    <div class="center"><b>Budget</b></div>
+    <div class="strip"><span>Aug</span><span>Sep</span><span class="sel">Oct</span></div>
+    <div class="card center"><div>Left this month</div><div class="big pos">17,600 ден.</div></div>
+    <div class="shade"></div>
+    <div class="sheet">
+      <div class="center" style="margin-bottom:8px"><b>New income</b></div>
+      <div class="amount"><span>30,000</span><span>MKD ⇄</span></div>
+      <div class="chips">
+        <button class="chip">📅 Today, 20 Oct</button>
+        <button class="chip">📝 Salary</button>
+        <button class="chip on" id="repChip" onclick="cycle()">🔁 Never</button>
+        <button class="chip hide" id="endChip" onclick="toggleEnds()">⏹ Ends: never</button>
+      </div>
+      <div id="endsPicker" class="hide" style="background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px"><div style="margin-bottom:6px"><b>When does it end?</b></div><div class="chips" style="margin:0"><button class="chip on" onclick="setEnd(this,'⏹ Ends: never')">Never</button><button class="chip" onclick="setEnd(this,'⏹ Ends: 20 Jan 2027')">In 3 months</button><button class="chip" onclick="setEnd(this,'⏹ Ends: 20 Apr 2027')">In 6 months</button><button class="chip" onclick="setEnd(this,'⏹ Ends: 20 Oct 2027')">In 1 year</button><button class="chip" onclick="setEnd(this,'⏹ Ends: 15 Dec 2026')">📅 Pick a date…</button></div></div><div class="hint" id="repText">One income on the chosen date. Nothing repeats.</div>
+      <br><button class="save">Save</button>
+    </div>
+  </div>
+  <div class="note">Income once = <b>Save only</b> after typing the amount. Tap the Repeats chip once for Monthly, twice for Weekly, three times for Never again. The "Ends" chip appears only when it repeats. Tap it to choose when it ends: Never, in 3 months, 6 months, 1 year, or pick a date. Ending is optional, so Save still needs no extra tap.</div>
+</div>
+
+<h2>3. The "Repeating income" part of the Budget tab: four new looks</h2>
+<div class="bar" id="q3">
+  <button class="on" onclick="q3('A',this)">A: one slim row</button>
+  <button onclick="q3('B',this)">B: green-edge cards</button>
+  <button onclick="q3('C',this)">C: inside the big card</button>
+  <button onclick="q3('D',this)">D: button + own screen</button>
+</div>
+<div class="phones">
+  <div class="phone" id="p3"></div>
+  <div class="note" id="p3note"></div>
+</div>
+
+<script>
+function theme(d){document.body.classList.toggle('dark',d);document.getElementById('dark').classList.toggle('on',d);document.getElementById('light').classList.toggle('on',!d)}
+var reps=['Never','Monthly','Weekly'],repIdx=0;
+var repTexts=['One income on the chosen date. Nothing repeats.','Every month on the 20th (day 31 means the last day of shorter months).','Every week on Tuesday.'];
+function toggleEnds(){document.getElementById('endsPicker').classList.toggle('hide')}
+function setEnd(btn,text){btn.parentNode.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});btn.classList.add('on');document.getElementById('endChip').textContent=text;document.getElementById('endsPicker').classList.add('hide')}
+function cycle(){
+  repIdx=(repIdx+1)%3;
+  document.getElementById('repChip').textContent='🔁 '+reps[repIdx];
+  document.getElementById('repText').textContent=repTexts[repIdx];
+  document.getElementById('endChip').classList.toggle('hide',repIdx===0);if(repIdx===0)document.getElementById('endsPicker').classList.add('hide');
+}
+var incomes=[
+ {name:'Salary',amt:'+30,000 ден.',rhythm:'Every month on the 1st',next:'next 1 Nov'},
+ {name:'Flat rent',amt:'+250 €',rhythm:'Every month on the 5th',next:'next 5 Nov'},
+ {name:'Tutoring',amt:'+1,500 ден.',rhythm:'Every week on Tuesday',next:'next 21 Oct'}
+];
+var head='<div class="center"><b>Budget</b></div><div class="strip"><span>Aug</span><span>Sep</span><span class="sel">Oct</span></div><div class="card center"><div>Left this month</div><div class="big pos">17,600 ден.</div><div style="display:flex;justify-content:space-around;margin-top:8px"><span>Income<br><b class="pos">30,000</b></span><span>Spent<br><b>12,400</b></span></div>@@C@@</div>';
+var tiles='<div class="card"><div class="row"><span>🍕 Lunch</span><b>420 ден.</b></div><div class="row"><span>🚌 Bus</span><b>60 ден.</b></div></div>';
+function block(i,withBorder){
+  return '<div class="card" style="margin:0 0 8px;'+(withBorder?'border-left:6px solid var(--pos);':'')+'"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="font-size:17px">'+i.name+'</b><b class="pos" style="font-size:17px;white-space:nowrap">'+i.amt+'</b></div><div style="margin:4px 0 10px;font-size:14px">'+i.rhythm+' · '+i.next+'</div><div style="display:flex;gap:8px"><button class="btn">Edit</button><button class="btn danger">Stop</button></div></div>';
+}
+function blocks(withBorder){return incomes.map(function(i){return block(i,withBorder)}).join('')}
+function q3(v,btn){
+  if(btn){document.querySelectorAll('#q3 button').forEach(function(x){x.classList.remove('on')});btn.classList.add('on')}
+  var p=document.getElementById('p3'),n=document.getElementById('p3note'),h=head.replace('@@C@@','');
+  if(v==='A'){
+    h+='<div class="card" style="cursor:pointer" onclick="sheetFor()"><div style="display:flex;justify-content:space-between;align-items:center"><span>🔁 <b>Repeating income</b></span><span>3 ›</span></div><div style="font-size:14px;margin-top:4px">Salary, Flat rent +1 more</div></div>'+tiles;
+    n.innerHTML='<b>A with 3 incomes.</b> The Budget tab still has one row, now saying "3" and "Salary, Flat rent +1 more". Tap the row: a sheet opens with all three, scrolling if there are more. Edit or Stop = 2 taps.';
+  }
+  if(v==='B'){
+    h+='<div style="margin:6px 0"><b>Repeating income</b></div><div style="max-height:250px;overflow:auto">'+blocks(true)+'</div>'+tiles;
+    n.innerHTML='<b>B with 3 incomes.</b> Three cards stack up and push the entries list down; I capped the area at 250 px so it scrolls inside. Edit or Stop = 1 tap, but you see only about two cards at once.';
+  }
+  if(v==='C'){
+    h=head.replace('@@C@@','<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:14px;cursor:pointer" onclick="sheetFor()">🔁 3 repeating incomes ›</div>')+tiles;
+    n.innerHTML='<b>C with 3 incomes.</b> The line at the bottom of the big card now says "3 repeating incomes ›". Tap: the same sheet as in A. Edit or Stop = 2 taps.';
+  }
+  if(v==='D'){
+    h+='<button class="btn" style="width:100%;margin:6px 0;text-align:left" onclick="screenD()">🔁 Repeating income (3) ›</button>'+tiles;
+    n.innerHTML='<b>D with 3 incomes.</b> The button says (3). Tap it: a full screen with all three and a "+ New repeating income" button. Edit or Stop = 2 taps.';
+  }
+  p.innerHTML=h+'<button class="fab">+</button>';
+}
+function sheetFor(){
+  var p=document.getElementById('p3');
+  p.insertAdjacentHTML('beforeend','<div id="ov"><div class="shade" onclick="closeOv()"></div><div class="sheet" style="max-height:80%;display:flex;flex-direction:column"><div class="center" style="margin-bottom:8px"><b>Repeating income</b></div><div style="overflow:auto;flex:1">'+blocks(false)+'</div><button class="btn" style="width:100%;margin-top:8px" onclick="closeOv()">Close</button></div></div>');
+}
+function closeOv(){var o=document.getElementById('ov');if(o)o.remove()}
+function screenD(){
+  var p=document.getElementById('p3');
+  p.innerHTML='<div><button class="btn" onclick="q3(\'D\')">‹ Back</button> <b style="margin-left:8px">Repeating income</b></div><div style="margin-top:10px;max-height:480px;overflow:auto">'+blocks(true)+'</div><button class="save" style="margin-top:10px">＋ New repeating income</button>';
+}
+q3('A');
+</script>
+</body>
+</html>
