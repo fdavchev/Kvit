@@ -44,6 +44,14 @@ namespace Kvit.Infrastructure.Repositories
             return await _context.RecurringIncomes.CountAsync(income => income.UserId == userId && income.StoppedAt == null, cancellationToken);
         }
 
+        public async Task<IReadOnlyList<RecurringIncome>> ListActiveOfAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            return await _context.RecurringIncomes
+                .AsNoTracking()
+                .Where(income => income.UserId == userId && income.StoppedAt == null)
+                .ToListAsync(cancellationToken);
+        }
+
         private static async Task<Result<RecurringIncome>> SingleOrNotFoundAsync(IQueryable<RecurringIncome> incomes, Guid userId, Guid recurringIncomeId, CancellationToken cancellationToken)
         {
             RecurringIncome? income = await incomes.SingleOrDefaultAsync(candidate => candidate.Id == recurringIncomeId && candidate.UserId == userId, cancellationToken);

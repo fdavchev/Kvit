@@ -25,13 +25,15 @@ Second phase of Release 2 ("budget"). Adds personal income: added once, or repea
 
 ### Database changes
 - Migration `Income` (Step 1): `Income` allowed as an entry kind, `personal_entries.recurring_income_id` with a unique index on (`recurring_income_id`, `entry_date`), and the new `recurring_incomes` table.
-- CI applies it on Neon after the merge.
+- Migration `RecurringIncomeRules` (Step 2): a repeating income has a day matching its rhythm and a title of 1 to 60 characters.
+- Migration `GeneratedIncomeEntries` (Step 3): `personal_entries.client_request_id` may be empty (entries made from a repeating income have none).
+- CI applies all three on Neon after the merge.
 
 ### Checklist
 - [x] Step 0: mockups, picks logged in DECISIONS
 - [x] Step 1: backend, income once and the migration
 - [x] Step 2: backend, repeating income (create, list, edit, stop, restart)
-- [ ] Step 3: backend, lazy generation with same-moment, month-end and time zone tests
+- [x] Step 3: backend, lazy generation with same-moment, month-end and time zone tests
 - [ ] Step 4: frontend, "Spending or Income?" sheet and add income once
 - [ ] Step 5: frontend, repeating income (Repeats and Ends chips, the row and the list)
 - [ ] Step 6: frontend, Budget tab with the Left card
@@ -41,3 +43,4 @@ Second phase of Release 2 ("budget"). Adds personal income: added once, or repea
 
 ## Later pushes: one-line commit subjects
 - Step 2: Add repeating income: create, list, edit, stop and restart, with the RecurringIncomeRules migration.
+- Step 3: Add lazy income generation: the catch-up endpoint, next dates and the GeneratedIncomeEntries migration.

@@ -40,6 +40,16 @@ namespace Kvit.Domain.Tests.Fakes
             return Task.FromResult(_entries.Any(entry => entry.RecurringIncomeId == recurringIncomeId));
         }
 
+        public Task<IReadOnlyDictionary<Guid, DateOnly>> LastDatesFromRecurringIncomesOfAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            IReadOnlyDictionary<Guid, DateOnly> lastDates = _entries
+                .Where(entry => entry.UserId == userId && entry.RecurringIncomeId is not null)
+                .GroupBy(entry => entry.RecurringIncomeId!.Value)
+                .ToDictionary(entries => entries.Key, entries => entries.Max(entry => entry.EntryDate));
+
+            return Task.FromResult(lastDates);
+        }
+
         private static Result<PersonalEntry> SingleOrNotFound(IEnumerable<PersonalEntry> entries, Guid userId, Guid entryId)
         {
             PersonalEntry? entry = entries.SingleOrDefault(candidate => candidate.Id == entryId && candidate.UserId == userId);

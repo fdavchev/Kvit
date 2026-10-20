@@ -1,6 +1,8 @@
 using Kvit.Application.Dispatching;
-using Kvit.Contracts.Auth;
+using Kvit.Application.Queries.Me;
+using Kvit.Contracts.Me;
 using Kvit.Contracts.RecurringIncomes;
+using Kvit.Domain.Accounts;
 using Kvit.Domain.Entities;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
@@ -9,20 +11,22 @@ using Microsoft.EntityFrameworkCore;
 namespace Kvit.Application.Queries.RecurringIncomes
 {
     public sealed class GetRecurringIncomeQueryHandler(
-        ICurrentUserProvider _currentUserProvider,
-        AppDbContext _context) : IQueryHandler<GetRecurringIncomeQuery, RecurringIncomeRow>
+        IDispatcher _dispatcher,
+        AppDbContext _context,
+        TimeProvider _timeProvider) : IQueryHandler<GetRecurringIncomeQuery, RecurringIncomeRow>
     {
         public async Task<Result<RecurringIncomeRow>> Handle(GetRecurringIncomeQuery query, CancellationToken cancellationToken)
         {
-            Result<Guid> userId = _currentUserProvider.GetCurrentUserId();
-            if (!userId.IsSuccess)
+            Result<MeResponse> caller = await _dispatcher.FullAccountOfCallerAsync(cancellationToken);
+            if (!caller.IsSuccess)
             {
-                return Result.Unauthorized<RecurringIncomeRow>(userId.Error, userId.ErrorCode);
+                return caller.ToFailure<RecurringIncomeRow>();
             }
 
-            RecurringIncomeRow? row = await _context.RecurringIncomesOf(userId.Value)
+            DateOnly userToday = UserLocalDate.Today(_timeProvider.GetUtcNow(), caller.Value.TimeZone);
+            RecurringIncomeRow? row = await _context.RecurringIncomesOf(caller.Value.Id)
                 .Where(income => income.Id == query.RecurringIncomeId)
-                .RecurringIncomeRows()
+                .RecurringIncomeRows(_context.PersonalEntries, userToday)
                 .SingleOrDefaultAsync(cancellationToken);
             if (row is null)
             {

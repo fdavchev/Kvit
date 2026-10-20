@@ -80,7 +80,7 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
             SeedStaleRate();
             _rateSource.FailWith("NBRM is down");
 
-            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, earlier.ClientRequestId, PersonalEntryTestData.Input(_pets.Id));
+            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, earlier.ClientRequestId!.Value, PersonalEntryTestData.Input(_pets.Id));
 
             Assert.True(result.IsSuccess);
             Assert.Equal(earlier.Id, result.Value);
@@ -105,7 +105,7 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
             earlier.Delete(PersonalEntryTestData.Moment);
             _entries.Seed(earlier);
 
-            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, earlier.ClientRequestId, PersonalEntryTestData.Input(_pets.Id));
+            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, earlier.ClientRequestId!.Value, PersonalEntryTestData.Input(_pets.Id));
 
             ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_CLIENT_REQUEST_ID_USED);
             Assert.Empty(_entries.Added);
@@ -117,7 +117,7 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
             PersonalEntry earlier = PersonalEntryTestData.NewSpending(_pets.Id);
             _entries.Seed(earlier);
 
-            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, earlier.ClientRequestId, PersonalEntryTestData.Input(_pets.Id, 999_900));
+            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, earlier.ClientRequestId!.Value, PersonalEntryTestData.Input(_pets.Id, 999_900));
 
             Assert.True(result.IsSuccess);
             Assert.Equal(earlier.Id, result.Value);
@@ -130,7 +130,7 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
             PersonalEntry earlier = PersonalEntryTestData.NewSpending(_pets.Id);
             _entries.Seed(earlier);
 
-            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, earlier.ClientRequestId, PersonalEntryTestData.Input(Guid.CreateVersion7(), 0, "USD"));
+            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, earlier.ClientRequestId!.Value, PersonalEntryTestData.Input(Guid.CreateVersion7(), 0, "USD"));
 
             Assert.True(result.IsSuccess);
             Assert.Equal(earlier.Id, result.Value);
@@ -142,7 +142,7 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
             PersonalEntry earlier = PersonalEntryTestData.NewSpending(_pets.Id, PersonalEntryTestData.OtherUserId);
             _entries.Seed(earlier);
 
-            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, earlier.ClientRequestId, PersonalEntryTestData.Input(_pets.Id));
+            Result<Guid> result = await ExecuteAsync(PersonalEntryTestData.UserId, earlier.ClientRequestId!.Value, PersonalEntryTestData.Input(_pets.Id));
 
             ResultAssert.Failed(result, HttpStatusCode.BadRequest, ResultCodes.PERSONAL_ENTRY_CLIENT_REQUEST_ID_USED);
             Assert.Empty(_entries.Added);

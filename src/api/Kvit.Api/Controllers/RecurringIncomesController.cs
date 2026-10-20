@@ -28,6 +28,13 @@ namespace Kvit.Api.Controllers
             return Result(result);
         }
 
+        [HttpPost("catch-up")]
+        public async Task<ActionResult<RecurringIncomeCatchUpResponse>> CatchUp(CancellationToken cancellationToken)
+        {
+            Result<RecurringIncomeCatchUpResponse> result = await _dispatcher.Send<CatchUpRecurringIncomesCommand, RecurringIncomeCatchUpResponse>(new CatchUpRecurringIncomesCommand(), cancellationToken);
+            return Result(result);
+        }
+
         [HttpPut("{recurringIncomeId:guid}")]
         public async Task<ActionResult<RecurringIncomeRow>> Edit(Guid recurringIncomeId, EditRecurringIncomeRequest request, CancellationToken cancellationToken)
         {

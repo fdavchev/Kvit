@@ -206,7 +206,7 @@ Release 1 accepted 2026-10-16. Filip put this BACKLOG "must do" before Phase 13.
 - [x] Step 0: mockups (three rounds) and Filip's picks (2026-10-20, `DECISIONS.md`)
 - [x] **Done 2026-10-20 (VERIFIED by automated test: backend 4354, frontend 8651; no UI yet).** Step 1: backend, income once and the `Income` migration (also created the empty `recurring_incomes` table)
 - [x] **Done 2026-10-20 (VERIFIED by automated test: backend 4608, frontend 8749; no UI yet).** Step 2: backend, repeating income (create, list, edit, stop, restart; migration `RecurringIncomeRules`)
-- [ ] Step 3: backend, lazy generation (same-moment, month-end, time zones)
+- [x] **Done 2026-10-20 (VERIFIED by automated test: backend 4854, frontend 8749; no UI yet).** Step 3: backend, lazy generation (catch-up endpoint, schedule, local today, `nextDate`; migration `GeneratedIncomeEntries`)
 - [ ] Step 4: frontend, "Spending or Income?" sheet and add income once
 - [ ] Step 5: frontend, repeating income (Repeats and Ends chips, the row and the list)
 - [ ] Step 6: frontend, Budget tab with the Left card

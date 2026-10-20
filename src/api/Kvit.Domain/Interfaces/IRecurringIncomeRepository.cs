@@ -14,5 +14,7 @@ namespace Kvit.Domain.Interfaces
         Task<Result<RecurringIncome>> FindOwnedIncludingStoppedAsync(Guid userId, Guid recurringIncomeId, CancellationToken cancellationToken);
 
         Task<int> LockAndCountActiveOfAsync(Guid userId, CancellationToken cancellationToken);
+
+        Task<IReadOnlyList<RecurringIncome>> ListActiveOfAsync(Guid userId, CancellationToken cancellationToken);
     }
 }

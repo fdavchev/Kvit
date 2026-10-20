@@ -13,5 +13,6 @@ namespace Kvit.Contracts.RecurringIncomes
         int? DayOfWeek,
         DateOnly StartsOn,
         DateOnly? EndsOn,
-        DateTimeOffset CreatedAt);
+        DateTimeOffset CreatedAt,
+        DateOnly? NextDate);
 }

@@ -24,6 +24,11 @@ namespace Kvit.Infrastructure.Persistence
                 await DiscardAsync(context, cancellationToken);
                 throw new ClientRequestIdAlreadySavedException(exception);
             }
+            catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, PersonalEntryConfiguration.RecurringIncomeDateIndexName))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new RecurringIncomeEntryAlreadySavedException(exception);
+            }
             catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, UsageEventConfiguration.ActiveDayIndexName))
             {
                 await DiscardAsync(context, cancellationToken);

@@ -9,6 +9,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
     public class PersonalEntryConfiguration : IEntityTypeConfiguration<PersonalEntry>
     {
         public const string ClientRequestIdIndexName = "ix_personal_entries_client_request_id";
+        public const string RecurringIncomeDateIndexName = "ix_personal_entries_recurring_income_id_entry_date";
 
         public void Configure(EntityTypeBuilder<PersonalEntry> builder)
         {
@@ -28,7 +29,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
 
             builder.HasIndex(entry => entry.ClientRequestId).HasDatabaseName(ClientRequestIdIndexName).IsUnique();
             builder.HasIndex(entry => new { entry.UserId, entry.EntryDate });
-            builder.HasIndex(entry => new { entry.RecurringIncomeId, entry.EntryDate }).IsUnique();
+            builder.HasIndex(entry => new { entry.RecurringIncomeId, entry.EntryDate }).HasDatabaseName(RecurringIncomeDateIndexName).IsUnique();
 
             builder.HasOne<AppUser>()
                 .WithMany()

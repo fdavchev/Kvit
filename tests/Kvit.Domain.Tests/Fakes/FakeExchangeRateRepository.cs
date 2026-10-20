@@ -1,4 +1,5 @@
 using Kvit.Domain.Entities;
+using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Interfaces;
 using Kvit.Domain.Tests.Services.ExchangeRates;
 
@@ -25,6 +26,11 @@ namespace Kvit.Domain.Tests.Fakes
             }
 
             return Task.FromResult(_rowsByDate.Last().Value);
+        }
+
+        public Task<StoredExchangeRates> GetStoredCoveringAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new StoredExchangeRates(_rowsByDate.Values));
         }
 
         public Task SaveFetchedAsync(DateOnly rateDate, decimal mkdPerEur, DateTimeOffset fetchedAt, CancellationToken cancellationToken)

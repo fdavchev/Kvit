@@ -13,5 +13,10 @@ namespace Kvit.Api.Tests.Expenses
         {
             _now += duration;
         }
+
+        public void SetTo(DateTimeOffset now)
+        {
+            _now = now;
+        }
     }
 }

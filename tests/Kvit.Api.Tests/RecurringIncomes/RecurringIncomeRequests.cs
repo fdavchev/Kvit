@@ -6,11 +6,12 @@ namespace Kvit.Api.Tests.RecurringIncomes
     public static class RecurringIncomeRequests
     {
         public const string RecurringIncomesPath = "/api/personal/recurring-incomes";
+        public const string CatchUpPath = "/api/personal/recurring-incomes/catch-up";
         public const int ActiveLimit = 20;
 
-        public static readonly string[] RowFieldNames = ["amountMinor", "createdAt", "currency", "dayOfMonth", "dayOfWeek", "endsOn", "frequency", "id", "startsOn", "title"];
+        public static readonly string[] RowFieldNames = ["amountMinor", "createdAt", "currency", "dayOfMonth", "dayOfWeek", "endsOn", "frequency", "id", "nextDate", "startsOn", "title"];
 
-        public static TheoryData<string> AllEndpoints => ["list", "create", "edit", "stop", "restart"];
+        public static TheoryData<string> AllEndpoints => ["list", "create", "edit", "stop", "restart", "catchUp"];
 
         public static TheoryData<string> EndpointsWithAnId => ["edit", "stop", "restart"];
 
@@ -71,6 +72,11 @@ namespace Kvit.Api.Tests.RecurringIncomes
             return client.PostAsync($"{PathOf(recurringIncomeId)}/restart", null, TestContext.Current.CancellationToken);
         }
 
+        public static Task<HttpResponseMessage> CatchUpAsync(HttpClient client)
+        {
+            return client.PostAsync(CatchUpPath, null, TestContext.Current.CancellationToken);
+        }
+
         public static Task<HttpResponseMessage> SendAsync(HttpClient client, string endpoint, Guid recurringIncomeId)
         {
             RecurringIncomeBody body = RecurringIncomeBody.Monthly();
@@ -82,6 +88,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
                 "edit" => EditAsync(client, recurringIncomeId, body with { AmountMinor = 5_000_000 }),
                 "stop" => StopAsync(client, recurringIncomeId),
                 "restart" => RestartAsync(client, recurringIncomeId),
+                "catchUp" => CatchUpAsync(client),
                 _ => throw new ArgumentOutOfRangeException(nameof(endpoint), endpoint, "Not a repeating income endpoint."),
             };
         }

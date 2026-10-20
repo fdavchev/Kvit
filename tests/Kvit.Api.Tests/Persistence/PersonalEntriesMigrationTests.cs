@@ -43,7 +43,7 @@ namespace Kvit.Api.Tests.Persistence
                 [
                     "amount_minor:bigint:NO",
                     "category_id:uuid:YES",
-                    "client_request_id:uuid:NO",
+                    "client_request_id:uuid:YES",
                     "created_at:timestamp with time zone:NO",
                     "currency:text:NO",
                     "deleted_at:timestamp with time zone:YES",

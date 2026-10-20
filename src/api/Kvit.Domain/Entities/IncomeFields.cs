@@ -35,9 +35,14 @@ namespace Kvit.Domain.Entities
 
         public static DateOnly EarliestDateOn(DateOnly utcToday)
         {
-            DateOnly firstDayOfUtcMonth = new(utcToday.Year, utcToday.Month, 1);
+            return FirstDayOfOldestMonth(utcToday).AddDays(-TimeZoneToleranceDays);
+        }
 
-            return firstDayOfUtcMonth.AddMonths(-(AllowedMonths - 1)).AddDays(-TimeZoneToleranceDays);
+        public static DateOnly FirstDayOfOldestMonth(DateOnly today)
+        {
+            DateOnly firstDayOfMonth = new(today.Year, today.Month, 1);
+
+            return firstDayOfMonth.AddMonths(-(AllowedMonths - 1));
         }
 
         private static Result<IncomeFields> Create(IncomeInput input, DateOnly utcToday, DateOnly? currentEntryDate)

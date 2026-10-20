@@ -32,7 +32,7 @@ namespace Kvit.Domain.Entities
 
         public Guid? RecurringIncomeId { get; private set; }
 
-        public Guid ClientRequestId { get; private set; }
+        public Guid? ClientRequestId { get; private set; }
 
         public DateTimeOffset CreatedAt { get; private set; }
 
@@ -52,6 +52,18 @@ namespace Kvit.Domain.Entities
         {
             PersonalEntry entry = New(userId, PersonalEntryKind.Income, rate, clientRequestId, createdAt);
             entry.ApplyFields(fields);
+
+            return entry;
+        }
+
+        public static PersonalEntry CreateFromRecurringIncome(RecurringIncome income, DateOnly entryDate, ExchangeRateSnapshot rate, DateTimeOffset createdAt)
+        {
+            PersonalEntry entry = New(income.UserId, PersonalEntryKind.Income, rate, null, createdAt);
+            entry.RecurringIncomeId = income.Id;
+            entry.AmountMinor = income.AmountMinor;
+            entry.Currency = income.Currency;
+            entry.EntryDate = entryDate;
+            entry.Note = income.Title;
 
             return entry;
         }
@@ -78,14 +90,15 @@ namespace Kvit.Domain.Entities
 
         public Result<Guid> AnswerToRepeatBy(Guid userId)
         {
+            Guid clientRequestId = ClientRequestId ?? throw new InvalidOperationException($"Personal entry {Id} was created from a repeating income and has no request id, so it cannot answer a repeated request.");
             if (UserId != userId)
             {
-                return ClientRequestIdUsed<Guid>(ClientRequestId);
+                return ClientRequestIdUsed<Guid>(clientRequestId);
             }
 
             if (DeletedAt is not null)
             {
-                return ClientRequestIdUsedByDeletedEntry<Guid>(ClientRequestId, Id);
+                return ClientRequestIdUsedByDeletedEntry<Guid>(clientRequestId, Id);
             }
 
             return Result.Ok(Id);
@@ -143,7 +156,7 @@ namespace Kvit.Domain.Entities
             return Result.Ok();
         }
 
-        private static PersonalEntry New(Guid userId, PersonalEntryKind kind, ExchangeRateSnapshot rate, Guid clientRequestId, DateTimeOffset createdAt)
+        private static PersonalEntry New(Guid userId, PersonalEntryKind kind, ExchangeRateSnapshot rate, Guid? clientRequestId, DateTimeOffset createdAt)
         {
             PersonalEntry entry = new()
             {

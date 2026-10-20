@@ -35,6 +35,19 @@ namespace Kvit.Application.Persistence
             }
         }
 
+        public static async Task<TResult> RunInTransactionOnceMoreIfRecurringIncomeEntryWasSavedAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
+            where TResult : Result
+        {
+            try
+            {
+                return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
+            }
+            catch (RecurringIncomeEntryAlreadySavedException)
+            {
+                return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
+            }
+        }
+
         public static async Task<TResult> RunInTransactionOrRefuseIfCategoryNameWasTakenAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, Func<Result, TResult> refusal, CancellationToken cancellationToken)
             where TResult : Result
         {

@@ -614,7 +614,7 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("category_id");
 
-                    b.Property<Guid>("ClientRequestId")
+                    b.Property<Guid?>("ClientRequestId")
                         .HasColumnType("uuid")
                         .HasColumnName("client_request_id");
 

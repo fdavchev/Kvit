@@ -35,6 +35,15 @@ namespace Kvit.Infrastructure.Repositories
             return _context.PersonalEntries.AnyAsync(entry => entry.RecurringIncomeId == recurringIncomeId, cancellationToken);
         }
 
+        public async Task<IReadOnlyDictionary<Guid, DateOnly>> LastDatesFromRecurringIncomesOfAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            return await _context.PersonalEntries
+                .Where(entry => entry.UserId == userId && entry.RecurringIncomeId != null)
+                .GroupBy(entry => entry.RecurringIncomeId!.Value)
+                .Select(entries => new { RecurringIncomeId = entries.Key, LastDate = entries.Max(entry => entry.EntryDate) })
+                .ToDictionaryAsync(last => last.RecurringIncomeId, last => last.LastDate, cancellationToken);
+        }
+
         private static async Task<Result<PersonalEntry>> SingleOrNotFoundAsync(IQueryable<PersonalEntry> entries, Guid userId, Guid entryId, CancellationToken cancellationToken)
         {
             PersonalEntry? entry = await entries.SingleOrDefaultAsync(candidate => candidate.Id == entryId && candidate.UserId == userId, cancellationToken);
