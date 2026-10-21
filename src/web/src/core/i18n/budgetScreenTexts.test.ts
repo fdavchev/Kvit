@@ -22,6 +22,8 @@ const budgetScreenTexts: BudgetScreenText[] = [
   { key: 'budget.screen.entries', en: 'Entries', mk: 'Внесови' },
 ]
 
+const leftCardKeys = ['budget.screen.leftThisMonth', 'budget.screen.income', 'budget.screen.spent']
+
 const navTexts: BudgetScreenText[] = [{ key: 'nav.budget', en: 'Budget', mk: 'Буџет' }]
 
 const reusedTexts: BudgetScreenText[] = [
@@ -53,8 +55,8 @@ describe('the texts of the Budget tab', () => {
     expect(translated('mk', key)).not.toMatch(latinLetters)
   })
 
-  it('has exactly the texts pinned above under budget.screen, in English and in Macedonian', () => {
-    const pinnedKeys = budgetScreenTexts.map(({ key }) => key).sort()
+  it('has exactly the texts pinned above and the three of the Left card under budget.screen, in English and in Macedonian', () => {
+    const pinnedKeys = [...budgetScreenTexts.map(({ key }) => key), ...leftCardKeys].sort()
 
     expect(keysUnder(en, prefix)).toEqual(pinnedKeys)
     expect(keysUnder(mk, prefix)).toEqual(pinnedKeys)

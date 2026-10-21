@@ -209,7 +209,7 @@ Release 1 accepted 2026-10-16. Filip put this BACKLOG "must do" before Phase 13.
 - [x] **Done 2026-10-20 (VERIFIED by automated test: backend 4854, frontend 8749; no UI yet).** Step 3: backend, lazy generation (catch-up endpoint, schedule, local today, `nextDate`; migration `GeneratedIncomeEntries`)
 - [x] **Done 2026-10-20 (VERIFIED by automated test: frontend 8955; not seen in a browser).** Step 4: frontend, "Spending or Income?" sheet and add income once
 - [x] **Done 2026-10-20 (VERIFIED by automated test: frontend 9503; not seen in a browser).** Step 5: frontend, repeating income (Repeats and Ends chips, the row and the list)
-- [ ] Step 6: frontend, Budget tab with the Left card
+- [x] **Done 2026-10-21 (VERIFIED by automated test: frontend 9553; not seen in a browser).** Step 6: frontend, Budget tab with the Left card
 - [ ] Step 7: desktop layout and the 360 px browser pass
 - [ ] Step 8: code review, report, guide
 - [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the migration on Neon)

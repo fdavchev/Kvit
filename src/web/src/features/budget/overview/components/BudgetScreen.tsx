@@ -110,7 +110,7 @@ export function BudgetScreen() {
         </>
       )
     }
-    const { entries, totals } = entriesQuery.data
+    const { entries, totals, incomeTotals } = entriesQuery.data
     if (entries.length === 0) {
       return (
         <>
@@ -123,7 +123,7 @@ export function BudgetScreen() {
     }
     return (
       <>
-        {totals.length === 0 ? (
+        {totals.length === 0 && incomeTotals.length === 0 ? (
           <>
             <p className={cn(balancesCardLook, 'mt-5 py-4 text-center font-semibold text-muted-foreground')}>
               {t('budget.screen.emptyTitle')}
@@ -132,9 +132,9 @@ export function BudgetScreen() {
           </>
         ) : (
           <>
-            <BudgetTotalCard totals={totals} />
+            <BudgetTotalCard totals={totals} incomeTotals={incomeTotals} />
             {repeatingRow}
-            <CategoryTotals totals={totals} />
+            {totals.length > 0 && <CategoryTotals totals={totals} />}
           </>
         )}
         <ul

@@ -7,10 +7,16 @@ import {
   budgetNow,
   categoryTotalsRegion,
   findEntryList,
-  findTotalCard,
   plusButton,
   renderBudget,
 } from '@/test/budgetTestHelpers'
+import {
+  amountTexts,
+  findLeftCard,
+  incomeAttribute,
+  leftAttribute,
+  spentAttribute,
+} from '@/test/budgetLeftCardTestHelpers'
 import { amountField, saveButton, sentBody, typeAmount } from '@/test/expenseFormTestHelpers'
 import { plainSpaces } from '@/test/expenseTestHelpers'
 import { coffeeCategory, personalFoodCategory } from '@/test/personalCategoryTestData'
@@ -84,12 +90,6 @@ function amountOf(row: HTMLElement): HTMLElement {
 
 function tileEmojiOf(row: HTMLElement): string | undefined {
   return row.querySelector('[aria-hidden="true"]')?.textContent ?? undefined
-}
-
-function amountLines(card: HTMLElement): string[] {
-  return Array.from(card.querySelectorAll('[data-total-amount]')).map((line) =>
-    plainSpaces((line.querySelector('.sr-only') ?? line).textContent ?? ''),
-  )
 }
 
 describe('BudgetScreen with income', () => {
@@ -257,20 +257,20 @@ describe('BudgetScreen with income', () => {
     })
   })
 
-  describe('the Spent card and the category tiles', () => {
-    it('add up spending only in a month with spending and income, never the income', async () => {
+  describe('the Left card and the category tiles', () => {
+    it('count the income only in Left and Income and the spending only in Spent, never mixing the currencies', async () => {
       await renderBudget({ months: [octoberWithSalary] })
 
-      const card = await findTotalCard()
+      const card = await findLeftCard()
 
-      expect(amountLines(card)).toEqual([money(12000, 'MKD'), money(1250, 'EUR')])
-      expect(plainSpaces(card.textContent ?? '')).not.toContain('65')
-      expect(plainSpaces(card.textContent ?? '')).not.toContain('+')
+      expect(amountTexts(card, leftAttribute)).toEqual([money(6488000, 'MKD')])
+      expect(amountTexts(card, incomeAttribute)).toEqual([signedMoney(6500000, 'MKD')])
+      expect(amountTexts(card, spentAttribute)).toEqual([money(12000, 'MKD'), money(1250, 'EUR')])
     })
 
     it('list only the spending categories in the tiles, with no tile for income', async () => {
       await renderBudget({ months: [octoberWithSalary] })
-      await findTotalCard()
+      await findLeftCard()
 
       const tiles = within(categoryTotalsRegion()).getAllByRole('listitem')
 
@@ -278,33 +278,36 @@ describe('BudgetScreen with income', () => {
       expect(within(categoryTotalsRegion()).queryByText(translated('en', 'budget.income.listTitle'))).toBeNull()
     })
 
-    it('show only the denar spending when the month has incomes in two currencies', async () => {
+    it('show spending 0 in the currency of an income that has no spending when the month has incomes in two currencies', async () => {
       await renderBudget({ months: [octoberWithTwoIncomes] })
 
-      const card = await findTotalCard()
+      const card = await findLeftCard()
 
-      expect(amountLines(card)).toEqual([money(12000, 'MKD')])
+      expect(amountTexts(card, spentAttribute)).toEqual([money(12000, 'MKD'), money(0, 'EUR')])
     })
   })
 
   describe('a month with income and no spending', () => {
-    it.each(languages)('shows the income row and the calm "Nothing spent this month" text, with no Spent card and no tiles (%s)', async (language) => {
+    it.each(languages)('shows the income row and the Left card with Left equal to the income and Spent 0, with no calm "Nothing spent this month" text and no tiles (%s)', async (language) => {
       await renderBudget({ language, months: [incomeOnlyOctober] })
 
       const list = await findEntryList(language)
+      const card = await findLeftCard(language)
 
       expect(within(list).getAllByRole('listitem')).toHaveLength(1)
       expect(titleOf(rowAt(list, 0))).toBe('Salary')
-      expect(screen.getByText(translated(language, 'budget.screen.emptyTitle'))).toBeTruthy()
+      expect(amountTexts(card, leftAttribute)).toEqual([money(6500000, 'MKD', language)])
+      expect(amountTexts(card, spentAttribute)).toEqual([money(0, 'MKD', language)])
+      expect(screen.queryByText(translated(language, 'budget.screen.emptyTitle'))).toBeNull()
       expect(screen.queryByRole('region', { name: translated(language, 'budget.screen.spentThisMonth') })).toBeNull()
       expect(screen.queryByRole('region', { name: translated(language, 'budget.screen.categoryTotals') })).toBeNull()
     })
 
-    it('shows no zero amount anywhere', async () => {
+    it('shows the zero as the Spent amount in the currency of the income, and no zero in the other currency', async () => {
       await renderBudget({ months: [incomeOnlyOctober] })
-      await findEntryList()
+      const card = await findLeftCard()
 
-      expect(screen.queryByText(money(0, 'MKD'), { normalizer: plainSpaces })).toBeNull()
+      expect(within(card).getAllByText(money(0, 'MKD'), { normalizer: plainSpaces })).toHaveLength(1)
       expect(screen.queryByText(money(0, 'EUR'), { normalizer: plainSpaces })).toBeNull()
     })
 
@@ -312,10 +315,12 @@ describe('BudgetScreen with income', () => {
       await renderBudget({ months: [euroIncomeOnlyOctober] })
 
       const list = await findEntryList()
+      const card = await findLeftCard()
 
       expect(readableText(amountOf(rowAt(list, 0)))).toBe(signedMoney(20000, 'EUR'))
       expect(titleOf(rowAt(list, 0))).toBe(translated('en', 'budget.income.listTitle'))
-      expect(screen.getByText(translated('en', 'budget.screen.emptyTitle'))).toBeTruthy()
+      expect(amountTexts(card, leftAttribute)).toEqual([money(20000, 'EUR')])
+      expect(screen.queryByText(translated('en', 'budget.screen.emptyTitle'))).toBeNull()
     })
 
     it('keeps the "+" so the next entry can be added', async () => {

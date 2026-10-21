@@ -594,6 +594,9 @@
     },
     "screen": {
       "spentThisMonth": "Spent this month",
+      "leftThisMonth": "Left this month",
+      "income": "Income",
+      "spent": "Spent",
       "emptyTitle": "Nothing spent this month",
       "add": "Add",
       "months": "Month",
