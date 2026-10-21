@@ -27,6 +27,7 @@ import {
   chooseSpending,
   findChoiceSheet,
   findDetailsSheet,
+  findPickSheet,
   personalEntriesPost,
   waitForEveryDialogToClose,
 } from '@/test/personalEntryTestHelpers'
@@ -52,6 +53,24 @@ async function waitForNoDialog(): Promise<void> {
   await waitForEveryDialogToClose()
   await new Promise((resolve) => setTimeout(resolve, 50))
 }
+
+async function waitForChoiceSheetToClose(): Promise<void> {
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog', { name: translated('en', 'budget.add.title') })).toBeNull()
+  })
+}
+
+async function tapChoiceWithFocus(choice: 'spending' | 'income', findNextSheet: () => Promise<HTMLElement>): Promise<HTMLElement> {
+  const button = choiceButton(await findChoiceSheet(), choice)
+  button.focus()
+  fireEvent.click(button)
+  return findNextSheet()
+}
+
+const cancelsOfTheIncomeSheet: [string, () => void][] = [
+  ['Escape', () => fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })],
+  ['a tap on the backdrop', () => dismissSheetByTappingBackdrop()],
+]
 
 describe('BudgetScreen, the "What do you add?" sheet', () => {
   beforeEach(() => {
@@ -144,6 +163,34 @@ describe('BudgetScreen, the "What do you add?" sheet', () => {
       })
     })
 
+    it('keeps the focus inside the category grid after the choice sheet has gone', async () => {
+      await renderBudget()
+      await findTotalCard()
+      plusButton().focus()
+      fireEvent.click(plusButton())
+
+      const pickSheet = await tapChoiceWithFocus('spending', findPickSheet)
+      await within(pickSheet).findByRole('button', { name: 'Coffee' })
+      await waitForChoiceSheetToClose()
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      expect(pickSheet.contains(document.activeElement)).toBe(true)
+    })
+
+    it('puts the focus back on the "+" button when the category grid is closed with Escape', async () => {
+      await renderBudget()
+      await findTotalCard()
+      plusButton().focus()
+      fireEvent.click(plusButton())
+      await within(await tapChoiceWithFocus('spending', findPickSheet)).findByRole('button', { name: 'Coffee' })
+      await waitForChoiceSheetToClose()
+
+      fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+
+      await waitForNoDialog()
+      expect(document.activeElement).toBe(plusButton())
+    })
+
     it('sends kind Spending and the category when the spending is saved', async () => {
       const { fetchMock } = await renderBudget({ answers: { [personalEntriesPost]: jsonAnswer(entryAnswerRow(coffeeEntry)) } })
       await findTotalCard()
@@ -185,6 +232,40 @@ describe('BudgetScreen, the "What do you add?" sheet', () => {
       await waitFor(() => {
         expect(document.activeElement).toBe(amountField())
       })
+    })
+
+    it.each([
+      ['a phone', () => undefined],
+      ['a desktop-sized window', () => stubDesktopScreen()],
+    ])('keeps the focus in the amount of the income sheet after the choice sheet has gone, on %s', async (_name, prepareDevice) => {
+      prepareDevice()
+      await renderBudget()
+      await findTotalCard()
+      plusButton().focus()
+      fireEvent.click(plusButton())
+
+      const incomeSheet = await tapChoiceWithFocus('income', findIncomeSheet)
+      await waitForChoiceSheetToClose()
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      expect(document.activeElement).toBe(amountField())
+      expect(incomeSheet.contains(document.activeElement)).toBe(true)
+    })
+
+    it.each(cancelsOfTheIncomeSheet)('puts the focus back on the "+" button when the income sheet is closed with %s', async (_name, cancel) => {
+      await renderBudget()
+      await findTotalCard()
+      plusButton().focus()
+      fireEvent.click(plusButton())
+      await tapChoiceWithFocus('income', findIncomeSheet)
+      await waitForChoiceSheetToClose()
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      amountField().focus()
+
+      cancel()
+
+      await waitForNoDialog()
+      expect(document.activeElement).toBe(plusButton())
     })
 
     it.each(languages)('writes the income sheet title in %s', async (language) => {

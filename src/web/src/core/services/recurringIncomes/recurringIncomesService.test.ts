@@ -101,6 +101,14 @@ describe('getRecurringIncomes', () => {
     expect(income.endsOn).toBe('2026-10-15')
   })
 
+  it('keeps whether the income already has entries', async () => {
+    stubFetch(Response.json(recurringListAnswerBody([{ ...salaryRecurringIncome, hasEntries: true }, flatRentRecurringIncome])))
+
+    const incomes = await getRecurringIncomes()
+
+    expect(incomes.map((income) => income.hasEntries)).toEqual([true, false])
+  })
+
   it('keeps a null end date as null', async () => {
     stubFetch(Response.json(recurringListAnswerBody([salaryRecurringIncome])))
 
@@ -141,6 +149,9 @@ describe('getRecurringIncomes', () => {
     ['endsOn', 'later'],
     ['createdAt', null],
     ['nextDate', 'tomorrow'],
+    ['hasEntries', 'yes'],
+    ['hasEntries', null],
+    ['hasEntries', 1],
   ])('throws an error naming "%s" when a row has %j', async (field, value) => {
     stubFetch(Response.json({ recurringIncomes: [{ ...recurringIncomeAnswerRow(salaryRecurringIncome), [field]: value }] }))
 

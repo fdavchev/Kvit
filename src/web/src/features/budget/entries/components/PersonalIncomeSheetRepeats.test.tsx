@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
 import { kvitGlassPanelLook } from '@/shared/components/kvitGlassLooks'
+import { formatDayOrdinal } from '@/shared/utils/formatDate'
 import {
   amountField,
   dateField,
@@ -265,8 +266,7 @@ describe('PersonalIncomeSheet, the Repeats chip', () => {
       ['2026-10-22', '22nd'],
       ['2026-10-23', '23rd'],
       ['2026-10-24', '24th'],
-      ['2026-10-30', '30th'],
-      ['2026-10-31', '31st'],
+      ['2026-09-28', '28th'],
     ])('writes the day %s as the %s in the monthly hint', async (date, ordinal) => {
       vi.setSystemTime(new Date(`${date}T10:00:00Z`))
       await renderIncomeSheet()
@@ -275,6 +275,30 @@ describe('PersonalIncomeSheet, the Repeats chip', () => {
       tapRepeats(sheet, 1)
 
       expect(within(sheet).getByText(`Every month on the ${ordinal}`)).toBeTruthy()
+    })
+
+    it.each([
+      ['2026-10-29', '29th'],
+      ['2026-10-30', '30th'],
+      ['2026-10-31', '31st'],
+    ])('adds the month-end note to the monthly hint of the day %s, the %s', async (date, ordinal) => {
+      vi.setSystemTime(new Date(`${date}T10:00:00Z`))
+      await renderIncomeSheet()
+      const sheet = await findIncomeSheet()
+
+      tapRepeats(sheet, 1)
+
+      expect(within(sheet).getByText(`Every month on the ${ordinal} (or the last day of shorter months)`)).toBeTruthy()
+    })
+
+    it('writes the month-end note of the 31st in Macedonian in the monthly hint', async () => {
+      vi.setSystemTime(new Date('2026-10-31T10:00:00Z'))
+      await renderIncomeSheet({ language: 'mk' })
+      const sheet = await findIncomeSheet('mk')
+
+      tapRepeats(sheet, 1, 'mk')
+
+      expect(within(sheet).getByText(translated('mk', 'budget.recurring.monthlyMonthEnd', { ordinal: formatDayOrdinal(31, 'mk') }))).toBeTruthy()
     })
 
     it.each([

@@ -14,6 +14,10 @@ export async function findIncomeSheet(language: Language = 'en'): Promise<HTMLEl
   return screen.findByRole('dialog', { name: translated(language, 'budget.income.title') })
 }
 
+export async function findIncomeEditSheet(language: Language = 'en'): Promise<HTMLElement> {
+  return screen.findByRole('dialog', { name: translated(language, 'budget.income.editTitle') })
+}
+
 export async function chooseIncome(language: Language = 'en'): Promise<HTMLElement> {
   fireEvent.click(choiceButton(await findChoiceSheet(language), 'income', language))
   return findIncomeSheet(language)

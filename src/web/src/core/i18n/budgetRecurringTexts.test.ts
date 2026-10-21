@@ -51,6 +51,7 @@ const listTexts: RecurringText[] = [
   text('budget.recurring.more_one', '+{{count}} more', ['{{count}}']),
   text('budget.recurring.more_other', '+{{count}} more', ['{{count}}']),
   text('budget.recurring.monthly', 'Every month on the {{ordinal}}', ['{{ordinal}}']),
+  text('budget.recurring.monthlyMonthEnd', 'Every month on the {{ordinal}} (or the last day of shorter months)', ['{{ordinal}}']),
   text('budget.recurring.weekly', 'Every week on {{weekday}}', ['{{weekday}}']),
   text('budget.recurring.next', 'next {{day}}', ['{{day}}']),
   text('budget.recurring.stop', 'Stop'),
@@ -104,6 +105,20 @@ describe('the texts of repeating income', () => {
   it('writes the hints of the rhythm the way the list and the sheet show them', () => {
     expect(translated('en', 'budget.recurring.monthly', { ordinal: '20th' })).toBe('Every month on the 20th')
     expect(translated('en', 'budget.recurring.weekly', { weekday: 'Tuesday' })).toBe('Every week on Tuesday')
+  })
+
+  it('adds the month-end note to the rhythm of the 31st in English', () => {
+    expect(translated('en', 'budget.recurring.monthlyMonthEnd', { ordinal: '31st' })).toBe(
+      'Every month on the 31st (or the last day of shorter months)',
+    )
+  })
+
+  it('keeps the Macedonian rhythm of the month end as the monthly rhythm plus a note', () => {
+    const monthly = translated('mk', 'budget.recurring.monthly', { ordinal: '31-ви' })
+    const monthEnd = translated('mk', 'budget.recurring.monthlyMonthEnd', { ordinal: '31-ви' })
+
+    expect(monthEnd.startsWith(monthly)).toBe(true)
+    expect(monthEnd.length).toBeGreaterThan(monthly.length)
   })
 
   it('names the seven weekdays of Macedonian, Sunday first', () => {

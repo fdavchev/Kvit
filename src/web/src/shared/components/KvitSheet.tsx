@@ -11,11 +11,12 @@ interface KvitSheetProps {
   onClose: () => void
   actionsRef?: RefObject<KvitSheetActions | null>
   returnsFocusOnClose?: () => boolean
+  opener?: Element | null
 }
 
-export function KvitSheet({ title, children, onClose, actionsRef, returnsFocusOnClose }: KvitSheetProps) {
+export function KvitSheet({ title, children, onClose, actionsRef, returnsFocusOnClose, opener }: KvitSheetProps) {
   const [isOpen, setIsOpen] = useState<boolean>(true)
-  const [openerElement] = useState<Element | null>(() => document.activeElement)
+  const [openerElement] = useState<Element | null>(() => opener ?? document.activeElement)
   const popupRef = useRef<HTMLDivElement>(null)
 
   function focusAfterClose(): HTMLElement | boolean {

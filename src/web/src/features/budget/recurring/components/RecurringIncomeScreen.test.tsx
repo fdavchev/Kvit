@@ -4,11 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import type { RecurringIncome } from '@/core/services/recurringIncomes/recurringIncomesService'
+import { formatDayOrdinal } from '@/shared/utils/formatDate'
 import { budgetNow } from '@/test/budgetTestHelpers'
 import { amountField, saveButton, sentBody, typeAmount } from '@/test/expenseFormTestHelpers'
 import { plainSpaces } from '@/test/expenseTestHelpers'
 import { stubGoogleSignIn } from '@/test/googleTestHelpers'
-import { findIncomeSheet } from '@/test/personalIncomeTestHelpers'
+import { findIncomeEditSheet, findIncomeSheet } from '@/test/personalIncomeTestHelpers'
 import {
   blockButton,
   blocksIn,
@@ -127,6 +128,19 @@ describe('the repeating income screen', () => {
       expect(router.state.location.pathname).toBe(routes.budgetRepeating)
     })
 
+    it('uses the narrow 40rem column of the Budget tab on a computer, with one block under the other', async () => {
+      await renderRepeatingScreen({ recurringIncomes: three })
+      await findBlocks()
+
+      const mainClasses = Array.from(screen.getByRole('main').classList)
+      const listClasses = Array.from(screen.getByRole('list', { name: translated('en', 'budget.recurring.title') }).classList)
+
+      expect(mainClasses).toContain('lg:max-w-[40rem]')
+      expect(mainClasses).not.toContain('lg:max-w-[64rem]')
+      expect(listClasses.filter((name) => name.startsWith('lg:'))).toEqual([])
+      expect(Array.from(newButton().classList).filter((name) => name.startsWith('lg:'))).toEqual([])
+    })
+
     it('shows one block for each income, with the name, the amount, the rhythm and the next date', async () => {
       await renderRepeatingScreen({ recurringIncomes: three })
       await findBlocks()
@@ -164,12 +178,36 @@ describe('the repeating income screen', () => {
       [21, '21st'],
       [22, '22nd'],
       [23, '23rd'],
-      [31, '31st'],
+      [28, '28th'],
     ])('writes the day %i of the month as the %s', async (day, ordinal) => {
       await renderRepeatingScreen({ recurringIncomes: [monthlyOn(day)] })
       await findBlocks()
 
       expect(within(blocksIn(document.body)[0]).getByText(`Every month on the ${ordinal}`)).toBeTruthy()
+    })
+
+    it.each([
+      [29, '29th'],
+      [30, '30th'],
+      [31, '31st'],
+    ])('adds the month-end note to the day %i of the month, the %s', async (day, ordinal) => {
+      await renderRepeatingScreen({ recurringIncomes: [monthlyOn(day)] })
+      await findBlocks()
+
+      expect(
+        within(blocksIn(document.body)[0]).getByText(`Every month on the ${ordinal} (or the last day of shorter months)`),
+      ).toBeTruthy()
+    })
+
+    it('writes the month-end note of the 31st in Macedonian', async () => {
+      await renderRepeatingScreen({ language: 'mk', recurringIncomes: [monthlyOn(31)] })
+      await findBlocks('mk')
+
+      expect(
+        within(blocksIn(document.body, 'mk')[0]).getByText(
+          translated('mk', 'budget.recurring.monthlyMonthEnd', { ordinal: formatDayOrdinal(31, 'mk') }),
+        ),
+      ).toBeTruthy()
     })
 
     it.each([
@@ -346,7 +384,7 @@ describe('the repeating income screen', () => {
 
       fireEvent.click(blockButton(blocksIn(document.body)[1], 'expense.edit'))
 
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
       expect(amountField().value).toBe('250')
       expect(within(sheet).getByLabelText<HTMLTextAreaElement>(translated('en', 'expense.note')).value).toBe('Flat rent')
       expect(repeatsChipIn(sheet, 'Monthly')).toBeTruthy()

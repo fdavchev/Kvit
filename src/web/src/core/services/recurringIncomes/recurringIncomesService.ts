@@ -11,6 +11,7 @@ import {
   readOneOf,
   readText,
   readTextOrNull,
+  readYesNo,
   type Fields,
 } from '@/core/services/readFields'
 import type { Currency } from '@/shared/utils/formatMoney'
@@ -36,6 +37,7 @@ export interface RecurringIncome extends RecurringIncomeFields {
   id: string
   createdAt: string
   nextDate: string | null
+  hasEntries: boolean
 }
 
 interface RecurringIncomeDays {
@@ -94,6 +96,7 @@ function parseRecurringIncome(row: unknown): RecurringIncome {
     endsOn: readDateOrNull(fields, 'endsOn', what),
     createdAt: readDate(fields, 'createdAt', what),
     nextDate: readDateOrNull(fields, 'nextDate', what),
+    hasEntries: readYesNo(fields, 'hasEntries', what),
   }
 }
 

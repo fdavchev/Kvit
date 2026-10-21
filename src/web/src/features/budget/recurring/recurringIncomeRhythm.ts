@@ -9,6 +9,7 @@ import { dayOfMonthOfDate, formatDayOrdinal, weekdayOfDate } from '@/shared/util
 export type RecurringIncomeDays = Pick<RecurringIncomeFields, 'frequency' | 'dayOfMonth' | 'dayOfWeek'>
 
 const weekdayKeys: readonly string[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+const lastDayInEveryMonth = 28
 
 export function recurringDaysFromStart(frequency: RecurringIncomeFrequency, startsOn: string): RecurringIncomeDays {
   return frequency === 'Monthly'
@@ -21,7 +22,8 @@ export function recurringRhythmText(days: RecurringIncomeDays, language: Languag
     if (days.dayOfMonth === null) {
       throw new Error('A Monthly repeating income has no day of the month')
     }
-    return t('budget.recurring.monthly', { ordinal: formatDayOrdinal(days.dayOfMonth, language) })
+    const key = days.dayOfMonth > lastDayInEveryMonth ? 'budget.recurring.monthlyMonthEnd' : 'budget.recurring.monthly'
+    return t(key, { ordinal: formatDayOrdinal(days.dayOfMonth, language) })
   }
   const weekdayKey = days.dayOfWeek === null ? undefined : weekdayKeys[days.dayOfWeek]
   if (weekdayKey === undefined) {

@@ -37,7 +37,7 @@ Second phase of Release 2 ("budget"). Adds personal income: added once, or repea
 - [x] Step 4: frontend, "Spending or Income?" sheet and add income once
 - [x] Step 5: frontend, repeating income (Repeats and Ends chips, the row and the list)
 - [x] Step 6: frontend, Budget tab with the Left card
-- [ ] Step 7: desktop layout and the 360 px browser pass (EN/MK, light/dark)
+- [x] Step 7: desktop layout and the 360 px browser pass (EN/MK, light/dark)
 - [ ] Step 8: code review fixes, report and guide
 - [ ] CI green
 
@@ -47,3 +47,5 @@ Second phase of Release 2 ("budget"). Adds personal income: added once, or repea
 - Step 4: Add the Spending or Income sheet and the income sheet to the Budget tab.
 - Step 5: Add repeating income to the Budget tab: Repeats and Ends chips, the row, the list and the catch-up.
 - Step 6: Add the Left this month card to the Budget tab.
+- Step 7: Fix the Phase 14 browser pass findings: focus, edit title, long amounts, locked start date and month-end line.
+- Step 7b: Reload the repeating income list after the opening catch-up creates entries.

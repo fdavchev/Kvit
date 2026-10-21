@@ -7,7 +7,7 @@ import { kvitGlassPanelLook } from '@/shared/components/kvitGlassLooks'
 import { budgetNow, renderBudget } from '@/test/budgetTestHelpers'
 import { amountField, dismissSheetByTappingBackdrop, saveButton, sentBody, typeAmount } from '@/test/expenseFormTestHelpers'
 import { plainSpaces } from '@/test/expenseTestHelpers'
-import { findIncomeSheet } from '@/test/personalIncomeTestHelpers'
+import { findIncomeEditSheet } from '@/test/personalIncomeTestHelpers'
 import {
   blockButton,
   blocksIn,
@@ -217,7 +217,7 @@ describe('BudgetScreen, the "Repeating income" sheet', () => {
       fireEvent.click(blockButton(blocksIn(sheet)[0], 'expense.edit'))
       taps += 1
 
-      const incomeSheet = await findIncomeSheet()
+      const incomeSheet = await findIncomeEditSheet()
       expect(taps).toBe(2)
       expect(amountField().value).toBe('30000')
       expect(within(incomeSheet).getByLabelText<HTMLTextAreaElement>(translated('en', 'expense.note')).value).toBe('Salary')
@@ -226,12 +226,50 @@ describe('BudgetScreen, the "Repeating income" sheet', () => {
       })
     })
 
+    it('puts the focus inside the edit sheet after the list sheet has gone, so Tab stays in it', async () => {
+      const { sheet } = await openSheetWith([salary, flatRent])
+      const edit = blockButton(blocksIn(sheet)[0], 'expense.edit')
+
+      edit.focus()
+      fireEvent.click(edit)
+
+      const editSheet = await findIncomeEditSheet()
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog', { name: translated('en', 'budget.recurring.title') })).toBeNull()
+      })
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      expect(document.activeElement).toBe(amountField())
+      expect(editSheet.contains(document.activeElement)).toBe(true)
+    })
+
+    it('puts the focus back on the Repeating income row when the edit sheet is closed with Escape', async () => {
+      await renderBudget({ recurringIncomes: [salary, flatRent] })
+      const row = await findRepeatingRow()
+      row.focus()
+      fireEvent.click(row)
+      const edit = blockButton(blocksIn(await findRepeatingSheet())[0], 'expense.edit')
+      edit.focus()
+      fireEvent.click(edit)
+      await findIncomeEditSheet()
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog', { name: translated('en', 'budget.recurring.title') })).toBeNull()
+      })
+
+      fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      expect(document.activeElement).toBe(row)
+    })
+
     it('opens the income that belongs to the block that was tapped', async () => {
       const { sheet } = await openSheetWith([salary, flatRent])
 
       fireEvent.click(blockButton(blocksIn(sheet)[1], 'expense.edit'))
 
-      await findIncomeSheet()
+      await findIncomeEditSheet()
       expect(amountField().value).toBe('250')
       expect(within(screen.getByRole('dialog')).getByLabelText<HTMLTextAreaElement>(translated('en', 'expense.note')).value).toBe('Flat rent')
     })
@@ -239,7 +277,7 @@ describe('BudgetScreen, the "Repeating income" sheet', () => {
     it('saves a change with PUT then the catch-up, and the list and the month are asked for again', async () => {
       const { sheet, fetchMock } = await openSheetWith([salary, flatRent], 'en', saveAnswers)
       fireEvent.click(blockButton(blocksIn(sheet)[0], 'expense.edit'))
-      await findIncomeSheet()
+      await findIncomeEditSheet()
 
       typeAmount('32000')
       fireEvent.click(saveButton())
@@ -271,7 +309,7 @@ describe('BudgetScreen, the "Repeating income" sheet', () => {
       expect(within(blocksIn(sheet)[0]).getByText('Flat rent')).toBeTruthy()
       expect(requestCount(fetchMock, 'POST', `${recurringIncomeUrl(salary.id)}/stop`)).toBe(1)
       expect(screen.getAllByRole('dialog')).toHaveLength(1)
-      expect(screen.queryByRole('dialog', { name: translated('en', 'budget.income.title') })).toBeNull()
+      expect(screen.queryByRole('dialog', { name: translated('en', 'budget.income.editTitle') })).toBeNull()
     })
 
     it.each(languages)('shows a "Stopped" toast with Undo (%s)', async (language) => {
@@ -348,6 +386,9 @@ describe('BudgetScreen, the "Repeating income" sheet', () => {
         ...answers,
         [recurringIncomeStopPost(salary.id)]: problemAnswer(404, 'RECURRING_INCOME_NOT_FOUND'),
       })
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'GET', listUrl)).toBe(2)
+      })
 
       fireEvent.click(blockButton(blocksIn(sheet)[0], 'budget.recurring.stop'))
 
@@ -355,7 +396,7 @@ describe('BudgetScreen, the "Repeating income" sheet', () => {
         expect(vi.mocked(toast.error)).toHaveBeenCalledWith(translated('en', 'errors.RECURRING_INCOME_NOT_FOUND'))
       })
       await waitFor(() => {
-        expect(requestCount(fetchMock, 'GET', listUrl)).toBe(2)
+        expect(requestCount(fetchMock, 'GET', listUrl)).toBe(3)
       })
     })
 
@@ -372,6 +413,42 @@ describe('BudgetScreen, the "Repeating income" sheet', () => {
         expect(vi.mocked(toast.error)).toHaveBeenCalledWith(translated('en', 'errors.GUEST_NOT_ALLOWED'))
       })
       expect(blocksIn(sheet)).toHaveLength(2)
+    })
+
+    it('closes the sheet when the last income is stopped, still shows "Stopped" with Undo, and the row says none yet', async () => {
+      const live = liveRecurringList([salary])
+      const { sheet } = await openSheetWith([salary], 'en', {
+        [recurringIncomesGet]: live.answer,
+        [recurringIncomeStopPost(salary.id)]: () => {
+          live.set([])
+          return new Response(null, { status: 204 })
+        },
+      })
+
+      fireEvent.click(blockButton(blocksIn(sheet)[0], 'budget.recurring.stop'))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      expect(toastShownWithText(translated('en', 'budget.recurring.stopped')).options.action).toMatchObject({
+        label: translated('en', 'common.undo'),
+      })
+      await waitFor(() => {
+        expect(within(screen.getByRole('button', { name: /^Repeating income/ })).getByText(translated('en', 'budget.recurring.rowNone'))).toBeTruthy()
+      })
+    })
+
+    it('keeps the sheet open when one of two incomes is stopped', async () => {
+      const { answers } = liveStopAnswers()
+      const { sheet } = await openSheetWith([salary, flatRent], 'en', answers)
+
+      fireEvent.click(blockButton(blocksIn(sheet)[0], 'budget.recurring.stop'))
+
+      await waitFor(() => {
+        expect(blocksIn(sheet)).toHaveLength(1)
+      })
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      expect(screen.getByRole('dialog', { name: translated('en', 'budget.recurring.title') })).toBe(sheet)
     })
 
     it('updates the row under the sheet after a stop', async () => {

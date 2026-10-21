@@ -49,6 +49,7 @@ export function BudgetScreen() {
   const [openedEntry, setOpenedEntry] = useState<PersonalEntry | null>(null)
   const [isRepeatingListOpen, setIsRepeatingListOpen] = useState<boolean>(false)
   const [openedRecurringIncome, setOpenedRecurringIncome] = useState<RecurringIncome | null>(null)
+  const [handOnOpener, setHandOnOpener] = useState<Element | null>(null)
   const navigate = useNavigate()
   const entriesQuery = usePersonalEntries(selectedMonth)
   const recurringQuery = useRecurringIncomes()
@@ -56,8 +57,14 @@ export function BudgetScreen() {
   useCatchUpOnOpen()
   const today = todayInTimeZone(me.timeZone, new Date())
 
+  function startAdding(): void {
+    setHandOnOpener(document.activeElement)
+    setAddingStep('choice')
+  }
+
   function openRepeating(incomes: readonly RecurringIncome[]): void {
     if (incomes.length > 0 && incomes.length <= mostIncomesInSheet) {
+      setHandOnOpener(document.activeElement)
       setIsRepeatingListOpen(true)
       return
     }
@@ -160,12 +167,12 @@ export function BudgetScreen() {
         selectedMonth={selectedMonth}
         onSelect={setSelectedMonth}
       />
-      {isDesktop && <BudgetRoundAddButton onClick={() => setAddingStep('choice')} />}
+      {isDesktop && <BudgetRoundAddButton onClick={startAdding} />}
       {renderMonth(renderRepeatingRow())}
-      {!isDesktop && <BudgetFloatingAddButton onClick={() => setAddingStep('choice')} />}
+      {!isDesktop && <BudgetFloatingAddButton onClick={startAdding} />}
       {addingStep === 'choice' && <BudgetAddChoiceSheet onClose={setAddingStep} />}
-      {addingStep === 'Spending' && <PersonalSpendingSheet onClose={() => setAddingStep(null)} />}
-      {addingStep === 'Income' && <PersonalIncomeSheet onClose={() => setAddingStep(null)} />}
+      {addingStep === 'Spending' && <PersonalSpendingSheet opener={handOnOpener} onClose={() => setAddingStep(null)} />}
+      {addingStep === 'Income' && <PersonalIncomeSheet opener={handOnOpener} onClose={() => setAddingStep(null)} />}
       {isRepeatingListOpen && recurringQuery.data !== undefined && (
         <RecurringIncomeListSheet incomes={recurringQuery.data} today={today} onClose={closeRepeatingList} />
       )}
@@ -173,6 +180,7 @@ export function BudgetScreen() {
         <PersonalIncomeSheet
           key={openedRecurringIncome.id}
           recurringIncome={openedRecurringIncome}
+          opener={handOnOpener}
           onClose={() => setOpenedRecurringIncome(null)}
         />
       )}

@@ -20,6 +20,7 @@ const addTexts: BudgetIncomeText[] = [
 const incomeTexts: BudgetIncomeText[] = [
   { key: 'budget.income.title', en: 'New income' },
   { key: 'budget.income.listTitle', en: 'Income' },
+  { key: 'budget.income.editTitle', en: 'Income' },
 ]
 
 const newTexts = [...addTexts, ...incomeTexts]

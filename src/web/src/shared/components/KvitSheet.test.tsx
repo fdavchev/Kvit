@@ -168,6 +168,41 @@ describe('KvitSheet', () => {
       expect(document.activeElement).toBe(screen.getByRole('button', { name: 'other button' }))
     })
 
+    it('puts the focus back on the opener it was given instead of the element that had the focus', async () => {
+      function SheetWithGivenOpener() {
+        const [isOpen, setIsOpen] = useState<boolean>(false)
+        const [opener, setOpener] = useState<Element | null>(null)
+        return (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setOpener(screen.getByRole('button', { name: 'other button' }))
+                setIsOpen(true)
+              }}
+            >
+              opener
+            </button>
+            <button type="button">other button</button>
+            {isOpen && (
+              <KvitSheet title={title} onClose={() => setIsOpen(false)} opener={opener}>
+                <label>
+                  Name
+                  <input autoFocus />
+                </label>
+              </KvitSheet>
+            )}
+          </>
+        )
+      }
+      render(<SheetWithGivenOpener />)
+      await openFromOpener()
+
+      await closeWithEscape()
+
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'other button' }))
+    })
+
     it('leaves the focus alone when the sheet says not to return it', async () => {
       render(<SheetWithFieldOpener returnsFocusOnClose={() => false} />)
       await openFromOpener()

@@ -26,6 +26,7 @@ interface PersonalEntryFormProps {
   footer?: ReactNode
   dateChipText?: (dayText: string) => string
   dateWindow?: PersonalEntryDateWindow
+  isDateLocked?: boolean
 }
 
 export function PersonalEntryForm({
@@ -36,6 +37,7 @@ export function PersonalEntryForm({
   footer,
   dateChipText,
   dateWindow,
+  isDateLocked = false,
 }: PersonalEntryFormProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
@@ -77,7 +79,7 @@ export function PersonalEntryForm({
           <button
             type="button"
             aria-invalid={form.isRefused('date')}
-            disabled={form.isBusy}
+            disabled={form.isBusy || isDateLocked}
             className={personalEntryChipLook}
             onClick={() => form.setIsDateOpen(true)}
           >

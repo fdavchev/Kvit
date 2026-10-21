@@ -3,9 +3,18 @@ import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PersonalEntryMonth } from '@/core/services/personalEntries/personalEntriesService'
 import { budgetNow, findEntryList, findTotalCard, monthButton, personalEntriesGet, renderBudget } from '@/test/budgetTestHelpers'
+import { isDisabled } from '@/test/expenseFormTestHelpers'
 import { monthAnswerBody, octoberMonth, octoberWithSalary } from '@/test/personalEntryTestData'
-import { findRepeatingRow } from '@/test/recurringIncomeTestHelpers'
-import { catchUpAnswer, catchUpPost, salaryRecurringIncome } from '@/test/recurringIncomeTestData'
+import { findIncomeEditSheet } from '@/test/personalIncomeTestHelpers'
+import { blockButton, blocksIn, findRepeatingRow, findRepeatingSheet, startChip } from '@/test/recurringIncomeTestHelpers'
+import {
+  catchUpAnswer,
+  catchUpPost,
+  liveRecurringList,
+  recurringIncomesGet,
+  recurringListAnswerBody,
+  salaryRecurringIncome,
+} from '@/test/recurringIncomeTestData'
 import { networkFailureAnswer, neverAnswer, problemAnswer, requestCount, requestsOf } from '@/test/requestTestHelpers'
 import { translated } from '@/test/translated'
 
@@ -13,6 +22,8 @@ vi.mock('sonner', async () => (await import('@/test/sonnerMock')).sonnerMock)
 
 const catchUpUrl = '/api/personal/recurring-incomes/catch-up'
 const octoberUrl = '/api/personal/entries?month=2026-10'
+const listUrl = '/api/personal/recurring-incomes'
+const salaryWithEntries = { ...salaryRecurringIncome, hasEntries: true }
 
 function liveOctober(): { answer: () => Response; next: (month: PersonalEntryMonth) => void } {
   let current = octoberMonth
@@ -26,6 +37,12 @@ function liveOctober(): { answer: () => Response; next: (month: PersonalEntryMon
 
 async function settle(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 50))
+}
+
+async function openSalaryEdit(): Promise<HTMLElement> {
+  fireEvent.click(await findRepeatingRow())
+  fireEvent.click(blockButton(blocksIn(await findRepeatingSheet())[0], 'expense.edit'))
+  return findIncomeEditSheet()
 }
 
 describe('BudgetScreen, the catch-up of repeating income', () => {
@@ -134,8 +151,8 @@ describe('BudgetScreen, the catch-up of repeating income', () => {
       expect(requestCount(fetchMock, 'GET', octoberUrl)).toBeGreaterThanOrEqual(2)
     })
 
-    it('asks for the month only once when it made nothing', async () => {
-      const { fetchMock } = await renderBudget({ answers: { [catchUpPost]: catchUpAnswer(0) } })
+    it('asks for the month and the repeating income list only once when it made nothing', async () => {
+      const { fetchMock } = await renderBudget({ recurringIncomes: [salaryRecurringIncome], answers: { [catchUpPost]: catchUpAnswer(0) } })
       await findTotalCard()
       await waitFor(() => {
         expect(requestsOf(fetchMock, 'POST', catchUpUrl)).toHaveLength(1)
@@ -143,6 +160,52 @@ describe('BudgetScreen, the catch-up of repeating income', () => {
       await settle()
 
       expect(requestCount(fetchMock, 'GET', octoberUrl)).toBe(1)
+      expect(requestCount(fetchMock, 'GET', listUrl)).toBe(1)
+    })
+
+    it('asks for the repeating income list again when it made entries, so the start date of that income is locked', async () => {
+      const live = liveRecurringList([salaryRecurringIncome])
+      const { fetchMock } = await renderBudget({
+        answers: {
+          [recurringIncomesGet]: live.answer,
+          [catchUpPost]: async () => {
+            await settle()
+            live.set([salaryWithEntries])
+            return Response.json({ created: 2 })
+          },
+        },
+      })
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'GET', listUrl)).toBe(2)
+      })
+      const editSheet = await openSalaryEdit()
+
+      expect(isDisabled(startChip(editSheet, '1 Aug'))).toBe(true)
+    })
+
+    it('locks the start date even when the catch-up is done while the first answer for the list is still on its way', async () => {
+      let current = [salaryRecurringIncome]
+      const { fetchMock } = await renderBudget({
+        answers: {
+          [recurringIncomesGet]: async () => {
+            const body = recurringListAnswerBody(current)
+            await new Promise((resolve) => setTimeout(resolve, 150))
+            return Response.json(body)
+          },
+          [catchUpPost]: () => {
+            current = [salaryWithEntries]
+            return Response.json({ created: 1 })
+          },
+        },
+      })
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'GET', listUrl)).toBeGreaterThanOrEqual(2)
+      })
+      const editSheet = await openSalaryEdit()
+
+      expect(isDisabled(startChip(editSheet, '1 Aug'))).toBe(true)
     })
 
     it('shows no message of its own when it made entries', async () => {

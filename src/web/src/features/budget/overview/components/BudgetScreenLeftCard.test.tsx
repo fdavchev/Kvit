@@ -14,6 +14,7 @@ import {
   amountAt,
   amountElements,
   amountLinesInOrder,
+  amountTexts,
   classesOf,
   findLeftCard,
   incomeAttribute,
@@ -30,6 +31,7 @@ import {
   octoberOverspent,
   octoberWithLargestSafeIncome,
   octoberWithLargestSafeIncomeAndSpending,
+  octoberWithLongAmounts,
   largestSafeMinor,
   septemberWithIncome,
 } from '@/test/budgetLeftTestData'
@@ -347,6 +349,44 @@ describe('BudgetScreen, the "Left this month" card', () => {
       expect(await screen.findByText(translated('en', 'budget.screen.emptyTitle'))).toBeTruthy()
       expect(screen.queryByRole('region', { name: translated('en', 'budget.screen.leftThisMonth') })).toBeNull()
       expect(screen.queryByRole('region', { name: translated('en', 'budget.screen.spentThisMonth') })).toBeNull()
+    })
+  })
+
+  describe('long amounts', () => {
+    function lengthOf(element: HTMLElement): string | undefined {
+      return element.style.getPropertyValue('--amount-length') || undefined
+    }
+
+    it.each(languages)('keeps the Income and Spent amounts whole on one line, shrunk to fit their column (%s)', async (language) => {
+      await renderBudget({ language, months: [octoberWithLongAmounts] })
+
+      const card = await findLeftCard(language)
+      const columnAmounts = [...amountElements(card, incomeAttribute), ...amountElements(card, spentAttribute)]
+
+      expect(columnAmounts).toHaveLength(4)
+      for (const amount of columnAmounts) {
+        expect(classesOf(amount)).toContain('fit-amount')
+        expect(classesOf(amount)).not.toContain('break-words')
+        expect(classesOf(amount.parentElement ?? amount)).toContain('@container')
+        expect(lengthOf(amount)).toBe(String(amount.textContent?.length))
+      }
+      expect(amountTexts(card, incomeAttribute)).toEqual([incomeMoney(999999999900, 'MKD', language), incomeMoney(99999999999, 'EUR', language)])
+    })
+
+    it.each(languages)('keeps the big Left amount whole on one line, shrunk to fit the card (%s)', async (language) => {
+      await renderBudget({ language, months: [octoberWithLongAmounts] })
+
+      const card = await findLeftCard(language)
+      const lefts = amountElements(card, leftAttribute)
+
+      expect(lefts).toHaveLength(2)
+      for (const left of lefts) {
+        const fitted = left.querySelector<HTMLElement>('.fit-amount')
+        expect(classesOf(left)).toContain('@container')
+        expect(classesOf(left)).not.toContain('break-words')
+        expect(fitted).not.toBeNull()
+        expect(lengthOf(fitted ?? left)).toBe(String(readableText(left).length))
+      }
     })
   })
 

@@ -11,7 +11,6 @@ import { recurringRhythmText } from '../recurringIncomeRhythm'
 interface RecurringIncomeListProps {
   incomes: readonly RecurringIncome[]
   today: string
-  className?: string
   isStopping: (recurringIncomeId: string) => boolean
   onEdit: (income: RecurringIncome) => void
   onStop: (income: RecurringIncome) => void
@@ -19,13 +18,13 @@ interface RecurringIncomeListProps {
 
 const blockButtonLook = cn(kvitRoundActionLooks.other, 'min-h-11 px-4 text-[0.9375rem] font-bold')
 
-export function RecurringIncomeList({ incomes, today, className, isStopping, onEdit, onStop }: RecurringIncomeListProps) {
+export function RecurringIncomeList({ incomes, today, isStopping, onEdit, onStop }: RecurringIncomeListProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const listRef = useListAnimation<HTMLUListElement>()
 
   return (
-    <ul ref={listRef} aria-label={t('budget.recurring.title')} className={cn('flex flex-col gap-2.5', className)}>
+    <ul ref={listRef} aria-label={t('budget.recurring.title')} className="flex flex-col gap-2.5">
       {incomes.map((income) => (
         <li key={income.id} className="flex flex-col gap-1 rounded-[20px] bg-card px-4 py-3.5 text-card-foreground">
           <div className="flex items-baseline justify-between gap-3">

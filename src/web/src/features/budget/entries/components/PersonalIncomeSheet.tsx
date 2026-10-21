@@ -20,6 +20,7 @@ interface PersonalIncomeSheetProps {
   entry?: PersonalEntry
   recurringIncome?: RecurringIncome
   initialFrequency?: 'Monthly'
+  opener?: Element | null
   onClose: () => void
 }
 
@@ -34,7 +35,7 @@ function startOf(recurringIncome: RecurringIncome | undefined): PersonalEntrySta
   return { amountMinor, currency, entryDate: startsOn, note: title }
 }
 
-export function PersonalIncomeSheet({ entry, recurringIncome, initialFrequency, onClose }: PersonalIncomeSheetProps) {
+export function PersonalIncomeSheet({ entry, recurringIncome, initialFrequency, opener, onClose }: PersonalIncomeSheetProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const entryForm = usePersonalEntryForm(entry, entry ?? startOf(recurringIncome))
@@ -44,6 +45,7 @@ export function PersonalIncomeSheet({ entry, recurringIncome, initialFrequency, 
   const { frequency, endsOn } = repeating
   const form = frequency === null ? entryForm : repeating.form
   const startsOn = form.entryDate
+  const isNew = entry === undefined && recurringIncome === undefined
 
   function closeEnds(choice: EndsChoice | null): void {
     setIsEndsOpen(false)
@@ -79,7 +81,12 @@ export function PersonalIncomeSheet({ entry, recurringIncome, initialFrequency, 
   )
 
   return (
-    <KvitSheet title={t('budget.income.title')} onClose={onClose} actionsRef={entryForm.sheet.actionsRef}>
+    <KvitSheet
+      title={t(isNew ? 'budget.income.title' : 'budget.income.editTitle')}
+      onClose={onClose}
+      actionsRef={entryForm.sheet.actionsRef}
+      opener={opener}
+    >
       <PersonalEntryForm
         form={form}
         extraChip={repeatChips}
@@ -97,6 +104,7 @@ export function PersonalIncomeSheet({ entry, recurringIncome, initialFrequency, 
             </KvitButton>
           )
         }
+        isDateLocked={recurringIncome?.hasEntries === true}
         dateChipText={frequency === null ? undefined : (dayText) => t('budget.income.startsOn', { day: dayText })}
         dateWindow={
           frequency === null

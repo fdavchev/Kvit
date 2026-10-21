@@ -29,7 +29,7 @@ import {
   salaryIncomeEntry,
 } from '@/test/personalEntryTestData'
 import { deleteButton, findDetailsSheet, shownCurrency } from '@/test/personalEntryTestHelpers'
-import { findIncomeSheet } from '@/test/personalIncomeTestHelpers'
+import { findIncomeEditSheet } from '@/test/personalIncomeTestHelpers'
 import { jsonAnswer, requestCount } from '@/test/requestTestHelpers'
 import { translated } from '@/test/translated'
 
@@ -186,7 +186,7 @@ describe('BudgetScreen with income', () => {
 
       fireEvent.click(within(rowAt(list, 2)).getByRole('button'))
 
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
       expect(amountField().value).toBe('65000')
       expect(within(sheet).getByLabelText<HTMLTextAreaElement>(translated('en', 'expense.note')).value).toBe('Salary')
       expect(deleteButton(sheet)).toBeTruthy()
@@ -199,7 +199,7 @@ describe('BudgetScreen with income', () => {
 
       fireEvent.click(within(rowAt(list, 2)).getByRole('button'))
 
-      await findIncomeSheet()
+      await findIncomeEditSheet()
       expect(screen.getAllByRole('dialog')).toHaveLength(1)
     })
 
@@ -209,7 +209,7 @@ describe('BudgetScreen with income', () => {
 
       fireEvent.click(within(rowAt(list, 0)).getByRole('button'))
 
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
       expect(amountField().value).toBe('200')
       expect(shownCurrency(sheet, 'EUR')).toBeTruthy()
     })
@@ -222,7 +222,7 @@ describe('BudgetScreen with income', () => {
 
       expect(await findDetailsSheet(coffeeCategory)).toBeTruthy()
       expect(amountField().value).toBe('120')
-      expect(screen.queryByRole('dialog', { name: translated('en', 'budget.income.title') })).toBeNull()
+      expect(screen.queryByRole('dialog', { name: translated('en', 'budget.income.editTitle') })).toBeNull()
     })
 
     it('opens the spending sheet of the food entry from the same list', async () => {
@@ -243,7 +243,7 @@ describe('BudgetScreen with income', () => {
       })
       const list = await findEntryList()
       fireEvent.click(within(rowAt(list, 2)).getByRole('button'))
-      await findIncomeSheet()
+      await findIncomeEditSheet()
 
       typeAmount('70000')
       fireEvent.click(saveButton())
@@ -336,7 +336,7 @@ describe('BudgetScreen with income', () => {
 
       fireEvent.click(within(rowAt(list, 0)).getByRole('button'))
 
-      expect(await findIncomeSheet()).toBeTruthy()
+      expect(await findIncomeEditSheet()).toBeTruthy()
     })
   })
 

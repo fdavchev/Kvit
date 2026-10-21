@@ -175,7 +175,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
             JsonElement after = Assert.Single(await RecurringIncomeSteps.ListRowsAsync(user.Client));
 
             Assert.Equal("2026-11-15", before.GetProperty("nextDate").GetString());
-            Assert.Equal(before.GetRawText(), after.GetRawText());
+            Assert.Equal("2026-11-15", after.GetProperty("nextDate").GetString());
         }
 
         [Fact]

@@ -48,13 +48,12 @@ export function RecurringIncomeScreen() {
           <RecurringIncomeList
             incomes={incomesQuery.data}
             today={today}
-            className="lg:grid lg:grid-cols-2"
             isStopping={stopper.isStopping}
             onEdit={(income) => setOpenedSheet({ kind: 'edit', income })}
             onStop={(income) => stopper.stop(income.id)}
           />
         )}
-        <KvitButton className="mt-5 lg:max-w-sm" onClick={() => setOpenedSheet({ kind: 'new' })}>
+        <KvitButton className="mt-5" onClick={() => setOpenedSheet({ kind: 'new' })}>
           {t('budget.recurring.newButton')}
         </KvitButton>
       </>
@@ -62,7 +61,7 @@ export function RecurringIncomeScreen() {
   }
 
   return (
-    <KvitScreen width="wide">
+    <KvitScreen>
       <div className="flex min-h-12">
         <KvitBackButton to={routes.budget} />
       </div>

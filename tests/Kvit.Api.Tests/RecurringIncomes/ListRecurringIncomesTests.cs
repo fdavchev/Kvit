@@ -24,7 +24,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
         }
 
         [Fact]
-        public async Task List_EachRow_HasExactlyTheElevenFields()
+        public async Task List_EachRow_HasExactlyTheTwelveFields()
         {
             SignedInUser user = await _app.SignUpAsync();
             await RecurringIncomeSteps.CreateAsync(user.Client, RecurringIncomeBody.Monthly());

@@ -14,5 +14,6 @@ namespace Kvit.Contracts.RecurringIncomes
         DateOnly StartsOn,
         DateOnly? EndsOn,
         DateTimeOffset CreatedAt,
-        DateOnly? NextDate);
+        DateOnly? NextDate,
+        bool HasEntries);
 }

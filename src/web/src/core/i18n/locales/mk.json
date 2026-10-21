@@ -553,6 +553,7 @@
     },
     "income": {
       "title": "Нов приход",
+      "editTitle": "Приход",
       "listTitle": "Приход",
       "repeatsNever": "Се повторува: никогаш",
       "repeatsMonthly": "Се повторува: месечно",
@@ -576,6 +577,7 @@
       "more_one": "уште {{count}}",
       "more_other": "уште {{count}}",
       "monthly": "Месечно, на {{ordinal}}",
+      "monthlyMonthEnd": "Месечно, на {{ordinal}} (или последниот ден во пократките месеци)",
       "weekly": "Неделно: {{weekday}}",
       "next": "следно {{day}}",
       "stop": "Запри",

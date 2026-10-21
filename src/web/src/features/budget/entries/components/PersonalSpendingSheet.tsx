@@ -11,10 +11,11 @@ import { SpendingCategoryHeading } from './SpendingCategoryHeading'
 
 interface PersonalSpendingSheetProps {
   entry?: PersonalEntry
+  opener?: Element | null
   onClose: () => void
 }
 
-export function PersonalSpendingSheet({ entry, onClose }: PersonalSpendingSheetProps) {
+export function PersonalSpendingSheet({ entry, opener, onClose }: PersonalSpendingSheetProps) {
   const { t } = useTranslation()
   const form = usePersonalEntryForm(entry)
   const [category, setCategory] = useState<PersonalCategory | null>(entry?.category ?? null)
@@ -46,6 +47,7 @@ export function PersonalSpendingSheet({ entry, onClose }: PersonalSpendingSheetP
       }
       onClose={onClose}
       actionsRef={form.sheet.actionsRef}
+      opener={opener}
     >
       {isShowingGrid ? (
         <PersonalCategoryGrid onPick={pickCategory} />

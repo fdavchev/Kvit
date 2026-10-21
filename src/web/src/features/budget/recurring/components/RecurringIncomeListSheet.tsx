@@ -30,7 +30,12 @@ export function RecurringIncomeListSheet({ incomes, today, onClose }: RecurringI
   }
 
   return (
-    <KvitSheet title={t('budget.recurring.title')} onClose={() => onClose(editedIncome)} actionsRef={sheet.actionsRef}>
+    <KvitSheet
+      title={t('budget.recurring.title')}
+      onClose={() => onClose(editedIncome)}
+      actionsRef={sheet.actionsRef}
+      returnsFocusOnClose={() => editedIncome === null}
+    >
       {incomes.length === 0 ? (
         <KvitEmpty message={t('budget.recurring.empty')} />
       ) : (
@@ -39,7 +44,7 @@ export function RecurringIncomeListSheet({ incomes, today, onClose }: RecurringI
           today={today}
           isStopping={stopper.isStopping}
           onEdit={edit}
-          onStop={(income) => stopper.stop(income.id)}
+          onStop={(income) => stopper.stop(income.id, incomes.length === 1 ? sheet.close : undefined)}
         />
       )}
     </KvitSheet>

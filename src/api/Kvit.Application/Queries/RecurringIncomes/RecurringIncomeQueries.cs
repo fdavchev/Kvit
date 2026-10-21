@@ -20,25 +20,31 @@ namespace Kvit.Application.Queries.RecurringIncomes
             return incomes
                 .OrderByDescending(income => income.CreatedAt)
                 .ThenByDescending(income => income.Id)
-                .Select(income => new RecurringIncomeRow(
-                    income.Id,
-                    income.AmountMinor,
-                    income.Currency,
-                    income.Title,
-                    income.Frequency,
-                    income.DayOfMonth,
-                    income.DayOfWeek,
-                    income.StartsOn,
-                    income.EndsOn,
-                    income.CreatedAt,
+                .Select(income => new
+                {
+                    Income = income,
+                    LastEntryDate = entries.Where(entry => entry.RecurringIncomeId == income.Id).Max(entry => (DateOnly?)entry.EntryDate),
+                })
+                .Select(row => new RecurringIncomeRow(
+                    row.Income.Id,
+                    row.Income.AmountMinor,
+                    row.Income.Currency,
+                    row.Income.Title,
+                    row.Income.Frequency,
+                    row.Income.DayOfMonth,
+                    row.Income.DayOfWeek,
+                    row.Income.StartsOn,
+                    row.Income.EndsOn,
+                    row.Income.CreatedAt,
                     RecurringIncomeSchedule.NextDate(
-                        income.Frequency,
-                        income.DayOfMonth,
-                        income.DayOfWeek,
-                        income.StartsOn,
-                        income.EndsOn,
-                        entries.Where(entry => entry.RecurringIncomeId == income.Id).Max(entry => (DateOnly?)entry.EntryDate),
-                        userToday)));
+                        row.Income.Frequency,
+                        row.Income.DayOfMonth,
+                        row.Income.DayOfWeek,
+                        row.Income.StartsOn,
+                        row.Income.EndsOn,
+                        row.LastEntryDate,
+                        userToday),
+                    row.LastEntryDate != null));
         }
     }
 }

@@ -36,7 +36,12 @@ export function BudgetAddChoiceSheet({ onClose }: BudgetAddChoiceSheetProps) {
   }
 
   return (
-    <KvitSheet title={t('budget.add.title')} onClose={() => onClose(chosenKind)} actionsRef={sheet.actionsRef}>
+    <KvitSheet
+      title={t('budget.add.title')}
+      onClose={() => onClose(chosenKind)}
+      actionsRef={sheet.actionsRef}
+      returnsFocusOnClose={() => chosenKind === null}
+    >
       <div className="grid grid-cols-2 gap-3">
         {addChoices.map((choice) => (
           <button key={choice.kind} type="button" className={choiceLook} onClick={() => choose(choice.kind)}>

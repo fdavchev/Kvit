@@ -36,6 +36,7 @@ export const salaryRecurringIncome: RecurringIncome = {
   endsOn: null,
   createdAt: '2026-08-01T07:00:00Z',
   nextDate: '2026-11-01',
+  hasEntries: false,
 }
 
 export const flatRentRecurringIncome: RecurringIncome = {
@@ -50,6 +51,7 @@ export const flatRentRecurringIncome: RecurringIncome = {
   endsOn: null,
   createdAt: '2026-06-05T07:00:00Z',
   nextDate: '2026-11-05',
+  hasEntries: false,
 }
 
 export const tutoringRecurringIncome: RecurringIncome = {
@@ -64,6 +66,7 @@ export const tutoringRecurringIncome: RecurringIncome = {
   endsOn: '2027-01-20',
   createdAt: '2026-09-01T07:00:00Z',
   nextDate: '2026-10-20',
+  hasEntries: false,
 }
 
 export const untitledRecurringIncome: RecurringIncome = {
@@ -78,6 +81,7 @@ export const untitledRecurringIncome: RecurringIncome = {
   endsOn: '2026-10-15',
   createdAt: '2026-01-15T07:00:00Z',
   nextDate: null,
+  hasEntries: false,
 }
 
 export function recurringIncomeAnswerRow(income: RecurringIncome): Record<string, unknown> {

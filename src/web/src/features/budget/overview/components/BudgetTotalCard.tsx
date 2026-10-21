@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import type {
@@ -8,7 +8,7 @@ import type {
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
 import { KvitAmount } from '@/shared/components/KvitAmount'
 import { cn } from '@/shared/utils/cn'
-import { formatMoney, moneyParts, type Currency } from '@/shared/utils/formatMoney'
+import { formatMoney, moneyParts, moneyText, type Currency } from '@/shared/utils/formatMoney'
 import { formatSignedMoney } from '@/shared/utils/formatSignedMoney'
 
 interface BudgetTotalCardProps {
@@ -19,6 +19,10 @@ interface BudgetTotalCardProps {
 const mainAmountLook = 'text-[2.25rem] leading-[1.1] font-extrabold tracking-[-0.02em]'
 const secondAmountLook = 'text-lg leading-tight font-bold text-muted-foreground'
 const labelLook = 'text-[0.8125rem] font-bold text-muted-foreground'
+
+function amountLengthStyle(text: string): CSSProperties {
+  return { '--amount-length': text.length } as CSSProperties
+}
 
 export function BudgetTotalCard({ totals, incomeTotals }: BudgetTotalCardProps) {
   const { t } = useTranslation()
@@ -64,6 +68,9 @@ export function BudgetTotalCard({ totals, incomeTotals }: BudgetTotalCardProps) 
       {incomeTotals.map((income, index) => {
         const spentMinor = spentIn(income.currency)
         const leftMinor = income.totalMinor - spentMinor
+        const leftParts = moneyParts(leftMinor, income.currency, language)
+        const incomeText = formatSignedMoney(income.totalMinor, income.currency, language)
+        const spentText = formatMoney(spentMinor, income.currency, language)
         return (
           <div
             key={income.currency}
@@ -72,24 +79,26 @@ export function BudgetTotalCard({ totals, incomeTotals }: BudgetTotalCardProps) 
             <p
               data-total-amount={index === 0 ? 'main' : 'second'}
               className={cn(
-                'max-w-full break-words',
+                '@container w-full',
                 index === 0 ? mainAmountLook : secondAmountLook,
                 leftMinor < 0 && 'text-negative',
               )}
             >
-              <KvitAmount parts={moneyParts(leftMinor, income.currency, language)} />
+              <span className="fit-amount block" style={amountLengthStyle(moneyText(leftParts))}>
+                <KvitAmount parts={leftParts} />
+              </span>
             </p>
             <div className="mt-1 grid w-full grid-cols-2 gap-2">
-              <p className="flex min-w-0 flex-col">
+              <p className="@container flex min-w-0 flex-col">
                 <span className={labelLook}>{t('budget.screen.income')}</span>
-                <span data-income-amount className="font-bold break-words text-positive">
-                  {formatSignedMoney(income.totalMinor, income.currency, language)}
+                <span data-income-amount className="fit-amount w-full font-bold text-positive" style={amountLengthStyle(incomeText)}>
+                  {incomeText}
                 </span>
               </p>
-              <p className="flex min-w-0 flex-col">
+              <p className="@container flex min-w-0 flex-col">
                 <span className={labelLook}>{t('budget.screen.spent')}</span>
-                <span data-spent-amount className="font-bold break-words">
-                  {formatMoney(spentMinor, income.currency, language)}
+                <span data-spent-amount className="fit-amount w-full font-bold" style={amountLengthStyle(spentText)}>
+                  {spentText}
                 </span>
               </p>
             </div>

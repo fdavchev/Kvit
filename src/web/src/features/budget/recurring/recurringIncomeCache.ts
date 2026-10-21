@@ -13,10 +13,15 @@ export async function refreshEntriesMadeByCatchUp(queryClient: QueryClient): Pro
   await refreshPersonalEntries(queryClient)
 }
 
+async function refreshAfterCatchUp(queryClient: QueryClient): Promise<void> {
+  await queryClient.cancelQueries({ queryKey: recurringIncomesQueryKey })
+  await Promise.all([refreshEntriesMadeByCatchUp(queryClient), refreshRecurringIncomes(queryClient)])
+}
+
 export async function catchUpOnOpen(queryClient: QueryClient): Promise<void> {
   const created = await catchUpRecurringIncomes()
   if (created > 0) {
-    await refreshEntriesMadeByCatchUp(queryClient)
+    await refreshAfterCatchUp(queryClient)
   }
 }
 
@@ -26,6 +31,5 @@ export async function catchUpAfterChange(queryClient: QueryClient): Promise<void
   } catch (error) {
     console.error('The catch-up after saving a repeating income failed; the change itself was saved', error)
   }
-  await queryClient.cancelQueries({ queryKey: recurringIncomesQueryKey })
-  await Promise.all([refreshEntriesMadeByCatchUp(queryClient), refreshRecurringIncomes(queryClient)])
+  await refreshAfterCatchUp(queryClient)
 }

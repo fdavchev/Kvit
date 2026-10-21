@@ -9,7 +9,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
         public const string CatchUpPath = "/api/personal/recurring-incomes/catch-up";
         public const int ActiveLimit = 20;
 
-        public static readonly string[] RowFieldNames = ["amountMinor", "createdAt", "currency", "dayOfMonth", "dayOfWeek", "endsOn", "frequency", "id", "nextDate", "startsOn", "title"];
+        public static readonly string[] RowFieldNames = ["amountMinor", "createdAt", "currency", "dayOfMonth", "dayOfWeek", "endsOn", "frequency", "hasEntries", "id", "nextDate", "startsOn", "title"];
 
         public static TheoryData<string> AllEndpoints => ["list", "create", "edit", "stop", "restart", "catchUp"];
 

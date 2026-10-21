@@ -17,7 +17,7 @@ import {
   shownCurrency,
   waitForEveryDialogToClose,
 } from '@/test/personalEntryTestHelpers'
-import { findIncomeSheet, renderIncomeSheet } from '@/test/personalIncomeTestHelpers'
+import { findIncomeEditSheet, renderIncomeSheet } from '@/test/personalIncomeTestHelpers'
 import {
   jsonAnswer,
   neverAnswer,
@@ -59,7 +59,7 @@ describe('PersonalIncomeSheet, editing', () => {
     it.each(languages)('is filled in with the amount, the currency, the date and the note of the income (%s)', async (language) => {
       await renderIncomeSheet({ entry: salaryIncomeEntry, language })
 
-      const sheet = await findIncomeSheet(language)
+      const sheet = await findIncomeEditSheet(language)
 
       expect(amountField(language).value).toBe('65000')
       expect(shownCurrency(sheet, 'MKD', language)).toBeTruthy()
@@ -67,10 +67,19 @@ describe('PersonalIncomeSheet, editing', () => {
       expect(screen.queryByRole('dialog', { name: translated(language, 'budget.entries.pickCategory') })).toBeNull()
     })
 
+    it.each(languages)('is titled with the edit title, not the title of a new income (%s)', async (language) => {
+      await renderIncomeSheet({ entry: salaryIncomeEntry, language })
+
+      const sheet = await findIncomeEditSheet(language)
+
+      expect(within(sheet).getByRole('heading', { name: translated(language, 'budget.income.editTitle') })).toBeTruthy()
+      expect(screen.queryByRole('heading', { name: translated(language, 'budget.income.title') })).toBeNull()
+    })
+
     it('shows the date of the income on the date chip', async () => {
       await renderIncomeSheet({ entry: salaryIncomeEntry })
 
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       expect(salaryDateChip(sheet)).toBeTruthy()
     })
@@ -78,7 +87,7 @@ describe('PersonalIncomeSheet, editing', () => {
     it('fills in a EUR income with cents, with the note chip closed when the income has no note', async () => {
       await renderIncomeSheet({ entry: untitledEuroIncomeEntry })
 
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       expect(amountField().value).toBe('200')
       expect(shownCurrency(sheet, 'EUR')).toBeTruthy()
@@ -91,15 +100,15 @@ describe('PersonalIncomeSheet, editing', () => {
 
       await renderIncomeSheet({ entry: salaryIncomeEntry })
 
-      expect(shownCurrency(await findIncomeSheet(), 'MKD')).toBeTruthy()
+      expect(shownCurrency(await findIncomeEditSheet(), 'MKD')).toBeTruthy()
     })
 
     it('keeps the title, Save and Delete in view while the amount, chips and note scroll on a short window', async () => {
       await renderIncomeSheet({ entry: salaryIncomeEntry })
 
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
-      expectTitleOutsideScrollingBody(sheet, translated('en', 'budget.income.title'))
+      expectTitleOutsideScrollingBody(sheet, translated('en', 'budget.income.editTitle'))
       expectSaveOutsideScrollingFields(sheet, amountField(), saveButton())
       expectSaveOutsideScrollingFields(sheet, amountField(), deleteButton(sheet))
     })
@@ -107,7 +116,7 @@ describe('PersonalIncomeSheet, editing', () => {
     it('offers a red Delete 44 px tall, and no category chip and no Repeats chip', async () => {
       await renderIncomeSheet({ entry: salaryIncomeEntry })
 
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       expect(Array.from(deleteButton(sheet).classList)).toEqual(expect.arrayContaining(['text-danger', 'min-h-13']))
       expect(within(sheet).queryByRole('button', { name: translated('en', 'expense.category') })).toBeNull()
@@ -121,7 +130,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: salaryIncomeEntry,
         answers: { [salaryPut]: jsonAnswer(entryAnswerRow(salaryIncomeEntry)) },
       })
-      await findIncomeSheet()
+      await findIncomeEditSheet()
 
       typeAmount('70000')
       fireEvent.click(saveButton())
@@ -147,7 +156,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: salaryIncomeEntry,
         answers: { [salaryPut]: jsonAnswer(entryAnswerRow(salaryIncomeEntry)) },
       })
-      await findIncomeSheet()
+      await findIncomeEditSheet()
 
       fireEvent.click(saveButton())
 
@@ -162,7 +171,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: salaryIncomeEntry,
         answers: { [salaryPut]: jsonAnswer(entryAnswerRow(salaryIncomeEntry)) },
       })
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       fireEvent.change(within(sheet).getByLabelText(translated('en', 'expense.note')), { target: { value: '' } })
       fireEvent.click(saveButton())
@@ -178,7 +187,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: untitledEuroIncomeEntry,
         answers: { [personalEntryPut(untitledEuroIncomeEntry.id)]: jsonAnswer(entryAnswerRow(untitledEuroIncomeEntry)) },
       })
-      await findIncomeSheet()
+      await findIncomeEditSheet()
 
       fireEvent.click(saveButton())
 
@@ -196,7 +205,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: oldIncome,
         answers: { [salaryPut]: jsonAnswer(entryAnswerRow(oldIncome)) },
       })
-      await findIncomeSheet()
+      await findIncomeEditSheet()
 
       typeAmount('70000')
       fireEvent.click(saveButton())
@@ -210,7 +219,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: salaryIncomeEntry,
         answers: { [salaryPut]: jsonAnswer(entryAnswerRow(salaryIncomeEntry)) },
       })
-      await findIncomeSheet()
+      await findIncomeEditSheet()
 
       fireEvent.click(saveButton())
       fireEvent.click(saveButton())
@@ -224,7 +233,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: salaryIncomeEntry,
         answers: { [salaryPut]: problemAnswer(400, 'PERSONAL_ENTRY_KIND_CANNOT_CHANGE') },
       })
-      await findIncomeSheet()
+      await findIncomeEditSheet()
 
       fireEvent.click(saveButton())
 
@@ -237,7 +246,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: salaryIncomeEntry,
         answers: { [salaryPut]: problemAnswer(400, 'PERSONAL_ENTRY_AMOUNT_TOO_LARGE') },
       })
-      await findIncomeSheet()
+      await findIncomeEditSheet()
 
       fireEvent.click(saveButton())
 
@@ -252,7 +261,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: salaryIncomeEntry,
         answers: { [salaryDelete]: noContentAnswer() },
       })
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       fireEvent.click(deleteButton(sheet))
 
@@ -270,7 +279,7 @@ describe('PersonalIncomeSheet, editing', () => {
         language,
         answers: { [salaryDelete]: noContentAnswer() },
       })
-      const sheet = await findIncomeSheet(language)
+      const sheet = await findIncomeEditSheet(language)
 
       fireEvent.click(deleteButton(sheet, language))
 
@@ -290,7 +299,7 @@ describe('PersonalIncomeSheet, editing', () => {
           [personalEntryRestorePost(salaryIncomeEntry.id)]: noContentAnswer(),
         },
       })
-      fireEvent.click(deleteButton(await findIncomeSheet()))
+      fireEvent.click(deleteButton(await findIncomeEditSheet()))
       await waitForEveryDialogToClose()
 
       pressToastAction(toastShownWithText(translated('en', 'budget.entries.deleted')))
@@ -309,7 +318,7 @@ describe('PersonalIncomeSheet, editing', () => {
           [personalEntryRestorePost(salaryIncomeEntry.id)]: problemAnswer(400, 'PERSONAL_ENTRY_RESTORE_EXPIRED'),
         },
       })
-      fireEvent.click(deleteButton(await findIncomeSheet()))
+      fireEvent.click(deleteButton(await findIncomeEditSheet()))
       await waitForEveryDialogToClose()
 
       pressToastAction(toastShownWithText(translated('en', 'budget.entries.deleted')))
@@ -324,7 +333,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: salaryIncomeEntry,
         answers: { [salaryDelete]: noContentAnswer() },
       })
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       fireEvent.click(deleteButton(sheet))
       fireEvent.click(deleteButton(sheet))
@@ -338,7 +347,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: salaryIncomeEntry,
         answers: { [salaryDelete]: problemAnswer(403, 'GUEST_NOT_ALLOWED') },
       })
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       fireEvent.click(deleteButton(sheet))
 
@@ -356,7 +365,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: salaryIncomeEntry,
         answers: { [salaryPut]: neverAnswer(), [salaryDelete]: noContentAnswer() },
       })
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       fireEvent.click(saveButton())
       await waitFor(() => {
@@ -374,7 +383,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: salaryIncomeEntry,
         answers: { [salaryDelete]: neverAnswer(), [salaryPut]: jsonAnswer(entryAnswerRow(salaryIncomeEntry)) },
       })
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       fireEvent.click(deleteButton(sheet))
       await waitFor(() => {
@@ -396,7 +405,7 @@ describe('PersonalIncomeSheet, editing', () => {
         entry: salaryIncomeEntry,
         answers: { [request]: problemAnswer(404, 'PERSONAL_ENTRY_NOT_FOUND') },
       })
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       fireEvent.click(button === 'Save' ? saveButton() : deleteButton(sheet))
 
@@ -416,7 +425,7 @@ describe('PersonalIncomeSheet, editing', () => {
       entry: salaryIncomeEntry,
       answers: { [salaryPut]: jsonAnswer(entryAnswerRow(salaryIncomeEntry)), [personalEntriesPost]: jsonAnswer({}) },
     })
-    await findIncomeSheet()
+    await findIncomeEditSheet()
 
     fireEvent.click(saveButton())
 

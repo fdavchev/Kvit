@@ -553,6 +553,7 @@
     },
     "income": {
       "title": "New income",
+      "editTitle": "Income",
       "listTitle": "Income",
       "repeatsNever": "Repeats: Never",
       "repeatsMonthly": "Repeats: Monthly",
@@ -576,6 +577,7 @@
       "more_one": "+{{count}} more",
       "more_other": "+{{count}} more",
       "monthly": "Every month on the {{ordinal}}",
+      "monthlyMonthEnd": "Every month on the {{ordinal}} (or the last day of shorter months)",
       "weekly": "Every week on {{weekday}}",
       "next": "next {{day}}",
       "stop": "Stop",

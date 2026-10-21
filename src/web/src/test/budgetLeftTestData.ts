@@ -105,3 +105,21 @@ export const octoberWithLargestSafeIncomeAndSpending: PersonalEntryMonth = {
   ],
   incomeTotals: [{ currency: 'EUR', totalMinor: largestSafeMinor, count: 1 }],
 }
+
+const longDenarIncomeEntry = entryOf(salaryIncomeEntry, 'f1000000-0000-4000-8000-000000000009', 999999999900)
+const longDenarSpendingEntry = entryOf(rentEntry, 'f1000000-0000-4000-8000-000000000010', 124056700)
+const longEuroIncomeEntry = entryOf(untitledEuroIncomeEntry, 'f1000000-0000-4000-8000-000000000011', 99999999999)
+const longEuroSpendingEntry = entryOf(holidayEuroEntry, 'f1000000-0000-4000-8000-000000000012', 99999999999)
+
+export const octoberWithLongAmounts: PersonalEntryMonth = {
+  month: '2026-10',
+  entries: [longDenarSpendingEntry, longEuroSpendingEntry, longDenarIncomeEntry, longEuroIncomeEntry],
+  totals: [
+    { currency: 'MKD', totalMinor: 124056700, categories: [{ category: coffeeCategory, totalMinor: 124056700, count: 1 }] },
+    { currency: 'EUR', totalMinor: 99999999999, categories: [{ category: personalFoodCategory, totalMinor: 99999999999, count: 1 }] },
+  ],
+  incomeTotals: [
+    { currency: 'MKD', totalMinor: 999999999900, count: 1 },
+    { currency: 'EUR', totalMinor: 99999999999, count: 1 },
+  ],
+}

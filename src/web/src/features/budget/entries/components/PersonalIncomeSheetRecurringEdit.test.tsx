@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
 import { amountField, dateField, isDisabled, saveButton, sentBody, typeAmount, yesterdayChip } from '@/test/expenseFormTestHelpers'
 import { isEntriesCacheRefreshed, noteChip, shownCurrency, waitForEveryDialogToClose } from '@/test/personalEntryTestHelpers'
-import { findIncomeSheet, renderIncomeSheet } from '@/test/personalIncomeTestHelpers'
+import { findIncomeEditSheet, renderIncomeSheet } from '@/test/personalIncomeTestHelpers'
 import {
   anyEndsChip,
   anyStartChip,
@@ -100,7 +100,7 @@ function refusedFields(sheet: HTMLElement): RefusedField[] {
 
 async function openSalary(answers: Record<string, AnswerFactory> = saveAnswers) {
   const rendered = await renderIncomeSheet({ recurringIncome: salary, answers })
-  const sheet = await findIncomeSheet()
+  const sheet = await findIncomeEditSheet()
   return { ...rendered, sheet }
 }
 
@@ -129,7 +129,7 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
     it.each(languages)('is filled in with the amount, currency, name, start, repeat rhythm and end of the income (%s)', async (language) => {
       await renderIncomeSheet({ recurringIncome: salary, language })
 
-      const sheet = await findIncomeSheet(language)
+      const sheet = await findIncomeEditSheet(language)
 
       expect(amountField(language).value).toBe('30000')
       expect(shownCurrency(sheet, 'MKD', language)).toBeTruthy()
@@ -137,6 +137,42 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
       expect(startChip(sheet, language === 'en' ? '1 Aug' : '1 авг', language)).toBeTruthy()
       expect(repeatsChipIn(sheet, 'Monthly', language)).toBeTruthy()
       expect(endsChip(sheet, null, language)).toBeTruthy()
+    })
+
+    it.each(languages)('is titled with the edit title, not the title of a new income (%s)', async (language) => {
+      await renderIncomeSheet({ recurringIncome: salary, language })
+
+      const sheet = await findIncomeEditSheet(language)
+
+      expect(within(sheet).getByRole('heading', { name: translated(language, 'budget.income.editTitle') })).toBeTruthy()
+      expect(screen.queryByRole('heading', { name: translated(language, 'budget.income.title') })).toBeNull()
+    })
+
+    it.each(languages)('shows the start date on a disabled chip when the income already has entries (%s)', async (language) => {
+      await renderIncomeSheet({ recurringIncome: { ...salary, hasEntries: true }, language })
+
+      const sheet = await findIncomeEditSheet(language)
+      const chip = startChip(sheet, language === 'en' ? '1 Aug' : '1 авг', language)
+
+      expect(isDisabled(chip)).toBe(true)
+      fireEvent.click(chip)
+      expect(screen.queryByRole('dialog', { name: translated(language, 'expense.pickDate') })).toBeNull()
+    })
+
+    it('keeps the start date chip enabled when the income has no entries yet', async () => {
+      const { sheet } = await openSalary()
+
+      expect(isDisabled(anyStartChip(sheet))).toBe(false)
+    })
+
+    it('keeps the other chips and Save enabled when the start date is locked', async () => {
+      await renderIncomeSheet({ recurringIncome: { ...salary, hasEntries: true } })
+
+      const sheet = await findIncomeEditSheet()
+
+      expect(isDisabled(repeatsChipIn(sheet, 'Monthly'))).toBe(false)
+      expect(isDisabled(anyEndsChip(sheet))).toBe(false)
+      expect(isDisabled(saveButton())).toBe(false)
     })
 
     it('shows the rhythm hint of the start: the 1st for the salary', async () => {
@@ -147,7 +183,7 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
 
     it('fills in a weekly income with its end date and the weekday of its start', async () => {
       await renderIncomeSheet({ recurringIncome: tutoringRecurringIncome })
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       expect(amountField().value).toBe('1500')
       expect(repeatsChipIn(sheet, 'Weekly')).toBeTruthy()
@@ -159,7 +195,7 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
     it('fills in a EUR income with cents and keeps the note chip closed when the income has no name', async () => {
       await renderIncomeSheet({ recurringIncome: untitledRecurringIncome })
 
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       expect(amountField().value).toBe('40')
       expect(shownCurrency(sheet, 'EUR')).toBeTruthy()
@@ -173,7 +209,7 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
 
       await renderIncomeSheet({ recurringIncome: salary })
 
-      expect(shownCurrency(await findIncomeSheet(), 'MKD')).toBeTruthy()
+      expect(shownCurrency(await findIncomeEditSheet(), 'MKD')).toBeTruthy()
     })
 
     it('offers a red Stop 44 px tall and no Delete', async () => {
@@ -186,7 +222,7 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
     it('keeps the title, Save and Stop in view while the amount, chips and note scroll on a short window', async () => {
       const { sheet } = await openSalary()
 
-      expectTitleOutsideScrollingBody(sheet, translated('en', 'budget.income.title'))
+      expectTitleOutsideScrollingBody(sheet, translated('en', 'budget.income.editTitle'))
       expectSaveOutsideScrollingFields(sheet, amountField(), saveButton())
       expectSaveOutsideScrollingFields(sheet, amountField(), stopButton(sheet))
     })
@@ -289,7 +325,7 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
         recurringIncome: tutoringRecurringIncome,
         answers: { [recurringIncomePut(tutoringRecurringIncome.id)]: jsonAnswer(recurringIncomeAnswerRow(tutoringRecurringIncome)), [catchUpPost]: catchUpAnswer(0) },
       })
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       tapRepeats(sheet, 1)
       fireEvent.click(saveButton())
@@ -322,7 +358,7 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
         recurringIncome: tutoringRecurringIncome,
         answers: { [recurringIncomePut(tutoringRecurringIncome.id)]: jsonAnswer(recurringIncomeAnswerRow(tutoringRecurringIncome)), [catchUpPost]: catchUpAnswer(0) },
       })
-      const sheet = await findIncomeSheet()
+      const sheet = await findIncomeEditSheet()
 
       await chooseEnds(sheet, 'endsOptionNever')
       fireEvent.click(saveButton())
@@ -367,7 +403,7 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
         recurringIncome: oldIncome,
         answers: { [recurringIncomePut(salary.id)]: jsonAnswer(recurringIncomeAnswerRow(oldIncome)), [catchUpPost]: catchUpAnswer(0) },
       })
-      await findIncomeSheet()
+      await findIncomeEditSheet()
 
       typeAmount('32000')
       fireEvent.click(saveButton())
@@ -384,7 +420,7 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
           [catchUpPost]: catchUpAnswer(1),
         },
       })
-      await findIncomeSheet()
+      await findIncomeEditSheet()
 
       fireEvent.click(saveButton())
 
@@ -504,7 +540,7 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
     it.each(languages)('writes Stop in %s and shows no Delete', async (language) => {
       await renderIncomeSheet({ recurringIncome: salary, language, answers: saveAnswers })
 
-      const sheet = await findIncomeSheet(language)
+      const sheet = await findIncomeEditSheet(language)
 
       expect(stopButton(sheet, language)).toBeTruthy()
       expect(within(sheet).queryByRole('button', { name: translated(language, 'expense.delete') })).toBeNull()
@@ -525,7 +561,7 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
 
     it.each(languages)('shows a "Stopped" toast with Undo (%s)', async (language) => {
       await renderIncomeSheet({ recurringIncome: salary, language, answers: stopAnswers })
-      const sheet = await findIncomeSheet(language)
+      const sheet = await findIncomeEditSheet(language)
 
       fireEvent.click(stopButton(sheet, language))
 
