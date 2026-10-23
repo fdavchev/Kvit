@@ -30,7 +30,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
         [InlineData(100_000, "MKD", "Weekly", 15, 3, "2026-10-01", null, ResultCodes.RECURRING_INCOME_DAY_INVALID)]
         [InlineData(100_000, "MKD", "Weekly", 15, null, "2026-10-01", null, ResultCodes.RECURRING_INCOME_DAY_INVALID)]
         [InlineData(100_000, "MKD", "Monthly", 15, null, "2024-10-30", null, ResultCodes.RECURRING_INCOME_START_DATE_INVALID)]
-        [InlineData(100_000, "MKD", "Monthly", 15, null, "2027-10-06", null, ResultCodes.RECURRING_INCOME_START_DATE_INVALID)]
+        [InlineData(100_000, "MKD", "Monthly", 15, null, "2027-10-07", null, ResultCodes.RECURRING_INCOME_START_DATE_INVALID)]
         [InlineData(100_000, "MKD", "Monthly", 15, null, "2000-01-01", null, ResultCodes.RECURRING_INCOME_START_DATE_INVALID)]
         [InlineData(100_000, "MKD", "Monthly", 15, null, "bad", null, ResultCodes.RECURRING_INCOME_START_DATE_INVALID)]
         [InlineData(100_000, "MKD", "Monthly", 15, null, "2026-10-01T00:00:00", null, ResultCodes.RECURRING_INCOME_START_DATE_INVALID)]

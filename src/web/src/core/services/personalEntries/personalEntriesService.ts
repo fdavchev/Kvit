@@ -12,6 +12,7 @@ import {
   readList,
   readObject,
   readOneOf,
+  readOrNullWhenMissing,
   readPositiveNumber,
   readText,
   readTextOrNull,
@@ -35,6 +36,7 @@ export interface PersonalEntry {
   rateDate: string
   createdAt: string
   updatedAt: string | null
+  recurringIncomeId: string | null
 }
 
 export interface PersonalCategoryTotal {
@@ -125,6 +127,7 @@ function parseEntry(row: unknown): PersonalEntry {
     rateDate: readDate(fields, 'rateDate', what),
     createdAt: readDate(fields, 'createdAt', what),
     updatedAt: readDateOrNull(fields, 'updatedAt', what),
+    recurringIncomeId: readOrNullWhenMissing(fields, 'recurringIncomeId', what, readTextOrNull),
   }
 }
 

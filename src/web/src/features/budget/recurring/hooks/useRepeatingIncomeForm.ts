@@ -10,7 +10,7 @@ import { textOrNull } from '@/features/expenses/shared/expenseTitle'
 import { useSaveOnce } from '../../categories/hooks/useSaveOnce'
 import type { PersonalEntryFieldName, PersonalEntryFormState } from '../../entries/hooks/usePersonalEntryForm'
 import { refreshRecurringIncomes } from '../recurringIncomeCache'
-import { recurringDaysFromStart } from '../recurringIncomeRhythm'
+import { endAfterMonths, recurringDaysFromStart } from '../recurringIncomeRhythm'
 import { useCreateRecurringIncome, useEditRecurringIncome } from './useSaveRecurringIncome'
 import { recurringIncomeNotFoundCode, useStopRecurringIncome } from './useStopRecurringIncome'
 
@@ -23,9 +23,12 @@ export interface RepeatingIncomeFormState {
   form: PersonalEntryFormState
   cycleRepeat: () => void
   changeEndsOn: (endsOn: string | null) => void
+  changeEndsAfterMonths: (months: number) => void
   save: () => void
   stop: () => void
 }
+
+type IncomeEnd = { kind: 'afterMonths'; months: number } | { kind: 'onDate'; endsOn: string | null }
 
 const repeatAfter: Record<IncomeRepeat, IncomeRepeat> = { Never: 'Monthly', Monthly: 'Weekly', Weekly: 'Never' }
 const otherFrequency: Record<RecurringIncomeFrequency, RecurringIncomeFrequency> = { Monthly: 'Weekly', Weekly: 'Monthly' }
@@ -55,7 +58,8 @@ export function useRepeatingIncomeForm(
   const stopper = useStopRecurringIncome(oneAtATime)
   const [clientRequestId] = useState<string>(() => crypto.randomUUID())
   const [repeat, setRepeat] = useState<IncomeRepeat>(recurringIncome?.frequency ?? initialFrequency ?? 'Never')
-  const [endsOn, setEndsOn] = useState<string | null>(recurringIncome?.endsOn ?? null)
+  const [end, setEnd] = useState<IncomeEnd>({ kind: 'onDate', endsOn: recurringIncome?.endsOn ?? null })
+  const endsOn = end.kind === 'afterMonths' ? endAfterMonths(entryForm.entryDate, end.months) : end.endsOn
 
   const saveError = recurringIncome === undefined ? create.error : edit.error
   const shownError = saveError !== null && !hasErrorCode(saveError, recurringIncomeNotFoundCode) ? saveError : null
@@ -117,7 +121,11 @@ export function useRepeatingIncomeForm(
       )
     },
     changeEndsOn: (nextEndsOn) => {
-      setEndsOn(nextEndsOn)
+      setEnd({ kind: 'onDate', endsOn: nextEndsOn })
+      entryForm.markChanged('ends')
+    },
+    changeEndsAfterMonths: (months) => {
+      setEnd({ kind: 'afterMonths', months })
       entryForm.markChanged('ends')
     },
     save,

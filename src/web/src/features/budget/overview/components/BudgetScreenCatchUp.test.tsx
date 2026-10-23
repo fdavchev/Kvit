@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { languages } from '@/core/i18n/language'
 import type { PersonalEntryMonth } from '@/core/services/personalEntries/personalEntriesService'
 import { budgetNow, findEntryList, findTotalCard, monthButton, personalEntriesGet, renderBudget } from '@/test/budgetTestHelpers'
 import { isDisabled } from '@/test/expenseFormTestHelpers'
@@ -234,16 +235,28 @@ describe('BudgetScreen, the catch-up of repeating income', () => {
       expect(screen.queryByRole('alert')).toBeNull()
     })
 
-    it('logs the failure with console.error and shows no toast', async () => {
+    it.each(languages)('logs the failure with console.error and says so in an error toast (%s)', async (language) => {
       const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined)
-      await renderBudget({ answers: { [catchUpPost]: networkFailureAnswer() } })
-      await findTotalCard()
+      await renderBudget({ language, answers: { [catchUpPost]: networkFailureAnswer() } })
+      await findTotalCard(language)
 
       await waitFor(() => {
-        expect(logged).toHaveBeenCalled()
+        expect(vi.mocked(toast.error)).toHaveBeenCalledWith(translated(language, 'budget.recurring.catchUpFailed'))
       })
-      expect(vi.mocked(toast.error)).not.toHaveBeenCalled()
+      expect(logged).toHaveBeenCalled()
       expect(vi.mocked(toast)).not.toHaveBeenCalled()
+    })
+
+    it('shows the error toast once for one opening of the tab, even when React starts the screen twice', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => undefined)
+      await renderBudget({ isStrictMode: true, answers: { [catchUpPost]: networkFailureAnswer() } })
+      await findTotalCard()
+      await waitFor(() => {
+        expect(vi.mocked(toast.error)).toHaveBeenCalled()
+      })
+      await settle()
+
+      expect(vi.mocked(toast.error)).toHaveBeenCalledOnce()
     })
 
     it('does not ask for the month again after a failure', async () => {

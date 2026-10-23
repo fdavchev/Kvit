@@ -491,9 +491,9 @@ describe('PersonalIncomeSheet, the Repeats chip', () => {
     })
 
     it.each([
-      ['endsIn3Months', '20 Jan 2027'],
-      ['endsIn6Months', '20 Apr 2027'],
-      ['endsIn1Year', '20 Oct 2027'],
+      ['endsIn3Months', '19 Jan 2027'],
+      ['endsIn6Months', '19 Apr 2027'],
+      ['endsIn1Year', '19 Oct 2027'],
     ] as const)('closes after %s and the chip shows the date %s', async (key, day) => {
       await renderIncomeSheet()
       const sheet = await findIncomeSheet()
@@ -540,7 +540,7 @@ describe('PersonalIncomeSheet, the Repeats chip', () => {
       await waitFor(() => {
         expect(screen.queryByRole('dialog', { name: translated('en', 'budget.income.endsTitle') })).toBeNull()
       })
-      expect(endsChip(sheet, '20 Jan 2027')).toBeTruthy()
+      expect(endsChip(sheet, '19 Jan 2027')).toBeTruthy()
     })
 
     it('leaves the end as it was when the backdrop is tapped', async () => {
@@ -558,13 +558,13 @@ describe('PersonalIncomeSheet, the Repeats chip', () => {
     })
 
     it.each([
-      ['2026-12-05', 'endsIn3Months', '5 Mar 2027'],
-      ['2026-12-05', 'endsIn6Months', '5 Jun 2027'],
-      ['2026-12-05', 'endsIn1Year', '5 Dec 2027'],
-      ['2026-08-31', 'endsIn3Months', '30 Nov'],
-      ['2026-08-31', 'endsIn6Months', '28 Feb 2027'],
-      ['2026-08-31', 'endsIn1Year', '31 Aug 2027'],
-    ] as const)('counts from the start %s: %s gives %s', async (start, key, day) => {
+      ['2026-12-05', 'endsIn3Months', '4 Mar 2027'],
+      ['2026-12-05', 'endsIn6Months', '4 Jun 2027'],
+      ['2026-12-05', 'endsIn1Year', '4 Dec 2027'],
+      ['2026-08-31', 'endsIn3Months', '29 Nov'],
+      ['2026-08-31', 'endsIn6Months', '27 Feb 2027'],
+      ['2026-08-31', 'endsIn1Year', '30 Aug 2027'],
+    ] as const)('counts from the start %s: %s gives %s, the day before the payment after the last one', async (start, key, day) => {
       await renderIncomeSheet()
       const sheet = await findIncomeSheet()
       tapRepeats(sheet, 1)
@@ -573,6 +573,48 @@ describe('PersonalIncomeSheet, the Repeats chip', () => {
       await chooseEnds(sheet, key)
 
       expect(endsChip(sheet, day)).toBeTruthy()
+    })
+
+    it('moves the end with the start when the start changes after "In 3 months" was chosen', async () => {
+      await renderIncomeSheet()
+      const sheet = await findIncomeSheet()
+      tapRepeats(sheet, 1)
+      await chooseEnds(sheet, 'endsIn3Months')
+
+      await pickStartDate(sheet, '2026-12-05')
+
+      expect(endsChip(sheet, '4 Mar 2027')).toBeTruthy()
+    })
+
+    it('still marks "In 3 months" as the chosen option after the start changed', async () => {
+      await renderIncomeSheet()
+      const sheet = await findIncomeSheet()
+      tapRepeats(sheet, 1)
+      await chooseEnds(sheet, 'endsIn3Months')
+      await pickStartDate(sheet, '2026-12-05')
+
+      const box = await openEndsBox(sheet)
+
+      expect(endsOption(box, 'endsIn3Months').getAttribute('aria-pressed')).toBe('true')
+      expect(endsOption(box, 'endsPickDate').getAttribute('aria-pressed')).not.toBe('true')
+    })
+
+    it('keeps a date chosen with "Pick a date…" when the start changes', async () => {
+      await renderIncomeSheet()
+      const sheet = await findIncomeSheet()
+      tapRepeats(sheet, 1)
+      const box = await openEndsBox(sheet)
+      fireEvent.click(endsOption(box, 'endsPickDate'))
+      const dateSheet = await findDateSheet()
+      typeDate(dateSheet, '2027-02-10')
+      fireEvent.click(doneButton(dateSheet))
+      await waitFor(() => {
+        expect(screen.getAllByRole('dialog')).toHaveLength(1)
+      })
+
+      await pickStartDate(sheet, '2026-12-05')
+
+      expect(endsChip(sheet, '10 Feb 2027')).toBeTruthy()
     })
   })
 

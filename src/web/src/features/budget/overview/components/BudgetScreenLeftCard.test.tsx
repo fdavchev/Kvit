@@ -56,6 +56,10 @@ vi.mock('sonner', async () => (await import('@/test/sonnerMock')).sonnerMock)
 const bigLook = 'text-[2.25rem]'
 const smallLook = 'text-lg'
 
+function lengthOf(element: HTMLElement): string | undefined {
+  return element.style.getPropertyValue('--amount-length') || undefined
+}
+
 describe('BudgetScreen, the "Left this month" card', () => {
   beforeEach(() => {
     window.localStorage.clear()
@@ -190,6 +194,33 @@ describe('BudgetScreen, the "Left this month" card', () => {
       expect(classesOf(euroLine)).not.toContain(bigLook)
       expect(amountElements(card, leftAttribute)).toHaveLength(1)
       expect(amountElements(card, incomeAttribute)).toHaveLength(1)
+    })
+
+    it('keeps the amount of the Spent line whole, shrunk to fit the card, so it never breaks inside its label', async () => {
+      await renderBudget({ months: [octoberWithLongAmounts] })
+
+      const card = await findLeftCard()
+      const lines = amountElements(card, spentAttribute)
+
+      expect(lines).toHaveLength(2)
+      for (const line of lines) {
+        const fitted = line.querySelector<HTMLElement>('.fit-amount')
+        expect(classesOf(line)).toContain('@container')
+        expect(classesOf(line)).not.toContain('break-words')
+        expect(lengthOf(fitted ?? line)).toBe(String(readableText(line).length))
+      }
+    })
+
+    it('keeps the amount of a plain Spent line in one unbroken look, shrunk to fit, for a currency with no income', async () => {
+      await renderBudget({ months: [octoberIncomeAndTwoSpendings] })
+
+      const card = await findLeftCard()
+      const euroLine = amountAt(card, spentAttribute, 1)
+      const fitted = euroLine.querySelector<HTMLElement>('.fit-amount')
+
+      expect(classesOf(euroLine)).toContain('@container')
+      expect(classesOf(euroLine)).not.toContain('break-words')
+      expect(lengthOf(fitted ?? euroLine)).toBe(String(money(5000, 'EUR').length))
     })
 
     it('puts the Spent line after the last block, and labels it with the word Spent', async () => {
@@ -353,10 +384,6 @@ describe('BudgetScreen, the "Left this month" card', () => {
   })
 
   describe('long amounts', () => {
-    function lengthOf(element: HTMLElement): string | undefined {
-      return element.style.getPropertyValue('--amount-length') || undefined
-    }
-
     it.each(languages)('keeps the Income and Spent amounts whole on one line, shrunk to fit their column (%s)', async (language) => {
       await renderBudget({ language, months: [octoberWithLongAmounts] })
 
@@ -365,10 +392,11 @@ describe('BudgetScreen, the "Left this month" card', () => {
 
       expect(columnAmounts).toHaveLength(4)
       for (const amount of columnAmounts) {
-        expect(classesOf(amount)).toContain('fit-amount')
+        const fitted = amount.querySelector<HTMLElement>('.fit-amount')
+        expect(classesOf(amount)).toContain('@container')
         expect(classesOf(amount)).not.toContain('break-words')
-        expect(classesOf(amount.parentElement ?? amount)).toContain('@container')
-        expect(lengthOf(amount)).toBe(String(amount.textContent?.length))
+        expect(fitted).not.toBeNull()
+        expect(lengthOf(fitted ?? amount)).toBe(String(amount.textContent?.length))
       }
       expect(amountTexts(card, incomeAttribute)).toEqual([incomeMoney(999999999900, 'MKD', language), incomeMoney(99999999999, 'EUR', language)])
     })

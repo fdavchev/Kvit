@@ -119,7 +119,8 @@ namespace Kvit.Api.Tests.RecurringIncomes
         [InlineData("2024-10-31")]
         [InlineData("2026-10-05")]
         [InlineData("2027-10-05")]
-        public async Task Create_StartOnTheEdgesOfTheWindowUpToOneYearAhead_Answers200(string startsOn)
+        [InlineData("2027-10-06")]
+        public async Task Create_StartOnTheEdgesOfTheWindowUpToOneYearAndOneDayAhead_Answers200(string startsOn)
         {
             SignedInUser user = await _app.SignUpAsync();
 

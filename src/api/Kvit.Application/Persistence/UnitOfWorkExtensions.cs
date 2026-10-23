@@ -22,30 +22,16 @@ namespace Kvit.Application.Persistence
             return result;
         }
 
-        public static async Task<TResult> RunInTransactionOnceMoreIfClientRequestIdWasTakenAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
+        public static Task<TResult> RunInTransactionOnceMoreIfClientRequestIdWasTakenAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
             where TResult : Result
         {
-            try
-            {
-                return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
-            }
-            catch (ClientRequestIdAlreadySavedException)
-            {
-                return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
-            }
+            return unitOfWork.RunInTransactionOnceMoreIfAsync<ClientRequestIdAlreadySavedException, TResult>(work, cancellationToken);
         }
 
-        public static async Task<TResult> RunInTransactionOnceMoreIfRecurringIncomeEntryWasSavedAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
+        public static Task<TResult> RunInTransactionOnceMoreIfRecurringIncomeEntryWasSavedAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
             where TResult : Result
         {
-            try
-            {
-                return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
-            }
-            catch (RecurringIncomeEntryAlreadySavedException)
-            {
-                return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
-            }
+            return unitOfWork.RunInTransactionOnceMoreIfAsync<RecurringIncomeEntryAlreadySavedException, TResult>(work, cancellationToken);
         }
 
         public static async Task<TResult> RunInTransactionOrRefuseIfCategoryNameWasTakenAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, Func<Result, TResult> refusal, CancellationToken cancellationToken)
@@ -61,14 +47,21 @@ namespace Kvit.Application.Persistence
             }
         }
 
-        public static async Task<TResult> RunInTransactionOnceMoreIfMemberChangedMeanwhileAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
+        public static Task<TResult> RunInTransactionOnceMoreIfMemberChangedMeanwhileAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
+            where TResult : Result
+        {
+            return unitOfWork.RunInTransactionOnceMoreIfAsync<MemberChangedMeanwhileException, TResult>(work, cancellationToken);
+        }
+
+        private static async Task<TResult> RunInTransactionOnceMoreIfAsync<TException, TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
+            where TException : Exception
             where TResult : Result
         {
             try
             {
                 return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
             }
-            catch (MemberChangedMeanwhileException)
+            catch (TException)
             {
                 return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
             }

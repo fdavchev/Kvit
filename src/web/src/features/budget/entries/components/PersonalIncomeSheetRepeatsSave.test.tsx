@@ -217,9 +217,9 @@ describe('PersonalIncomeSheet, saving a repeating income', () => {
     })
 
     it.each([
-      ['endsIn3Months', '2027-01-20'],
-      ['endsIn6Months', '2027-04-20'],
-      ['endsIn1Year', '2027-10-20'],
+      ['endsIn3Months', '2027-01-19'],
+      ['endsIn6Months', '2027-04-19'],
+      ['endsIn1Year', '2027-10-19'],
     ] as const)('sends the end %s as %s', async (key, endsOn) => {
       const { fetchMock, sheet } = await openRepeatingSheet(1)
       typeAmount('65000')
@@ -377,6 +377,34 @@ describe('PersonalIncomeSheet, saving a repeating income', () => {
       expect(isEntriesCacheRefreshed(queryClient)).toBe(true)
       expect(screen.queryByRole('alert')).toBeNull()
       expect(logged).toHaveBeenCalled()
+    })
+
+    it('says Saved first and then shows an error toast when the catch-up fails after the income was saved', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => undefined)
+      const { onClose } = await openRepeatingSheet(1, { ...createdAnswers, [catchUpPost]: networkFailureAnswer() })
+      typeAmount('65000')
+
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(vi.mocked(toast.error)).toHaveBeenCalledWith(translated('en', 'budget.recurring.catchUpFailed'))
+      })
+      expect(onClose).toHaveBeenCalledOnce()
+      expect(vi.mocked(toast.error)).toHaveBeenCalledOnce()
+      expect(vi.mocked(toast.success).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(toast.error).mock.invocationCallOrder[0])
+    })
+
+    it('shows no error toast when the catch-up works', async () => {
+      const { onClose } = await openRepeatingSheet(1)
+      typeAmount('65000')
+
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(onClose).toHaveBeenCalledOnce()
+      })
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      expect(vi.mocked(toast.error)).not.toHaveBeenCalled()
     })
 
     it('keeps Save disabled until the amount is a positive amount', async () => {

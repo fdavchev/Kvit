@@ -14,12 +14,18 @@ interface RecurringIncomeListSheetProps {
   onClose: (editedIncome: RecurringIncome | null) => void
 }
 
+function isStillRunning(income: RecurringIncome, today: string): boolean {
+  return income.endsOn === null || income.endsOn >= today
+}
+
 export function RecurringIncomeListSheet({ incomes, today, onClose }: RecurringIncomeListSheetProps) {
   const { t } = useTranslation()
   const sheet = useKvitSheet()
   const oneAtATime = useSaveOnce()
   const stopper = useStopRecurringIncome(oneAtATime)
   const [editedIncome, setEditedIncome] = useState<RecurringIncome | null>(null)
+  const [incomesWhileClosing, setIncomesWhileClosing] = useState<readonly RecurringIncome[] | null>(null)
+  const shownIncomes = incomesWhileClosing ?? incomes
 
   function edit(income: RecurringIncome): void {
     if (editedIncome !== null) {
@@ -29,6 +35,18 @@ export function RecurringIncomeListSheet({ incomes, today, onClose }: RecurringI
     sheet.close()
   }
 
+  function stop(income: RecurringIncome): void {
+    const isLastRunning = !incomes.some((other) => other.id !== income.id && isStillRunning(other, today))
+    if (!isLastRunning) {
+      stopper.stop(income.id)
+      return
+    }
+    stopper.stop(income.id, () => {
+      setIncomesWhileClosing(incomes)
+      sheet.close()
+    })
+  }
+
   return (
     <KvitSheet
       title={t('budget.recurring.title')}
@@ -36,15 +54,15 @@ export function RecurringIncomeListSheet({ incomes, today, onClose }: RecurringI
       actionsRef={sheet.actionsRef}
       returnsFocusOnClose={() => editedIncome === null}
     >
-      {incomes.length === 0 ? (
+      {shownIncomes.length === 0 ? (
         <KvitEmpty message={t('budget.recurring.empty')} />
       ) : (
         <RecurringIncomeList
-          incomes={incomes}
+          incomes={shownIncomes}
           today={today}
           isStopping={stopper.isStopping}
           onEdit={edit}
-          onStop={(income) => stopper.stop(income.id, incomes.length === 1 ? sheet.close : undefined)}
+          onStop={stop}
         />
       )}
     </KvitSheet>

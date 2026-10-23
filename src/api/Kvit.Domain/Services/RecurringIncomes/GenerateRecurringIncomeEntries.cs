@@ -17,7 +17,7 @@ namespace Kvit.Domain.Services.RecurringIncomes
         {
             DateTimeOffset now = _timeProvider.GetUtcNow();
             DateOnly today = UserLocalDate.Today(now, timeZoneId);
-            DateOnly oldestAllowedDate = IncomeFields.FirstDayOfOldestMonth(today);
+            DateOnly oldestAllowedDate = EntryAmountDateAndNote.FirstDayOfOldestMonth(today);
             IReadOnlyList<RecurringIncome> incomes = await _incomes.ListActiveOfAsync(userId, cancellationToken);
             IReadOnlyDictionary<Guid, DateOnly> lastDates = await _entries.LastDatesFromRecurringIncomesOfAsync(userId, cancellationToken);
 

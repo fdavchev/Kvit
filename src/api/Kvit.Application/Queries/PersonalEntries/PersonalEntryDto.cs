@@ -13,6 +13,7 @@ namespace Kvit.Application.Queries.PersonalEntries
         string? Note,
         decimal MkdPerEur,
         DateOnly RateDate,
+        Guid? RecurringIncomeId,
         DateTimeOffset CreatedAt,
         DateTimeOffset? UpdatedAt);
 }

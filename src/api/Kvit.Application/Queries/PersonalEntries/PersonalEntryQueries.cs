@@ -32,6 +32,7 @@ namespace Kvit.Application.Queries.PersonalEntries
                     entry.Note,
                     entry.MkdPerEur,
                     entry.RateDate,
+                    entry.RecurringIncomeId,
                     entry.CreatedAt,
                     entry.UpdatedAt));
         }
@@ -60,6 +61,7 @@ namespace Kvit.Application.Queries.PersonalEntries
                 entry.Note,
                 entry.MkdPerEur,
                 entry.RateDate,
+                entry.RecurringIncomeId,
                 entry.CreatedAt,
                 entry.UpdatedAt);
         }

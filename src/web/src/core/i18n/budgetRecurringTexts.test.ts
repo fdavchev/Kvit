@@ -32,6 +32,8 @@ const incomeSheetTexts: RecurringText[] = [
   text('budget.income.endsPickDate', 'Pick a date…'),
   text('budget.income.startDateHint', 'Pick a start date from the last 24 months, up to one year ahead.'),
   text('budget.income.endDateHint', 'Pick an end date from the start, up to 10 years later.'),
+  text('budget.income.startLockedReason', "The start date can't change once entries exist."),
+  text('budget.income.dateLockedReason', 'This date comes from a repeating income.'),
 ]
 
 const weekdayTexts: RecurringText[] = [
@@ -58,6 +60,7 @@ const listTexts: RecurringText[] = [
   text('budget.recurring.stopped', 'Stopped'),
   text('budget.recurring.empty', 'No repeating income yet'),
   text('budget.recurring.newButton', '+ New repeating income'),
+  text('budget.recurring.catchUpFailed', "Couldn't update repeating income. Try again later."),
   ...weekdayTexts,
 ]
 

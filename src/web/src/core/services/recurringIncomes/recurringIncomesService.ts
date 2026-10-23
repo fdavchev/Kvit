@@ -9,6 +9,7 @@ import {
   readList,
   readObject,
   readOneOf,
+  readOrNullWhenMissing,
   readText,
   readTextOrNull,
   readYesNo,
@@ -37,7 +38,7 @@ export interface RecurringIncome extends RecurringIncomeFields {
   id: string
   createdAt: string
   nextDate: string | null
-  hasEntries: boolean
+  hasEntries: boolean | null
 }
 
 interface RecurringIncomeDays {
@@ -96,7 +97,7 @@ function parseRecurringIncome(row: unknown): RecurringIncome {
     endsOn: readDateOrNull(fields, 'endsOn', what),
     createdAt: readDate(fields, 'createdAt', what),
     nextDate: readDateOrNull(fields, 'nextDate', what),
-    hasEntries: readYesNo(fields, 'hasEntries', what),
+    hasEntries: readOrNullWhenMissing(fields, 'hasEntries', what, readYesNo),
   }
 }
 

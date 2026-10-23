@@ -14,9 +14,38 @@ namespace Kvit.Domain.Services.PersonalEntries
         GetCurrentExchangeRate _getCurrentExchangeRate,
         TimeProvider _timeProvider)
     {
-        public async Task<Result> Execute(Guid userId, Guid entryId, PersonalEntryInput input, CancellationToken cancellationToken)
+        public Task<Result> Execute(Guid userId, Guid entryId, PersonalEntryInput input, CancellationToken cancellationToken)
         {
-            Result<PersonalEntry> found = await FindOwnedOfKindAsync(userId, entryId, PersonalEntryKind.Spending, cancellationToken);
+            return EditAsync(
+                userId,
+                entryId,
+                PersonalEntryKind.Spending,
+                (entry, utcToday) => CheckSpendingAsync(userId, entry, input, utcToday, cancellationToken),
+                (entry, fields, now) => entry.Update(fields, now),
+                cancellationToken);
+        }
+
+        public Task<Result> Execute(Guid userId, Guid entryId, IncomeInput input, CancellationToken cancellationToken)
+        {
+            return EditAsync(
+                userId,
+                entryId,
+                PersonalEntryKind.Income,
+                (entry, utcToday) => Task.FromResult(IncomeFields.CreateForEdit(input, utcToday, entry.EntryDate)),
+                (entry, fields, now) => entry.Update(fields, now),
+                cancellationToken);
+        }
+
+        private async Task<Result> EditAsync<TFields>(
+            Guid userId,
+            Guid entryId,
+            PersonalEntryKind kind,
+            Func<PersonalEntry, DateOnly, Task<Result<TFields>>> checkFields,
+            Action<PersonalEntry, TFields, DateTimeOffset> update,
+            CancellationToken cancellationToken)
+            where TFields : EntryAmountDateAndNote
+        {
+            Result<PersonalEntry> found = await FindOwnedOfKindAsync(userId, entryId, kind, cancellationToken);
             if (!found.IsSuccess)
             {
                 return found;
@@ -24,7 +53,32 @@ namespace Kvit.Domain.Services.PersonalEntries
 
             PersonalEntry entry = found.Value;
             DateTimeOffset now = _timeProvider.GetUtcNow();
-            Result<PersonalEntryFields> fields = PersonalEntryFields.CreateForEdit(input, DateOnly.FromDateTime(now.UtcDateTime), entry.EntryDate);
+            Result<TFields> fields = await checkFields(entry, DateOnly.FromDateTime(now.UtcDateTime));
+            if (!fields.IsSuccess)
+            {
+                return fields;
+            }
+
+            Result dateCanChange = entry.CheckDateCanChangeTo(fields.Value.EntryDate);
+            if (!dateCanChange.IsSuccess)
+            {
+                return dateCanChange;
+            }
+
+            Result rate = await SaveCurrentRateIfTheCurrencyChangesAsync(entry, fields.Value.Amount.Currency, cancellationToken);
+            if (!rate.IsSuccess)
+            {
+                return rate;
+            }
+
+            update(entry, fields.Value, now);
+
+            return Result.Ok();
+        }
+
+        private async Task<Result<PersonalEntryFields>> CheckSpendingAsync(Guid userId, PersonalEntry entry, PersonalEntryInput input, DateOnly utcToday, CancellationToken cancellationToken)
+        {
+            Result<PersonalEntryFields> fields = PersonalEntryFields.CreateForEdit(input, utcToday, entry.EntryDate);
             if (!fields.IsSuccess)
             {
                 return fields;
@@ -35,46 +89,11 @@ namespace Kvit.Domain.Services.PersonalEntries
                 Result category = await _categories.CheckPersonalEntryCategoryAsync(userId, fields.Value.CategoryId, cancellationToken);
                 if (!category.IsSuccess)
                 {
-                    return category;
+                    return category.ToFailure<PersonalEntryFields>();
                 }
             }
 
-            Result rate = await SaveCurrentRateIfTheCurrencyChangesAsync(entry, fields.Value.Amount.Currency, cancellationToken);
-            if (!rate.IsSuccess)
-            {
-                return rate;
-            }
-
-            entry.Update(fields.Value, now);
-
-            return Result.Ok();
-        }
-
-        public async Task<Result> Execute(Guid userId, Guid entryId, IncomeInput input, CancellationToken cancellationToken)
-        {
-            Result<PersonalEntry> found = await FindOwnedOfKindAsync(userId, entryId, PersonalEntryKind.Income, cancellationToken);
-            if (!found.IsSuccess)
-            {
-                return found;
-            }
-
-            PersonalEntry entry = found.Value;
-            DateTimeOffset now = _timeProvider.GetUtcNow();
-            Result<IncomeFields> fields = IncomeFields.CreateForEdit(input, DateOnly.FromDateTime(now.UtcDateTime), entry.EntryDate);
-            if (!fields.IsSuccess)
-            {
-                return fields;
-            }
-
-            Result rate = await SaveCurrentRateIfTheCurrencyChangesAsync(entry, fields.Value.Amount.Currency, cancellationToken);
-            if (!rate.IsSuccess)
-            {
-                return rate;
-            }
-
-            entry.Update(fields.Value, now);
-
-            return Result.Ok();
+            return fields;
         }
 
         private async Task<Result<PersonalEntry>> FindOwnedOfKindAsync(Guid userId, Guid entryId, PersonalEntryKind kind, CancellationToken cancellationToken)

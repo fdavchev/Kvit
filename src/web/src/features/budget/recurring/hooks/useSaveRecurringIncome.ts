@@ -1,32 +1,47 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import {
   createRecurringIncome,
   editRecurringIncome,
   type NewRecurringIncome,
-  type RecurringIncome,
   type RecurringIncomeFields,
 } from '@/core/services/recurringIncomes/recurringIncomesService'
 import type { SaveOnce } from '../../categories/hooks/useSaveOnce'
 import type { PersonalEntryRun } from '../../entries/hooks/useAddPersonalEntry'
-import { catchUpAfterChange } from '../recurringIncomeCache'
+import { catchUpAfterChange, catchUpFailedMessageKey } from '../recurringIncomeCache'
 
 export interface RecurringIncomeEdit {
   recurringIncomeId: string
   fields: RecurringIncomeFields
 }
 
-export function useCreateRecurringIncome(oneAtATime: SaveOnce): PersonalEntryRun<NewRecurringIncome> {
+function useSaveThenCatchUp<Input>(
+  save: (input: Input) => Promise<unknown>,
+  oneAtATime: SaveOnce,
+): PersonalEntryRun<Input> {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const mutation = useMutation<RecurringIncome, Error, NewRecurringIncome>({
-    mutationFn: createRecurringIncome,
-    onSuccess: () => catchUpAfterChange(queryClient),
+  const mutation = useMutation<boolean, Error, Input>({
+    mutationFn: async (input) => {
+      await save(input)
+      return catchUpAfterChange(queryClient)
+    },
     onSettled: oneAtATime.finish,
   })
 
   return {
-    run: (income, onDone, onRefused) => {
+    run: (input, onDone, onRefused) => {
       if (oneAtATime.tryStart()) {
-        mutation.mutate(income, { onSuccess: onDone, onError: onRefused })
+        mutation.mutate(input, {
+          onSuccess: (isCaughtUp) => {
+            onDone()
+            if (!isCaughtUp) {
+              toast.error(t(catchUpFailedMessageKey))
+            }
+          },
+          onError: onRefused,
+        })
       }
     },
     isPending: mutation.isPending,
@@ -34,21 +49,13 @@ export function useCreateRecurringIncome(oneAtATime: SaveOnce): PersonalEntryRun
   }
 }
 
-export function useEditRecurringIncome(oneAtATime: SaveOnce): PersonalEntryRun<RecurringIncomeEdit> {
-  const queryClient = useQueryClient()
-  const mutation = useMutation<RecurringIncome, Error, RecurringIncomeEdit>({
-    mutationFn: ({ recurringIncomeId, fields }) => editRecurringIncome(recurringIncomeId, fields),
-    onSuccess: () => catchUpAfterChange(queryClient),
-    onSettled: oneAtATime.finish,
-  })
+export function useCreateRecurringIncome(oneAtATime: SaveOnce): PersonalEntryRun<NewRecurringIncome> {
+  return useSaveThenCatchUp(createRecurringIncome, oneAtATime)
+}
 
-  return {
-    run: (edit, onDone, onRefused) => {
-      if (oneAtATime.tryStart()) {
-        mutation.mutate(edit, { onSuccess: onDone, onError: onRefused })
-      }
-    },
-    isPending: mutation.isPending,
-    error: mutation.error,
-  }
+export function useEditRecurringIncome(oneAtATime: SaveOnce): PersonalEntryRun<RecurringIncomeEdit> {
+  return useSaveThenCatchUp(
+    ({ recurringIncomeId, fields }: RecurringIncomeEdit) => editRecurringIncome(recurringIncomeId, fields),
+    oneAtATime,
+  )
 }

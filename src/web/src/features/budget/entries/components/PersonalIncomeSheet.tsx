@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '@/core/i18n/useLanguage'
@@ -35,6 +36,20 @@ function startOf(recurringIncome: RecurringIncome | undefined): PersonalEntrySta
   return { amountMinor, currency, entryDate: startsOn, note: title }
 }
 
+function dateLockReasonOf(
+  entry: PersonalEntry | undefined,
+  recurringIncome: RecurringIncome | undefined,
+  t: TFunction,
+): string | undefined {
+  if (entry !== undefined && entry.recurringIncomeId !== null) {
+    return t('budget.income.dateLockedReason')
+  }
+  if (recurringIncome?.hasEntries === true) {
+    return t('budget.income.startLockedReason')
+  }
+  return undefined
+}
+
 export function PersonalIncomeSheet({ entry, recurringIncome, initialFrequency, opener, onClose }: PersonalIncomeSheetProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
@@ -49,8 +64,11 @@ export function PersonalIncomeSheet({ entry, recurringIncome, initialFrequency, 
 
   function closeEnds(choice: EndsChoice | null): void {
     setIsEndsOpen(false)
-    if (choice?.kind === 'end') {
-      repeating.changeEndsOn(choice.endsOn)
+    if (choice?.kind === 'never') {
+      repeating.changeEndsOn(null)
+    }
+    if (choice?.kind === 'afterMonths') {
+      repeating.changeEndsAfterMonths(choice.months)
     }
     if (choice?.kind === 'pickDate') {
       setIsEndDateOpen(true)
@@ -104,7 +122,7 @@ export function PersonalIncomeSheet({ entry, recurringIncome, initialFrequency, 
             </KvitButton>
           )
         }
-        isDateLocked={recurringIncome?.hasEntries === true}
+        dateLockReason={dateLockReasonOf(entry, recurringIncome, t)}
         dateChipText={frequency === null ? undefined : (dayText) => t('budget.income.startsOn', { day: dayText })}
         dateWindow={
           frequency === null

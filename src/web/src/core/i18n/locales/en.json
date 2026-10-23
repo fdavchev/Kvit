@@ -121,6 +121,7 @@
     "PERSONAL_ENTRY_NOTE_INVALID": "The note can have up to 500 characters.",
     "PERSONAL_ENTRY_INCOME_HAS_CATEGORY": "Income has no category.",
     "PERSONAL_ENTRY_KIND_CANNOT_CHANGE": "An entry cannot change between spending and income.",
+    "PERSONAL_ENTRY_DATE_LOCKED": "The date of an entry from a repeating income can't change.",
     "RECURRING_INCOME_NOT_FOUND": "This repeating income doesn't exist or was stopped.",
     "RECURRING_INCOME_CURRENCY_INVALID": "Pick MKD or EUR.",
     "RECURRING_INCOME_AMOUNT_NOT_POSITIVE": "The amount must be more than 0.",
@@ -568,7 +569,9 @@
       "endsIn1Year": "In 1 year",
       "endsPickDate": "Pick a date…",
       "startDateHint": "Pick a start date from the last 24 months, up to one year ahead.",
-      "endDateHint": "Pick an end date from the start, up to 10 years later."
+      "endDateHint": "Pick an end date from the start, up to 10 years later.",
+      "startLockedReason": "The start date can't change once entries exist.",
+      "dateLockedReason": "This date comes from a repeating income."
     },
     "recurring": {
       "title": "Repeating income",
@@ -584,6 +587,7 @@
       "stopped": "Stopped",
       "empty": "No repeating income yet",
       "newButton": "+ New repeating income",
+      "catchUpFailed": "Couldn't update repeating income. Try again later.",
       "weekdays": {
         "sunday": "Sunday",
         "monday": "Monday",

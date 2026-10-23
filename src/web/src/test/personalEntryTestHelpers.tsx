@@ -157,6 +157,11 @@ export function categoryChip(sheet: HTMLElement, language: Language = 'en'): HTM
   return within(sheet).getByRole('button', { name: translated(language, 'expense.category') })
 }
 
+export function describedText(element: HTMLElement): string {
+  const ids = (element.getAttribute('aria-describedby') ?? '').split(/\s+/).filter((id) => id !== '')
+  return ids.map((id) => document.getElementById(id)?.textContent ?? '').join(' ')
+}
+
 export function deleteButton(sheet: HTMLElement, language: Language = 'en'): HTMLElement {
   return within(sheet).getByRole('button', { name: translated(language, 'expense.delete') })
 }

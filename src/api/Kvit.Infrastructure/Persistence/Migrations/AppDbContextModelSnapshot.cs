@@ -688,6 +688,12 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_personal_entries_currency", "currency IN ('MKD', 'EUR')");
 
+                            t.HasCheckConstraint("ck_personal_entries_generated_is_income", "recurring_income_id IS NULL OR kind = 'Income'");
+
+                            t.HasCheckConstraint("ck_personal_entries_has_origin", "client_request_id IS NOT NULL OR recurring_income_id IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_personal_entries_income_has_no_category", "kind <> 'Income' OR category_id IS NULL");
+
                             t.HasCheckConstraint("ck_personal_entries_kind", "kind IN ('Spending', 'Income')");
 
                             t.HasCheckConstraint("ck_personal_entries_mkd_per_eur_positive", "mkd_per_eur > 0");

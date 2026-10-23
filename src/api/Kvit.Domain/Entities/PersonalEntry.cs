@@ -1,3 +1,4 @@
+using System.Globalization;
 using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
@@ -51,7 +52,7 @@ namespace Kvit.Domain.Entities
         public static PersonalEntry CreateIncome(Guid userId, IncomeFields fields, ExchangeRateSnapshot rate, Guid clientRequestId, DateTimeOffset createdAt)
         {
             PersonalEntry entry = New(userId, PersonalEntryKind.Income, rate, clientRequestId, createdAt);
-            entry.ApplyFields(fields);
+            entry.ApplyAmountDateAndNote(fields);
 
             return entry;
         }
@@ -114,6 +115,16 @@ namespace Kvit.Domain.Entities
             return Result.Ok();
         }
 
+        public Result CheckDateCanChangeTo(DateOnly entryDate)
+        {
+            if (RecurringIncomeId is Guid recurringIncomeId && entryDate != EntryDate)
+            {
+                return Result.Failure($"Personal entry {Id} was created by repeating income {recurringIncomeId}, so its date {EntryDate.ToString(ExpenseFields.DateFormat, CultureInfo.InvariantCulture)} cannot change to {entryDate.ToString(ExpenseFields.DateFormat, CultureInfo.InvariantCulture)}.", ResultCodes.PERSONAL_ENTRY_DATE_LOCKED);
+            }
+
+            return Result.Ok();
+        }
+
         public void Update(PersonalEntryFields fields, DateTimeOffset updatedAt)
         {
             ThrowUnlessKindIs(PersonalEntryKind.Spending);
@@ -124,7 +135,7 @@ namespace Kvit.Domain.Entities
         public void Update(IncomeFields fields, DateTimeOffset updatedAt)
         {
             ThrowUnlessKindIs(PersonalEntryKind.Income);
-            ApplyFields(fields);
+            ApplyAmountDateAndNote(fields);
             UpdatedAt = updatedAt;
         }
 
@@ -182,20 +193,15 @@ namespace Kvit.Domain.Entities
         private void ApplyFields(PersonalEntryFields fields)
         {
             CategoryId = fields.CategoryId;
-            ApplyAmountDateAndNote(fields.Amount, fields.EntryDate, fields.Note);
+            ApplyAmountDateAndNote(fields);
         }
 
-        private void ApplyFields(IncomeFields fields)
+        private void ApplyAmountDateAndNote(EntryAmountDateAndNote fields)
         {
-            ApplyAmountDateAndNote(fields.Amount, fields.EntryDate, fields.Note);
-        }
-
-        private void ApplyAmountDateAndNote(Money amount, DateOnly entryDate, string? note)
-        {
-            AmountMinor = amount.MinorUnits;
-            Currency = amount.Currency;
-            EntryDate = entryDate;
-            Note = note;
+            AmountMinor = fields.Amount.MinorUnits;
+            Currency = fields.Amount.Currency;
+            EntryDate = fields.EntryDate;
+            Note = fields.Note;
         }
     }
 }

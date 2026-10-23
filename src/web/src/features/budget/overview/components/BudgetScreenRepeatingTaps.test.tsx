@@ -117,7 +117,7 @@ describe('BudgetScreen, tap counts of repeating income, counted from the open "W
       expect(requestsOf(fetchMock, 'POST', createUrl)).toHaveLength(1)
     })
     expect(taps).toBe(5)
-    expect(sentBody(fetchMock, 'POST', createUrl)).toMatchObject({ frequency: 'Monthly', endsOn: '2027-04-19' })
+    expect(sentBody(fetchMock, 'POST', createUrl)).toMatchObject({ frequency: 'Monthly', endsOn: '2027-04-18' })
   })
 
   it('still adds income once in 2 taps and 1 field, Income and Save, with the chip left on Never and no repeating call', async () => {

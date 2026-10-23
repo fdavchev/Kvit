@@ -118,7 +118,9 @@ namespace Kvit.Domain.Entities
 
         private static Result<DateOnly> CheckStartDate(string startsOnText, DateOnly utcToday)
         {
-            return ExpenseFields.CheckDate(startsOnText, IncomeFields.EarliestDateOn(utcToday), utcToday.AddYears(StartMaxYearsAhead), ResultCodes.RECURRING_INCOME_START_DATE_INVALID);
+            DateOnly latestStart = utcToday.AddYears(StartMaxYearsAhead).AddDays(EntryAmountDateAndNote.TimeZoneToleranceDays);
+
+            return ExpenseFields.CheckDate(startsOnText, EntryAmountDateAndNote.EarliestDateOn(utcToday), latestStart, ResultCodes.RECURRING_INCOME_START_DATE_INVALID);
         }
 
         private static Result<DateOnly> CheckChangedStartDate(string startsOnText, DateOnly utcToday, DateOnly currentStartsOn, bool hasEntries)

@@ -263,7 +263,8 @@ namespace Kvit.Domain.Tests.Entities
         [InlineData("2024-11-01")]
         [InlineData("2026-10-19")]
         [InlineData("2027-10-19")]
-        public void Create_StartOnTheEdgesOfThePastWindowAndOneYearAhead_IsAccepted(string startsOn)
+        [InlineData("2027-10-20")]
+        public void Create_StartOnTheEdgesOfThePastWindowAndOneYearAndOneDayAhead_IsAccepted(string startsOn)
         {
             Result<RecurringIncome> result = RecurringIncomeTestData.Create(RecurringIncomeTestData.MonthlyInput(startsOn: startsOn));
 
@@ -272,7 +273,7 @@ namespace Kvit.Domain.Tests.Entities
 
         [Theory]
         [InlineData("2024-10-30")]
-        [InlineData("2027-10-20")]
+        [InlineData("2027-10-21")]
         [InlineData("2000-01-01")]
         [InlineData("2026-13-01")]
         [InlineData("19.10.2026")]
@@ -301,9 +302,10 @@ namespace Kvit.Domain.Tests.Entities
         }
 
         [Theory]
-        [InlineData("2026-03-01", "2027-03-01", "2027-03-02")]
-        [InlineData("2026-12-31", "2027-12-31", "2028-01-01")]
-        public void Create_LatestStart_IsOneYearAfterTheUtcToday(string utcToday, string latestAccepted, string earliestRefused)
+        [InlineData("2026-03-01", "2027-03-02", "2027-03-03")]
+        [InlineData("2026-12-31", "2028-01-01", "2028-01-02")]
+        [InlineData("2028-02-29", "2029-03-01", "2029-03-02")]
+        public void Create_LatestStart_IsOneYearAndOneDayAfterTheUtcToday(string utcToday, string latestAccepted, string earliestRefused)
         {
             DateOnly today = DateOnly.ParseExact(utcToday, ExpenseFields.DateFormat, CultureInfo.InvariantCulture);
 

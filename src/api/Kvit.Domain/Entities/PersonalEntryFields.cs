@@ -1,38 +1,29 @@
-using Kvit.Domain.MoneyRules;
 using Kvit.Domain.PersonalEntries;
 using Kvit.Domain.Results;
 
 namespace Kvit.Domain.Entities
 {
-    public sealed class PersonalEntryFields
+    public sealed class PersonalEntryFields : EntryAmountDateAndNote
     {
-        private PersonalEntryFields(Guid categoryId, IncomeFields amountDateAndNote)
+        private PersonalEntryFields(Guid categoryId, EntryAmountDateAndNote amountDateAndNote)
+            : base(amountDateAndNote)
         {
             CategoryId = categoryId;
-            Amount = amountDateAndNote.Amount;
-            EntryDate = amountDateAndNote.EntryDate;
-            Note = amountDateAndNote.Note;
         }
 
         public Guid CategoryId { get; }
 
-        public Money Amount { get; }
-
-        public DateOnly EntryDate { get; }
-
-        public string? Note { get; }
-
         public static Result<PersonalEntryFields> Create(PersonalEntryInput input, DateOnly utcToday)
         {
-            return WithCategory(input, IncomeFields.Create(input.AmountDateAndNote(), utcToday));
+            return WithCategory(input, EntryAmountDateAndNote.Check(input.AmountDateAndNote(), utcToday));
         }
 
         public static Result<PersonalEntryFields> CreateForEdit(PersonalEntryInput input, DateOnly utcToday, DateOnly currentEntryDate)
         {
-            return WithCategory(input, IncomeFields.CreateForEdit(input.AmountDateAndNote(), utcToday, currentEntryDate));
+            return WithCategory(input, EntryAmountDateAndNote.CheckForEdit(input.AmountDateAndNote(), utcToday, currentEntryDate));
         }
 
-        private static Result<PersonalEntryFields> WithCategory(PersonalEntryInput input, Result<IncomeFields> amountDateAndNote)
+        private static Result<PersonalEntryFields> WithCategory(PersonalEntryInput input, Result<EntryAmountDateAndNote> amountDateAndNote)
         {
             if (!amountDateAndNote.IsSuccess)
             {

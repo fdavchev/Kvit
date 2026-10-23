@@ -121,6 +121,7 @@
     "PERSONAL_ENTRY_NOTE_INVALID": "Белешката може да има најмногу 500 знаци.",
     "PERSONAL_ENTRY_INCOME_HAS_CATEGORY": "Приходот нема категорија.",
     "PERSONAL_ENTRY_KIND_CANNOT_CHANGE": "Ставката не може да се смени од трошок во приход или обратно.",
+    "PERSONAL_ENTRY_DATE_LOCKED": "Датумот на ставка од редовен приход не може да се смени.",
     "RECURRING_INCOME_NOT_FOUND": "Овој редовен приход не постои или е запрен.",
     "RECURRING_INCOME_CURRENCY_INVALID": "Избери MKD или EUR.",
     "RECURRING_INCOME_AMOUNT_NOT_POSITIVE": "Износот мора да е поголем од 0.",
@@ -568,7 +569,9 @@
       "endsIn1Year": "За 1 година",
       "endsPickDate": "Избери датум…",
       "startDateHint": "Избери почеток од последните 24 месеци, најдоцна една година однапред.",
-      "endDateHint": "Избери крај од почетокот, најмногу 10 години подоцна."
+      "endDateHint": "Избери крај од почетокот, најмногу 10 години подоцна.",
+      "startLockedReason": "Почетокот не може да се смени откако веќе има ставки.",
+      "dateLockedReason": "Овој датум доаѓа од редовен приход."
     },
     "recurring": {
       "title": "Редовен приход",
@@ -584,6 +587,7 @@
       "stopped": "Запрено",
       "empty": "Сѐ уште немаш редовен приход",
       "newButton": "+ Нов редовен приход",
+      "catchUpFailed": "Редовниот приход не можеше да се ажурира. Обиди се подоцна.",
       "weekdays": {
         "sunday": "Недела",
         "monday": "Понеделник",

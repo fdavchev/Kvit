@@ -147,7 +147,7 @@ namespace Kvit.Domain.Tests.Entities
 
         [Theory]
         [InlineData("2024-10-31")]
-        [InlineData("2027-10-19")]
+        [InlineData("2027-10-20")]
         public void Update_ChangingTheStartToTheEdgesOfTheWindowWhileThereAreNoEntries_IsAccepted(string startsOn)
         {
             RecurringIncome income = RecurringIncomeTestData.NewMonthly();
@@ -159,7 +159,7 @@ namespace Kvit.Domain.Tests.Entities
 
         [Theory]
         [InlineData("2024-10-30")]
-        [InlineData("2027-10-20")]
+        [InlineData("2027-10-21")]
         [InlineData("bad")]
         public void Update_ChangingTheStartOutsideTheWindowWhileThereAreNoEntries_FailsWithTheStartDateCodeAndKeepsTheOldStart(string startsOn)
         {

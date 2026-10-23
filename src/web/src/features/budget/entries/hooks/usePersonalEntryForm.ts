@@ -69,7 +69,7 @@ const refusedCodesOf: Record<PersonalEntryFieldName, readonly string[]> = {
     'MONEY_NOT_ON_CURRENCY_STEP',
     'PERSONAL_ENTRY_CURRENCY_INVALID',
   ],
-  date: ['PERSONAL_ENTRY_DATE_INVALID'],
+  date: ['PERSONAL_ENTRY_DATE_INVALID', 'PERSONAL_ENTRY_DATE_LOCKED'],
   note: ['PERSONAL_ENTRY_NOTE_INVALID'],
   category: ['PERSONAL_ENTRY_CATEGORY_INVALID'],
   ends: [],

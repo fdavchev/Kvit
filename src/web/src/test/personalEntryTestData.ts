@@ -21,6 +21,7 @@ export const coffeeEntry: PersonalEntry = {
   rateDate: '2026-10-17',
   createdAt: '2026-10-19T08:00:00Z',
   updatedAt: null,
+  recurringIncomeId: null,
 }
 
 export const lunchInEuroEntry: PersonalEntry = {
@@ -35,6 +36,7 @@ export const lunchInEuroEntry: PersonalEntry = {
   rateDate: '2026-10-17',
   createdAt: '2026-10-18T12:00:00Z',
   updatedAt: '2026-10-18T12:30:00Z',
+  recurringIncomeId: null,
 }
 
 export const gymEntryWithArchivedCategory: PersonalEntry = {
@@ -49,6 +51,7 @@ export const gymEntryWithArchivedCategory: PersonalEntry = {
   rateDate: '2026-09-01',
   createdAt: '2026-09-02T18:00:00Z',
   updatedAt: null,
+  recurringIncomeId: null,
 }
 
 export function entryAnswerRow(entry: PersonalEntry): Record<string, unknown> {
@@ -67,6 +70,7 @@ export const salaryIncomeEntry: PersonalEntry = {
   rateDate: '2026-10-14',
   createdAt: '2026-10-15T07:00:00Z',
   updatedAt: null,
+  recurringIncomeId: null,
 }
 
 export const untitledEuroIncomeEntry: PersonalEntry = {
@@ -81,6 +85,15 @@ export const untitledEuroIncomeEntry: PersonalEntry = {
   rateDate: '2026-10-17',
   createdAt: '2026-10-19T09:00:00Z',
   updatedAt: null,
+  recurringIncomeId: null,
+}
+
+export const generatedSalaryEntry: PersonalEntry = {
+  ...salaryIncomeEntry,
+  id: 'f0000000-0000-4000-8000-000000000009',
+  entryDate: '2026-10-01',
+  createdAt: '2026-10-01T07:00:00Z',
+  recurringIncomeId: 'a0000000-0000-4000-8000-000000000001',
 }
 
 export const octoberMonth: PersonalEntryMonth = {
@@ -125,6 +138,7 @@ export const groceriesEntry: PersonalEntry = {
   rateDate: '2026-10-10',
   createdAt: '2026-10-12T17:00:00Z',
   updatedAt: null,
+  recurringIncomeId: null,
 }
 
 export const secondCoffeeEntry: PersonalEntry = {
@@ -139,6 +153,7 @@ export const secondCoffeeEntry: PersonalEntry = {
   rateDate: '2026-10-17',
   createdAt: '2026-10-18T09:00:00Z',
   updatedAt: null,
+  recurringIncomeId: null,
 }
 
 export const mkdOnlyMonth: PersonalEntryMonth = {
@@ -169,6 +184,7 @@ export const euroDinnerEntry: PersonalEntry = {
   rateDate: '2026-08-14',
   createdAt: '2026-08-14T19:00:00Z',
   updatedAt: null,
+  recurringIncomeId: null,
 }
 
 export const euroOnlyAugust: PersonalEntryMonth = {

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { errorMessageKey } from '@/core/api/errors'
 import { useLanguage } from '@/core/i18n/useLanguage'
@@ -26,7 +26,7 @@ interface PersonalEntryFormProps {
   footer?: ReactNode
   dateChipText?: (dayText: string) => string
   dateWindow?: PersonalEntryDateWindow
-  isDateLocked?: boolean
+  dateLockReason?: string
 }
 
 export function PersonalEntryForm({
@@ -37,10 +37,12 @@ export function PersonalEntryForm({
   footer,
   dateChipText,
   dateWindow,
-  isDateLocked = false,
+  dateLockReason,
 }: PersonalEntryFormProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
+  const dateLockReasonId = useId()
+  const isDateLocked = dateLockReason !== undefined
   const { entry } = form
   const dayText = expenseDayText(form.entryDate, form.today, language, t)
   const shownDateWindow = dateWindow ?? {
@@ -79,9 +81,15 @@ export function PersonalEntryForm({
           <button
             type="button"
             aria-invalid={form.isRefused('date')}
-            disabled={form.isBusy || isDateLocked}
+            aria-disabled={isDateLocked || undefined}
+            aria-describedby={isDateLocked ? dateLockReasonId : undefined}
+            disabled={form.isBusy}
             className={personalEntryChipLook}
-            onClick={() => form.setIsDateOpen(true)}
+            onClick={() => {
+              if (!isDateLocked) {
+                form.setIsDateOpen(true)
+              }
+            }}
           >
             <span aria-hidden="true">📅</span>
             {dateChipText === undefined ? dayText : dateChipText(dayText)}
@@ -94,6 +102,11 @@ export function PersonalEntryForm({
           )}
           {extraChip}
         </div>
+        {isDateLocked && (
+          <p id={dateLockReasonId} className="-mt-2 text-[0.9375rem] text-muted-foreground">
+            {dateLockReason}
+          </p>
+        )}
         {belowChips}
         {form.isNoteOpen && (
           <NoteField

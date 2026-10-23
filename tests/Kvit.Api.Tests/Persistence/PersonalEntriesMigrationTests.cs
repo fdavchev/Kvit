@@ -70,6 +70,9 @@ namespace Kvit.Api.Tests.Persistence
                 [
                     "ck_personal_entries_amount_minor_positive",
                     "ck_personal_entries_currency",
+                    "ck_personal_entries_generated_is_income",
+                    "ck_personal_entries_has_origin",
+                    "ck_personal_entries_income_has_no_category",
                     "ck_personal_entries_kind",
                     "ck_personal_entries_mkd_per_eur_positive",
                     "ck_personal_entries_note_length",

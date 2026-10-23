@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
 import { amountField, dateField, isDisabled, saveButton, sentBody, typeAmount, yesterdayChip } from '@/test/expenseFormTestHelpers'
-import { isEntriesCacheRefreshed, noteChip, shownCurrency, waitForEveryDialogToClose } from '@/test/personalEntryTestHelpers'
+import { describedText, isEntriesCacheRefreshed, noteChip, shownCurrency, waitForEveryDialogToClose } from '@/test/personalEntryTestHelpers'
 import { findIncomeEditSheet, renderIncomeSheet } from '@/test/personalIncomeTestHelpers'
 import {
   anyEndsChip,
@@ -163,6 +163,39 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
       const { sheet } = await openSalary()
 
       expect(isDisabled(anyStartChip(sheet))).toBe(false)
+    })
+
+    it.each(languages)('says why the start date is locked, under the chips and linked to the chip (%s)', async (language) => {
+      await renderIncomeSheet({ recurringIncome: { ...salary, hasEntries: true }, language })
+
+      const sheet = await findIncomeEditSheet(language)
+      const chip = startChip(sheet, language === 'en' ? '1 Aug' : '1 авг', language)
+
+      expect(chip.getAttribute('aria-disabled')).toBe('true')
+      expect(within(sheet).getByText(translated(language, 'budget.income.startLockedReason'))).toBeTruthy()
+      expect(describedText(chip)).toBe(translated(language, 'budget.income.startLockedReason'))
+    })
+
+    it('keeps the locked start chip in the Tab order, so a keyboard or screen reader still reaches the start date', async () => {
+      await renderIncomeSheet({ recurringIncome: { ...salary, hasEntries: true } })
+
+      const chip = anyStartChip(await findIncomeEditSheet())
+
+      expect(chip.matches(':disabled')).toBe(false)
+      expect(chip.tabIndex).toBeGreaterThanOrEqual(0)
+    })
+
+    it.each([
+      ['has no entries yet', false],
+      ['comes from an older API that does not say whether it has entries', null],
+    ] as const)('shows no reason and leaves the start open when the income %s', async (_name, hasEntries) => {
+      await renderIncomeSheet({ recurringIncome: { ...salary, hasEntries } })
+
+      const sheet = await findIncomeEditSheet()
+
+      expect(isDisabled(anyStartChip(sheet))).toBe(false)
+      expect(anyStartChip(sheet).hasAttribute('aria-describedby')).toBe(false)
+      expect(within(sheet).queryByText(translated('en', 'budget.income.startLockedReason'))).toBeNull()
     })
 
     it('keeps the other chips and Save enabled when the start date is locked', async () => {
@@ -344,13 +377,13 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
       const { fetchMock, sheet } = await openSalary()
 
       await chooseEnds(sheet, 'endsIn3Months')
-      expect(endsChip(sheet, '1 Nov')).toBeTruthy()
+      expect(endsChip(sheet, '31 Oct')).toBeTruthy()
       fireEvent.click(saveButton())
 
       await waitFor(() => {
         expect(requestsOf(fetchMock, 'PUT', salaryUrl)).toHaveLength(1)
       })
-      expect(sentBody(fetchMock, 'PUT', salaryUrl)).toMatchObject({ endsOn: '2026-11-01' })
+      expect(sentBody(fetchMock, 'PUT', salaryUrl)).toMatchObject({ endsOn: '2026-10-31' })
     })
 
     it('sends no end after Never was chosen on an income that had an end', async () => {
@@ -455,6 +488,20 @@ describe('PersonalIncomeSheet, editing a repeating income', () => {
       expect(vi.mocked(toast.success)).toHaveBeenCalledWith(translated('en', 'groupSettings.saved'))
       expect(screen.queryByRole('alert')).toBeNull()
       expect(logged).toHaveBeenCalled()
+    })
+
+    it('says Saved first and then shows an error toast when the catch-up fails after the change was saved', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => undefined)
+      const { onClose } = await openSalary({ ...saveAnswers, [catchUpPost]: networkFailureAnswer() })
+
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(vi.mocked(toast.error)).toHaveBeenCalledWith(translated('en', 'budget.recurring.catchUpFailed'))
+      })
+      expect(onClose).toHaveBeenCalledOnce()
+      expect(vi.mocked(toast.error)).toHaveBeenCalledOnce()
+      expect(vi.mocked(toast.success).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(toast.error).mock.invocationCallOrder[0])
     })
 
     it('sends one PUT and one catch-up when Save is tapped twice quickly', async () => {

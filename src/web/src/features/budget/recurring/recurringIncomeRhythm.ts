@@ -4,12 +4,13 @@ import type {
   RecurringIncomeFields,
   RecurringIncomeFrequency,
 } from '@/core/services/recurringIncomes/recurringIncomesService'
-import { dayOfMonthOfDate, formatDayOrdinal, weekdayOfDate } from '@/shared/utils/formatDate'
+import { addMonthsToDate } from '@/shared/utils/calendarMonth'
+import { addDays, dayOfMonthOfDate, formatDayOrdinal, weekdayOfDate } from '@/shared/utils/formatDate'
 
 export type RecurringIncomeDays = Pick<RecurringIncomeFields, 'frequency' | 'dayOfMonth' | 'dayOfWeek'>
 
 const weekdayKeys: readonly string[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-const lastDayInEveryMonth = 28
+const shortestMonthDays = 28
 
 export function recurringDaysFromStart(frequency: RecurringIncomeFrequency, startsOn: string): RecurringIncomeDays {
   return frequency === 'Monthly'
@@ -17,12 +18,16 @@ export function recurringDaysFromStart(frequency: RecurringIncomeFrequency, star
     : { frequency, dayOfMonth: null, dayOfWeek: weekdayOfDate(startsOn) }
 }
 
+export function endAfterMonths(startsOn: string, months: number): string {
+  return addDays(addMonthsToDate(startsOn, months), -1)
+}
+
 export function recurringRhythmText(days: RecurringIncomeDays, language: Language, t: TFunction): string {
   if (days.frequency === 'Monthly') {
     if (days.dayOfMonth === null) {
       throw new Error('A Monthly repeating income has no day of the month')
     }
-    const key = days.dayOfMonth > lastDayInEveryMonth ? 'budget.recurring.monthlyMonthEnd' : 'budget.recurring.monthly'
+    const key = days.dayOfMonth > shortestMonthDays ? 'budget.recurring.monthlyMonthEnd' : 'budget.recurring.monthly'
     return t(key, { ordinal: formatDayOrdinal(days.dayOfMonth, language) })
   }
   const weekdayKey = days.dayOfWeek === null ? undefined : weekdayKeys[days.dayOfWeek]

@@ -13,7 +13,32 @@ namespace Kvit.Domain.Services.PersonalEntries
         GetCurrentExchangeRate _getCurrentExchangeRate,
         TimeProvider _timeProvider)
     {
-        public async Task<Result<Guid>> Execute(Guid userId, Guid clientRequestId, PersonalEntryInput input, CancellationToken cancellationToken)
+        public Task<Result<Guid>> Execute(Guid userId, Guid clientRequestId, PersonalEntryInput input, CancellationToken cancellationToken)
+        {
+            return AddAsync(
+                userId,
+                clientRequestId,
+                utcToday => CheckSpendingAsync(userId, input, utcToday, cancellationToken),
+                (fields, rate, now) => PersonalEntry.CreateSpending(userId, fields, rate, clientRequestId, now),
+                cancellationToken);
+        }
+
+        public Task<Result<Guid>> Execute(Guid userId, Guid clientRequestId, IncomeInput input, CancellationToken cancellationToken)
+        {
+            return AddAsync(
+                userId,
+                clientRequestId,
+                utcToday => Task.FromResult(IncomeFields.Create(input, utcToday)),
+                (fields, rate, now) => PersonalEntry.CreateIncome(userId, fields, rate, clientRequestId, now),
+                cancellationToken);
+        }
+
+        private async Task<Result<Guid>> AddAsync<TFields>(
+            Guid userId,
+            Guid clientRequestId,
+            Func<DateOnly, Task<Result<TFields>>> checkFields,
+            Func<TFields, ExchangeRateSnapshot, DateTimeOffset, PersonalEntry> createEntry,
+            CancellationToken cancellationToken)
         {
             PersonalEntry? earlier = await _entries.FindByClientRequestIdAsync(clientRequestId, cancellationToken);
             if (earlier is not null)
@@ -22,16 +47,10 @@ namespace Kvit.Domain.Services.PersonalEntries
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();
-            Result<PersonalEntryFields> fields = PersonalEntryFields.Create(input, DateOnly.FromDateTime(now.UtcDateTime));
+            Result<TFields> fields = await checkFields(DateOnly.FromDateTime(now.UtcDateTime));
             if (!fields.IsSuccess)
             {
                 return fields.ToFailure<Guid>();
-            }
-
-            Result category = await _categories.CheckPersonalEntryCategoryAsync(userId, fields.Value.CategoryId, cancellationToken);
-            if (!category.IsSuccess)
-            {
-                return category.ToFailure<Guid>();
             }
 
             Result<ExchangeRateSnapshot> rate = await _getCurrentExchangeRate.Execute(cancellationToken);
@@ -40,37 +59,27 @@ namespace Kvit.Domain.Services.PersonalEntries
                 return rate.ToFailure<Guid>();
             }
 
-            PersonalEntry entry = PersonalEntry.CreateSpending(userId, fields.Value, rate.Value, clientRequestId, now);
+            PersonalEntry entry = createEntry(fields.Value, rate.Value, now);
             _entries.Add(entry);
 
             return Result.Ok(entry.Id);
         }
 
-        public async Task<Result<Guid>> Execute(Guid userId, Guid clientRequestId, IncomeInput input, CancellationToken cancellationToken)
+        private async Task<Result<PersonalEntryFields>> CheckSpendingAsync(Guid userId, PersonalEntryInput input, DateOnly utcToday, CancellationToken cancellationToken)
         {
-            PersonalEntry? earlier = await _entries.FindByClientRequestIdAsync(clientRequestId, cancellationToken);
-            if (earlier is not null)
-            {
-                return earlier.AnswerToRepeatBy(userId);
-            }
-
-            DateTimeOffset now = _timeProvider.GetUtcNow();
-            Result<IncomeFields> fields = IncomeFields.Create(input, DateOnly.FromDateTime(now.UtcDateTime));
+            Result<PersonalEntryFields> fields = PersonalEntryFields.Create(input, utcToday);
             if (!fields.IsSuccess)
             {
-                return fields.ToFailure<Guid>();
+                return fields;
             }
 
-            Result<ExchangeRateSnapshot> rate = await _getCurrentExchangeRate.Execute(cancellationToken);
-            if (!rate.IsSuccess)
+            Result category = await _categories.CheckPersonalEntryCategoryAsync(userId, fields.Value.CategoryId, cancellationToken);
+            if (!category.IsSuccess)
             {
-                return rate.ToFailure<Guid>();
+                return category.ToFailure<PersonalEntryFields>();
             }
 
-            PersonalEntry entry = PersonalEntry.CreateIncome(userId, fields.Value, rate.Value, clientRequestId, now);
-            _entries.Add(entry);
-
-            return Result.Ok(entry.Id);
+            return fields;
         }
     }
 }

@@ -26,6 +26,7 @@ import { RecurringIncomeListSheet } from '../../recurring/components/RecurringIn
 import { RecurringIncomeRow, RecurringIncomeRowError } from '../../recurring/components/RecurringIncomeRow'
 import { useCatchUpOnOpen } from '../../recurring/hooks/useCatchUpOnOpen'
 import { useRecurringIncomes } from '../../recurring/hooks/useRecurringIncomes'
+import { liveRecurringIncome } from '../../recurring/recurringIncomeCache'
 import { BudgetAddChoiceSheet } from './BudgetAddChoiceSheet'
 import { BudgetFloatingAddButton, BudgetRoundAddButton } from './BudgetAddButton'
 import { BudgetTotalCard } from './BudgetTotalCard'
@@ -179,7 +180,7 @@ export function BudgetScreen() {
       {openedRecurringIncome !== null && (
         <PersonalIncomeSheet
           key={openedRecurringIncome.id}
-          recurringIncome={openedRecurringIncome}
+          recurringIncome={liveRecurringIncome(openedRecurringIncome, recurringQuery.data)}
           opener={handOnOpener}
           onClose={() => setOpenedRecurringIncome(null)}
         />

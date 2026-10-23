@@ -5,7 +5,8 @@ import { languages } from '@/core/i18n/language'
 import type { RecurringIncome } from '@/core/services/recurringIncomes/recurringIncomesService'
 import { kvitGlassPanelLook } from '@/shared/components/kvitGlassLooks'
 import { budgetNow, renderBudget } from '@/test/budgetTestHelpers'
-import { amountField, dismissSheetByTappingBackdrop, saveButton, sentBody, typeAmount } from '@/test/expenseFormTestHelpers'
+import { recurringIncomesQueryKey } from '@/features/budget/recurring/recurringIncomeCache'
+import { amountField, dismissSheetByTappingBackdrop, isDisabled, saveButton, sentBody, typeAmount } from '@/test/expenseFormTestHelpers'
 import { plainSpaces } from '@/test/expenseTestHelpers'
 import { findIncomeEditSheet } from '@/test/personalIncomeTestHelpers'
 import {
@@ -15,6 +16,7 @@ import {
   findRepeatingSheet,
   sentWritesToRecurringIncomes,
   signedMoneyText,
+  startChip,
   weekdayName,
 } from '@/test/recurringIncomeTestHelpers'
 import {
@@ -28,11 +30,12 @@ import {
   recurringIncomeStopPost,
   recurringIncomeUrl,
   recurringIncomesGet,
+  recurringListAnswerBody,
   salaryRecurringIncome,
   tutoringRecurringIncome,
   untitledRecurringIncome,
 } from '@/test/recurringIncomeTestData'
-import { jsonAnswer, problemAnswer, requestCount, requestsOf, type AnswerFactory } from '@/test/requestTestHelpers'
+import { jsonAnswer, networkFailureAnswer, problemAnswer, requestCount, requestsOf, type AnswerFactory } from '@/test/requestTestHelpers'
 import { pressToastAction, toastShownWithText } from '@/test/toastTestHelpers'
 import { translated } from '@/test/translated'
 
@@ -264,6 +267,22 @@ describe('BudgetScreen, the "Repeating income" sheet', () => {
       expect(document.activeElement).toBe(row)
     })
 
+    it('locks the start date of the open edit sheet when the list comes back saying the income now has entries', async () => {
+      const live = liveRecurringList([salary, flatRent])
+      const { sheet, queryClient } = await openSheetWith([salary, flatRent], 'en', { [recurringIncomesGet]: live.answer })
+      fireEvent.click(blockButton(blocksIn(sheet)[0], 'expense.edit'))
+      const editSheet = await findIncomeEditSheet()
+      expect(isDisabled(startChip(editSheet, '1 Aug'))).toBe(false)
+
+      live.set([{ ...salary, hasEntries: true }, flatRent])
+      await queryClient.invalidateQueries({ queryKey: recurringIncomesQueryKey })
+
+      await waitFor(() => {
+        expect(startChip(editSheet, '1 Aug').getAttribute('aria-disabled')).toBe('true')
+      })
+      expect(within(editSheet).getByText(translated('en', 'budget.income.startLockedReason'))).toBeTruthy()
+    })
+
     it('opens the income that belongs to the block that was tapped', async () => {
       const { sheet } = await openSheetWith([salary, flatRent])
 
@@ -346,6 +365,29 @@ describe('BudgetScreen, the "Repeating income" sheet', () => {
         `POST ${recurringIncomeUrl(salary.id)}/restart`,
         `POST ${listUrl}/catch-up`,
       ])
+    })
+
+    it('says Restored first and then shows an error toast when the catch-up after Undo fails', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => undefined)
+      const { answers } = liveStopAnswers()
+      let isCatchUpBroken = false
+      const { sheet } = await openSheetWith([salary, flatRent], 'en', {
+        ...answers,
+        [catchUpPost]: () => (isCatchUpBroken ? networkFailureAnswer()() : Response.json({ created: 1 })),
+      })
+      fireEvent.click(blockButton(blocksIn(sheet)[0], 'budget.recurring.stop'))
+      await waitFor(() => {
+        expect(blocksIn(sheet)).toHaveLength(1)
+      })
+      isCatchUpBroken = true
+
+      pressToastAction(toastShownWithText(translated('en', 'budget.recurring.stopped')))
+
+      await waitFor(() => {
+        expect(vi.mocked(toast.error)).toHaveBeenCalledWith(translated('en', 'budget.recurring.catchUpFailed'))
+      })
+      expect(vi.mocked(toast.success)).toHaveBeenCalledWith(translated('en', 'budget.entries.restored'))
+      expect(vi.mocked(toast.success).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(toast.error).mock.invocationCallOrder[0])
     })
 
     it('shows the translated error when Undo comes too late', async () => {
@@ -436,6 +478,87 @@ describe('BudgetScreen, the "Repeating income" sheet', () => {
       await waitFor(() => {
         expect(within(screen.getByRole('button', { name: /^Repeating income/ })).getByText(translated('en', 'budget.recurring.rowNone'))).toBeTruthy()
       })
+    })
+
+    it('closes the sheet while the list is still being asked for again, so it never shows "No repeating income yet"', async () => {
+      let isStopped = false
+      let answerList: () => void = () => undefined
+      const { sheet } = await openSheetWith([salary], 'en', {
+        [recurringIncomesGet]: () =>
+          isStopped
+            ? new Promise<Response>((resolve) => {
+                answerList = () => resolve(Response.json(recurringListAnswerBody([])))
+              })
+            : Response.json(recurringListAnswerBody([salary])),
+        [recurringIncomeStopPost(salary.id)]: () => {
+          isStopped = true
+          return new Response(null, { status: 204 })
+        },
+      })
+      const emptyText = translated('en', 'budget.recurring.empty')
+      let wasEmptyShown = false
+      const watcher = new MutationObserver(() => {
+        wasEmptyShown ||= within(document.body).queryByText(emptyText) !== null
+      })
+      watcher.observe(document.body, { subtree: true, childList: true, characterData: true })
+
+      fireEvent.click(blockButton(blocksIn(sheet)[0], 'budget.recurring.stop'))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      answerList()
+      await waitFor(() => {
+        expect(within(screen.getByRole('button', { name: /^Repeating income/ })).getByText(translated('en', 'budget.recurring.rowNone'))).toBeTruthy()
+      })
+      watcher.disconnect()
+      expect(wasEmptyShown).toBe(false)
+    })
+
+    it('closes the sheet when the only other income has already ended, and Undo still brings the stopped one back', async () => {
+      const live = liveRecurringList([salary, untitledRecurringIncome])
+      const { sheet, fetchMock } = await openSheetWith([salary, untitledRecurringIncome], 'en', {
+        [recurringIncomesGet]: live.answer,
+        [recurringIncomeStopPost(salary.id)]: () => {
+          live.set([untitledRecurringIncome])
+          return new Response(null, { status: 204 })
+        },
+        [recurringIncomeRestartPost(salary.id)]: () => {
+          live.set([salary, untitledRecurringIncome])
+          return new Response(null, { status: 204 })
+        },
+        [catchUpPost]: catchUpAnswer(0),
+      })
+
+      fireEvent.click(blockButton(blocksIn(sheet)[0], 'budget.recurring.stop'))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      pressToastAction(toastShownWithText(translated('en', 'budget.recurring.stopped')))
+      await waitFor(() => {
+        expect(vi.mocked(toast.success)).toHaveBeenCalledWith(translated('en', 'budget.entries.restored'))
+      })
+      expect(requestCount(fetchMock, 'POST', `${recurringIncomeUrl(salary.id)}/restart`)).toBe(1)
+    })
+
+    it('keeps the sheet open when the income that has already ended is stopped and another one still runs', async () => {
+      const live = liveRecurringList([salary, untitledRecurringIncome])
+      const { sheet } = await openSheetWith([salary, untitledRecurringIncome], 'en', {
+        [recurringIncomesGet]: live.answer,
+        [recurringIncomeStopPost(untitledRecurringIncome.id)]: () => {
+          live.set([salary])
+          return new Response(null, { status: 204 })
+        },
+      })
+
+      fireEvent.click(blockButton(blocksIn(sheet)[1], 'budget.recurring.stop'))
+
+      await waitFor(() => {
+        expect(blocksIn(sheet)).toHaveLength(1)
+      })
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      expect(screen.getByRole('dialog', { name: translated('en', 'budget.recurring.title') })).toBe(sheet)
     })
 
     it('keeps the sheet open when one of two incomes is stopped', async () => {

@@ -21,6 +21,9 @@ namespace Kvit.Infrastructure.Persistence.Configurations
                 table.HasCheckConstraint("ck_personal_entries_note_length", $"char_length(note) BETWEEN 1 AND {ExpenseFields.NoteMaxLength}");
                 table.HasCheckConstraint("ck_personal_entries_mkd_per_eur_positive", "mkd_per_eur > 0");
                 table.HasCheckConstraint("ck_personal_entries_spending_has_category", $"kind <> '{nameof(PersonalEntryKind.Spending)}' OR category_id IS NOT NULL");
+                table.HasCheckConstraint("ck_personal_entries_income_has_no_category", $"kind <> '{nameof(PersonalEntryKind.Income)}' OR category_id IS NULL");
+                table.HasCheckConstraint("ck_personal_entries_generated_is_income", $"recurring_income_id IS NULL OR kind = '{nameof(PersonalEntryKind.Income)}'");
+                table.HasCheckConstraint("ck_personal_entries_has_origin", "client_request_id IS NOT NULL OR recurring_income_id IS NOT NULL");
             });
 
             builder.Property(entry => entry.Kind).HasConversion<string>();

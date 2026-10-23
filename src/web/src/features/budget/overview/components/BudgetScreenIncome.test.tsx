@@ -307,8 +307,8 @@ describe('BudgetScreen with income', () => {
       await renderBudget({ months: [incomeOnlyOctober] })
       const card = await findLeftCard()
 
-      expect(within(card).getAllByText(money(0, 'MKD'), { normalizer: plainSpaces })).toHaveLength(1)
-      expect(screen.queryByText(money(0, 'EUR'), { normalizer: plainSpaces })).toBeNull()
+      expect(amountTexts(card, spentAttribute)).toEqual([money(0, 'MKD')])
+      expect(plainSpaces(document.body.textContent ?? '')).not.toContain(money(0, 'EUR'))
     })
 
     it('does not crash for an income in EUR only', async () => {

@@ -129,10 +129,21 @@ describe('getRecurringIncomes', () => {
     await expect(getRecurringIncomes()).rejects.toThrow('recurringIncomes')
   })
 
-  it.each(Object.keys(recurringIncomeAnswerRow(salaryRecurringIncome)))('throws an error naming "%s" when a row lacks it', async (field) => {
-    stubFetch(Response.json({ recurringIncomes: [withoutField(recurringIncomeAnswerRow(salaryRecurringIncome), field)] }))
+  it.each(Object.keys(recurringIncomeAnswerRow(salaryRecurringIncome)).filter((field) => field !== 'hasEntries'))(
+    'throws an error naming "%s" when a row lacks it',
+    async (field) => {
+      stubFetch(Response.json({ recurringIncomes: [withoutField(recurringIncomeAnswerRow(salaryRecurringIncome), field)] }))
 
-    await expect(getRecurringIncomes()).rejects.toThrow(field)
+      await expect(getRecurringIncomes()).rejects.toThrow(field)
+    },
+  )
+
+  it('reads a row without "hasEntries" as not known yet, so an older API still works', async () => {
+    stubFetch(Response.json({ recurringIncomes: [withoutField(recurringIncomeAnswerRow(salaryRecurringIncome), 'hasEntries')] }))
+
+    const [income] = await getRecurringIncomes()
+
+    expect(income).toEqual({ ...salaryRecurringIncome, hasEntries: null })
   })
 
   it.each([
@@ -265,6 +276,12 @@ describe('createRecurringIncome', () => {
     expect(await createRecurringIncome(newMonthly)).toEqual(salaryRecurringIncome)
   })
 
+  it('reads an answer without "hasEntries" as not known yet, so an older API still works', async () => {
+    stubFetch(Response.json(withoutField(recurringIncomeAnswerRow(salaryRecurringIncome), 'hasEntries')))
+
+    expect(await createRecurringIncome(newMonthly)).toEqual({ ...salaryRecurringIncome, hasEntries: null })
+  })
+
   it('throws an error naming "frequency" when the answer lacks it', async () => {
     stubFetch(Response.json(withoutField(recurringIncomeAnswerRow(salaryRecurringIncome), 'frequency')))
 
@@ -312,6 +329,12 @@ describe('editRecurringIncome', () => {
     stubFetch(Response.json(recurringIncomeAnswerRow(flatRentRecurringIncome)))
 
     expect(await editRecurringIncome(flatRentRecurringIncome.id, monthlyFields)).toEqual(flatRentRecurringIncome)
+  })
+
+  it('reads an answer without "hasEntries" as not known yet, so an older API still works', async () => {
+    stubFetch(Response.json(withoutField(recurringIncomeAnswerRow(flatRentRecurringIncome), 'hasEntries')))
+
+    expect(await editRecurringIncome(flatRentRecurringIncome.id, monthlyFields)).toEqual({ ...flatRentRecurringIncome, hasEntries: null })
   })
 
   it.each([

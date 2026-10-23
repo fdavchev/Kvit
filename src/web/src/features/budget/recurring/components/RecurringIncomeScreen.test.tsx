@@ -6,7 +6,8 @@ import { routes } from '@/core/router/routes'
 import type { RecurringIncome } from '@/core/services/recurringIncomes/recurringIncomesService'
 import { formatDayOrdinal } from '@/shared/utils/formatDate'
 import { budgetNow } from '@/test/budgetTestHelpers'
-import { amountField, saveButton, sentBody, typeAmount } from '@/test/expenseFormTestHelpers'
+import { recurringIncomesQueryKey } from '@/features/budget/recurring/recurringIncomeCache'
+import { amountField, isDisabled, saveButton, sentBody, typeAmount } from '@/test/expenseFormTestHelpers'
 import { plainSpaces } from '@/test/expenseTestHelpers'
 import { stubGoogleSignIn } from '@/test/googleTestHelpers'
 import { findIncomeEditSheet, findIncomeSheet } from '@/test/personalIncomeTestHelpers'
@@ -18,6 +19,7 @@ import {
   renderRepeatingScreen,
   sentWritesToRecurringIncomes,
   signedMoneyText,
+  startChip,
   weekdayName,
 } from '@/test/recurringIncomeTestHelpers'
 import {
@@ -388,6 +390,23 @@ describe('the repeating income screen', () => {
       expect(amountField().value).toBe('250')
       expect(within(sheet).getByLabelText<HTMLTextAreaElement>(translated('en', 'expense.note')).value).toBe('Flat rent')
       expect(repeatsChipIn(sheet, 'Monthly')).toBeTruthy()
+    })
+
+    it('locks the start date of the open edit sheet when the list comes back saying the income now has entries', async () => {
+      const live = liveRecurringList(three)
+      const { queryClient } = await renderRepeatingScreen({ answers: { [recurringIncomesGet]: live.answer } })
+      await findBlocks()
+      fireEvent.click(blockButton(blocksIn(document.body)[0], 'expense.edit'))
+      const sheet = await findIncomeEditSheet()
+      expect(isDisabled(startChip(sheet, '1 Aug'))).toBe(false)
+
+      live.set([{ ...salary, hasEntries: true }, flatRent, tutoring])
+      await queryClient.invalidateQueries({ queryKey: recurringIncomesQueryKey })
+
+      await waitFor(() => {
+        expect(startChip(sheet, '1 Aug').getAttribute('aria-disabled')).toBe('true')
+      })
+      expect(within(sheet).getByText(translated('en', 'budget.income.startLockedReason'))).toBeTruthy()
     })
   })
 

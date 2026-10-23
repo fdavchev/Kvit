@@ -16,6 +16,7 @@ import { useSaveOnce } from '../../categories/hooks/useSaveOnce'
 import { PersonalIncomeSheet } from '../../entries/components/PersonalIncomeSheet'
 import { useRecurringIncomes } from '../hooks/useRecurringIncomes'
 import { useStopRecurringIncome } from '../hooks/useStopRecurringIncome'
+import { liveRecurringIncome } from '../recurringIncomeCache'
 import { RecurringIncomeList } from './RecurringIncomeList'
 
 type OpenedSheet = { kind: 'new' } | { kind: 'edit'; income: RecurringIncome }
@@ -73,7 +74,7 @@ export function RecurringIncomeScreen() {
       {openedSheet?.kind === 'edit' && (
         <PersonalIncomeSheet
           key={openedSheet.income.id}
-          recurringIncome={openedSheet.income}
+          recurringIncome={liveRecurringIncome(openedSheet.income, incomesQuery.data)}
           onClose={() => setOpenedSheet(null)}
         />
       )}

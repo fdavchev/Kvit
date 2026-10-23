@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { KvitSheet } from '@/shared/components/KvitSheet'
 import { kvitChipLook } from '@/shared/components/kvitChipLook'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
-import { addMonthsToDate } from '@/shared/utils/calendarMonth'
+import { endAfterMonths } from '../recurringIncomeRhythm'
 
-export type EndsChoice = { kind: 'end'; endsOn: string | null } | { kind: 'pickDate' }
+export type EndsChoice = { kind: 'never' } | { kind: 'afterMonths'; months: number } | { kind: 'pickDate' }
 
 interface EndsOption {
   labelKey: string
@@ -28,7 +28,11 @@ const endsOptions: readonly EndsOption[] = [
 const calendarEmoji = '\u{1F4C5}'
 
 function endOf(option: EndsOption, startsOn: string): string | null {
-  return option.monthsAfterStart === null ? null : addMonthsToDate(startsOn, option.monthsAfterStart)
+  return option.monthsAfterStart === null ? null : endAfterMonths(startsOn, option.monthsAfterStart)
+}
+
+function choiceOf(option: EndsOption): EndsChoice {
+  return option.monthsAfterStart === null ? { kind: 'never' } : { kind: 'afterMonths', months: option.monthsAfterStart }
 }
 
 export function RecurringIncomeEndsSheet({ startsOn, endsOn, onClose }: RecurringIncomeEndsSheetProps) {
@@ -56,7 +60,7 @@ export function RecurringIncomeEndsSheet({ startsOn, endsOn, onClose }: Recurrin
               type="button"
               aria-pressed={optionEnd === endsOn}
               className={kvitChipLook}
-              onClick={() => choose({ kind: 'end', endsOn: optionEnd })}
+              onClick={() => choose(choiceOf(option))}
             >
               {t(option.labelKey)}
             </button>

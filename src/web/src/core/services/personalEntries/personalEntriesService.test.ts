@@ -5,6 +5,7 @@ import { archivedGymCategory, coffeeCategory } from '@/test/personalCategoryTest
 import {
   coffeeEntry,
   entryAnswerRow,
+  generatedSalaryEntry,
   gymEntryWithArchivedCategory,
   lunchInEuroEntry,
   monthAnswerBody,
@@ -107,10 +108,35 @@ describe('getPersonalEntries', () => {
     await expect(getPersonalEntries('2026-10')).rejects.toThrow(field)
   })
 
-  it.each(Object.keys(entryAnswerRow(coffeeEntry)))('throws an error naming "%s" when an entry lacks it', async (field) => {
-    stubFetch(Response.json({ month: '2026-10', entries: [withoutField(entryAnswerRow(coffeeEntry), field)], totals: [], incomeTotals: [] }))
+  it.each(Object.keys(entryAnswerRow(coffeeEntry)).filter((field) => field !== 'recurringIncomeId'))(
+    'throws an error naming "%s" when an entry lacks it',
+    async (field) => {
+      stubFetch(Response.json({ month: '2026-10', entries: [withoutField(entryAnswerRow(coffeeEntry), field)], totals: [], incomeTotals: [] }))
 
-    await expect(getPersonalEntries('2026-10')).rejects.toThrow(field)
+      await expect(getPersonalEntries('2026-10')).rejects.toThrow(field)
+    },
+  )
+
+  it('keeps the repeating income an entry was made by, and null for an entry the person added', async () => {
+    stubFetch(Response.json({ month: '2026-10', entries: [entryAnswerRow(generatedSalaryEntry), entryAnswerRow(salaryIncomeEntry)], totals: [], incomeTotals: [] }))
+
+    const month = await getPersonalEntries('2026-10')
+
+    expect(month.entries.map((entry) => entry.recurringIncomeId)).toEqual([generatedSalaryEntry.recurringIncomeId, null])
+  })
+
+  it('reads an entry without "recurringIncomeId" as one the person added, so an older API still works', async () => {
+    stubFetch(Response.json({ month: '2026-10', entries: [withoutField(entryAnswerRow(salaryIncomeEntry), 'recurringIncomeId')], totals: [], incomeTotals: [] }))
+
+    const month = await getPersonalEntries('2026-10')
+
+    expect(month.entries).toEqual([salaryIncomeEntry])
+  })
+
+  it.each([42, true, {}])('throws an error naming "recurringIncomeId" when an entry has %j', async (value) => {
+    stubFetch(Response.json({ month: '2026-10', entries: [{ ...entryAnswerRow(salaryIncomeEntry), recurringIncomeId: value }], totals: [], incomeTotals: [] }))
+
+    await expect(getPersonalEntries('2026-10')).rejects.toThrow('recurringIncomeId')
   })
 
   it.each([
@@ -295,6 +321,12 @@ describe('addPersonalEntry', () => {
     expect(await addPersonalEntry(newIncome)).toEqual(salaryIncomeEntry)
   })
 
+  it('reads an answer without "recurringIncomeId" as an entry the person added, so an older API still works', async () => {
+    stubFetch(Response.json(withoutField(entryAnswerRow(salaryIncomeEntry), 'recurringIncomeId')))
+
+    expect(await addPersonalEntry(newIncome)).toEqual(salaryIncomeEntry)
+  })
+
   it('throws an error naming "amountMinor" when the answer has no amount', async () => {
     stubFetch(Response.json(withoutField(entryAnswerRow(coffeeEntry), 'amountMinor')))
 
@@ -372,6 +404,26 @@ describe('editPersonalEntry', () => {
     stubFetch(Response.json(entryAnswerRow(salaryIncomeEntry)))
 
     expect(await editPersonalEntry(salaryIncomeEntry.id, incomeFields)).toEqual(salaryIncomeEntry)
+  })
+
+  it('returns the repeating income an edited entry was made by', async () => {
+    stubFetch(Response.json(entryAnswerRow(generatedSalaryEntry)))
+
+    expect(await editPersonalEntry(generatedSalaryEntry.id, incomeFields)).toEqual(generatedSalaryEntry)
+  })
+
+  it('reads an answer without "recurringIncomeId" as an entry the person added, so an older API still works', async () => {
+    stubFetch(Response.json(withoutField(entryAnswerRow(salaryIncomeEntry), 'recurringIncomeId')))
+
+    expect(await editPersonalEntry(salaryIncomeEntry.id, incomeFields)).toEqual(salaryIncomeEntry)
+  })
+
+  it('rethrows the refusal to move the date of an entry made by a repeating income with its error code', async () => {
+    stubFetch(problemResponse(400, 'PERSONAL_ENTRY_DATE_LOCKED'))
+
+    const error = await captureError(editPersonalEntry(generatedSalaryEntry.id, incomeFields))
+
+    expect(error).toMatchObject({ httpStatus: 400, errorCode: 'PERSONAL_ENTRY_DATE_LOCKED' })
   })
 
   it('rethrows a not-found refusal with its error code', async () => {
