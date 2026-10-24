@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit Phase 15 mockup</title>
+<style>
+:root{--page:#ffd9a8;--card:#fff1dc;--line:#9c6f47;--ink:#3d2610;--brand:#ffa53a;--brand-d:#b54a00;--red:#b3261e;--green:#2e6b34;--track:#f0c68f}
+*{box-sizing:border-box}
+body{margin:0;background:#fff8ee;color:var(--ink);font:16px system-ui,sans-serif;padding:16px;max-width:1200px;margin-inline:auto}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:18px;margin:28px 0 8px;border-top:2px solid var(--line);padding-top:16px}
+p.n{margin:0 0 10px;font-size:14px;max-width:70ch}
+.tabs{display:flex;gap:8px;margin:8px 0 12px;flex-wrap:wrap}
+.tabs button{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:10px 16px;min-height:44px;font:inherit;cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--brand);font-weight:700}
+.opt{display:none}.opt.on{display:block}
+.row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.phone{width:360px;background:var(--page);border:2px solid var(--line);border-radius:22px;padding:14px;min-height:300px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px}
+.big{font-size:28px;font-weight:700;text-align:center}.sub{font-size:13px;text-align:center}
+.muted{font-size:13px;opacity:.8}
+.pill{display:inline-block;border:1.5px solid var(--line);border-radius:999px;padding:2px 10px;font-size:12px;background:var(--card)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px}
+.bar{height:8px;background:var(--track);border-radius:99px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--green);border-radius:99px}
+.bar i.warn{background:#c77700}.bar i.over{background:var(--red)}
+.e{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid #d9b48a}
+.e small{display:block;font-size:12px;opacity:.75}
+.btn{border:1.5px solid var(--line);background:var(--brand);border-radius:999px;padding:10px 16px;min-height:44px;font:inherit;font-weight:700;cursor:pointer}
+.sw{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #d9b48a}
+.sw input{width:44px;height:26px}
+.sheet{background:var(--card);border:1.5px solid var(--line);border-radius:18px 18px 0 0;padding:14px;margin-top:10px}
+.field{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:10px;margin:6px 0}
+.neg{color:var(--red)}
+</style>
+</head>
+<body>
+<h1>Phase 15 mockup: budget share, currency, limits, summary</h1>
+<p class="n">Phone width, light theme, made-up numbers, English. Tap the A / B / C buttons in each part to compare. Pick one per part and tell Claude (for example "1 B, 2 A, 3 A, 4 C, 5 A").</p>
+
+<h2>1. Budget currency</h2>
+<p class="n">Today MKD and EUR are never added. Question: should the Budget show one total in a currency you choose in Settings (euro spending converted with the rate saved on each entry, rounded to the whole denar), or stay apart?</p>
+<div class="tabs" data-g="g1"><button aria-pressed="true" data-o="a">A: one converted total</button><button aria-pressed="false" data-o="b">B: MKD and EUR apart</button></div>
+<div class="opt on" data-g="g1" data-o="a"><div class="row">
+<div class="phone"><div class="card"><div class="big">18,450 ден.</div><div class="sub">Spent this month · in MKD</div><div class="muted" style="text-align:center">includes 60 EUR converted (3,690 ден.)</div></div>
+<div class="tiles"><div class="tile"><b>Food</b><br>7,200 ден.<div class="bar"><i style="width:72%"></i></div><div class="muted">limit 10,000</div></div><div class="tile"><b>Transport</b><br>3,100 ден.<div class="bar"><i style="width:52%"></i></div><div class="muted">limit 6,000</div></div></div>
+<div class="e" style="margin-top:10px"><div>Lunch<small>20 EUR, shown as 1,230 ден.</small></div><div>1,230 ден.</div></div></div>
+<div><p class="n"><b>For:</b> one number, one limit per category, the monthly summary compares like with like.<br><b>Against:</b> the total can change if the saved rates differ day to day; an entry's own amount is shown small under it. Settings gets a "Budget currency" choice (MKD or EUR).</p></div></div></div>
+<div class="opt" data-g="g1" data-o="b"><div class="row">
+<div class="phone"><div class="card"><div class="big">14,760 ден.</div><div class="big" style="font-size:20px">+ 60 EUR</div><div class="sub">Spent this month</div></div>
+<div class="tiles"><div class="tile"><b>Food</b><br>7,200 ден. + 20 EUR<div class="bar"><i style="width:72%"></i></div><div class="muted">limit 10,000 ден. only</div></div><div class="tile"><b>Transport</b><br>3,100 ден.<div class="bar"><i style="width:52%"></i></div><div class="muted">limit 6,000 ден.</div></div></div></div>
+<div><p class="n"><b>For:</b> nothing is ever converted, same as today.<br><b>Against:</b> a limit has to pick one currency, so euro spending does not count against it (or every limit needs two amounts). The summary compares each currency separately.</p></div></div></div>
+
+<h2>2. Group shares on the Budget tab</h2>
+<div class="tabs" data-g="g2"><button aria-pressed="true" data-o="a">A: mixed into the entries</button><button aria-pressed="false" data-o="b">B: separate "From groups" part</button><button aria-pressed="false" data-o="c">C: mixed, with a filter chip</button></div>
+<div class="opt on" data-g="g2" data-o="a"><div class="row"><div class="phone"><div class="card"><div class="big">18,450 ден.</div><div class="sub">Spent this month</div></div>
+<div class="e"><div>Coffee<small>Food · mine</small></div><div>120 ден.</div></div>
+<div class="e"><div>Hotel <span class="pill">Greece trip</span><small>Stay · your share</small></div><div>4,800 ден.</div></div>
+<div class="e"><div>Dinner <span class="pill">Flat</span><small>Food · your share</small></div><div>950 ден.</div></div></div>
+<p class="n">Group shares sit in the same list with a small group label. The category tiles and totals include them. Tapping a group share opens the group's expense (you edit it there, not here).</p></div></div>
+<div class="opt" data-g="g2" data-o="b"><div class="row"><div class="phone"><div class="card"><div class="big">18,450 ден.</div><div class="sub">Spent this month</div><div class="muted" style="text-align:center">Mine 6,000 · From groups 12,450</div></div>
+<div class="e"><div>Coffee<small>Food</small></div><div>120 ден.</div></div>
+<div class="card" style="margin-top:10px"><b>From groups</b> · 12,450 ден.<div class="e"><div>Hotel <span class="pill">Greece trip</span></div><div>4,800 ден.</div></div><div class="e"><div>Dinner <span class="pill">Flat</span></div><div>950 ден.</div></div></div></div>
+<p class="n">Your own entries stay as they are; group shares have their own block below, still counted in the total and the tiles.</p></div></div>
+<div class="opt" data-g="g2" data-o="c"><div class="row"><div class="phone"><div class="card"><div class="big">18,450 ден.</div><div class="sub">Spent this month</div></div>
+<div style="margin-bottom:8px"><span class="pill">All</span> <span class="pill" style="background:var(--brand)">Mine</span> <span class="pill">From groups</span></div>
+<div class="e"><div>Coffee<small>Food</small></div><div>120 ден.</div></div></div>
+<p class="n">One list like A, with chips to show only yours or only group shares. One extra tap only when you want to filter.</p></div></div>
+
+<h2>3. Where the switch and the currency live</h2>
+<div class="tabs" data-g="g3"><button aria-pressed="true" data-o="a">A: in each group's settings + Settings</button><button aria-pressed="false" data-o="b">B: only a list in Settings</button></div>
+<div class="opt on" data-g="g3" data-o="a"><div class="row"><div class="phone"><div class="card"><b>Greece trip · settings</b><div class="sw"><span>Count my shares in my budget<br><span class="muted">From now on. Past months stay as they were.</span></span><input type="checkbox" checked></div></div>
+<div class="card"><b>Settings</b><div class="sw"><span>Budget currency</span><span class="pill">MKD ▾</span></div></div></div>
+<p class="n">The switch sits in the group (where you think about that group). Settings has the budget currency only.</p></div></div>
+<div class="opt" data-g="g3" data-o="b"><div class="row"><div class="phone"><div class="card"><b>Settings · Budget</b><div class="sw"><span>Budget currency</span><span class="pill">MKD ▾</span></div><div class="sw"><span>Greece trip</span><input type="checkbox" checked></div><div class="sw"><span>Flat</span><input type="checkbox" checked></div><div class="sw"><span>Birthday dinner</span><input type="checkbox"></div></div></div>
+<p class="n">Everything about the budget in one place, one row per group. Nothing added to the group screens.</p></div></div>
+
+<h2>4. Limits</h2>
+<div class="tabs" data-g="g4"><button aria-pressed="true" data-o="a">A: bar on each tile</button><button aria-pressed="false" data-o="b">B: "Limits" list under the card</button><button aria-pressed="false" data-o="c">C: the set-a-limit sheet</button></div>
+<div class="opt on" data-g="g4" data-o="a"><div class="row"><div class="phone"><div class="card"><div class="big">18,450 ден.</div><div class="sub">of 25,000 limit</div><div class="bar"><i class="warn" style="width:74%"></i></div></div>
+<div class="tiles"><div class="tile"><b>Food</b><br>7,200 / 10,000<div class="bar"><i style="width:72%"></i></div></div><div class="tile"><b>Stay</b><br>4,800 / 4,500<div class="bar"><i class="over" style="width:100%"></i></div><div class="neg muted">300 over</div></div><div class="tile"><b>Fun</b><br>1,200<div class="muted">no limit · tap to set</div></div></div></div>
+<p class="n">Green under 80 %, amber from 80 %, red when over. Tiles without a limit show "tap to set". The big card has the whole-month limit.</p></div></div>
+<div class="opt" data-g="g4" data-o="b"><div class="row"><div class="phone"><div class="card"><div class="big">18,450 ден.</div><div class="sub">Spent this month</div></div>
+<div class="card"><b>Limits</b><div class="e"><div>Whole month</div><div>18,450 / 25,000</div></div><div class="bar"><i class="warn" style="width:74%"></i></div><div class="e"><div>Food</div><div>7,200 / 10,000</div></div><div class="bar"><i style="width:72%"></i></div><div class="e"><div>Stay</div><div class="neg">4,800 / 4,500</div></div><div class="bar"><i class="over" style="width:100%"></i></div></div></div>
+<p class="n">The tiles stay as today; limits get their own card with an Edit link.</p></div></div>
+<div class="opt" data-g="g4" data-o="c"><div class="row"><div class="phone"><div class="sheet"><b>Food · monthly limit</b><div class="field">10,000 ден.</div><div class="muted">Applies to every month from now on. Past months keep showing what was set then.</div><p><button class="btn">Save</button> <button class="btn" style="background:var(--card)">Remove limit</button></p></div></div>
+<p class="n">Tap a tile, type one amount, Save. 2 taps and 1 field. "Remove limit" appears only if one exists.</p></div></div>
+
+<h2>5. Monthly summary</h2>
+<div class="tabs" data-g="g5"><button aria-pressed="true" data-o="a">A: own screen</button><button aria-pressed="false" data-o="b">B: card on the Budget tab</button></div>
+<div class="opt on" data-g="g5" data-o="a"><div class="row"><div class="phone"><div class="card"><b>October vs September</b><div class="e"><div>Total</div><div>18,450 <span class="neg">▲ 12 %</span></div></div><div class="e"><div>Food</div><div>7,200 <span style="color:var(--green)">▼ 5 %</span></div></div><div class="e"><div>Stay</div><div>4,800 <span class="neg">▲ new</span></div></div><div class="e"><div>Income</div><div>40,000</div></div></div></div>
+<p class="n">A "Summary" link under the card opens a full screen (like Repeating income) with each category against the previous month.</p></div></div>
+<div class="opt" data-g="g5" data-o="b"><div class="row"><div class="phone"><div class="card"><div class="big">18,450 ден.</div><div class="sub">Spent this month</div><div class="muted" style="text-align:center">▲ 12 % vs September · Stay is up most</div></div></div>
+<p class="n">Only one line on the card: the change against last month and the biggest mover. Smaller, no new screen, less detail.</p></div></div>
+
+<script>
+document.querySelectorAll('.tabs').forEach(function(t){
+  t.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click',function(){
+      var g=t.dataset.g;
+      t.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b)});
+      document.querySelectorAll('.opt[data-g="'+g+'"]').forEach(function(o){o.classList.toggle('on',o.dataset.o===b.dataset.o)});
+    });
+  });
+});
+</script>
+</body>
+</html>

@@ -29,6 +29,8 @@ namespace Kvit.Domain.Entities
 
         public MemberEndKind? EndKind { get; private set; }
 
+        public bool CountsInBudget { get; private set; }
+
         public static GroupMember ForAccount(Guid groupId, Guid userId, string accountName, Guid addedByUserId, DateTimeOffset joinedAt)
         {
             return new GroupMember
@@ -39,6 +41,7 @@ namespace Kvit.Domain.Entities
                 Name = accountName,
                 JoinedAt = joinedAt,
                 AddedByUserId = addedByUserId,
+                CountsInBudget = true,
             };
         }
 
@@ -57,6 +60,7 @@ namespace Kvit.Domain.Entities
                 Name = validName.Value,
                 JoinedAt = joinedAt,
                 AddedByUserId = addedByUserId,
+                CountsInBudget = true,
             });
         }
 
@@ -151,6 +155,11 @@ namespace Kvit.Domain.Entities
             ClaimedAt = null;
 
             return Result.Ok(claimerUserId);
+        }
+
+        public void SetCountsInBudget(bool countsInBudget)
+        {
+            CountsInBudget = countsInBudget;
         }
 
         public void TurnIntoPlainName()

@@ -91,7 +91,7 @@ namespace Kvit.Domain.Services.Expenses
                 expense.SaveRate(rate);
             }
 
-            expense.Update(fields.Value, input.PaidByMemberId, shares.Value, userId, now);
+            expense.Update(fields.Value, input.PaidByMemberId, shares.Value, roster, userId, now);
             _activityEvents.Add(ActivityEvent.ExpenseEdited(groupId, userId, expenseId, changes, fields.Value.Amount.Currency, now));
             await _finishPaidOneBill.Execute(group, userId, cancellationToken);
 

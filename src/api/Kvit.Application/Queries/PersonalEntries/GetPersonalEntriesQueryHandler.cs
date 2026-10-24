@@ -39,12 +39,14 @@ namespace Kvit.Application.Queries.PersonalEntries
                 .ToListAsync(cancellationToken);
             List<PersonalCategoryRow> categories = await _context.PersonalCategoryRowsOfAsync(entries, cancellationToken);
             Dictionary<Guid, PersonalCategoryRow> categoriesById = categories.ToDictionary(category => category.Id);
+            List<GroupShareRow> groupShares = await _context.GroupShareRowsOf(userId.Value, firstDay.Value, firstDayOfNextMonth).ToListAsync(cancellationToken);
 
             return Result.Ok(new PersonalEntryMonthResponse(
                 firstDay.Value.ToString(MonthFormat, CultureInfo.InvariantCulture),
                 [.. entries.Select(entry => PersonalEntryQueries.PersonalEntryRowOf(entry, categoriesById))],
                 SpendingTotalsOf(entries, categories),
-                IncomeTotalsOf(entries)));
+                IncomeTotalsOf(entries),
+                groupShares));
         }
 
         private static Result<DateOnly> FirstDayOf(string? month)

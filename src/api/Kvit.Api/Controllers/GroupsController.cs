@@ -99,6 +99,14 @@ namespace Kvit.Api.Controllers
             return Result(result);
         }
 
+        [HttpPut("{groupId:guid}/members/me/counts-in-budget")]
+        public async Task<ActionResult> SetCountsInBudget(Guid groupId, SetCountsInBudgetRequest request, CancellationToken cancellationToken)
+        {
+            bool countsInBudget = request.CountsInBudget ?? throw new InvalidOperationException("The request reached the action without countsInBudget, although the model validation requires it.");
+            Result result = await _dispatcher.Send(new SetCountsInBudgetCommand(groupId, countsInBudget), cancellationToken);
+            return Result(result);
+        }
+
         [HttpDelete("{groupId:guid}/members/{memberId:guid}")]
         public async Task<ActionResult> RemoveMember(Guid groupId, Guid memberId, CancellationToken cancellationToken)
         {

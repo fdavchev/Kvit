@@ -411,6 +411,11 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("member_id");
 
+                    b.Property<bool>("CountsInBudget")
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("counts_in_budget");
+
                     b.Property<long>("InputValue")
                         .HasColumnType("bigint")
                         .HasColumnName("input_value");
@@ -543,6 +548,11 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("ClaimedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("claimed_at");
+
+                    b.Property<bool>("CountsInBudget")
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("counts_in_budget");
 
                     b.Property<string>("EndKind")
                         .HasColumnType("text")

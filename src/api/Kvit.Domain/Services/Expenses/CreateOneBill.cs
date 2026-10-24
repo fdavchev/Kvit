@@ -81,7 +81,8 @@ namespace Kvit.Domain.Services.Expenses
                 inputs.Add(new SplitInput(member.Value, share.InputValue));
             }
 
-            Result<IReadOnlyList<SplitShare>> shares = Expense.SplitAmong(new GroupRoster(people.Value), fields.Value, payer.Value, inputs);
+            GroupRoster roster = new(people.Value);
+            Result<IReadOnlyList<SplitShare>> shares = Expense.SplitAmong(roster, fields.Value, payer.Value, inputs);
             if (!shares.IsSuccess)
             {
                 return shares.ToFailure<OneBillCreated>();
@@ -93,7 +94,7 @@ namespace Kvit.Domain.Services.Expenses
                 return rate.ToFailure<OneBillCreated>();
             }
 
-            Expense expense = Expense.Create(group.Id, fields.Value, payer.Value, shares.Value, rate.Value, userId, clientRequestId, now);
+            Expense expense = Expense.Create(group.Id, fields.Value, payer.Value, shares.Value, roster, rate.Value, userId, clientRequestId, now);
             _groups.Add(group);
             _activityEvents.Add(ActivityEvent.GroupCreated(group.Id, userId, group.Name, now));
             foreach (NamedMember person in people.Value)

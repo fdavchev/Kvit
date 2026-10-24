@@ -310,4 +310,4 @@ Open ──owner confirms "close?"──▶ Closing ──everyone confirmed, or
 5. **Anyone in the group** can add name-only members ("Grandma"); removing people stays owner-only: **yes**.
 
 **Still open:**
-6. *(Release 2, can wait)* When someone claims "Marko", should Marko's older shares start counting in his budget? Suggested → yes; they're his real spending.
+6. *(Release 2)* When someone claims "Marko", should Marko's older shares start counting in his budget? **Answered 2026-10-24 (Filip): yes**, they're his real spending.
