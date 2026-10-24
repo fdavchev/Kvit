@@ -11,6 +11,7 @@ import {
 
 export const coffeeEntry: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000001',
+  kind: 'Spending',
   category: coffeeCategory,
   amountMinor: 12000,
   currency: 'MKD',
@@ -20,10 +21,12 @@ export const coffeeEntry: PersonalEntry = {
   rateDate: '2026-10-17',
   createdAt: '2026-10-19T08:00:00Z',
   updatedAt: null,
+  recurringIncomeId: null,
 }
 
 export const lunchInEuroEntry: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000002',
+  kind: 'Spending',
   category: personalFoodCategory,
   amountMinor: 1250,
   currency: 'EUR',
@@ -33,10 +36,12 @@ export const lunchInEuroEntry: PersonalEntry = {
   rateDate: '2026-10-17',
   createdAt: '2026-10-18T12:00:00Z',
   updatedAt: '2026-10-18T12:30:00Z',
+  recurringIncomeId: null,
 }
 
 export const gymEntryWithArchivedCategory: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000003',
+  kind: 'Spending',
   category: archivedGymCategory,
   amountMinor: 150000,
   currency: 'MKD',
@@ -46,10 +51,49 @@ export const gymEntryWithArchivedCategory: PersonalEntry = {
   rateDate: '2026-09-01',
   createdAt: '2026-09-02T18:00:00Z',
   updatedAt: null,
+  recurringIncomeId: null,
 }
 
 export function entryAnswerRow(entry: PersonalEntry): Record<string, unknown> {
-  return { ...entry, categoryId: entry.category.id }
+  return { ...entry, categoryId: entry.category === null ? null : entry.category.id }
+}
+
+export const salaryIncomeEntry: PersonalEntry = {
+  id: 'f0000000-0000-4000-8000-000000000007',
+  kind: 'Income',
+  category: null,
+  amountMinor: 6500000,
+  currency: 'MKD',
+  entryDate: '2026-10-15',
+  note: 'Salary',
+  mkdPerEur: 61.5,
+  rateDate: '2026-10-14',
+  createdAt: '2026-10-15T07:00:00Z',
+  updatedAt: null,
+  recurringIncomeId: null,
+}
+
+export const untitledEuroIncomeEntry: PersonalEntry = {
+  id: 'f0000000-0000-4000-8000-000000000008',
+  kind: 'Income',
+  category: null,
+  amountMinor: 20000,
+  currency: 'EUR',
+  entryDate: '2026-10-19',
+  note: null,
+  mkdPerEur: 61.5,
+  rateDate: '2026-10-17',
+  createdAt: '2026-10-19T09:00:00Z',
+  updatedAt: null,
+  recurringIncomeId: null,
+}
+
+export const generatedSalaryEntry: PersonalEntry = {
+  ...salaryIncomeEntry,
+  id: 'f0000000-0000-4000-8000-000000000009',
+  entryDate: '2026-10-01',
+  createdAt: '2026-10-01T07:00:00Z',
+  recurringIncomeId: 'a0000000-0000-4000-8000-000000000001',
 }
 
 export const octoberMonth: PersonalEntryMonth = {
@@ -67,6 +111,7 @@ export const octoberMonth: PersonalEntryMonth = {
       categories: [{ category: personalFoodCategory, totalMinor: 1250, count: 1 }],
     },
   ],
+  incomeTotals: [],
 }
 
 export function monthAnswerBody(month: PersonalEntryMonth): Record<string, unknown> {
@@ -77,11 +122,13 @@ export function monthAnswerBody(month: PersonalEntryMonth): Record<string, unkno
       ...total,
       categories: total.categories.map((row) => ({ ...row, categoryId: row.category.id })),
     })),
+    incomeTotals: month.incomeTotals,
   }
 }
 
 export const groceriesEntry: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000004',
+  kind: 'Spending',
   category: personalGroceriesCategory,
   amountMinor: 123400,
   currency: 'MKD',
@@ -91,10 +138,12 @@ export const groceriesEntry: PersonalEntry = {
   rateDate: '2026-10-10',
   createdAt: '2026-10-12T17:00:00Z',
   updatedAt: null,
+  recurringIncomeId: null,
 }
 
 export const secondCoffeeEntry: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000005',
+  kind: 'Spending',
   category: coffeeCategory,
   amountMinor: 15000,
   currency: 'MKD',
@@ -104,6 +153,7 @@ export const secondCoffeeEntry: PersonalEntry = {
   rateDate: '2026-10-17',
   createdAt: '2026-10-18T09:00:00Z',
   updatedAt: null,
+  recurringIncomeId: null,
 }
 
 export const mkdOnlyMonth: PersonalEntryMonth = {
@@ -119,10 +169,12 @@ export const mkdOnlyMonth: PersonalEntryMonth = {
       ],
     },
   ],
+  incomeTotals: [],
 }
 
 export const euroDinnerEntry: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000006',
+  kind: 'Spending',
   category: personalFoodCategory,
   amountMinor: 4250,
   currency: 'EUR',
@@ -132,6 +184,7 @@ export const euroDinnerEntry: PersonalEntry = {
   rateDate: '2026-08-14',
   createdAt: '2026-08-14T19:00:00Z',
   updatedAt: null,
+  recurringIncomeId: null,
 }
 
 export const euroOnlyAugust: PersonalEntryMonth = {
@@ -144,6 +197,7 @@ export const euroOnlyAugust: PersonalEntryMonth = {
       categories: [{ category: personalFoodCategory, totalMinor: 4250, count: 1 }],
     },
   ],
+  incomeTotals: [],
 }
 
 export const septemberWithArchivedCategory: PersonalEntryMonth = {
@@ -156,8 +210,40 @@ export const septemberWithArchivedCategory: PersonalEntryMonth = {
       categories: [{ category: archivedGymCategory, totalMinor: 150000, count: 1 }],
     },
   ],
+  incomeTotals: [],
 }
 
 export function emptyMonth(month: string): PersonalEntryMonth {
-  return { month, entries: [], totals: [] }
+  return { month, entries: [], totals: [], incomeTotals: [] }
+}
+
+export const octoberWithSalary: PersonalEntryMonth = {
+  month: '2026-10',
+  entries: [coffeeEntry, lunchInEuroEntry, salaryIncomeEntry],
+  totals: octoberMonth.totals,
+  incomeTotals: [{ currency: 'MKD', totalMinor: 6500000, count: 1 }],
+}
+
+export const octoberWithTwoIncomes: PersonalEntryMonth = {
+  month: '2026-10',
+  entries: [untitledEuroIncomeEntry, coffeeEntry, salaryIncomeEntry],
+  totals: [octoberMonth.totals[0]],
+  incomeTotals: [
+    { currency: 'MKD', totalMinor: 6500000, count: 1 },
+    { currency: 'EUR', totalMinor: 20000, count: 1 },
+  ],
+}
+
+export const incomeOnlyOctober: PersonalEntryMonth = {
+  month: '2026-10',
+  entries: [salaryIncomeEntry],
+  totals: [],
+  incomeTotals: [{ currency: 'MKD', totalMinor: 6500000, count: 1 }],
+}
+
+export const euroIncomeOnlyOctober: PersonalEntryMonth = {
+  month: '2026-10',
+  entries: [untitledEuroIncomeEntry],
+  totals: [],
+  incomeTotals: [{ currency: 'EUR', totalMinor: 20000, count: 1 }],
 }

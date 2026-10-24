@@ -11,22 +11,28 @@ interface KvitAmountProps {
 }
 
 export function KvitAmount({ parts }: KvitAmountProps) {
-  const fractionDigits = parts.unsignedDecimal.split('.')[1]?.length ?? 0
-
   return (
     <>
       <span className="sr-only">{moneyText(parts)}</span>
-      <NumberFlow
-        aria-hidden="true"
-        className="tabular-nums"
-        value={parts.unsignedDecimal as `${number}`}
-        locales={intlLocaleWithTheSameSeparatorsAs(parts.language)}
-        format={{ minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits }}
-        prefix={`${parts.sign}${parts.currencyBefore}`}
-        suffix={parts.currencyAfter}
-        transformTiming={rollTiming}
-        opacityTiming={rollTiming}
-      />
+      <KvitRollingNumber parts={parts} />
     </>
+  )
+}
+
+export function KvitRollingNumber({ parts }: KvitAmountProps) {
+  const fractionDigits = parts.unsignedDecimal.split('.')[1]?.length ?? 0
+
+  return (
+    <NumberFlow
+      aria-hidden="true"
+      className="tabular-nums"
+      value={parts.unsignedDecimal as `${number}`}
+      locales={intlLocaleWithTheSameSeparatorsAs(parts.language)}
+      format={{ minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits }}
+      prefix={`${parts.sign}${parts.currencyBefore}`}
+      suffix={parts.currencyAfter}
+      transformTiming={rollTiming}
+      opacityTiming={rollTiming}
+    />
   )
 }

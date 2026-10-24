@@ -12,5 +12,9 @@ namespace Kvit.Domain.Interfaces
         Task<Result<PersonalEntry>> FindOwnedAsync(Guid userId, Guid entryId, CancellationToken cancellationToken);
 
         Task<Result<PersonalEntry>> FindOwnedIncludingDeletedAsync(Guid userId, Guid entryId, CancellationToken cancellationToken);
+
+        Task<bool> AnyFromRecurringIncomeAsync(Guid recurringIncomeId, CancellationToken cancellationToken);
+
+        Task<IReadOnlyDictionary<Guid, DateOnly>> LastDatesFromRecurringIncomesOfAsync(Guid userId, CancellationToken cancellationToken);
     }
 }

@@ -24,7 +24,7 @@ namespace Kvit.Api.Controllers
         public async Task<ActionResult<PersonalEntryRow>> Add(AddPersonalEntryRequest request, CancellationToken cancellationToken)
         {
             PersonalEntryInput input = new(request.CategoryId, request.AmountMinor, request.Currency, request.EntryDate, request.Note);
-            Result<PersonalEntryRow> result = await _dispatcher.Send<AddPersonalEntryCommand, PersonalEntryRow>(new AddPersonalEntryCommand(request.ClientRequestId, input), cancellationToken);
+            Result<PersonalEntryRow> result = await _dispatcher.Send<AddPersonalEntryCommand, PersonalEntryRow>(new AddPersonalEntryCommand(request.ClientRequestId, request.Kind, input), cancellationToken);
             return Result(result);
         }
 
@@ -32,7 +32,7 @@ namespace Kvit.Api.Controllers
         public async Task<ActionResult<PersonalEntryRow>> Edit(Guid entryId, EditPersonalEntryRequest request, CancellationToken cancellationToken)
         {
             PersonalEntryInput input = new(request.CategoryId, request.AmountMinor, request.Currency, request.EntryDate, request.Note);
-            Result<PersonalEntryRow> result = await _dispatcher.Send<EditPersonalEntryCommand, PersonalEntryRow>(new EditPersonalEntryCommand(entryId, input), cancellationToken);
+            Result<PersonalEntryRow> result = await _dispatcher.Send<EditPersonalEntryCommand, PersonalEntryRow>(new EditPersonalEntryCommand(entryId, request.Kind, input), cancellationToken);
             return Result(result);
         }
 

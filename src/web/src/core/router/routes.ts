@@ -15,6 +15,7 @@ export const routes = {
   newBill: '/groups/new/bill',
   recentlyDeletedGroups: '/groups/recently-deleted',
   budget: '/budget',
+  budgetRepeating: '/budget/repeating',
   group: (groupId: string) => `/groups/${groupId}`,
   groupActivity: (groupId: string) => `/groups/${groupId}/activity`,
   groupBalances: (groupId: string) => `/groups/${groupId}/balances`,

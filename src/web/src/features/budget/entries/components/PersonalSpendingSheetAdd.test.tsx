@@ -150,7 +150,7 @@ describe('PersonalSpendingSheet, adding', () => {
       expect(taps).toBe(2)
     })
 
-    it('sends a request id, the category, the amount in deni, MKD, today and no note', async () => {
+    it('sends a request id, kind Spending, the category, the amount in deni, MKD, today and no note', async () => {
       vi.useFakeTimers({ toFake: ['Date'] })
       vi.setSystemTime(new Date('2026-10-19T10:00:00Z'))
       const { fetchMock } = await renderSpendingSheet({ answers: savedAnswer })
@@ -165,6 +165,7 @@ describe('PersonalSpendingSheet, adding', () => {
       const body = sentBody(fetchMock, 'POST', '/api/personal/entries')
       expect(body).toEqual({
         clientRequestId: expect.stringMatching(uuidPattern),
+        kind: 'Spending',
         categoryId: coffeeCategory.id,
         amountMinor: 12000,
         currency: 'MKD',

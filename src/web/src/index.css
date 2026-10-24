@@ -339,8 +339,8 @@ html [data-sonner-toast][data-styled='true']:focus-visible {
 
 @utility fit-amount {
   --average-glyph-width: 0.62;
-  font-size: min(1em, calc(100cqi / (var(--amount-length) * var(--average-glyph-width))));
-  white-space: nowrap;
+  font-size: max(0.75em, min(1em, calc(100cqi / (var(--amount-length) * var(--average-glyph-width)))));
+  overflow-wrap: normal;
 }
 
 @layer base {

@@ -33,7 +33,7 @@ namespace Kvit.Application.Queries.PersonalEntries
             }
 
             DateOnly firstDayOfNextMonth = firstDay.Value.AddMonths(1);
-            List<PersonalEntryDto> entries = await _context.SpendingOf(userId.Value)
+            List<PersonalEntryDto> entries = await _context.EntriesOf(userId.Value)
                 .Where(entry => entry.EntryDate >= firstDay.Value && entry.EntryDate < firstDayOfNextMonth)
                 .PersonalEntryDtos()
                 .ToListAsync(cancellationToken);
@@ -43,7 +43,8 @@ namespace Kvit.Application.Queries.PersonalEntries
             return Result.Ok(new PersonalEntryMonthResponse(
                 firstDay.Value.ToString(MonthFormat, CultureInfo.InvariantCulture),
                 [.. entries.Select(entry => PersonalEntryQueries.PersonalEntryRowOf(entry, categoriesById))],
-                TotalsOf(entries, categories)));
+                SpendingTotalsOf(entries, categories),
+                IncomeTotalsOf(entries)));
         }
 
         private static Result<DateOnly> FirstDayOf(string? month)
@@ -61,9 +62,10 @@ namespace Kvit.Application.Queries.PersonalEntries
             return Result.Ok(firstDay);
         }
 
-        private static List<PersonalCurrencyTotalRow> TotalsOf(IReadOnlyList<PersonalEntryDto> entries, IReadOnlyList<PersonalCategoryRow> categoriesInOrder)
+        private static List<PersonalCurrencyTotalRow> SpendingTotalsOf(IReadOnlyList<PersonalEntryDto> entries, IReadOnlyList<PersonalCategoryRow> categoriesInOrder)
         {
             return [.. entries
+                .Where(entry => entry.Kind == PersonalEntryKind.Spending)
                 .GroupBy(entry => entry.Currency)
                 .OrderBy(currencyEntries => currencyEntries.Key)
                 .Select(currencyEntries => new PersonalCurrencyTotalRow(
@@ -72,10 +74,22 @@ namespace Kvit.Application.Queries.PersonalEntries
                     CategoryTotalsOf(currencyEntries, categoriesInOrder)))];
         }
 
+        private static List<PersonalIncomeTotalRow> IncomeTotalsOf(IReadOnlyList<PersonalEntryDto> entries)
+        {
+            return [.. entries
+                .Where(entry => entry.Kind == PersonalEntryKind.Income)
+                .GroupBy(entry => entry.Currency)
+                .OrderBy(currencyEntries => currencyEntries.Key)
+                .Select(currencyEntries => new PersonalIncomeTotalRow(
+                    currencyEntries.Key,
+                    currencyEntries.Sum(entry => entry.AmountMinor),
+                    currencyEntries.Count()))];
+        }
+
         private static List<PersonalCategoryTotalRow> CategoryTotalsOf(IEnumerable<PersonalEntryDto> currencyEntries, IReadOnlyList<PersonalCategoryRow> categoriesInOrder)
         {
             Dictionary<Guid, List<PersonalEntryDto>> entriesByCategory = currencyEntries
-                .GroupBy(entry => entry.CategoryId)
+                .GroupBy(entry => entry.CategoryId ?? throw new InvalidOperationException($"Spending entry {entry.Id} has no category."))
                 .ToDictionary(categoryEntries => categoryEntries.Key, categoryEntries => categoryEntries.ToList());
 
             return [.. categoriesInOrder

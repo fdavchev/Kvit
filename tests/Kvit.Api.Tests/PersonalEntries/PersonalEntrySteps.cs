@@ -26,6 +26,23 @@ namespace Kvit.Api.Tests.PersonalEntries
             return entryId;
         }
 
+        public static async Task<Guid> AddIncomeAsync(HttpClient client, IncomeEntryInput input, Guid? clientRequestId = null)
+        {
+            HttpResponseMessage response = await PersonalEntryRequests.AddIncomeAsync(client, input, clientRequestId);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return (await AuthRequests.ReadJsonAsync(response)).GetProperty("id").GetGuid();
+        }
+
+        public static async Task<Guid> AddIncomeAndDeleteAsync(HttpClient client, IncomeEntryInput input)
+        {
+            Guid entryId = await AddIncomeAsync(client, input);
+            HttpResponseMessage deleted = await PersonalEntryRequests.DeleteAsync(client, entryId);
+
+            Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
+            return entryId;
+        }
+
         public static async Task<JsonElement> MonthAsync(HttpClient client, string month = PersonalEntryRequests.DefaultMonth)
         {
             HttpResponseMessage response = await PersonalEntryRequests.ListAsync(client, month);

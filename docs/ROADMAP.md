@@ -202,8 +202,19 @@ Release 1 accepted 2026-10-16. Filip put this BACKLOG "must do" before Phase 13.
 - [x] **Done 2026-10-20 (VERIFIED by automated test: backend 4169, frontend 8631; the review fixes are not yet seen in a browser).** Step 7: code review (8 findings fixed), report `reports/2026-10-20-phase-13-personal-spending.md`, guide `guides/phase-13-personal-spending.md`, first-push texts `guides/phase-13-pr-text.md`
 - [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the 2 migrations on Neon)
 
+## Phase 14: Income, once and repeating · `feat/14-income`
+- [x] Step 0: mockups (three rounds) and Filip's picks (2026-10-20, `DECISIONS.md`)
+- [x] **Done 2026-10-20 (VERIFIED by automated test: backend 4354, frontend 8651; no UI yet).** Step 1: backend, income once and the `Income` migration (also created the empty `recurring_incomes` table)
+- [x] **Done 2026-10-20 (VERIFIED by automated test: backend 4608, frontend 8749; no UI yet).** Step 2: backend, repeating income (create, list, edit, stop, restart; migration `RecurringIncomeRules`)
+- [x] **Done 2026-10-20 (VERIFIED by automated test: backend 4854, frontend 8749; no UI yet).** Step 3: backend, lazy generation (catch-up endpoint, schedule, local today, `nextDate`; migration `GeneratedIncomeEntries`)
+- [x] **Done 2026-10-20 (VERIFIED by automated test: frontend 8955; not seen in a browser).** Step 4: frontend, "Spending or Income?" sheet and add income once
+- [x] **Done 2026-10-20 (VERIFIED by automated test: frontend 9503; not seen in a browser).** Step 5: frontend, repeating income (Repeats and Ends chips, the row and the list)
+- [x] **Done 2026-10-21 (VERIFIED by automated test: frontend 9553; not seen in a browser).** Step 6: frontend, Budget tab with the Left card
+- [x] **Done 2026-10-21 (VERIFIED by live run, headless Chromium, local stack; 6 bugs found, all fixed; Bug 6 fix VERIFIED by automated test only; backend 4860, frontend 9600).** Step 7: desktop layout and the 360 px browser pass (`reports/2026-10-21-phase-14-browser-pass.md`)
+- [x] **Done 2026-10-24 (VERIFIED by automated test: backend 4892, frontend 9717; the fixes VERIFIED by live run in the tester's re-checks).** Step 8: two code reviews (20 findings fixed), report `reports/2026-10-24-phase-14-income.md`, guide `guides/phase-14-income.md`, first-push texts `guides/phase-14-pr-text.md` (migrations `RecurringIncomeRules`, `GeneratedIncomeEntries`, `PersonalEntryOriginRules` came with it)
+- [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the migration on Neon)
+
 ## Later phases
-- Phase 14: income, once and repeating (lazy)
 - Phase 15: budget share per group, budget currency, limits, monthly summary
 - Phase 16: possible duplicates, group totals per category, group spending plan
 

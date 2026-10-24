@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { readWholeNumber } from './readFields'
+import { readOrNullWhenMissing, readTextOrNull, readWholeNumber, readYesNo } from './readFields'
 
 describe('readWholeNumber', () => {
   it.each([
@@ -31,5 +31,25 @@ describe('readWholeNumber', () => {
 
   it('throws an error naming the field and saying nothing was there when the field is missing', () => {
     expect(() => readWholeNumber({}, 'balanceMinor', 'a balance')).toThrow(/"balanceMinor".*nothing/)
+  })
+})
+
+describe('readOrNullWhenMissing', () => {
+  it('returns null when the field is not there at all', () => {
+    expect(readOrNullWhenMissing({}, 'hasEntries', 'a repeating income', readYesNo)).toBeNull()
+  })
+
+  it.each([true, false])('reads a field that is there with the given reader: %j', (value) => {
+    expect(readOrNullWhenMissing({ hasEntries: value }, 'hasEntries', 'a repeating income', readYesNo)).toBe(value)
+  })
+
+  it.each([null, 'yes', 1])('lets the given reader refuse a field that is there but wrong: %j', (value) => {
+    expect(() => readOrNullWhenMissing({ hasEntries: value }, 'hasEntries', 'a repeating income', readYesNo)).toThrow(
+      /"hasEntries".*a repeating income/,
+    )
+  })
+
+  it('keeps a null that the given reader accepts', () => {
+    expect(readOrNullWhenMissing({ recurringIncomeId: null }, 'recurringIncomeId', 'a personal entry', readTextOrNull)).toBeNull()
   })
 })

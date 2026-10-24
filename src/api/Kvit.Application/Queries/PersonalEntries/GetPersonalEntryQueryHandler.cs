@@ -21,7 +21,7 @@ namespace Kvit.Application.Queries.PersonalEntries
                 return Result.Unauthorized<PersonalEntryRow>(userId.Error, userId.ErrorCode);
             }
 
-            PersonalEntryDto? entry = await _context.SpendingOf(userId.Value)
+            PersonalEntryDto? entry = await _context.EntriesOf(userId.Value)
                 .Where(candidate => candidate.Id == query.EntryId)
                 .PersonalEntryDtos()
                 .SingleOrDefaultAsync(cancellationToken);

@@ -9,6 +9,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
     public class PersonalEntryConfiguration : IEntityTypeConfiguration<PersonalEntry>
     {
         public const string ClientRequestIdIndexName = "ix_personal_entries_client_request_id";
+        public const string RecurringIncomeDateIndexName = "ix_personal_entries_recurring_income_id_entry_date";
 
         public void Configure(EntityTypeBuilder<PersonalEntry> builder)
         {
@@ -20,6 +21,9 @@ namespace Kvit.Infrastructure.Persistence.Configurations
                 table.HasCheckConstraint("ck_personal_entries_note_length", $"char_length(note) BETWEEN 1 AND {ExpenseFields.NoteMaxLength}");
                 table.HasCheckConstraint("ck_personal_entries_mkd_per_eur_positive", "mkd_per_eur > 0");
                 table.HasCheckConstraint("ck_personal_entries_spending_has_category", $"kind <> '{nameof(PersonalEntryKind.Spending)}' OR category_id IS NOT NULL");
+                table.HasCheckConstraint("ck_personal_entries_income_has_no_category", $"kind <> '{nameof(PersonalEntryKind.Income)}' OR category_id IS NULL");
+                table.HasCheckConstraint("ck_personal_entries_generated_is_income", $"recurring_income_id IS NULL OR kind = '{nameof(PersonalEntryKind.Income)}'");
+                table.HasCheckConstraint("ck_personal_entries_has_origin", "client_request_id IS NOT NULL OR recurring_income_id IS NOT NULL");
             });
 
             builder.Property(entry => entry.Kind).HasConversion<string>();
@@ -28,6 +32,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
 
             builder.HasIndex(entry => entry.ClientRequestId).HasDatabaseName(ClientRequestIdIndexName).IsUnique();
             builder.HasIndex(entry => new { entry.UserId, entry.EntryDate });
+            builder.HasIndex(entry => new { entry.RecurringIncomeId, entry.EntryDate }).HasDatabaseName(RecurringIncomeDateIndexName).IsUnique();
 
             builder.HasOne<AppUser>()
                 .WithMany()
@@ -37,6 +42,11 @@ namespace Kvit.Infrastructure.Persistence.Configurations
             builder.HasOne<Category>()
                 .WithMany()
                 .HasForeignKey(entry => entry.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne<RecurringIncome>()
+                .WithMany()
+                .HasForeignKey(entry => entry.RecurringIncomeId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

@@ -9,11 +9,11 @@ namespace Kvit.Application.Queries.PersonalEntries
 {
     public static class PersonalEntryQueries
     {
-        public static IQueryable<PersonalEntry> SpendingOf(this AppDbContext context, Guid userId)
+        public static IQueryable<PersonalEntry> EntriesOf(this AppDbContext context, Guid userId)
         {
             return context.PersonalEntries
                 .AsNoTracking()
-                .Where(entry => entry.UserId == userId && entry.DeletedAt == null && entry.Kind == PersonalEntryKind.Spending);
+                .Where(entry => entry.UserId == userId && entry.DeletedAt == null);
         }
 
         public static IQueryable<PersonalEntryDto> PersonalEntryDtos(this IQueryable<PersonalEntry> entries)
@@ -24,20 +24,22 @@ namespace Kvit.Application.Queries.PersonalEntries
                 .ThenByDescending(entry => entry.Id)
                 .Select(entry => new PersonalEntryDto(
                     entry.Id,
-                    entry.CategoryId!.Value,
+                    entry.Kind,
+                    entry.CategoryId,
                     entry.AmountMinor,
                     entry.Currency,
                     entry.EntryDate,
                     entry.Note,
                     entry.MkdPerEur,
                     entry.RateDate,
+                    entry.RecurringIncomeId,
                     entry.CreatedAt,
                     entry.UpdatedAt));
         }
 
         public static Task<List<PersonalCategoryRow>> PersonalCategoryRowsOfAsync(this AppDbContext context, IReadOnlyCollection<PersonalEntryDto> entries, CancellationToken cancellationToken)
         {
-            List<Guid> categoryIds = [.. entries.Select(entry => entry.CategoryId).Distinct()];
+            List<Guid> categoryIds = [.. entries.Select(entry => entry.CategoryId).OfType<Guid>().Distinct()];
 
             return context.Categories
                 .AsNoTracking()
@@ -50,14 +52,16 @@ namespace Kvit.Application.Queries.PersonalEntries
         {
             return new PersonalEntryRow(
                 entry.Id,
+                entry.Kind,
                 entry.CategoryId,
-                categoriesById[entry.CategoryId],
+                entry.CategoryId is Guid categoryId ? categoriesById[categoryId] : null,
                 entry.AmountMinor,
                 entry.Currency,
                 entry.EntryDate,
                 entry.Note,
                 entry.MkdPerEur,
                 entry.RateDate,
+                entry.RecurringIncomeId,
                 entry.CreatedAt,
                 entry.UpdatedAt);
         }

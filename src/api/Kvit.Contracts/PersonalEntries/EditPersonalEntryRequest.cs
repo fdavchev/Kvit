@@ -1,9 +1,13 @@
+using System.ComponentModel.DataAnnotations;
+using Kvit.Domain.Entities;
+
 namespace Kvit.Contracts.PersonalEntries
 {
     public sealed record EditPersonalEntryRequest(
-        Guid CategoryId,
+        Guid? CategoryId,
         long AmountMinor,
         string Currency,
         string EntryDate,
-        string? Note);
+        string? Note,
+        [EnumDataType(typeof(PersonalEntryKind))] PersonalEntryKind Kind = PersonalEntryKind.Spending);
 }

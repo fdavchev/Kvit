@@ -1,8 +1,12 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
-import type { PersonalEntry } from '@/core/services/personalEntries/personalEntriesService'
+import { routes } from '@/core/router/routes'
+import type { PersonalEntry, PersonalEntryKind } from '@/core/services/personalEntries/personalEntriesService'
+import type { RecurringIncome } from '@/core/services/recurringIncomes/recurringIncomesService'
+import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitError } from '@/shared/components/KvitError'
 import { KvitLoading } from '@/shared/components/KvitLoading'
@@ -12,10 +16,18 @@ import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
 import { useIsDesktop } from '@/shared/hooks/useIsDesktop'
 import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { currentMonthInTimeZone } from '@/shared/utils/calendarMonth'
+import { cn } from '@/shared/utils/cn'
 import { todayInTimeZone } from '@/shared/utils/formatDate'
 import { budgetMonths } from '../../budgetMonths'
+import { PersonalIncomeSheet } from '../../entries/components/PersonalIncomeSheet'
 import { PersonalSpendingSheet } from '../../entries/components/PersonalSpendingSheet'
 import { usePersonalEntries } from '../../entries/hooks/usePersonalEntries'
+import { RecurringIncomeListSheet } from '../../recurring/components/RecurringIncomeListSheet'
+import { RecurringIncomeRow, RecurringIncomeRowError } from '../../recurring/components/RecurringIncomeRow'
+import { useCatchUpOnOpen } from '../../recurring/hooks/useCatchUpOnOpen'
+import { useRecurringIncomes } from '../../recurring/hooks/useRecurringIncomes'
+import { liveRecurringIncome } from '../../recurring/recurringIncomeCache'
+import { BudgetAddChoiceSheet } from './BudgetAddChoiceSheet'
 import { BudgetFloatingAddButton, BudgetRoundAddButton } from './BudgetAddButton'
 import { BudgetTotalCard } from './BudgetTotalCard'
 import { CategoryTotals } from './CategoryTotals'
@@ -24,22 +36,64 @@ import { PersonalEntryListItem } from './PersonalEntryListItem'
 
 const receiptEmoji = '\u{1F9FE}'
 
+type AddingStep = 'choice' | PersonalEntryKind
+
+const mostIncomesInSheet = 2
+
 export function BudgetScreen() {
   const { t } = useTranslation()
   const me = useSignedInMe()
   const isDesktop = useIsDesktop()
   const [currentMonth] = useState<string>(() => currentMonthInTimeZone(me.timeZone, new Date()))
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth)
-  const [isAdding, setIsAdding] = useState<boolean>(false)
+  const [addingStep, setAddingStep] = useState<AddingStep | null>(null)
   const [openedEntry, setOpenedEntry] = useState<PersonalEntry | null>(null)
+  const [isRepeatingListOpen, setIsRepeatingListOpen] = useState<boolean>(false)
+  const [openedRecurringIncome, setOpenedRecurringIncome] = useState<RecurringIncome | null>(null)
+  const [handOnOpener, setHandOnOpener] = useState<Element | null>(null)
+  const navigate = useNavigate()
   const entriesQuery = usePersonalEntries(selectedMonth)
+  const recurringQuery = useRecurringIncomes()
   const entriesRef = useListAnimation<HTMLUListElement>()
+  useCatchUpOnOpen()
+  const today = todayInTimeZone(me.timeZone, new Date())
 
-  function renderMonth() {
+  function startAdding(): void {
+    setHandOnOpener(document.activeElement)
+    setAddingStep('choice')
+  }
+
+  function openRepeating(incomes: readonly RecurringIncome[]): void {
+    if (incomes.length > 0 && incomes.length <= mostIncomesInSheet) {
+      setHandOnOpener(document.activeElement)
+      setIsRepeatingListOpen(true)
+      return
+    }
+    void navigate(routes.budgetRepeating)
+  }
+
+  function closeRepeatingList(editedIncome: RecurringIncome | null): void {
+    setIsRepeatingListOpen(false)
+    setOpenedRecurringIncome(editedIncome)
+  }
+
+  function renderRepeatingRow(): ReactNode {
+    if (recurringQuery.isPending) {
+      return null
+    }
+    if (recurringQuery.isError) {
+      return <RecurringIncomeRowError onRetry={() => void recurringQuery.refetch()} />
+    }
+    const incomes = recurringQuery.data
+    return <RecurringIncomeRow incomes={incomes} onOpen={() => openRepeating(incomes)} />
+  }
+
+  function renderMonth(repeatingRow: ReactNode) {
     if (entriesQuery.isPending) {
       return (
         <KvitLoading>
           <KvitSkeleton className="mt-5 h-28 rounded-[20px]" />
+          <KvitSkeleton className="mt-3 h-16 rounded-[20px]" />
           <div className="mt-5 grid grid-cols-4 gap-x-1.5">
             <KvitSkeleton className="h-20 rounded-[14px]" />
             <KvitSkeleton className="h-20 rounded-[14px]" />
@@ -55,25 +109,42 @@ export function BudgetScreen() {
     }
     if (entriesQuery.isError) {
       return (
-        <KvitError
-          message={t(errorMessageKey(entriesQuery.error))}
-          onRetry={() => void entriesQuery.refetch()}
-        />
+        <>
+          {repeatingRow}
+          <KvitError
+            message={t(errorMessageKey(entriesQuery.error))}
+            onRetry={() => void entriesQuery.refetch()}
+          />
+        </>
       )
     }
-    const { entries, totals } = entriesQuery.data
+    const { entries, totals, incomeTotals } = entriesQuery.data
     if (entries.length === 0) {
       return (
-        <div className="pt-6">
-          <KvitEmpty emoji={receiptEmoji} title={t('budget.screen.emptyTitle')} message={t('expenses.emptyHint')} />
-        </div>
+        <>
+          {repeatingRow}
+          <div className="pt-6">
+            <KvitEmpty emoji={receiptEmoji} title={t('budget.screen.emptyTitle')} message={t('expenses.emptyHint')} />
+          </div>
+        </>
       )
     }
-    const today = todayInTimeZone(me.timeZone, new Date())
     return (
       <>
-        <BudgetTotalCard totals={totals} />
-        <CategoryTotals totals={totals} />
+        {totals.length === 0 && incomeTotals.length === 0 ? (
+          <>
+            <p className={cn(balancesCardLook, 'mt-5 py-4 text-center font-semibold text-muted-foreground')}>
+              {t('budget.screen.emptyTitle')}
+            </p>
+            {repeatingRow}
+          </>
+        ) : (
+          <>
+            <BudgetTotalCard totals={totals} incomeTotals={incomeTotals} />
+            {repeatingRow}
+            {totals.length > 0 && <CategoryTotals totals={totals} />}
+          </>
+        )}
         <ul
           ref={entriesRef}
           aria-label={t('budget.screen.entries')}
@@ -97,13 +168,29 @@ export function BudgetScreen() {
         selectedMonth={selectedMonth}
         onSelect={setSelectedMonth}
       />
-      {isDesktop && <BudgetRoundAddButton onClick={() => setIsAdding(true)} />}
-      {renderMonth()}
-      {!isDesktop && <BudgetFloatingAddButton onClick={() => setIsAdding(true)} />}
-      {isAdding && <PersonalSpendingSheet onClose={() => setIsAdding(false)} />}
-      {openedEntry !== null && (
-        <PersonalSpendingSheet key={openedEntry.id} entry={openedEntry} onClose={() => setOpenedEntry(null)} />
+      {isDesktop && <BudgetRoundAddButton onClick={startAdding} />}
+      {renderMonth(renderRepeatingRow())}
+      {!isDesktop && <BudgetFloatingAddButton onClick={startAdding} />}
+      {addingStep === 'choice' && <BudgetAddChoiceSheet onClose={setAddingStep} />}
+      {addingStep === 'Spending' && <PersonalSpendingSheet opener={handOnOpener} onClose={() => setAddingStep(null)} />}
+      {addingStep === 'Income' && <PersonalIncomeSheet opener={handOnOpener} onClose={() => setAddingStep(null)} />}
+      {isRepeatingListOpen && recurringQuery.data !== undefined && (
+        <RecurringIncomeListSheet incomes={recurringQuery.data} today={today} onClose={closeRepeatingList} />
       )}
+      {openedRecurringIncome !== null && (
+        <PersonalIncomeSheet
+          key={openedRecurringIncome.id}
+          recurringIncome={liveRecurringIncome(openedRecurringIncome, recurringQuery.data)}
+          opener={handOnOpener}
+          onClose={() => setOpenedRecurringIncome(null)}
+        />
+      )}
+      {openedEntry !== null &&
+        (openedEntry.kind === 'Income' ? (
+          <PersonalIncomeSheet key={openedEntry.id} entry={openedEntry} onClose={() => setOpenedEntry(null)} />
+        ) : (
+          <PersonalSpendingSheet key={openedEntry.id} entry={openedEntry} onClose={() => setOpenedEntry(null)} />
+        ))}
     </KvitScreen>
   )
 }

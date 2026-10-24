@@ -26,6 +26,12 @@ export function formatGroupedDecimal(plainDecimal: string, language: Language): 
   return `${sign}${groupedWhole}${fractionText(fraction, separators)}`
 }
 
+export function groupedDecimalPieces(plainDecimal: string, language: Language): string[] {
+  const thousands = numberSeparators[language].thousands
+  const groups = formatGroupedDecimal(plainDecimal, language).split(thousands)
+  return groups.map((group, index) => (index < groups.length - 1 ? `${group}${thousands}` : group))
+}
+
 export function formatUngroupedDecimal(plainDecimal: string, language: Language): string {
   const { sign, whole, fraction } = readPlainDecimal(plainDecimal)
   return `${sign}${whole}${fractionText(fraction, numberSeparators[language])}`

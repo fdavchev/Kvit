@@ -113,6 +113,15 @@ export function readDateOrNull(fields: Fields, name: string, what: string): stri
   return fields[name] === null ? null : readDate(fields, name, what)
 }
 
+export function readOrNullWhenMissing<Value>(
+  fields: Fields,
+  name: string,
+  what: string,
+  read: (fields: Fields, name: string, what: string) => Value,
+): Value | null {
+  return Object.hasOwn(fields, name) ? read(fields, name, what) : null
+}
+
 function describeValue(value: unknown): string {
   return value === undefined ? 'nothing' : JSON.stringify(value)
 }

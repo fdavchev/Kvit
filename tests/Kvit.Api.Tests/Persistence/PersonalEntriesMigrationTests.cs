@@ -43,7 +43,7 @@ namespace Kvit.Api.Tests.Persistence
                 [
                     "amount_minor:bigint:NO",
                     "category_id:uuid:YES",
-                    "client_request_id:uuid:NO",
+                    "client_request_id:uuid:YES",
                     "created_at:timestamp with time zone:NO",
                     "currency:text:NO",
                     "deleted_at:timestamp with time zone:YES",
@@ -53,6 +53,7 @@ namespace Kvit.Api.Tests.Persistence
                     "mkd_per_eur:numeric:NO",
                     "note:text:YES",
                     "rate_date:date:NO",
+                    "recurring_income_id:uuid:YES",
                     "updated_at:timestamp with time zone:YES",
                     "user_id:uuid:NO",
                 ],
@@ -69,6 +70,9 @@ namespace Kvit.Api.Tests.Persistence
                 [
                     "ck_personal_entries_amount_minor_positive",
                     "ck_personal_entries_currency",
+                    "ck_personal_entries_generated_is_income",
+                    "ck_personal_entries_has_origin",
+                    "ck_personal_entries_income_has_no_category",
                     "ck_personal_entries_kind",
                     "ck_personal_entries_mkd_per_eur_positive",
                     "ck_personal_entries_note_length",
@@ -78,29 +82,35 @@ namespace Kvit.Api.Tests.Persistence
         }
 
         [Fact]
-        public async Task ForeignKeys_AreToUsersAndCategoriesAndBothRestrictDeletes()
+        public async Task ForeignKeys_AreToUsersCategoriesAndRecurringIncomesAndEveryOneRestrictsDeletes()
         {
             List<string?> foreignKeys = await _database.QueryAsync(
                 "SELECT conname || ':' || confrelid::regclass::text || ':' || confdeltype::text FROM pg_constraint "
                 + "WHERE conrelid = 'personal_entries'::regclass AND contype = 'f' ORDER BY conname");
 
             Assert.Equal(
-                ["fk_personal_entries_categories_category_id:categories:r", "fk_personal_entries_users_user_id:users:r"],
+                [
+                    "fk_personal_entries_categories_category_id:categories:r",
+                    "fk_personal_entries_recurring_incomes_recurring_income_id:recurring_incomes:r",
+                    "fk_personal_entries_users_user_id:users:r"
+                ],
                 foreignKeys);
         }
 
         [Fact]
-        public async Task Indexes_AreTheUniqueClientRequestIdTheUserAndDateAndTheCategory()
+        public async Task Indexes_AreTheUniqueClientRequestIdTheUniqueRecurringIncomeAndDateTheUserAndDateAndTheCategory()
         {
             List<string?> indexes = await _database.QueryAsync(
                 "SELECT indexname || ':' || indexdef FROM pg_indexes WHERE tablename = 'personal_entries' AND indexname <> 'pk_personal_entries' ORDER BY indexname");
 
-            Assert.Equal(3, indexes.Count);
+            Assert.Equal(4, indexes.Count);
             Assert.Contains("ix_personal_entries_category_id:", indexes[0]);
             Assert.Contains("ix_personal_entries_client_request_id:CREATE UNIQUE INDEX", indexes[1]);
             Assert.Contains("(client_request_id)", indexes[1]);
-            Assert.Contains("ix_personal_entries_user_id_entry_date:", indexes[2]);
-            Assert.Contains("(user_id, entry_date)", indexes[2]);
+            Assert.Contains("ix_personal_entries_recurring_income_id_entry_date:CREATE UNIQUE INDEX", indexes[2]);
+            Assert.Contains("(recurring_income_id, entry_date)", indexes[2]);
+            Assert.Contains("ix_personal_entries_user_id_entry_date:", indexes[3]);
+            Assert.Contains("(user_id, entry_date)", indexes[3]);
         }
 
         [Fact]
@@ -115,11 +125,22 @@ namespace Kvit.Api.Tests.Persistence
         }
 
         [Fact]
-        public async Task Insert_KindOtherThanSpending_IsRejected()
+        public async Task Insert_KindOtherThanSpendingOrIncome_IsRejected()
         {
             Guid userId = await UserRows.AddAsync(_database);
 
-            await RejectedInsert.AssertAsync(() => InsertAsync(userId, kind: "Income"), CheckViolation);
+            await RejectedInsert.AssertAsync(() => InsertAsync(userId, kind: "Savings"), CheckViolation);
+        }
+
+        [Fact]
+        public async Task Insert_ValidIncomeRowWithoutACategory_IsAccepted()
+        {
+            Guid userId = await UserRows.AddAsync(_database);
+
+            await InsertRowAsync(userId, "Income", 4_500_000, "MKD", null, null, null);
+
+            List<string?> kinds = await _database.QueryAsync("SELECT kind FROM personal_entries WHERE user_id = @user_id", new NpgsqlParameter("user_id", userId));
+            Assert.Equal("Income", Assert.Single(kinds));
         }
 
         [Theory]

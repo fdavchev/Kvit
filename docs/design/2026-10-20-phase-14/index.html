@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit Phase 14: income mockup</title>
+<style>
+:root{--bg:#ffd9a8;--fg:#3d2610;--card:#fff1dc;--primary:#b54a00;--pf:#fff;--line:#9c6f47;--field:#fff;--pill:#fff;--pos:#1d6b2e;--posbg:#d9efd6;--neg:#b71f1f;--mut:#7a3300}
+body.dark{--bg:#1f1816;--fg:#fff1dc;--card:#2c2220;--primary:#ffd9a8;--pf:#1f1816;--line:#72625c;--field:#161110;--pill:#d9b48a;--pos:#7fd18c;--posbg:#24382a;--neg:#ff8a80;--mut:#ffd9a8}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:#888;color:#222;padding:16px}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:16px;margin:24px 0 8px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.bar button,.opt button{font:inherit;padding:8px 12px;border-radius:999px;border:2px solid #444;background:#fff;cursor:pointer}
+.bar button.on,.opt button.on{background:#222;color:#fff}
+.phones{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.phone{width:360px;min-height:600px;background:var(--bg);color:var(--fg);border-radius:16px;padding:12px;position:relative;overflow:hidden}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+.center{text-align:center}.big{font-size:32px;font-weight:700}
+.row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.strip{display:flex;gap:6px;overflow:hidden}.strip span{padding:6px 12px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}.strip .sel{background:var(--pill);color:#3d2610;font-weight:700}
+.fab{position:absolute;right:16px;bottom:16px;width:56px;height:56px;border-radius:50%;background:var(--primary);color:var(--pf);font-size:30px;border:0;cursor:pointer}
+.fab2{position:absolute;right:84px;bottom:20px;height:48px;border-radius:999px;background:var(--card);color:var(--fg);border:2px solid var(--primary);padding:0 16px;font-weight:700;cursor:pointer}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:14px;box-shadow:0 -6px 20px rgba(0,0,0,.25)}
+.seg{display:flex;background:var(--bg);border-radius:999px;padding:3px;margin-bottom:10px}.seg span{flex:1;text-align:center;padding:6px;border-radius:999px;cursor:pointer}.seg .sel{background:var(--pill);color:#3d2610;font-weight:700}
+.amount{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:28px;font-weight:700;display:flex;justify-content:space-between}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.chip{border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--bg);cursor:pointer}.chip.on{background:var(--pill);color:#3d2610;font-weight:700}
+.save{width:100%;padding:14px;border-radius:12px;border:0;background:var(--primary);color:var(--pf);font:700 16px system-ui}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.tile{background:var(--bg);border-radius:10px;padding:6px;text-align:center;font-size:12px}
+.note{background:#fff;color:#222;border-radius:8px;padding:8px 10px;margin:6px 0;font-size:14px;max-width:760px}
+.hide{display:none}
+.tag{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--posbg);color:var(--pos)}
+</style>
+</head>
+<body>
+<h1>Kvit Phase 14: income (mockup, nothing is built)</h1>
+<div class="bar"><button id="light" class="on">Light</button><button id="dark">Dark</button></div>
+<div class="note">Colours come from <code>src/web/src/index.css</code>. Click the options. Tap counts are written under each phone. 360 px wide.</div>
+
+<h2>1. Where "Add income" starts</h2>
+<div class="bar opt" id="q1"><button data-v="A" class="on">A: Income / Spending switch inside the sheet</button><button data-v="B">B: second button "+ Income"</button><button data-v="C">C: "+" asks first</button></div>
+<div class="phones">
+  <div class="phone" id="p1">
+    <div class="center"><b>Budget</b></div>
+    <div class="strip"><span>Aug</span><span>Sep</span><span class="sel">Oct</span></div>
+    <div class="card center"><div>Spent this month</div><div class="big">12,400 ден.</div></div>
+    <div id="p1body"></div>
+  </div>
+  <div class="note" id="p1note"></div>
+</div>
+
+<h2>2. The income sheet, and how repeating works</h2>
+<div class="bar opt" id="q2"><button data-v="once" class="on">Repeats: Never</button><button data-v="monthly">Repeats: Monthly</button><button data-v="weekly">Repeats: Weekly</button></div>
+<div class="phones">
+  <div class="phone" style="min-height:520px"><div class="sheet" style="position:relative;margin-top:60px">
+    <div class="seg"><span>Spending</span><span class="sel">Income</span></div>
+    <div class="amount"><span>30,000</span><span>MKD ⇄</span></div>
+    <div class="chips"><span class="chip">📅 Today, 20 Oct</span><span class="chip">📝 Salary</span><span class="chip on" id="repChip">🔁 Never</span><span class="chip hide" id="endChip">⏹ Ends: never</span></div>
+    <div class="note" id="repText" style="background:var(--bg);color:var(--fg)"></div>
+    <button class="save">Save</button>
+  </div></div>
+  <div class="note">Income once: tap Income (1), type the amount, Save (1) = <b>2 taps + 1 field</b>. Repeating adds 1 tap on the Repeats chip, then Monthly or Weekly (2 more taps). Title and end date are optional.</div>
+</div>
+
+<h2>3. Budget tab with income</h2>
+<div class="bar opt" id="q3"><button data-v="A" class="on">A: two cards</button><button data-v="B">B: one card, Left</button><button data-v="C">C: income rows in the list</button></div>
+<div class="phones">
+  <div class="phone" id="p3"></div>
+  <div class="note">Option A keeps today's card unchanged and adds a green card. Option B shows income, spent and what is left in one card. Option C changes no card; income rows sit in the list with a green "+". All three show the "Repeating income" list: <b>Salary, 30,000 ден., monthly on the 1st</b>, with Edit and Stop.</div>
+</div>
+
+<h2>4. Not in this phase (my advice)</h2>
+<div class="note">Future and planned payments (paid / not yet paid) are a different feature. I suggest keeping them in the BACKLOG and leaving the date limit as it is. Budget share, budget currency, limits and the monthly summary are Phase 15.</div>
+
+<script>
+const $=s=>document.querySelector(s);
+function pick(id,fn){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on'));b.classList.add('on');fn(b.dataset.v)})}
+$('#light').onclick=()=>{document.body.classList.remove('dark');$('#light').classList.add('on');$('#dark').classList.remove('on')};
+$('#dark').onclick=()=>{document.body.classList.add('dark');$('#dark').classList.add('on');$('#light').classList.remove('on')};
+const entries='<div class="card"><div class="row"><span>🍕 Lunch</span><b>420 ден.</b></div><div class="row"><span>🚌 Bus</span><b>60 ден.</b></div></div>';
+function q1(v){
+  const b=$('#p1body');let h=entries;
+  if(v==='A'){h+='<button class="fab">+</button>';$('#p1note').innerHTML='<b>A.</b> The round + opens the sheet as today (category first). A switch at the top of the sheet changes it to Income: Spending stays <b>2 taps + 1 field</b>, Income is <b>2 taps + 1 field</b> (Income, Save). One button, nothing new on screen.'}
+  if(v==='B'){h+='<button class="fab2">＋ Income</button><button class="fab">+</button>';$('#p1note').innerHTML='<b>B.</b> A second button next to +. Income: <b>1 tap to open + Save = 2 taps + 1 field</b>. Spending unchanged. More on screen, and the two buttons can cover the last rows.'}
+  if(v==='C'){h+='<button class="fab">+</button><div class="sheet"><div class="center"><b>What do you add?</b></div><div class="chips" style="justify-content:center"><span class="chip">💸 Spending</span><span class="chip">💰 Income</span></div></div>';$('#p1note').innerHTML='<b>C.</b> + asks first. Spending becomes <b>3 taps + 1 field</b> (one more than today). I advise against it: speed is the product.'}
+  b.innerHTML=h;
+}
+pick('q1',q1);q1('A');
+function q2(v){
+  const t={once:'One income on the chosen date. Nothing repeats.',monthly:'Every month on the 20th (day 31 means the last day of shorter months). Starts today, no end.',weekly:'Every week on Tuesday. Starts today, no end.'};
+  $('#repChip').textContent='🔁 '+({once:'Never',monthly:'Monthly',weekly:'Weekly'})[v];
+  $('#endChip').classList.toggle('hide',v==='once');
+  $('#repText').textContent=t[v];
+}
+pick('q2',q2);q2('once');
+const repeating='<div class="card"><b>Repeating income</b><div class="row"><span>Salary · monthly on the 1st</span><span><b>30,000 ден.</b> · Edit · Stop</span></div></div>';
+function q3(v){
+  const p=$('#p3');
+  let h='<div class="center"><b>Budget</b></div><div class="strip"><span>Aug</span><span>Sep</span><span class="sel">Oct</span></div>';
+  if(v==='A')h+='<div class="card center"><div>Spent this month</div><div class="big">12,400 ден.</div></div><div class="card center"><div>Income this month</div><div class="big pos">30,000 ден.</div></div>';
+  if(v==='B')h+='<div class="card center"><div>Left this month</div><div class="big pos">17,600 ден.</div><div style="display:flex;justify-content:space-around;margin-top:8px"><span>Income<br><b class="pos">30,000</b></span><span>Spent<br><b>12,400</b></span></div></div>';
+  if(v==='C')h+='<div class="card center"><div>Spent this month</div><div class="big">12,400 ден.</div></div>';
+  h+='<div class="tiles"><div class="tile">🍕<br>Food</div><div class="tile">🚌<br>Transport</div><div class="tile">🏠<br>Home</div><div class="tile">＋<br>New</div></div>';
+  h+=repeating;
+  h+='<div class="card">'+(v==='C'?'<div class="row"><span>💰 Salary <span class="tag">repeating</span></span><b class="pos">+30,000 ден.</b></div>':'')+'<div class="row"><span>🍕 Lunch</span><b>420 ден.</b></div><div class="row"><span>🚌 Bus</span><b>60 ден.</b></div></div><button class="fab">+</button>';
+  p.innerHTML=h;
+}
+pick('q3',q3);q3('A');
+</script>
+</body>
+</html>

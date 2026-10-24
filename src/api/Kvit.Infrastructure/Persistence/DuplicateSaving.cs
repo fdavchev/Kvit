@@ -19,10 +19,15 @@ namespace Kvit.Infrastructure.Persistence
                 await DiscardAsync(context, cancellationToken);
                 throw new MemberChangedMeanwhileException(exception);
             }
-            catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, ExpenseConfiguration.ClientRequestIdIndexName, SettlementConfiguration.ClientRequestIdIndexName, PersonalEntryConfiguration.ClientRequestIdIndexName))
+            catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, ExpenseConfiguration.ClientRequestIdIndexName, SettlementConfiguration.ClientRequestIdIndexName, PersonalEntryConfiguration.ClientRequestIdIndexName, RecurringIncomeConfiguration.ClientRequestIdIndexName))
             {
                 await DiscardAsync(context, cancellationToken);
                 throw new ClientRequestIdAlreadySavedException(exception);
+            }
+            catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, PersonalEntryConfiguration.RecurringIncomeDateIndexName))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new RecurringIncomeEntryAlreadySavedException(exception);
             }
             catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, UsageEventConfiguration.ActiveDayIndexName))
             {
@@ -34,6 +39,16 @@ namespace Kvit.Infrastructure.Persistence
                 await DiscardAsync(context, cancellationToken);
                 throw new CategoryNameAlreadySavedException(exception);
             }
+            catch (InvalidOperationException exception) when (IsDeadlock(exception))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new DeadlockDetectedException(exception);
+            }
+        }
+
+        private static bool IsDeadlock(InvalidOperationException exception)
+        {
+            return exception.InnerException is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.DeadlockDetected } };
         }
 
         private static bool IsUniqueViolationOf(DbUpdateException exception, params string[] indexNames)

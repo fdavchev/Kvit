@@ -1,11 +1,12 @@
-import { useId, type CSSProperties } from 'react'
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import type { PersonalCurrencyTotal } from '@/core/services/personalEntries/personalEntriesService'
 import { kvitCategoryGridLook } from '@/shared/components/KvitCategoryChoice'
 import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
+import { KvitFitBreakableAmount } from '@/shared/components/KvitFitAmount'
 import { categoryColor } from '@/shared/utils/categoryLooks'
-import { currencyLabel, formatMoney } from '@/shared/utils/formatMoney'
+import { currencyLabel, moneyParts } from '@/shared/utils/formatMoney'
 import { personalCategoryName } from '../../categories/personalCategoryName'
 
 interface CategoryTotalsProps {
@@ -45,25 +46,20 @@ function CurrencyTotals({ total, label }: CurrencyTotalsProps) {
 
   const grid = (
     <ul className={kvitCategoryGridLook}>
-      {total.categories.map((row) => {
-        const amount = formatMoney(row.totalMinor, total.currency, language)
-        return (
-          <li
-            key={row.category.id}
-            className="@container flex min-w-0 flex-col items-center gap-1 py-1 text-center text-xs leading-tight"
-          >
-            <KvitEmojiTile emoji={row.category.emoji} background={categoryColor(row.category)} />
-            <span className="w-full font-semibold break-words">{personalCategoryName(row.category, t)}</span>
-            <span
-              data-tile-amount=""
-              className="fit-amount w-full font-bold"
-              style={{ '--amount-length': amount.length } as CSSProperties}
-            >
-              {amount}
-            </span>
-          </li>
-        )
-      })}
+      {total.categories.map((row) => (
+        <li
+          key={row.category.id}
+          className="flex min-w-0 flex-col items-center gap-1 py-1 text-center text-xs leading-tight"
+        >
+          <KvitEmojiTile emoji={row.category.emoji} background={categoryColor(row.category)} />
+          <span className="w-full font-semibold break-words">{personalCategoryName(row.category, t)}</span>
+          <KvitFitBreakableAmount
+            parts={moneyParts(row.totalMinor, total.currency, language)}
+            data-tile-amount=""
+            className="font-bold"
+          />
+        </li>
+      ))}
     </ul>
   )
 

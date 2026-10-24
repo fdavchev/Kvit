@@ -1,4 +1,5 @@
 using Kvit.Domain.Entities;
+using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Interfaces;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
@@ -17,6 +18,27 @@ namespace Kvit.Infrastructure.Repositories
 
             return latest ?? throw new InvalidOperationException(
                 "The exchange_rates table is empty, but the CategoriesAndExchangeRates migration seeds it. Check that every migration was applied to this database.");
+        }
+
+        public async Task<StoredExchangeRates> GetStoredCoveringAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken)
+        {
+            DateOnly? newestOnOrBeforeFrom = await _context.ExchangeRates
+                .Where(exchangeRate => exchangeRate.RateDate <= from)
+                .MaxAsync(exchangeRate => (DateOnly?)exchangeRate.RateDate, cancellationToken);
+            DateOnly? coveringFrom = newestOnOrBeforeFrom ?? await _context.ExchangeRates.MinAsync(exchangeRate => (DateOnly?)exchangeRate.RateDate, cancellationToken);
+            if (coveringFrom is not DateOnly start)
+            {
+                throw new InvalidOperationException(
+                    "The exchange_rates table is empty, but the CategoriesAndExchangeRates migration seeds it. Check that every migration was applied to this database.");
+            }
+
+            DateOnly end = to > start ? to : start;
+            List<ExchangeRate> rates = await _context.ExchangeRates
+                .AsNoTracking()
+                .Where(exchangeRate => exchangeRate.RateDate >= start && exchangeRate.RateDate <= end)
+                .ToListAsync(cancellationToken);
+
+            return new StoredExchangeRates(rates);
         }
 
         public async Task SaveFetchedAsync(DateOnly rateDate, decimal mkdPerEur, DateTimeOffset fetchedAt, CancellationToken cancellationToken)

@@ -71,10 +71,10 @@ namespace Kvit.Domain.Entities
                 return date.ToFailure<ExpenseFields>();
             }
 
-            string? trimmedTitle = TrimToNull(title);
-            if (trimmedTitle is not null && trimmedTitle.Length > titleMaxLength)
+            Result<string?> trimmedTitle = CheckTitle(title, titleMaxLength, ResultCodes.EXPENSE_TITLE_INVALID);
+            if (!trimmedTitle.IsSuccess)
             {
-                return Result.Failure<ExpenseFields>($"The title must have at most {titleMaxLength} characters; it has {trimmedTitle.Length}.", ResultCodes.EXPENSE_TITLE_INVALID);
+                return trimmedTitle.ToFailure<ExpenseFields>();
             }
 
             Result<string?> trimmedNote = CheckNote(note, ResultCodes.EXPENSE_NOTE_INVALID);
@@ -83,7 +83,7 @@ namespace Kvit.Domain.Entities
                 return trimmedNote.ToFailure<ExpenseFields>();
             }
 
-            return Result.Ok(new ExpenseFields(trimmedTitle, trimmedNote.Value, amount.Value, date.Value, categoryId, Enum.Parse<SplitType>(splitType)));
+            return Result.Ok(new ExpenseFields(trimmedTitle.Value, trimmedNote.Value, amount.Value, date.Value, categoryId, Enum.Parse<SplitType>(splitType)));
         }
 
         public static string? TrimToNull(string? text)
@@ -138,6 +138,17 @@ namespace Kvit.Domain.Entities
             }
 
             return Result.Ok(date);
+        }
+
+        public static Result<string?> CheckTitle(string? title, int titleMaxLength, string invalidTitleCode)
+        {
+            string? trimmedTitle = TrimToNull(title);
+            if (trimmedTitle is not null && trimmedTitle.Length > titleMaxLength)
+            {
+                return Result.Failure<string?>($"The title must have at most {titleMaxLength} characters; it has {trimmedTitle.Length}.", invalidTitleCode);
+            }
+
+            return Result.Ok(trimmedTitle);
         }
 
         public static Result<string?> CheckNote(string? note, string invalidNoteCode)

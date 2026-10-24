@@ -296,4 +296,12 @@ When debugging, prefer the command that produces a number (a grep count, a SQL `
 
 - **Guests (Phase 12b, 2026-10-16):** every 401 a request gets makes the frontend treat the person as signed out (`updateMeAfterFailure` in `core/api/queryClient.ts` clears `me`), and a guest who sees the signed-out screen cannot get back in alone. So an endpoint a signed-in person calls answers 401 only for "not signed in"; a bad Google token on the guest upgrade answers **400** `AUTH_GOOGLE_TOKEN_INVALID` (Google log-in and sign-up keep their 401).
 
+- **Repeating income and lazy generation (Phase 14, 2026-10-24):**
+  - **A GET never writes, so catching up is its own POST** (`POST api/personal/recurring-incomes/catch-up`), sent by the website when the Budget tab opens and after a save. It uses the person's `users.time_zone` for "today" (`UserLocalDate`) and never calls NBRM (the stored rate on or before the entry's date).
+  - **Same-moment safety is the unique index** on (`recurring_income_id`, `entry_date`), plus one more run of the transaction on the clash (`RunInTransactionOnceMoreIfRecurringIncomeEntryWasSavedOrDeadlockedAsync`). Do NOT take a per-user lock before reading: the race tests need both requests to read before either inserts, and a lock is the documented fallback only.
+  - **EF Core inserts new rows sorted by their id, not in the order they were added.** Entries made in the same millisecond got random ids, so two catch-ups wrote the same dates in different orders and Postgres deadlocked (40P01). Generated entries therefore get ids made from "now + their position in milliseconds", the active incomes are listed by (`created_at`, `id`), and a deadlock gets one more run (a second one still answers 500). `CatchUpInsertOrderTests` fails if EF ever stops sorting by id.
+  - **`personal_entries.client_request_id` is nullable** (generated entries have none); the database requires a request id or a repeating income (`ck_personal_entries_has_origin`), and income never has a category.
+  - **The date of a generated entry cannot change** (`PERSONAL_ENTRY_DATE_LOCKED`), because the catch-up continues from the period of the latest entry.
+  - **The website must tolerate an API one deploy behind** (Cloudflare publishes in seconds, Render needs minutes): new response fields are read as "unknown" when missing (`readOrNullWhenMissing`), and the saved-copy version (`savedQueryCache`) is bumped when a saved shape changes.
+
 New traps found while building get added here, with the date.

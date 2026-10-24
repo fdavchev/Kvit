@@ -157,6 +157,28 @@ describe('personal spending from the home screen', () => {
     expect(await findPickSheet()).toBeTruthy()
   })
 
+  it('opens the category grid straight away, with no "What do you add?" sheet and no Income item', async () => {
+    await renderHome({ answers: spendingAnswers })
+    const menu = await openPlusMenu()
+
+    expect(within(menu).queryByRole('menuitem', { name: translated('en', 'budget.add.income') })).toBeNull()
+    fireEvent.click(within(menu).getByRole('menuitem', { name: spendingName() }))
+
+    expect(await findPickSheet()).toBeTruthy()
+    expect(screen.queryByRole('dialog', { name: translated('en', 'budget.add.title') })).toBeNull()
+    expect(screen.queryByRole('dialog', { name: translated('en', 'budget.income.title') })).toBeNull()
+  })
+
+  it('has no Income round button on a desktop-sized window', async () => {
+    stubDesktopScreen()
+    await renderHome({ answers: spendingAnswers })
+
+    await screen.findByRole('button', { name: spendingName() })
+
+    expect(screen.queryByRole('button', { name: translated('en', 'budget.add.income') })).toBeNull()
+    expect(screen.queryByRole('link', { name: translated('en', 'budget.add.income') })).toBeNull()
+  })
+
   it('opens the same sheet from the round button on a desktop-sized window', async () => {
     stubDesktopScreen()
     await renderHome({ answers: spendingAnswers })

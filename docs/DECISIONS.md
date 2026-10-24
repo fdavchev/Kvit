@@ -1,5 +1,18 @@
 ﻿# Decisions
 
+## 2026-10-24: Phase 14 (income, once and repeating): done, the rules that stay
+The whole Phase 14 decision log (Filip's mockup picks, the Step 1 to 6 notes, the browser-pass and code-review choices, rejected alternatives) moved word for word to the end of `reports/2026-10-24-phase-14-income.md`, section "Decisions and rejected alternatives". What stays true:
+- **Income is personal and private, like spending.** Guests have none (no Budget, 403). An income entry has no category; MKD and EUR are never added together. Paybacks and settlements are never income.
+- **Adding:** the Budget "+" asks "Spending or Income?" first (spending 3 taps + 1 field once the choice sheet is open, income 2 taps + 1 field). Income is one amount, optional title (the entry note), date (last 24 months up to today), and a Repeats chip (Never / Monthly / Weekly) with an optional end.
+- **Repeating income is lazy:** entries appear when the Budget tab opens (and after a save), in the person's own time zone (`users.time_zone`), never older than 24 months, never in the future, never twice (unique on income and date), never again after a deleted entry. No scheduler. Catch-up is `POST /api/personal/recurring-incomes/catch-up` (a GET never changes anything).
+- **One entry per month (monthly) or per week (weekly, Sunday to Saturday):** a new generated entry falls in a period after the one holding the last entry (deleted entries count), so moving a pay day never gives a second salary in the same period. The date of an entry made by a repeating income cannot change; amount, note, delete and restore can.
+- **Edit changes only what comes next; Stop only records `stopped_at`** (hidden, generates nothing more, Undo = restart within 5 days); entries already made stay. The start date can change only until the first entry exists (`hasEntries`). At most 20 active repeating incomes per person.
+- **End options:** "In 3 months / 6 months / 1 year" mean exactly 3 / 6 / 12 payments (the end is the day before, because the end day is itself a payday); a start change recalculates the end of such an option.
+- **Budget tab:** a month with income shows "Left this month" per income currency (income minus spending, red when negative) with Income and Spent; a currency with spending but no income shows only a Spent line; a month with no income keeps the Phase 13 "Spent this month" card. The Repeating income row sits under the card (1 or 2 incomes open a sheet, 0 or 3+ open `/budget/repeating`, a 40rem column).
+- **Exchange rate of a generated entry:** the newest stored rate on or before its date (the oldest stored one if none); generation never calls NBRM.
+- **Rate and money rules:** integer minor units only; all totals are per currency.
+- **Not in Phase 14 (later phases):** budget share of group expenses, budget currency, limits, monthly summary (15), duplicates and group totals (16), future and planned payments (BACKLOG). The Home "+" list has no Income item.
+
 ## 2026-10-20: Phase 13 (personal spending + custom categories): done, the rules that stay
 The whole Phase 13 decision log (Filip's mockup picks, the Step 1 to 6 notes, the browser-pass choices, the code review fixes, rejected alternatives) moved word for word to the end of `reports/2026-10-20-phase-13-personal-spending.md`, section "Decisions and rejected alternatives". What stays true:
 - **Guests have no Budget:** no tab, no Home item, `/budget` redirects a guest to Settings, the API answers 403 `GUEST_NOT_ALLOWED` on every personal endpoint (personal data lives on the user, and a guest on a lost phone could not reach it).

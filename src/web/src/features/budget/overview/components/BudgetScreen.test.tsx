@@ -252,6 +252,22 @@ describe('BudgetScreen', () => {
       expect(card.querySelector('[data-total-amount="main"]')?.textContent).toContain('42.50')
     })
 
+    it.each(languages)('keeps each total whole, shrunk to fit the card, so a long amount never breaks inside its label (%s)', async (language) => {
+      await renderBudget({ language, months: [longAmountsMonth] })
+
+      const card = await findTotalCard(language)
+      const lines = Array.from(card.querySelectorAll<HTMLElement>('[data-total-amount]'))
+
+      expect(lines).toHaveLength(2)
+      for (const line of lines) {
+        const fitted = line.querySelector<HTMLElement>('.fit-amount')
+        expect(line.className.split(/\s+/)).toContain('@container')
+        expect(line.className.split(/\s+/)).not.toContain('break-words')
+        expect(fitted?.style.getPropertyValue('--amount-length')).toBe(String(readableText(line).length))
+      }
+      expect(amountLines(card)).toEqual([money(12345678900, 'MKD', language), money(123456789, 'EUR', language)])
+    })
+
     it('makes the first amount the big one and the second a smaller line', async () => {
       await renderBudget()
 
@@ -327,7 +343,7 @@ describe('BudgetScreen', () => {
       expect(within(categoryTotalsRegion()).getByRole('list').className.split(/\s+/)).toContain('grid-cols-4')
     })
 
-    it.each(languages)('keeps a long amount in one piece on one line, shrunk to fit the tile, with its currency (%s)', async (language) => {
+    it.each(languages)('keeps a long amount whole, shrunk to fit the tile, with its currency (%s)', async (language) => {
       await renderBudget({ language, months: [longAmountsMonth] })
       await findTotalCard(language)
 
@@ -336,20 +352,51 @@ describe('BudgetScreen', () => {
       expect(tiles).toHaveLength(2)
       for (const tile of tiles) {
         const amount = tile.querySelector<HTMLElement>('[data-tile-amount]')
-        expect(tile.className.split(/\s+/)).toContain('@container')
-        expect(amount?.className.split(/\s+/)).toContain('fit-amount')
+        const fitted = amount?.querySelector<HTMLElement>('.fit-amount')
+        expect(amount?.className.split(/\s+/)).toContain('@container')
         expect(amount?.className.split(/\s+/)).not.toContain('break-words')
-        expect(amount?.style.getPropertyValue('--amount-length')).toBe(String(amount?.textContent?.length))
+        expect(fitted?.style.getPropertyValue('--amount-length')).toBe(String(amount?.textContent?.length))
       }
       expect(textOf(tiles[0])).toContain(money(12345678900, 'MKD', language))
       expect(textOf(tiles[1])).toContain(money(123456789, 'EUR', language))
     })
 
-    it('shrinks the tile amount by the width of its tile and its length, never above the normal size', () => {
+    it.each(languages)('lets a long tile amount wrap only right after a thousands separator, so it never sticks out of its tile (%s)', async (language) => {
+      await renderBudget({ language, months: [longAmountsMonth] })
+      await findTotalCard(language)
+
+      const tiles = within(categoryTotalsRegion(language)).getAllByRole('listitem')
+      const separator = language === 'en' ? ',' : '.'
+      const decimal = language === 'en' ? '.' : ','
+      const pieces = tiles.map((tile) => [...(tile.querySelector('[data-tile-amount] .fit-amount')?.querySelectorAll('.whitespace-nowrap') ?? [])].map((piece) => piece.textContent))
+      const breaks = tiles.map((tile) => tile.querySelectorAll('[data-tile-amount] .fit-amount > wbr').length)
+
+      expect(pieces).toEqual([
+        [`123${separator}`, `456${separator}`, '789', language === 'en' ? 'MKD' : 'ден.'],
+        [`€1${separator}`, `234${separator}`, `567${decimal}89`],
+      ])
+      expect(breaks).toEqual([2, 2])
+    })
+
+    it.each(languages)('never gives the amounts of the total card a break point inside the number (%s)', async (language) => {
+      await renderBudget({ language, months: [longAmountsMonth] })
+
+      const card = await findTotalCard(language)
+
+      expect(card.querySelectorAll('[data-total-amount] wbr')).toHaveLength(0)
+    })
+
+    it('shrinks the tile amount by the width of its tile and its length, never above the normal size and never below three quarters of it', () => {
       const fitAmount = blockAfter(indexCss, '@utility fit-amount')
 
-      expect(fitAmount).toContain('white-space: nowrap;')
-      expect(fitAmount).toContain('font-size: min(1em, calc(100cqi / (var(--amount-length) * var(--average-glyph-width))));')
+      expect(fitAmount).toContain('font-size: max(0.75em, min(1em, calc(100cqi / (var(--amount-length) * var(--average-glyph-width)))));')
+    })
+
+    it('lets a fitted amount wrap only between its unbroken pieces, never inside the number or the label', () => {
+      const fitAmount = blockAfter(indexCss, '@utility fit-amount')
+
+      expect(fitAmount).not.toContain('white-space: nowrap;')
+      expect(fitAmount).toContain('overflow-wrap: normal;')
     })
   })
 
