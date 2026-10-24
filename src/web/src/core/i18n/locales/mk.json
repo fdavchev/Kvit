@@ -137,6 +137,7 @@
     "RECURRING_INCOME_LIMIT_REACHED": "Можеш да имаш најмногу 20 редовни приходи. Прво запри еден.",
     "RECURRING_INCOME_NOT_STOPPED": "Овој редовен приход не е запрен.",
     "RECURRING_INCOME_RESTART_EXPIRED": "Овој редовен приход е запрен пред повеќе од 5 дена и не може повторно да се вклучи.",
+    "BUDGET_LIMIT_AMOUNT_INVALID": "Внеси лимит во цели денари, поголем од 0.",
     "SETTLEMENT_NOT_FOUND": "Ова плаќање не постои или е избришано.",
     "SETTLEMENT_NOT_ALLOWED": "Не можеш да го направиш ова со ова плаќање.",
     "SETTLEMENT_NOT_PENDING": "Ова плаќање веќе не чека одговор.",

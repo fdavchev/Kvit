@@ -219,7 +219,7 @@ One big phase (Filip, 2026-10-24). Prompt: `guides/phase-15-budget-prompt.md`; f
 - [ ] Step 0: mockup (budget currency, shares on the tab, switch place, limits, summary) and Filip's picks
 - [x] **Done 2026-10-24 (VERIFIED by automated test: backend 4958 of 4959 pass, frontend 9717; the one failure is the old `ExpenseSharesTableTests.Table_HasExactlyTheFourColumns`, which still lists four columns and needs `counts_in_budget` added).** Step 1: backend, budget share (per-group switch, remembered flag, claimed names; migration `BudgetShare`)
 - [x] **Done 2026-10-24 (VERIFIED by automated test: backend 5087 of 5087 pass, frontend 9721).** Step 2: backend, budget currency (optional converted total setting, the conversion rule, `convertedTotals` in the Budget month answer; migration `BudgetTotalCurrency`)
-- [ ] Step 3: backend, limits
+- [x] **Done 2026-10-24 (VERIFIED by automated test: backend 5284 of 5284 pass, frontend 9728).** Step 3: backend, limits with history (set and remove per category and for the whole month, same-moment saves and removals answer 204, `limits` in the Budget month answer; migration `BudgetLimits`) and the any-letter-case budget currency fix
 - [ ] Step 4: backend, monthly summary
 - [ ] Step 5: frontend, Settings (budget currency, per-group switch)
 - [ ] Step 6: frontend, group shares on the Budget tab

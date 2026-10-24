@@ -246,7 +246,7 @@ Built in Release 2 with their own migration. Listed now so Release 1 doesn't blo
 | `expense_shares.counts_in_budget` (bool) | Copied from the switch when the expense is saved, so "past months stay as they were" |
 | `personal_entries` | Personal spending and income: `user_id`, `kind` (`Spending` / `Income`), amount + currency + saved rate, `entry_date`, `category_id` (spending only), `note`, `recurring_income_id`, `client_request_id`, soft delete. Unique (`recurring_income_id`, `entry_date`) so lazy generation can't double up |
 | `recurring_incomes` | `amount`, `currency`, `title`, `frequency` (`Monthly` / `Weekly`), `day_of_month` (31 = last day of shorter months) or `day_of_week`, `starts_on`, `ends_on`. Entries are created lazily when the user opens the app, in the user's time zone |
-| `budget_limits` | `user_id`, `category_id` (empty = the whole month), `monthly_limit_minor` in the budget currency |
+| `budget_limits` | Monthly limits with history: `user_id`, `category_id` (empty = the whole month), `effective_from` (first day of the month the row starts applying), `limit_minor` (nullable, always MKD in deni, whole denars; empty = no limit from that month on), `created_at`, `updated_at`. Unique (`user_id`, `category_id`, `effective_from`) with NULLS NOT DISTINCT, so one whole-month row per month too. A month shows the row with the latest `effective_from` on or before its first day |
 | `duplicate_answers` | "Same, merge" / "No, it's new" answers, so Kvit never asks twice about the same pair |
 | `groups.plan_amount_minor`, `groups.plan_currency` | The group spending plan ("600 EUR planned") |
 

@@ -3,6 +3,7 @@ using System.Text.Json;
 using Kvit.Api.Tests.Auth;
 using Kvit.Api.Tests.Expenses;
 using Kvit.Api.Tests.Groups;
+using Kvit.Api.Tests.Guards;
 using Kvit.Api.Tests.Persistence;
 using Kvit.Api.Tests.PersonalEntries;
 using Kvit.Api.Tests.Settlements;
@@ -328,6 +329,38 @@ namespace Kvit.Api.Tests.BudgetShares
             Assert.Equal("Pizza", row.GetProperty("title").GetString());
             Assert.Equal(BudgetShareSteps.HalfOfOneThousandMkd, row.GetProperty("shareMinor").GetInt64());
             Assert.True(await BudgetShareSteps.ShareCountsAsync(_app, expenseId, await GroupRows.CurrentMemberIdAsync(_app, groupId, caller.UserId)));
+        }
+
+        [Theory]
+        [InlineData("Closing")]
+        [InlineData("Finished")]
+        public async Task List_GroupThatIsClosingOrFinished_StillListsTheSharesOfEveryMember(string status)
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            Guid expenseId = await BudgetShareSteps.AddSharedExpenseAsync(_app, group);
+
+            await GroupRows.SetStatusAsync(_app, group.GroupId, status);
+
+            JsonElement memberRow = Assert.Single((await BudgetShareSteps.GroupSharesAsync(group.Member.Client)).EnumerateArray());
+            JsonElement ownerRow = Assert.Single((await BudgetShareSteps.GroupSharesAsync(group.Owner.Client)).EnumerateArray());
+            Assert.Equal(expenseId, memberRow.GetProperty("expenseId").GetGuid());
+            Assert.Equal(BudgetShareSteps.HalfOfOneThousandMkd, memberRow.GetProperty("shareMinor").GetInt64());
+            Assert.Equal(expenseId, ownerRow.GetProperty("expenseId").GetGuid());
+            Assert.Equal(BudgetShareSteps.HalfOfOneThousandMkd, ownerRow.GetProperty("shareMinor").GetInt64());
+        }
+
+        [Fact]
+        public async Task List_OneBillThatFinishedByItself_StillListsTheCreatorsShare()
+        {
+            OneBillSetup bill = await OneBillSteps.CreateBillAsync(_app);
+            await OneBillSteps.MarkoPaysAsync(bill);
+            await OneBillSteps.AssertFinishedNowByAsync(_app, bill.GroupId, bill.Owner);
+
+            JsonElement row = Assert.Single((await BudgetShareSteps.GroupSharesAsync(bill.Owner.Client)).EnumerateArray());
+
+            Assert.Equal(bill.ExpenseId, row.GetProperty("expenseId").GetGuid());
+            Assert.Equal(bill.GroupId, row.GetProperty("groupId").GetGuid());
+            Assert.Equal(OneBillSteps.MarkoShareMinor, row.GetProperty("shareMinor").GetInt64());
         }
     }
 }

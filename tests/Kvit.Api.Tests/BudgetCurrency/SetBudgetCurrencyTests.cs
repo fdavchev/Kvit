@@ -127,10 +127,25 @@ namespace Kvit.Api.Tests.BudgetCurrency
         }
 
         [Theory]
+        [InlineData("mkd", "MKD")]
+        [InlineData("Mkd", "MKD")]
+        [InlineData("eur", "EUR")]
+        [InlineData("Eur", "EUR")]
+        public async Task Set_AnyLetterCaseOfMkdOrEur_Answers204AndStoresTheUpperCaseName(string sent, string expectedStored)
+        {
+            SignedInUser user = await _app.SignUpAsync();
+
+            HttpResponseMessage response = await BudgetCurrencyRequests.SetAsync(user.Client, sent);
+
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            Assert.Equal(string.Empty, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            Assert.Equal(expectedStored, await BudgetCurrencySteps.StoredAsync(_app, user.UserId));
+            JsonElement me = await AuthRequests.ReadJsonAsync(await AuthRequests.GetMeAsync(user.Client));
+            Assert.Equal(expectedStored, me.GetProperty("budgetTotalCurrency").GetString());
+        }
+
+        [Theory]
         [InlineData("USD")]
-        [InlineData("mkd")]
-        [InlineData("eur")]
-        [InlineData("Eur")]
         [InlineData("")]
         [InlineData(" ")]
         [InlineData("MKD ")]

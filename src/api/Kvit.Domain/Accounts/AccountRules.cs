@@ -116,7 +116,7 @@ namespace Kvit.Domain.Accounts
 
             foreach (Currency currency in Enum.GetValues<Currency>())
             {
-                if (string.Equals(currency.ToString(), budgetTotalCurrency, StringComparison.Ordinal))
+                if (string.Equals(currency.ToString(), budgetTotalCurrency, StringComparison.OrdinalIgnoreCase))
                 {
                     return Result.Ok<Currency?>(currency);
                 }

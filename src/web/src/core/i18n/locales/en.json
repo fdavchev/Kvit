@@ -137,6 +137,7 @@
     "RECURRING_INCOME_LIMIT_REACHED": "You can have up to 20 repeating incomes. Stop one first.",
     "RECURRING_INCOME_NOT_STOPPED": "This repeating income is not stopped.",
     "RECURRING_INCOME_RESTART_EXPIRED": "This repeating income was stopped more than 5 days ago and can't be restarted.",
+    "BUDGET_LIMIT_AMOUNT_INVALID": "Enter a limit in whole denars, more than 0.",
     "SETTLEMENT_NOT_FOUND": "This payment doesn't exist or was deleted.",
     "SETTLEMENT_NOT_ALLOWED": "You can't do this with this payment.",
     "SETTLEMENT_NOT_PENDING": "This payment is no longer waiting for an answer.",

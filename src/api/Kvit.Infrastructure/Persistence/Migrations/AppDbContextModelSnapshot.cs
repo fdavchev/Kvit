@@ -79,6 +79,57 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Kvit.Domain.Entities.BudgetLimit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_from");
+
+                    b.Property<long?>("LimitMinor")
+                        .HasColumnType("bigint")
+                        .HasColumnName("limit_minor");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_budget_limits");
+
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("ix_budget_limits_category_id");
+
+                    b.HasIndex("UserId", "CategoryId", "EffectiveFrom")
+                        .IsUnique()
+                        .HasDatabaseName("ix_budget_limits_user_id_category_id_effective_from");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("UserId", "CategoryId", "EffectiveFrom"), false);
+
+                    b.ToTable("budget_limits", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_budget_limits_effective_from_first_day", "extract(day from effective_from) = 1");
+
+                            t.HasCheckConstraint("ck_budget_limits_limit_minor_valid", "limit_minor IS NULL OR (limit_minor > 0 AND limit_minor <= 999999999999 AND limit_minor % 100 = 0)");
+                        });
+                });
+
             modelBuilder.Entity("Kvit.Domain.Entities.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1277,6 +1328,22 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_activity_events_groups_group_id");
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.BudgetLimit", b =>
+                {
+                    b.HasOne("Kvit.Domain.Entities.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_budget_limits_categories_category_id");
+
+                    b.HasOne("Kvit.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_budget_limits_users_user_id");
                 });
 
             modelBuilder.Entity("Kvit.Domain.Entities.Category", b =>

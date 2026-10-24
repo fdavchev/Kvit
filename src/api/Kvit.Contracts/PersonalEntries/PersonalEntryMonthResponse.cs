@@ -6,5 +6,6 @@ namespace Kvit.Contracts.PersonalEntries
         IReadOnlyList<PersonalCurrencyTotalRow> Totals,
         IReadOnlyList<PersonalIncomeTotalRow> IncomeTotals,
         IReadOnlyList<GroupShareRow> GroupShares,
-        ConvertedTotalsResponse? ConvertedTotals);
+        ConvertedTotalsResponse? ConvertedTotals,
+        LimitsResponse Limits);
 }

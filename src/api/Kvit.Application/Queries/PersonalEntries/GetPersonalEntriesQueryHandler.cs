@@ -42,6 +42,7 @@ namespace Kvit.Application.Queries.PersonalEntries
             List<PersonalCategoryRow> categories = await _context.PersonalCategoryRowsOfAsync(entries, cancellationToken);
             Dictionary<Guid, PersonalCategoryRow> categoriesById = categories.ToDictionary(category => category.Id);
             List<GroupShareDto> groupShares = await _context.GroupSharesOf(me.Value.Id, firstDay.Value, firstDayOfNextMonth).ToListAsync(cancellationToken);
+            LimitsResponse limits = await _context.LimitsResponseOfAsync(me.Value.Id, firstDay.Value, entries, groupShares, cancellationToken);
 
             return Result.Ok(new PersonalEntryMonthResponse(
                 firstDay.Value.ToString(MonthFormat, CultureInfo.InvariantCulture),
@@ -49,7 +50,8 @@ namespace Kvit.Application.Queries.PersonalEntries
                 SpendingTotalsOf(entries, categories),
                 IncomeTotalsOf(entries),
                 [.. groupShares.Select(share => share.Row)],
-                ConvertedTotalsOf(me.Value.BudgetTotalCurrency, entries, groupShares)));
+                ConvertedTotalsOf(me.Value.BudgetTotalCurrency, entries, groupShares),
+                limits));
         }
 
         private static Result<DateOnly> FirstDayOf(string? month)

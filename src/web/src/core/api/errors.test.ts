@@ -81,6 +81,7 @@ const mappedErrorCodes = [
   'RECURRING_INCOME_LIMIT_REACHED',
   'RECURRING_INCOME_NOT_STOPPED',
   'RECURRING_INCOME_RESTART_EXPIRED',
+  'BUDGET_LIMIT_AMOUNT_INVALID',
 ]
 
 const errorTexts: Record<'en' | 'mk', Record<string, unknown>> = {
