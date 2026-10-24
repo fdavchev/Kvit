@@ -1,3 +1,4 @@
+using Kvit.Domain.MoneyRules;
 using Microsoft.AspNetCore.Identity;
 
 namespace Kvit.Infrastructure.Auth
@@ -26,5 +27,12 @@ namespace Kvit.Infrastructure.Auth
         public bool MustChangePassword { get; set; }
 
         public bool IsGuest { get; set; }
+
+        public Currency? BudgetTotalCurrency { get; private set; }
+
+        public void SetBudgetTotalCurrency(Currency? budgetTotalCurrency)
+        {
+            BudgetTotalCurrency = budgetTotalCurrency;
+        }
     }
 }

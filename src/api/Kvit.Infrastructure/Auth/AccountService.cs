@@ -2,6 +2,7 @@ using Kvit.Contracts.Auth;
 using Kvit.Contracts.Me;
 using Kvit.Domain.Accounts;
 using Kvit.Domain.Entities;
+using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
 using Kvit.Infrastructure.Persistence.Configurations;
@@ -314,6 +315,20 @@ namespace Kvit.Infrastructure.Auth
             return Result.Ok();
         }
 
+        public async Task<Result> SetBudgetTotalCurrencyAsync(Guid userId, Currency? budgetTotalCurrency, CancellationToken cancellationToken)
+        {
+            int updatedUsers = await _context.Users
+                .Where(user => user.Id == userId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(user => user.BudgetTotalCurrency, budgetTotalCurrency), cancellationToken);
+
+            if (updatedUsers == 0)
+            {
+                return Result.Unauthorized(NotSignedInMessage, ResultCodes.AUTH_NOT_SIGNED_IN);
+            }
+
+            return Result.Ok();
+        }
+
         private async Task<PasswordCheck> CheckPasswordAsync(AppUser user, string password)
         {
             if (await _userManager.IsLockedOutAsync(user))
@@ -435,7 +450,7 @@ namespace Kvit.Infrastructure.Auth
 
         private static MeResponse MeResponseOf(AppUser user)
         {
-            return new MeResponse(user.Id, user.DisplayName, user.Email, user.Language, user.TimeZone, user.MustChangePassword, user.PasswordHash is not null, user.GooglePictureUrl, user.IsGuest);
+            return new MeResponse(user.Id, user.DisplayName, user.Email, user.Language, user.TimeZone, user.MustChangePassword, user.PasswordHash is not null, user.GooglePictureUrl, user.IsGuest, user.BudgetTotalCurrency);
         }
     }
 }

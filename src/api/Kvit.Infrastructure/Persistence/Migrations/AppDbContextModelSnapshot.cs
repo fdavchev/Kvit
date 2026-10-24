@@ -948,6 +948,10 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("access_failed_count");
 
+                    b.Property<string>("BudgetTotalCurrency")
+                        .HasColumnType("text")
+                        .HasColumnName("budget_total_currency");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text")
@@ -1066,6 +1070,8 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                     b.ToTable("users", null, t =>
                         {
+                            t.HasCheckConstraint("ck_users_budget_total_currency", "budget_total_currency IN ('MKD', 'EUR')");
+
                             t.HasCheckConstraint("ck_users_created_at_set", "created_at > '0002-01-01 00:00:00+00'");
 
                             t.HasCheckConstraint("ck_users_display_name_not_empty", "char_length(display_name) >= 1");

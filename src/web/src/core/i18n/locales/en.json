@@ -33,6 +33,7 @@
     "AUTH_NOT_SIGNED_IN": "Your session ended. Log in again.",
     "TIME_ZONE_INVALID": "We couldn't read your phone's time zone, so this isn't possible on this device for now.",
     "LANGUAGE_INVALID": "That language isn't supported.",
+    "ME_BUDGET_CURRENCY_INVALID": "That budget currency isn't supported.",
     "RATE_LIMITED": "Too many tries. Wait a few minutes and try again.",
     "AUTH_MUST_CHANGE_PASSWORD": "Choose a new password to continue.",
     "AUTH_CURRENT_PASSWORD_WRONG": "Wrong password.",

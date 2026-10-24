@@ -24,11 +24,12 @@ Third phase of Release 2 ("budget"). Your share of group expenses now counts in 
 
 ### Database changes
 - Migration `BudgetShare`: adds `group_members.counts_in_budget` and `expense_shares.counts_in_budget` (true / false, never empty, default true, so every existing member and share counts).
+- Migration `BudgetTotalCurrency`: adds `users.budget_total_currency` (empty, `MKD` or `EUR`; empty for every existing account, so nobody's Budget changes).
 
 ### Checklist
 - [ ] Step 0: mockup, picks logged in DECISIONS
 - [x] Step 1: backend, budget share
-- [ ] Step 2: backend, budget currency
+- [x] Step 2: backend, budget currency
 - [ ] Step 3: backend, limits
 - [ ] Step 4: backend, monthly summary
 - [ ] Step 5: frontend, Settings (budget currency, per-group switch)
@@ -41,3 +42,4 @@ Third phase of Release 2 ("budget"). Your share of group expenses now counts in 
 
 ## Later pushes: one-line commit subjects
 - Step 1: Add the budget share: per-group switch, remembered flag on shares and group shares in the Budget month answer, with the BudgetShare migration.
+- Step 2: Add the budget total currency: optional converted total setting, the conversion rule and convertedTotals in the Budget month answer, with the BudgetTotalCurrency migration.

@@ -1,4 +1,6 @@
+using Kvit.Domain.MoneyRules;
+
 namespace Kvit.Contracts.Me
 {
-    public sealed record MeResponse(Guid Id, string DisplayName, string? Email, string Language, string TimeZone, bool MustChangePassword, bool HasPassword, string? PictureUrl, bool IsGuest);
+    public sealed record MeResponse(Guid Id, string DisplayName, string? Email, string Language, string TimeZone, bool MustChangePassword, bool HasPassword, string? PictureUrl, bool IsGuest, Currency? BudgetTotalCurrency);
 }

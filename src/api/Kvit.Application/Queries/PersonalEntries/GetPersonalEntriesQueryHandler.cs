@@ -1,9 +1,11 @@
 using System.Globalization;
 using Kvit.Application.Dispatching;
 using Kvit.Application.Queries.Me;
+using Kvit.Contracts.Me;
 using Kvit.Contracts.PersonalCategories;
 using Kvit.Contracts.PersonalEntries;
 using Kvit.Domain.Entities;
+using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -20,10 +22,10 @@ namespace Kvit.Application.Queries.PersonalEntries
 
         public async Task<Result<PersonalEntryMonthResponse>> Handle(GetPersonalEntriesQuery query, CancellationToken cancellationToken)
         {
-            Result<Guid> userId = await _dispatcher.IdOfCallerAsync(cancellationToken);
-            if (!userId.IsSuccess)
+            Result<MeResponse> me = await _dispatcher.FullAccountOfCallerAsync(cancellationToken);
+            if (!me.IsSuccess)
             {
-                return userId.ToFailure<PersonalEntryMonthResponse>();
+                return me.ToFailure<PersonalEntryMonthResponse>();
             }
 
             Result<DateOnly> firstDay = FirstDayOf(query.Month);
@@ -33,20 +35,21 @@ namespace Kvit.Application.Queries.PersonalEntries
             }
 
             DateOnly firstDayOfNextMonth = firstDay.Value.AddMonths(1);
-            List<PersonalEntryDto> entries = await _context.EntriesOf(userId.Value)
+            List<PersonalEntryDto> entries = await _context.EntriesOf(me.Value.Id)
                 .Where(entry => entry.EntryDate >= firstDay.Value && entry.EntryDate < firstDayOfNextMonth)
                 .PersonalEntryDtos()
                 .ToListAsync(cancellationToken);
             List<PersonalCategoryRow> categories = await _context.PersonalCategoryRowsOfAsync(entries, cancellationToken);
             Dictionary<Guid, PersonalCategoryRow> categoriesById = categories.ToDictionary(category => category.Id);
-            List<GroupShareRow> groupShares = await _context.GroupShareRowsOf(userId.Value, firstDay.Value, firstDayOfNextMonth).ToListAsync(cancellationToken);
+            List<GroupShareDto> groupShares = await _context.GroupSharesOf(me.Value.Id, firstDay.Value, firstDayOfNextMonth).ToListAsync(cancellationToken);
 
             return Result.Ok(new PersonalEntryMonthResponse(
                 firstDay.Value.ToString(MonthFormat, CultureInfo.InvariantCulture),
                 [.. entries.Select(entry => PersonalEntryQueries.PersonalEntryRowOf(entry, categoriesById))],
                 SpendingTotalsOf(entries, categories),
                 IncomeTotalsOf(entries),
-                groupShares));
+                [.. groupShares.Select(share => share.Row)],
+                ConvertedTotalsOf(me.Value.BudgetTotalCurrency, entries, groupShares)));
         }
 
         private static Result<DateOnly> FirstDayOf(string? month)
@@ -86,6 +89,27 @@ namespace Kvit.Application.Queries.PersonalEntries
                     currencyEntries.Key,
                     currencyEntries.Sum(entry => entry.AmountMinor),
                     currencyEntries.Count()))];
+        }
+
+        private static ConvertedTotalsResponse? ConvertedTotalsOf(Currency? budgetTotalCurrency, IReadOnlyList<PersonalEntryDto> entries, IReadOnlyList<GroupShareDto> groupShares)
+        {
+            if (budgetTotalCurrency is not Currency target)
+            {
+                return null;
+            }
+
+            long spendingMinor = ConvertedSumOf(entries, PersonalEntryKind.Spending, target);
+            long incomeMinor = ConvertedSumOf(entries, PersonalEntryKind.Income, target);
+            long groupSharesMinor = groupShares.Sum(share => CurrencyConversion.Convert(share.Row.ShareMinor, share.Row.Currency, target, share.MkdPerEur));
+
+            return new ConvertedTotalsResponse(target, spendingMinor, incomeMinor, groupSharesMinor, checked(incomeMinor - spendingMinor - groupSharesMinor));
+        }
+
+        private static long ConvertedSumOf(IEnumerable<PersonalEntryDto> entries, PersonalEntryKind kind, Currency target)
+        {
+            return entries
+                .Where(entry => entry.Kind == kind)
+                .Sum(entry => CurrencyConversion.Convert(entry.AmountMinor, entry.Currency, target, entry.MkdPerEur));
         }
 
         private static List<PersonalCategoryTotalRow> CategoryTotalsOf(IEnumerable<PersonalEntryDto> currencyEntries, IReadOnlyList<PersonalCategoryRow> categoriesInOrder)

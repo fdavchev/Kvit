@@ -241,7 +241,7 @@ Built in Release 2 with their own migration. Listed now so Release 1 doesn't blo
 
 | Table / column | Purpose |
 |---|---|
-| `users.budget_currency` (text, default `'MKD'`) | The currency the budget is shown in |
+| `users.budget_total_currency` (text, nullable: empty, `'MKD'` or `'EUR'`) | Empty = MKD and EUR shown apart (the default); `MKD` or `EUR` = also show one converted total in that currency |
 | `group_members.counts_in_budget` (bool, default true) | "Count my shares in my budget", per group |
 | `expense_shares.counts_in_budget` (bool) | Copied from the switch when the expense is saved, so "past months stay as they were" |
 | `personal_entries` | Personal spending and income: `user_id`, `kind` (`Spending` / `Income`), amount + currency + saved rate, `entry_date`, `category_id` (spending only), `note`, `recurring_income_id`, `client_request_id`, soft delete. Unique (`recurring_income_id`, `entry_date`) so lazy generation can't double up |

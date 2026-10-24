@@ -86,6 +86,7 @@ namespace Kvit.Domain.Results
         public const string AUTH_NOT_GUEST = "AUTH_NOT_GUEST";
         public const string TIME_ZONE_INVALID = "TIME_ZONE_INVALID";
         public const string LANGUAGE_INVALID = "LANGUAGE_INVALID";
+        public const string ME_BUDGET_CURRENCY_INVALID = "ME_BUDGET_CURRENCY_INVALID";
         public const string RATE_LIMITED = "RATE_LIMITED";
         public const string GROUP_NOT_FOUND = "GROUP_NOT_FOUND";
         public const string GROUP_NOT_OWNER = "GROUP_NOT_OWNER";
