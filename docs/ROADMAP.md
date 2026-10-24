@@ -212,10 +212,24 @@ Release 1 accepted 2026-10-16. Filip put this BACKLOG "must do" before Phase 13.
 - [x] **Done 2026-10-21 (VERIFIED by automated test: frontend 9553; not seen in a browser).** Step 6: frontend, Budget tab with the Left card
 - [x] **Done 2026-10-21 (VERIFIED by live run, headless Chromium, local stack; 6 bugs found, all fixed; Bug 6 fix VERIFIED by automated test only; backend 4860, frontend 9600).** Step 7: desktop layout and the 360 px browser pass (`reports/2026-10-21-phase-14-browser-pass.md`)
 - [x] **Done 2026-10-24 (VERIFIED by automated test: backend 4892, frontend 9717; the fixes VERIFIED by live run in the tester's re-checks).** Step 8: two code reviews (20 findings fixed), report `reports/2026-10-24-phase-14-income.md`, guide `guides/phase-14-income.md`, first-push texts `guides/phase-14-pr-text.md` (migrations `RecurringIncomeRules`, `GeneratedIncomeEntries`, `PersonalEntryOriginRules` came with it)
-- [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the migration on Neon)
+- [x] **Filip:** commit, push, PR, CI green, merge (PR #18 merged)
+
+## Phase 15: Budget share, budget currency, limits, monthly summary · `feat/15-budget`
+One big phase (Filip, 2026-10-24). Prompt: `guides/phase-15-budget-prompt.md`; first-push texts: `guides/phase-15-pr-text.md`.
+- [ ] Step 0: mockup (budget currency, shares on the tab, switch place, limits, summary) and Filip's picks
+- [x] **Done 2026-10-24 (VERIFIED by automated test: backend 4958 of 4959 pass, frontend 9717; the one failure is the old `ExpenseSharesTableTests.Table_HasExactlyTheFourColumns`, which still lists four columns and needs `counts_in_budget` added).** Step 1: backend, budget share (per-group switch, remembered flag, claimed names; migration `BudgetShare`)
+- [ ] Step 2: backend, budget currency
+- [ ] Step 3: backend, limits
+- [ ] Step 4: backend, monthly summary
+- [ ] Step 5: frontend, Settings (budget currency, per-group switch)
+- [ ] Step 6: frontend, group shares on the Budget tab
+- [ ] Step 7: frontend, limits
+- [ ] Step 8: frontend, monthly summary
+- [ ] Step 9: desktop layout and the 360 px browser pass
+- [ ] Step 10: code review, report, guide
+- [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the migrations on Neon)
 
 ## Later phases
-- Phase 15: budget share per group, budget currency, limits, monthly summary
 - Phase 16: possible duplicates, group totals per category, group spending plan
 
 # Release 3: "polish"

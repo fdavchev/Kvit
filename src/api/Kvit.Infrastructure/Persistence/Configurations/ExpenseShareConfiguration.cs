@@ -16,6 +16,8 @@ namespace Kvit.Infrastructure.Persistence.Configurations
 
             builder.HasKey(share => new { share.ExpenseId, share.MemberId });
 
+            builder.Property(share => share.CountsInBudget).HasDefaultValue(true).ValueGeneratedNever();
+
             builder.HasOne<GroupMember>()
                 .WithMany()
                 .HasForeignKey(share => share.MemberId)

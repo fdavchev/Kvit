@@ -37,6 +37,31 @@ namespace Kvit.Application.Queries.PersonalEntries
                     entry.UpdatedAt));
         }
 
+        public static IQueryable<GroupShareRow> GroupShareRowsOf(this AppDbContext context, Guid userId, DateOnly firstDay, DateOnly firstDayAfter)
+        {
+            return context.ExpenseShares
+                .AsNoTracking()
+                .Where(share => share.CountsInBudget && share.ShareMinor > 0)
+                .Join(context.GroupMembers.Where(member => member.UserId == userId), share => share.MemberId, member => member.Id, (share, member) => share)
+                .Join(
+                    context.Expenses.Where(expense => expense.DeletedAt == null && expense.ExpenseDate >= firstDay && expense.ExpenseDate < firstDayAfter),
+                    share => share.ExpenseId,
+                    expense => expense.Id,
+                    (share, expense) => new { Share = share, Expense = expense })
+                .Join(context.Groups.Where(group => group.DeletedAt == null), row => row.Expense.GroupId, group => group.Id, (row, group) => new { row.Share, row.Expense, Group = group })
+                .OrderBy(row => row.Expense.ExpenseDate)
+                .ThenBy(row => row.Expense.Id)
+                .Select(row => new GroupShareRow(
+                    row.Expense.Id,
+                    row.Group.Id,
+                    row.Group.Name,
+                    row.Expense.Title,
+                    row.Expense.CategoryId,
+                    row.Expense.ExpenseDate,
+                    row.Expense.Currency,
+                    row.Share.ShareMinor));
+        }
+
         public static Task<List<PersonalCategoryRow>> PersonalCategoryRowsOfAsync(this AppDbContext context, IReadOnlyCollection<PersonalEntryDto> entries, CancellationToken cancellationToken)
         {
             List<Guid> categoryIds = [.. entries.Select(entry => entry.CategoryId).OfType<Guid>().Distinct()];

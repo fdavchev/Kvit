@@ -4,5 +4,6 @@ namespace Kvit.Contracts.PersonalEntries
         string Month,
         IReadOnlyList<PersonalEntryRow> Entries,
         IReadOnlyList<PersonalCurrencyTotalRow> Totals,
-        IReadOnlyList<PersonalIncomeTotalRow> IncomeTotals);
+        IReadOnlyList<PersonalIncomeTotalRow> IncomeTotals,
+        IReadOnlyList<GroupShareRow> GroupShares);
 }

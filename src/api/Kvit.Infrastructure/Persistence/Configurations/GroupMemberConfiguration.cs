@@ -20,6 +20,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
             builder.Property(member => member.EndKind).HasConversion<string>();
             builder.Property(member => member.UserId).IsConcurrencyToken();
             builder.Property(member => member.Name).HasMaxLength(AccountRules.DisplayNameMaxLength);
+            builder.Property(member => member.CountsInBudget).HasDefaultValue(true).ValueGeneratedNever();
 
             builder.HasOne<Group>()
                 .WithMany()
