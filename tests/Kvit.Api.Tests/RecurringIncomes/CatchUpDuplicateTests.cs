@@ -16,7 +16,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
         {
             CatchUpSteps.SetNow(_app, CatchUpSteps.NoonOnOctober20);
             SignedInUser user = await CatchUpSteps.SignUpAsync(_app);
-            SignedInUser secondDevice = await SignInOnASecondDeviceAsync(user);
+            SignedInUser secondDevice = await CatchUpSteps.SignInOnASecondDeviceAsync(_app, user);
             Guid recurringIncomeId = await RecurringIncomeRows.InsertAsync(_app, user.UserId, dayOfMonth: 15, startsOn: new DateOnly(2026, 8, 1));
             await using InsertGate gate = await InsertGate.CloseAsync(_app, "personal_entries");
 
@@ -44,7 +44,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
         {
             CatchUpSteps.SetNow(_app, CatchUpSteps.NoonOnOctober20);
             SignedInUser user = await CatchUpSteps.SignUpAsync(_app);
-            SignedInUser secondDevice = await SignInOnASecondDeviceAsync(user);
+            SignedInUser secondDevice = await CatchUpSteps.SignInOnASecondDeviceAsync(_app, user);
             Guid recurringIncomeId = await RecurringIncomeRows.InsertAsync(_app, user.UserId, dayOfMonth: 15, startsOn: new DateOnly(2026, 8, 1));
             await using (InsertGate gate = await InsertGate.CloseAsync(_app, "personal_entries"))
             {
@@ -68,7 +68,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
         {
             CatchUpSteps.SetNow(_app, CatchUpSteps.NoonOnOctober20);
             SignedInUser user = await CatchUpSteps.SignUpAsync(_app);
-            SignedInUser secondDevice = await SignInOnASecondDeviceAsync(user);
+            SignedInUser secondDevice = await CatchUpSteps.SignInOnASecondDeviceAsync(_app, user);
             Guid monthly = await RecurringIncomeRows.InsertAsync(_app, user.UserId, dayOfMonth: 1, startsOn: new DateOnly(2026, 9, 1));
             Guid weekly = await RecurringIncomeRows.InsertAsync(_app, user.UserId, frequency: "Weekly", dayOfMonth: null, dayOfWeek: 3, startsOn: new DateOnly(2026, 10, 1));
             await using InsertGate gate = await InsertGate.CloseAsync(_app, "personal_entries");
@@ -83,16 +83,6 @@ namespace Kvit.Api.Tests.RecurringIncomes
             Assert.Equal([HttpStatusCode.OK, HttpStatusCode.OK], [.. responses.Select(response => response.StatusCode)]);
             Assert.Equal(["2026-09-01", "2026-10-01"], await CatchUpSteps.EntryDatesAsync(_app, monthly));
             Assert.Equal(["2026-10-07", "2026-10-14"], await CatchUpSteps.EntryDatesAsync(_app, weekly));
-        }
-
-        private async Task<SignedInUser> SignInOnASecondDeviceAsync(SignedInUser user)
-        {
-            HttpClient client = _app.CreateClient();
-
-            HttpResponseMessage response = await CatchUpSteps.AtACookieSafeTimeAsync(_app, () => AuthRequests.LogInAsync(client, user.Form.Email, user.Form.Password));
-
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            return new SignedInUser(client, user.UserId, user.Form);
         }
     }
 }

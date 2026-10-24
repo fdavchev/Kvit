@@ -18,7 +18,7 @@ namespace Kvit.Domain.Services.RecurringIncomes
             DateTimeOffset now = _timeProvider.GetUtcNow();
             DateOnly today = UserLocalDate.Today(now, timeZoneId);
             DateOnly oldestAllowedDate = EntryAmountDateAndNote.FirstDayOfOldestMonth(today);
-            IReadOnlyList<RecurringIncome> incomes = await _incomes.ListActiveOfAsync(userId, cancellationToken);
+            IReadOnlyList<RecurringIncome> incomes = await _incomes.ListActiveOfInCreationOrderAsync(userId, cancellationToken);
             IReadOnlyDictionary<Guid, DateOnly> lastDates = await _entries.LastDatesFromRecurringIncomesOfAsync(userId, cancellationToken);
 
             List<(RecurringIncome Income, DateOnly EntryDate)> missing = [];
@@ -36,9 +36,11 @@ namespace Kvit.Domain.Services.RecurringIncomes
             }
 
             StoredExchangeRates rates = await _exchangeRates.GetStoredCoveringAsync(missing.Min(due => due.EntryDate), missing.Max(due => due.EntryDate), cancellationToken);
-            foreach ((RecurringIncome income, DateOnly entryDate) in missing)
+            for (int position = 0; position < missing.Count; position++)
             {
-                _entries.Add(PersonalEntry.CreateFromRecurringIncome(income, entryDate, rates.On(entryDate), now));
+                (RecurringIncome income, DateOnly entryDate) = missing[position];
+                Guid idThatSortsInSavingOrder = Guid.CreateVersion7(now.AddMilliseconds(position));
+                _entries.Add(PersonalEntry.CreateFromRecurringIncome(idThatSortsInSavingOrder, income, entryDate, rates.On(entryDate), now));
             }
 
             return Result.Ok(missing.Count);

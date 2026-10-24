@@ -1,5 +1,5 @@
 import type { Language } from '@/core/i18n/language'
-import { formatGroupedDecimal } from './formatNumber'
+import { formatGroupedDecimal, groupedDecimalPieces } from './formatNumber'
 
 export type Currency = 'MKD' | 'EUR'
 
@@ -30,6 +30,12 @@ export function currencyLabel(currency: Currency, language: Language): string {
 export function moneyText(parts: MoneyParts): string {
   const number = formatGroupedDecimal(parts.unsignedDecimal, parts.language)
   return `${parts.sign}${parts.currencyBefore}${number}${parts.currencyAfter}`
+}
+
+export function moneyNumberPieces(parts: MoneyParts): string[] {
+  return groupedDecimalPieces(parts.unsignedDecimal, parts.language).map((piece, index) =>
+    index === 0 ? `${parts.sign}${parts.currencyBefore}${piece}` : piece,
+  )
 }
 
 export function moneyParts(

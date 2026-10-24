@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { currencyLabel, formatMoney } from './formatMoney'
+import { currencyLabel, formatMoney, moneyNumberPieces, moneyParts } from './formatMoney'
+import { signedMoneyParts } from './formatSignedMoney'
 
 const nbsp = ' '
 
@@ -111,5 +112,36 @@ describe('currencyLabel', () => {
 
   it.each(['en', 'mk'] as const)('uses the same denar word as the amounts in %s', (language) => {
     expect(formatMoney(100, 'MKD', language).endsWith(currencyLabel('MKD', language))).toBe(true)
+  })
+})
+
+describe('moneyNumberPieces', () => {
+  it.each([
+    [99_999_999_999, 'en', ['€999,', '999,', '999.99']],
+    [99_999_999_999, 'mk', ['€999.', '999.', '999,99']],
+    [199_999_999_998, 'en', ['€1,', '999,', '999,', '999.98']],
+    [123_450, 'en', ['€1,', '234.50']],
+    [99, 'en', ['€0.99']],
+  ] as const)('splits the euro amount %i in %s after each thousands separator', (amount, language, expected) => {
+    expect(moneyNumberPieces(moneyParts(amount, 'EUR', language))).toEqual(expected)
+  })
+
+  it.each([
+    [999_999_999_900, 'en', ['9,', '999,', '999,', '999']],
+    [999_999_999_900, 'mk', ['9.', '999.', '999.', '999']],
+    [99_900, 'en', ['999']],
+  ] as const)('splits the denar number %i in %s after each thousands separator and leaves the label out', (amount, language, expected) => {
+    expect(moneyNumberPieces(moneyParts(amount, 'MKD', language))).toEqual(expected)
+  })
+
+  it('keeps the minus and the plus sign in the first piece', () => {
+    expect(moneyNumberPieces(moneyParts(-123_456_700, 'MKD', 'en'))).toEqual(['-1,', '234,', '567'])
+    expect(moneyNumberPieces(signedMoneyParts(123_456_789, 'EUR', 'en'))).toEqual(['+€1,', '234,', '567.89'])
+  })
+
+  it.each(['en', 'mk'] as const)('gives back exactly the formatted number when the pieces are joined (%s)', (language) => {
+    const parts = moneyParts(199_999_999_998, 'EUR', language)
+
+    expect(moneyNumberPieces(parts).join('')).toBe(formatMoney(199_999_999_998, 'EUR', language))
   })
 })

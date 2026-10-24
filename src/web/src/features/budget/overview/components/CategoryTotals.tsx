@@ -4,7 +4,7 @@ import { useLanguage } from '@/core/i18n/useLanguage'
 import type { PersonalCurrencyTotal } from '@/core/services/personalEntries/personalEntriesService'
 import { kvitCategoryGridLook } from '@/shared/components/KvitCategoryChoice'
 import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
-import { KvitFitAmount } from '@/shared/components/KvitFitAmount'
+import { KvitFitBreakableAmount } from '@/shared/components/KvitFitAmount'
 import { categoryColor } from '@/shared/utils/categoryLooks'
 import { currencyLabel, moneyParts } from '@/shared/utils/formatMoney'
 import { personalCategoryName } from '../../categories/personalCategoryName'
@@ -53,7 +53,7 @@ function CurrencyTotals({ total, label }: CurrencyTotalsProps) {
         >
           <KvitEmojiTile emoji={row.category.emoji} background={categoryColor(row.category)} />
           <span className="w-full font-semibold break-words">{personalCategoryName(row.category, t)}</span>
-          <KvitFitAmount
+          <KvitFitBreakableAmount
             parts={moneyParts(row.totalMinor, total.currency, language)}
             data-tile-amount=""
             className="font-bold"

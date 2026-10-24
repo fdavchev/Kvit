@@ -39,6 +39,16 @@ namespace Kvit.Infrastructure.Persistence
                 await DiscardAsync(context, cancellationToken);
                 throw new CategoryNameAlreadySavedException(exception);
             }
+            catch (InvalidOperationException exception) when (IsDeadlock(exception))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new DeadlockDetectedException(exception);
+            }
+        }
+
+        private static bool IsDeadlock(InvalidOperationException exception)
+        {
+            return exception.InnerException is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.DeadlockDetected } };
         }
 
         private static bool IsUniqueViolationOf(DbUpdateException exception, params string[] indexNames)

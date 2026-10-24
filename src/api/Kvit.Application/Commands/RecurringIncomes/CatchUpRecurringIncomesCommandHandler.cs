@@ -22,7 +22,7 @@ namespace Kvit.Application.Commands.RecurringIncomes
                 return caller.ToFailure<RecurringIncomeCatchUpResponse>();
             }
 
-            Result<int> created = await _unitOfWork.RunInTransactionOnceMoreIfRecurringIncomeEntryWasSavedAsync(
+            Result<int> created = await _unitOfWork.RunInTransactionOnceMoreIfRecurringIncomeEntryWasSavedOrDeadlockedAsync(
                 () => _generateRecurringIncomeEntries.Execute(caller.Value.Id, caller.Value.TimeZone, cancellationToken),
                 cancellationToken);
             if (!created.IsSuccess)

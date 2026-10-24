@@ -401,6 +401,18 @@ describe('BudgetScreen, the "Left this month" card', () => {
       expect(amountTexts(card, incomeAttribute)).toEqual([incomeMoney(999999999900, 'MKD', language), incomeMoney(99999999999, 'EUR', language)])
     })
 
+    it.each(languages)('never gives the Left, Income and Spent amounts a break point inside the number (%s)', async (language) => {
+      await renderBudget({ language, months: [octoberWithLongAmounts] })
+
+      const card = await findLeftCard(language)
+      const amounts = [...amountElements(card, leftAttribute), ...amountElements(card, incomeAttribute), ...amountElements(card, spentAttribute)]
+
+      expect(amounts).toHaveLength(6)
+      for (const amount of amounts) {
+        expect(amount.querySelectorAll('wbr')).toHaveLength(0)
+      }
+    })
+
     it.each(languages)('keeps the big Left amount whole on one line, shrunk to fit the card (%s)', async (language) => {
       await renderBudget({ language, months: [octoberWithLongAmounts] })
 

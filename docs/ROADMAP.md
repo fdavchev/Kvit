@@ -211,7 +211,7 @@ Release 1 accepted 2026-10-16. Filip put this BACKLOG "must do" before Phase 13.
 - [x] **Done 2026-10-20 (VERIFIED by automated test: frontend 9503; not seen in a browser).** Step 5: frontend, repeating income (Repeats and Ends chips, the row and the list)
 - [x] **Done 2026-10-21 (VERIFIED by automated test: frontend 9553; not seen in a browser).** Step 6: frontend, Budget tab with the Left card
 - [x] **Done 2026-10-21 (VERIFIED by live run, headless Chromium, local stack; 6 bugs found, all fixed; Bug 6 fix VERIFIED by automated test only; backend 4860, frontend 9600).** Step 7: desktop layout and the 360 px browser pass (`reports/2026-10-21-phase-14-browser-pass.md`)
-- [ ] Step 8: code review, report, guide
+- [x] **Done 2026-10-24 (VERIFIED by automated test: backend 4892, frontend 9717; the fixes VERIFIED by live run in the tester's re-checks).** Step 8: two code reviews (20 findings fixed), report `reports/2026-10-24-phase-14-income.md`, guide `guides/phase-14-income.md`, first-push texts `guides/phase-14-pr-text.md` (migrations `RecurringIncomeRules`, `GeneratedIncomeEntries`, `PersonalEntryOriginRules` came with it)
 - [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the migration on Neon)
 
 ## Later phases

@@ -15,6 +15,6 @@ namespace Kvit.Domain.Interfaces
 
         Task<int> LockAndCountActiveOfAsync(Guid userId, CancellationToken cancellationToken);
 
-        Task<IReadOnlyList<RecurringIncome>> ListActiveOfAsync(Guid userId, CancellationToken cancellationToken);
+        Task<IReadOnlyList<RecurringIncome>> ListActiveOfInCreationOrderAsync(Guid userId, CancellationToken cancellationToken);
     }
 }

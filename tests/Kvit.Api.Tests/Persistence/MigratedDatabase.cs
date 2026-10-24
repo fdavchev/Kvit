@@ -44,6 +44,14 @@ namespace Kvit.Api.Tests.Persistence
             return _factory.Services.CreateScope();
         }
 
+        public async Task<NpgsqlConnection> OpenConnectionAsync()
+        {
+            NpgsqlConnection connection = new(_connectionString);
+            await connection.OpenAsync(TestContext.Current.CancellationToken);
+
+            return connection;
+        }
+
         public async Task<List<string?>> QueryAsync(string sql, params NpgsqlParameter[] parameters)
         {
             await using NpgsqlConnection connection = new(_connectionString);

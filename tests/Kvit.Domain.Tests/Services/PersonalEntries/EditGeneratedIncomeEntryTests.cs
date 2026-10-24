@@ -24,7 +24,7 @@ namespace Kvit.Domain.Tests.Services.PersonalEntries
 
         public EditGeneratedIncomeEntryTests()
         {
-            _generated = PersonalEntry.CreateFromRecurringIncome(_salary, PayDay, PersonalEntryTestData.Rate, PersonalEntryTestData.Moment);
+            _generated = PersonalEntry.CreateFromRecurringIncome(Guid.CreateVersion7(), _salary, PayDay, PersonalEntryTestData.Rate, PersonalEntryTestData.Moment);
             _entries.Seed(_generated);
             PersonalEntryTestData.SeedRate(_rates, PersonalEntryTestData.Rate);
             FixedTimeProvider timeProvider = new(Later);

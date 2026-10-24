@@ -44,11 +44,13 @@ namespace Kvit.Infrastructure.Repositories
             return await _context.RecurringIncomes.CountAsync(income => income.UserId == userId && income.StoppedAt == null, cancellationToken);
         }
 
-        public async Task<IReadOnlyList<RecurringIncome>> ListActiveOfAsync(Guid userId, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<RecurringIncome>> ListActiveOfInCreationOrderAsync(Guid userId, CancellationToken cancellationToken)
         {
             return await _context.RecurringIncomes
                 .AsNoTracking()
                 .Where(income => income.UserId == userId && income.StoppedAt == null)
+                .OrderBy(income => income.CreatedAt)
+                .ThenBy(income => income.Id)
                 .ToListAsync(cancellationToken);
         }
 

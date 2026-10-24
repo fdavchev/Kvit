@@ -41,6 +41,16 @@ namespace Kvit.Api.Tests.RecurringIncomes
             return AtACookieSafeTimeAsync(app, () => app.SignUpAsync(displayName));
         }
 
+        public static async Task<SignedInUser> SignInOnASecondDeviceAsync(ExpensesApp app, SignedInUser user)
+        {
+            HttpClient client = app.CreateClient();
+
+            HttpResponseMessage response = await AtACookieSafeTimeAsync(app, () => AuthRequests.LogInAsync(client, user.Form.Email, user.Form.Password));
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return new SignedInUser(client, user.UserId, user.Form);
+        }
+
         public static async Task<SignedInUser> SignUpInAsync(ExpensesApp app, string timeZone, string displayName = GroupsApp.OwnerName)
         {
             SignedInUser user = await SignUpAsync(app, displayName);

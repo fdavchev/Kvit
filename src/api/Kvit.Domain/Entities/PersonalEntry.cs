@@ -43,7 +43,7 @@ namespace Kvit.Domain.Entities
 
         public static PersonalEntry CreateSpending(Guid userId, PersonalEntryFields fields, ExchangeRateSnapshot rate, Guid clientRequestId, DateTimeOffset createdAt)
         {
-            PersonalEntry entry = New(userId, PersonalEntryKind.Spending, rate, clientRequestId, createdAt);
+            PersonalEntry entry = New(Guid.CreateVersion7(), userId, PersonalEntryKind.Spending, rate, clientRequestId, createdAt);
             entry.ApplyFields(fields);
 
             return entry;
@@ -51,15 +51,15 @@ namespace Kvit.Domain.Entities
 
         public static PersonalEntry CreateIncome(Guid userId, IncomeFields fields, ExchangeRateSnapshot rate, Guid clientRequestId, DateTimeOffset createdAt)
         {
-            PersonalEntry entry = New(userId, PersonalEntryKind.Income, rate, clientRequestId, createdAt);
+            PersonalEntry entry = New(Guid.CreateVersion7(), userId, PersonalEntryKind.Income, rate, clientRequestId, createdAt);
             entry.ApplyAmountDateAndNote(fields);
 
             return entry;
         }
 
-        public static PersonalEntry CreateFromRecurringIncome(RecurringIncome income, DateOnly entryDate, ExchangeRateSnapshot rate, DateTimeOffset createdAt)
+        public static PersonalEntry CreateFromRecurringIncome(Guid id, RecurringIncome income, DateOnly entryDate, ExchangeRateSnapshot rate, DateTimeOffset createdAt)
         {
-            PersonalEntry entry = New(income.UserId, PersonalEntryKind.Income, rate, null, createdAt);
+            PersonalEntry entry = New(id, income.UserId, PersonalEntryKind.Income, rate, null, createdAt);
             entry.RecurringIncomeId = income.Id;
             entry.AmountMinor = income.AmountMinor;
             entry.Currency = income.Currency;
@@ -167,11 +167,11 @@ namespace Kvit.Domain.Entities
             return Result.Ok();
         }
 
-        private static PersonalEntry New(Guid userId, PersonalEntryKind kind, ExchangeRateSnapshot rate, Guid? clientRequestId, DateTimeOffset createdAt)
+        private static PersonalEntry New(Guid id, Guid userId, PersonalEntryKind kind, ExchangeRateSnapshot rate, Guid? clientRequestId, DateTimeOffset createdAt)
         {
             PersonalEntry entry = new()
             {
-                Id = Guid.CreateVersion7(),
+                Id = id,
                 UserId = userId,
                 Kind = kind,
                 ClientRequestId = clientRequestId,

@@ -4,7 +4,7 @@ import { languages } from '@/core/i18n/language'
 import { formatMoney, moneyParts } from '@/shared/utils/formatMoney'
 import { formatSignedMoney, signedMoneyParts } from '@/shared/utils/formatSignedMoney'
 import { plainSpaces } from '@/test/expenseTestHelpers'
-import { KvitFitAmount, KvitFitRollingAmount } from './KvitFitAmount'
+import { KvitFitAmount, KvitFitBreakableAmount, KvitFitRollingAmount } from './KvitFitAmount'
 
 function classesOf(element: Element): string[] {
   return element.className.split(/\s+/)
@@ -125,5 +125,60 @@ describe('KvitFitRollingAmount', () => {
 
     expect(shown?.querySelector('number-flow-react')).not.toBeNull()
     expect(unbrokenPieces(shown ?? container)).toEqual([])
+  })
+})
+
+function piecesAndBreaks(element: HTMLElement): string[] {
+  return [...element.childNodes].map((node) => {
+    if (node instanceof HTMLElement && node.tagName === 'WBR') {
+      return '<wbr>'
+    }
+    return node.textContent ?? ''
+  })
+}
+
+describe('KvitFitBreakableAmount', () => {
+  it('is its own container with the given look and attributes, with the shrinking amount and its length inside', () => {
+    const { container } = render(<KvitFitBreakableAmount parts={moneyParts(99999999999, 'EUR', 'en')} className="font-bold" data-tile-amount="" />)
+
+    const box = onlyChild(container)
+    const fitted = fittedIn(box)
+
+    expect(classesOf(box)).toEqual(expect.arrayContaining(['@container', 'block', 'w-full', 'font-bold']))
+    expect(box.hasAttribute('data-tile-amount')).toBe(true)
+    expect(fitted.style.getPropertyValue('--amount-length')).toBe(String(formatMoney(99999999999, 'EUR', 'en').length))
+  })
+
+  it.each([
+    ['en', ['€999,', '<wbr>', '999,', '<wbr>', '999.99']],
+    ['mk', ['€999.', '<wbr>', '999.', '<wbr>', '999,99']],
+  ] as const)('lets a long euro amount wrap only right after a thousands separator, never inside a group (%s)', (language, expected) => {
+    const { container } = render(<KvitFitBreakableAmount parts={moneyParts(99999999999, 'EUR', language)} />)
+
+    const fitted = fittedIn(onlyChild(container))
+
+    expect(piecesAndBreaks(fitted)).toEqual(expected)
+    expect(unbrokenPieces(fitted)).toEqual(expected.filter((piece) => piece !== '<wbr>'))
+    expect(fitted.textContent).toBe(formatMoney(99999999999, 'EUR', language))
+  })
+
+  it.each(languages)('lets a long denar amount wrap after a thousands separator or before its label (%s)', (language) => {
+    const { container } = render(<KvitFitBreakableAmount parts={moneyParts(1999999999800, 'MKD', language)} />)
+
+    const fitted = fittedIn(onlyChild(container))
+    const separator = language === 'en' ? ',' : '.'
+
+    expect(unbrokenPieces(fitted)).toEqual([`19${separator}`, `999${separator}`, `999${separator}`, '998', language === 'en' ? 'MKD' : 'ден.'])
+    expect(fitted.querySelectorAll('wbr')).toHaveLength(3)
+    expect(plainSpaces(fitted.textContent ?? '')).toBe(plainSpaces(formatMoney(1999999999800, 'MKD', language)))
+  })
+
+  it('draws an amount under a thousand as one unbroken piece with no break point', () => {
+    const { container } = render(<KvitFitBreakableAmount parts={moneyParts(99999, 'EUR', 'en')} />)
+
+    const fitted = fittedIn(onlyChild(container))
+
+    expect(unbrokenPieces(fitted)).toEqual(['€999.99'])
+    expect(fitted.querySelectorAll('wbr')).toHaveLength(0)
   })
 })

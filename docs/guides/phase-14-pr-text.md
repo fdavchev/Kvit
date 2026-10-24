@@ -27,7 +27,8 @@ Second phase of Release 2 ("budget"). Adds personal income: added once, or repea
 - Migration `Income` (Step 1): `Income` allowed as an entry kind, `personal_entries.recurring_income_id` with a unique index on (`recurring_income_id`, `entry_date`), and the new `recurring_incomes` table.
 - Migration `RecurringIncomeRules` (Step 2): a repeating income has a day matching its rhythm and a title of 1 to 60 characters.
 - Migration `GeneratedIncomeEntries` (Step 3): `personal_entries.client_request_id` may be empty (entries made from a repeating income have none).
-- CI applies all three on Neon after the merge.
+- Migration `PersonalEntryOriginRules` (Step 8): income never has a category, a generated entry is always income, and every entry has a request id or a repeating income.
+- CI applies all four on Neon after the merge.
 
 ### Checklist
 - [x] Step 0: mockups, picks logged in DECISIONS
@@ -38,7 +39,7 @@ Second phase of Release 2 ("budget"). Adds personal income: added once, or repea
 - [x] Step 5: frontend, repeating income (Repeats and Ends chips, the row and the list)
 - [x] Step 6: frontend, Budget tab with the Left card
 - [x] Step 7: desktop layout and the 360 px browser pass (EN/MK, light/dark)
-- [ ] Step 8: code review fixes, report and guide
+- [x] Step 8: code review fixes, report and guide
 - [ ] CI green
 
 ## Later pushes: one-line commit subjects
@@ -49,3 +50,6 @@ Second phase of Release 2 ("budget"). Adds personal income: added once, or repea
 - Step 6: Add the Left this month card to the Budget tab.
 - Step 7: Fix the Phase 14 browser pass findings: focus, edit title, long amounts, locked start date and month-end line.
 - Step 7b: Reload the repeating income list after the opening catch-up creates entries.
+- Step 8: Fix the Phase 14 code review findings: locked generated dates, exact end dates, error toasts, shared fit amount and origin rules.
+- Step 8b: Fix the Phase 14 re-check findings: deadlock on parallel catch-up, locked chip contrast and long euro tile amounts.
+- Step 8c: Record where Phase 14 stopped: report, guide, roadmap and status.

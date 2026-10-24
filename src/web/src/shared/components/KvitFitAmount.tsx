@@ -1,6 +1,6 @@
-import type { CSSProperties, HTMLAttributes, ReactNode } from 'react'
+import { Fragment, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react'
 import { cn } from '@/shared/utils/cn'
-import { moneyText, type MoneyParts } from '@/shared/utils/formatMoney'
+import { moneyNumberPieces, moneyText, type MoneyParts } from '@/shared/utils/formatMoney'
 import { KvitRollingNumber } from './KvitAmount'
 
 interface KvitFitAmountProps extends HTMLAttributes<HTMLSpanElement> {
@@ -50,6 +50,20 @@ export function KvitFitAmount({ parts, ...attributes }: KvitFitAmountProps) {
   return (
     <FitBox parts={parts} {...attributes}>
       <span className={unbrokenLook}>{moneyText(withoutLabel(parts))}</span>
+      <LabelAfterSpace label={labelOf(parts)} />
+    </FitBox>
+  )
+}
+
+export function KvitFitBreakableAmount({ parts, ...attributes }: KvitFitAmountProps) {
+  return (
+    <FitBox parts={parts} {...attributes}>
+      {moneyNumberPieces(parts).map((piece, index) => (
+        <Fragment key={index}>
+          {index > 0 && <wbr />}
+          <span className={unbrokenLook}>{piece}</span>
+        </Fragment>
+      ))}
       <LabelAfterSpace label={labelOf(parts)} />
     </FitBox>
   )
