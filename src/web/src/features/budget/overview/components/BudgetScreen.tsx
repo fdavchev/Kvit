@@ -4,7 +4,11 @@ import { useNavigate } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
 import { routes } from '@/core/router/routes'
-import type { PersonalEntry, PersonalEntryKind } from '@/core/services/personalEntries/personalEntriesService'
+import type {
+  MonthLimits,
+  PersonalEntry,
+  PersonalEntryKind,
+} from '@/core/services/personalEntries/personalEntriesService'
 import type { RecurringIncome } from '@/core/services/recurringIncomes/recurringIncomesService'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
@@ -23,6 +27,10 @@ import { usePersonalCategories } from '../../categories/hooks/usePersonalCategor
 import { PersonalIncomeSheet } from '../../entries/components/PersonalIncomeSheet'
 import { PersonalSpendingSheet } from '../../entries/components/PersonalSpendingSheet'
 import { usePersonalEntries } from '../../entries/hooks/usePersonalEntries'
+import type { LimitTarget } from '../../limits/budgetLimits'
+import { BudgetLimitChoiceSheet } from '../../limits/components/BudgetLimitChoiceSheet'
+import { BudgetLimits } from '../../limits/components/BudgetLimits'
+import { BudgetLimitSheet } from '../../limits/components/BudgetLimitSheet'
 import { RecurringIncomeListSheet } from '../../recurring/components/RecurringIncomeListSheet'
 import { RecurringIncomeRow, RecurringIncomeRowError } from '../../recurring/components/RecurringIncomeRow'
 import { useCatchUpOnOpen } from '../../recurring/hooks/useCatchUpOnOpen'
@@ -54,6 +62,8 @@ export function BudgetScreen() {
   const [isRepeatingListOpen, setIsRepeatingListOpen] = useState<boolean>(false)
   const [openedRecurringIncome, setOpenedRecurringIncome] = useState<RecurringIncome | null>(null)
   const [handOnOpener, setHandOnOpener] = useState<Element | null>(null)
+  const [limitsToChooseFrom, setLimitsToChooseFrom] = useState<MonthLimits | null>(null)
+  const [openedLimit, setOpenedLimit] = useState<LimitTarget | null>(null)
   const navigate = useNavigate()
   const entriesQuery = usePersonalEntries(selectedMonth)
   const categoriesQuery = usePersonalCategories()
@@ -79,6 +89,21 @@ export function BudgetScreen() {
   function closeRepeatingList(editedIncome: RecurringIncome | null): void {
     setIsRepeatingListOpen(false)
     setOpenedRecurringIncome(editedIncome)
+  }
+
+  function startSettingLimit(limits: MonthLimits): void {
+    setHandOnOpener(document.activeElement)
+    setLimitsToChooseFrom(limits)
+  }
+
+  function openLimit(target: LimitTarget): void {
+    setHandOnOpener(document.activeElement)
+    setOpenedLimit(target)
+  }
+
+  function closeLimitChoice(chosen: LimitTarget | null): void {
+    setLimitsToChooseFrom(null)
+    setOpenedLimit(chosen)
   }
 
   function renderRepeatingRow(): ReactNode {
@@ -108,7 +133,7 @@ export function BudgetScreen() {
     if (entriesQuery.isError) {
       return renderLoadError(entriesQuery.error, () => void entriesQuery.refetch())
     }
-    const { entries, totals, incomeTotals, groupShares, convertedTotals } = entriesQuery.data
+    const { entries, totals, incomeTotals, groupShares, convertedTotals, limits } = entriesQuery.data
     const sharesNeedCategories = groupShares.some((share) => share.categoryId !== null)
     if (sharesNeedCategories && categoriesQuery.isPending) {
       return <BudgetMonthSkeleton />
@@ -117,10 +142,14 @@ export function BudgetScreen() {
       return renderLoadError(categoriesQuery.error, () => void categoriesQuery.refetch())
     }
     const categories = categoriesQuery.data ?? []
+    const limitsPart = (
+      <BudgetLimits limits={limits} onOpenLimit={openLimit} onSetLimit={() => startSettingLimit(limits)} />
+    )
     if (entries.length === 0 && groupShares.length === 0) {
       return (
         <>
           {repeatingRow}
+          {limitsPart}
           <div className="pt-6">
             <KvitEmpty emoji={receiptEmoji} title={t('budget.screen.emptyTitle')} message={t('expenses.emptyHint')} />
           </div>
@@ -139,6 +168,7 @@ export function BudgetScreen() {
               {t('budget.screen.emptyTitle')}
             </p>
             {repeatingRow}
+            {limitsPart}
           </>
         ) : (
           <>
@@ -154,6 +184,7 @@ export function BudgetScreen() {
               />
             )}
             {repeatingRow}
+            {limitsPart}
             {tileTotals.length > 0 && <CategoryTotals totals={tileTotals} />}
           </>
         )}
@@ -200,6 +231,16 @@ export function BudgetScreen() {
           recurringIncome={liveRecurringIncome(openedRecurringIncome, recurringQuery.data)}
           opener={handOnOpener}
           onClose={() => setOpenedRecurringIncome(null)}
+        />
+      )}
+      {limitsToChooseFrom !== null && <BudgetLimitChoiceSheet limits={limitsToChooseFrom} onClose={closeLimitChoice} />}
+      {openedLimit !== null && (
+        <BudgetLimitSheet
+          target={openedLimit}
+          viewedMonth={selectedMonth}
+          currentMonth={currentMonth}
+          opener={handOnOpener}
+          onClose={() => setOpenedLimit(null)}
         />
       )}
       {openedEntry !== null &&

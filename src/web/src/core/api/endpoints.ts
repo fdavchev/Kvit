@@ -29,6 +29,8 @@ export const endpoints = {
   personalEntriesOfMonth: (month: string) => `/api/personal/entries?month=${month}`,
   personalEntry: (entryId: string) => `/api/personal/entries/${entryId}`,
   personalEntryRestore: (entryId: string) => `/api/personal/entries/${entryId}/restore`,
+  personalLimitsMonth: '/api/personal/limits/month',
+  personalLimitsCategory: (categoryId: string) => `/api/personal/limits/categories/${categoryId}`,
   recurringIncomes: '/api/personal/recurring-incomes',
   recurringIncomesCatchUp: '/api/personal/recurring-incomes/catch-up',
   recurringIncome: (recurringIncomeId: string) => `/api/personal/recurring-incomes/${recurringIncomeId}`,

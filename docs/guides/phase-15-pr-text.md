@@ -35,7 +35,7 @@ Third phase of Release 2 ("budget"). Your share of group expenses now counts in 
 - [x] Step 4: backend, monthly summary
 - [x] Step 5: frontend, Settings (budget currency, per-group switch)
 - [x] Step 6: frontend, group shares on the Budget tab
-- [ ] Step 7: frontend, limits
+- [x] Step 7: frontend, limits
 - [ ] Step 8: frontend, monthly summary
 - [ ] Step 9: desktop layout and the 360 px browser pass (EN/MK, light/dark)
 - [ ] Step 10: code review fixes, report and guide
@@ -48,3 +48,4 @@ Third phase of Release 2 ("budget"). Your share of group expenses now counts in 
 - Step 4: Add the monthly summary: this month against the previous one per currency and category, with converted totals, as GET /api/personal/summary.
 - Step 5: Add the Budget card to Settings and the Count my shares switch to group settings, with the countsInBudget field on the group.
 - Step 6: Show group shares on the Budget tab: a From groups block, shares in the totals and tiles, and the single converted total.
+- Step 7: Add monthly limits to the Budget tab: the Limits card with progress bars, the set-a-limit sheet and the choice sheet.

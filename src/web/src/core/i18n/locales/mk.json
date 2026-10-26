@@ -627,6 +627,19 @@
       "inEur": "во евра",
       "includesConvertedEuro": "вклучува претворени износи во евра",
       "includesConvertedDenars": "вклучува претворени износи во денари"
+    },
+    "limits": {
+      "title": "Лимити",
+      "wholeMonth": "Цел месец",
+      "setLimit": "Постави лимит",
+      "chooseTitle": "Постави лимит за",
+      "sheetTitle": "{{name}} · месечен лимит",
+      "appliesFromNow": "Важи од овој месец натаму. Претходните месеци го задржуваат својот лимит.",
+      "viewingPast": "Гледате {{month}}. Промената почнува овој месец.",
+      "remove": "Отстрани го лимитот",
+      "removed": "Лимитот е отстранет",
+      "over": "{{amount}} над лимитот",
+      "includesConverted": "вклучува {{amount}} претворени во денари"
     }
   },
   "addName": {

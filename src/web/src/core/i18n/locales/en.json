@@ -627,6 +627,19 @@
       "inEur": "in EUR",
       "includesConvertedEuro": "includes converted euro amounts",
       "includesConvertedDenars": "includes converted denar amounts"
+    },
+    "limits": {
+      "title": "Limits",
+      "wholeMonth": "Whole month",
+      "setLimit": "Set a limit",
+      "chooseTitle": "Set a limit for",
+      "sheetTitle": "{{name}} · monthly limit",
+      "appliesFromNow": "Applies from this month on. Earlier months keep their limit.",
+      "viewingPast": "You are looking at {{month}}. The change starts this month.",
+      "remove": "Remove limit",
+      "removed": "Limit removed",
+      "over": "{{amount}} over",
+      "includesConverted": "includes {{amount}} converted to MKD"
     }
   },
   "addName": {
