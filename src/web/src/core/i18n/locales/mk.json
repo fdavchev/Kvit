@@ -640,6 +640,18 @@
       "removed": "Лимитот е отстранет",
       "over": "{{amount}} над лимитот",
       "includesConverted": "вклучува {{amount}} претворени во денари"
+    },
+    "summary": {
+      "title": "{{month}} наспроти {{previousMonth}}",
+      "row": "Резиме",
+      "was": "беше",
+      "up": "повеќе за {{percent}} отсто",
+      "down": "помалку за {{percent}} отсто",
+      "same": "без промена",
+      "new": "ново",
+      "percent": "{{percent}} %",
+      "empty": "Засега нема што да се спореди",
+      "toBudget": "Оди на Буџет"
     }
   },
   "addName": {

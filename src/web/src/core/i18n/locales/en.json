@@ -640,6 +640,18 @@
       "removed": "Limit removed",
       "over": "{{amount}} over",
       "includesConverted": "includes {{amount}} converted to MKD"
+    },
+    "summary": {
+      "title": "{{month}} vs {{previousMonth}}",
+      "row": "Summary",
+      "was": "was",
+      "up": "up {{percent}} percent",
+      "down": "down {{percent}} percent",
+      "same": "no change",
+      "new": "new",
+      "percent": "{{percent}} %",
+      "empty": "Nothing to compare yet",
+      "toBudget": "Go to Budget"
     }
   },
   "addName": {

@@ -36,6 +36,7 @@ import { RecurringIncomeRow, RecurringIncomeRowError } from '../../recurring/com
 import { useCatchUpOnOpen } from '../../recurring/hooks/useCatchUpOnOpen'
 import { useRecurringIncomes } from '../../recurring/hooks/useRecurringIncomes'
 import { liveRecurringIncome } from '../../recurring/recurringIncomeCache'
+import { BudgetSummaryRow } from '../../summary/components/BudgetSummaryRow'
 import { BudgetAddChoiceSheet } from './BudgetAddChoiceSheet'
 import { BudgetFloatingAddButton, BudgetRoundAddButton } from './BudgetAddButton'
 import { spendingWithGroupShares } from '../groupShareTotals'
@@ -145,10 +146,12 @@ export function BudgetScreen() {
     const limitsPart = (
       <BudgetLimits limits={limits} onOpenLimit={openLimit} onSetLimit={() => startSettingLimit(limits)} />
     )
+    const summaryRow = <BudgetSummaryRow month={selectedMonth} />
     if (entries.length === 0 && groupShares.length === 0) {
       return (
         <>
           {repeatingRow}
+          {summaryRow}
           {limitsPart}
           <div className="pt-6">
             <KvitEmpty emoji={receiptEmoji} title={t('budget.screen.emptyTitle')} message={t('expenses.emptyHint')} />
@@ -168,6 +171,7 @@ export function BudgetScreen() {
               {t('budget.screen.emptyTitle')}
             </p>
             {repeatingRow}
+            {summaryRow}
             {limitsPart}
           </>
         ) : (
@@ -184,6 +188,7 @@ export function BudgetScreen() {
               />
             )}
             {repeatingRow}
+            {summaryRow}
             {limitsPart}
             {tileTotals.length > 0 && <CategoryTotals totals={tileTotals} />}
           </>
