@@ -21,6 +21,7 @@ import {
   monthThatChanges,
   openLimitSheetFromRow,
   queryLimitsCard,
+  queryRemoveLimitButton,
   querySetLimitButton,
   removeLimitButton,
   renderBudgetWithLimits,
@@ -108,6 +109,14 @@ async function openSeptember(): Promise<void> {
   await waitFor(() => {
     expect(queryLimitsCard()?.textContent).toContain('Gym')
   })
+}
+
+async function openWholeMonthSheetFromSeptember(answers: Record<string, AnswerFactory> = {}) {
+  const rendered = await renderBudgetWithLimits({ months: [octoberWithLimits, septemberWithLimits], answers })
+  await findLimitsCard()
+  await openSeptember()
+  const sheet = await openLimitSheetFromRow(queryLimitsCard() ?? document.body, wholeMonthName())
+  return { ...rendered, sheet }
 }
 
 function successToastTexts(): unknown[] {
@@ -273,6 +282,49 @@ describe('BudgetScreen, the set-a-limit sheet', () => {
 
       expect(markedForDecimals).toBe('true')
       expect(limitAmountField(sheet).getAttribute('aria-invalid')).toBe('false')
+    })
+  })
+
+  describe('when Save can be tapped from an earlier month', () => {
+    it('is enabled at once, because the limit of this month is not known to the sheet', async () => {
+      const { sheet } = await openWholeMonthSheetFromSeptember()
+
+      expect(limitAmountField(sheet).value).toBe('20000')
+      expect(saveLimitButton(sheet).disabled).toBe(false)
+    })
+
+    it('is enabled when the amount is typed back to the limit of the earlier month', async () => {
+      const { sheet } = await openWholeMonthSheetFromSeptember()
+      typeLimit(sheet, '21000')
+
+      typeLimit(sheet, '20000')
+
+      expect(saveLimitButton(sheet).disabled).toBe(false)
+    })
+
+    it('sends the limit of the earlier month as it is when Save is tapped without typing', async () => {
+      const { fetchMock, sheet } = await openWholeMonthSheetFromSeptember({ [monthLimitPut]: () => new Response(null, { status: 204 }) })
+
+      fireEvent.click(saveLimitButton(sheet))
+
+      await waitFor(() => {
+        expect(requestsOf(fetchMock, 'PUT', endpoints.personalLimitsMonth)).toHaveLength(1)
+      })
+      expect(requestsOf(fetchMock, 'PUT', endpoints.personalLimitsMonth)[0].body).toEqual({ limitMinor: 2000000 })
+    })
+
+    it.each(['', '0', '00', '12.5', '12,5', 'abc', '-5', '99999999999'])('is disabled for the amount "%s", which is not a valid number of whole denars above 0', async (text) => {
+      const { sheet } = await openWholeMonthSheetFromSeptember()
+
+      typeLimit(sheet, text)
+
+      expect(saveLimitButton(sheet).disabled).toBe(true)
+    })
+
+    it('shows Remove limit, because the earlier month has a limit on that row', async () => {
+      const { sheet } = await openWholeMonthSheetFromSeptember()
+
+      expect(queryRemoveLimitButton(sheet)).toBeTruthy()
     })
   })
 

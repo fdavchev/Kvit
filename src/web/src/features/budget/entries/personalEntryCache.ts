@@ -1,4 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
+import { personalSummaryFamilyKey } from '../summary/personalSummaryCache'
 
 export const personalEntriesFamilyKey =['personal', 'entries'] as const
 
@@ -6,6 +7,9 @@ export function personalEntriesQueryKey(month: string): readonly ['personal', 'e
   return [...personalEntriesFamilyKey, month]
 }
 
-export function refreshPersonalEntries(queryClient: QueryClient): Promise<void> {
-  return queryClient.invalidateQueries({ queryKey: personalEntriesFamilyKey })
+export async function refreshPersonalEntries(queryClient: QueryClient): Promise<void> {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: personalEntriesFamilyKey }),
+    queryClient.invalidateQueries({ queryKey: personalSummaryFamilyKey }),
+  ])
 }

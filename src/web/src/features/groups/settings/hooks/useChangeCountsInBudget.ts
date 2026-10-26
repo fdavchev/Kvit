@@ -10,7 +10,7 @@ export function useChangeCountsInBudget(groupId: string): UseMutationResult<void
     onSuccess: (_answer, countsInBudget) => {
       const group = queryClient.getQueryData<Group>(groupQueryKey(groupId))
       if (group === undefined) {
-        throw new Error(`Expected group ${groupId} in the cache to apply countsInBudget ${String(countsInBudget)}, found nothing`)
+        return
       }
       queryClient.setQueryData<Group>(groupQueryKey(groupId), { ...group, countsInBudget })
     },

@@ -10,6 +10,7 @@ import {
 } from '@/test/apiTestHelpers'
 import { renderHookWithProviders } from '@/test/renderWithProviders'
 import { seedMe, testMe } from '@/test/testMe'
+import { personalSummaryQueryKey } from '@/features/budget/summary/personalSummaryCache'
 import { useChangeBudgetCurrency } from './useChangeBudgetCurrency'
 
 const meWithEuroTotal = { ...testMe, budgetTotalCurrency: 'EUR' } as const
@@ -65,6 +66,36 @@ describe('useChangeBudgetCurrency', () => {
     await act(() => result.current.mutateAsync(null))
 
     expect(queryClient.getQueryData(meQueryKey)).toEqual({ ...testMe, budgetTotalCurrency: null })
+  })
+
+  it('marks every cached summary as out of date once the server accepted it, because the converted totals change', async () => {
+    stubFetch(new Response(null, { status: 204 }))
+    const { result, queryClient } = await renderHookWithProviders(() => useChangeBudgetCurrency(), {
+      seedCache: (client) => {
+        seedMe(testMe)(client)
+        client.setQueryData(personalSummaryQueryKey('2026-10'), 'the October summary')
+        client.setQueryData(personalSummaryQueryKey('2026-09'), 'the September summary')
+      },
+    })
+
+    await act(() => result.current.mutateAsync('EUR'))
+
+    expect(queryClient.getQueryState(personalSummaryQueryKey('2026-10'))?.isInvalidated).toBe(true)
+    expect(queryClient.getQueryState(personalSummaryQueryKey('2026-09'))?.isInvalidated).toBe(true)
+  })
+
+  it('leaves every cached summary alone when the server refuses', async () => {
+    stubFetch(problemResponse(400, 'ME_BUDGET_CURRENCY_INVALID'))
+    const { result, queryClient } = await renderHookWithProviders(() => useChangeBudgetCurrency(), {
+      seedCache: (client) => {
+        seedMe(testMe)(client)
+        client.setQueryData(personalSummaryQueryKey('2026-10'), 'the October summary')
+      },
+    })
+
+    await act(() => captureError(result.current.mutateAsync('EUR')))
+
+    expect(queryClient.getQueryState(personalSummaryQueryKey('2026-10'))?.isInvalidated).toBe(false)
   })
 
   it('leaves the me cache as it was before the server answered', async () => {

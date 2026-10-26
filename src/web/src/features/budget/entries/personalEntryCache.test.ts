@@ -5,12 +5,15 @@ import {
   personalCategoriesWithArchivedQueryKey,
   refreshPersonalCategories,
 } from '../categories/personalCategoryCache'
+import { personalSummaryQueryKey } from '../summary/personalSummaryCache'
 import { personalEntriesQueryKey, refreshPersonalEntries } from './personalEntryCache'
 
 function cacheWithEverything(): QueryClient {
   const queryClient = new QueryClient()
   queryClient.setQueryData(personalEntriesQueryKey('2026-10'), 'october')
   queryClient.setQueryData(personalEntriesQueryKey('2026-09'), 'september')
+  queryClient.setQueryData(personalSummaryQueryKey('2026-10'), 'october summary')
+  queryClient.setQueryData(personalSummaryQueryKey('2026-09'), 'september summary')
   queryClient.setQueryData(personalCategoriesQueryKey, 'categories')
   queryClient.setQueryData(personalCategoriesWithArchivedQueryKey, 'categories with archived')
   queryClient.setQueryData(['groups'], 'groups')
@@ -26,7 +29,7 @@ describe('the personal entries cache', () => {
     expect(personalEntriesQueryKey('2026-10')).toEqual(['personal', 'entries', '2026-10'])
   })
 
-  it('refreshes every month of entries and nothing else', async () => {
+  it('refreshes every month of entries and leaves the categories and groups alone', async () => {
     const queryClient = cacheWithEverything()
 
     await refreshPersonalEntries(queryClient)
@@ -35,6 +38,15 @@ describe('the personal entries cache', () => {
     expect(isStale(queryClient, personalEntriesQueryKey('2026-09'))).toBe(true)
     expect(isStale(queryClient, personalCategoriesQueryKey)).toBe(false)
     expect(isStale(queryClient, ['groups'])).toBe(false)
+  })
+
+  it('also refreshes every month of the summary, because each summary adds up the same entries', async () => {
+    const queryClient = cacheWithEverything()
+
+    await refreshPersonalEntries(queryClient)
+
+    expect(isStale(queryClient, personalSummaryQueryKey('2026-10'))).toBe(true)
+    expect(isStale(queryClient, personalSummaryQueryKey('2026-09'))).toBe(true)
   })
 })
 

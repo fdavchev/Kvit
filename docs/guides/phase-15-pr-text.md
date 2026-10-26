@@ -51,3 +51,4 @@ Third phase of Release 2 ("budget"). Your share of group expenses now counts in 
 - Step 7: Add monthly limits to the Budget tab: the Limits card with progress bars, the set-a-limit sheet and the choice sheet.
 - Step 8: Add the monthly summary screen at /budget/summary with a Summary row on the Budget tab.
 - Step 9: Fix the Phase 15 browser pass findings: long share titles, focus after saving a limit and no retries of rejected months.
+- Step 10 (code review): Fix the Phase 15 code review findings: limit sheet from earlier months, summary refresh, a missing cached group and retries of timeouts.

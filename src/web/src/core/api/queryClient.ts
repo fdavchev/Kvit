@@ -19,6 +19,9 @@ export const groupStateChangedCodes: readonly string[] = [
 const maxQueryRetries = 3
 const firstClientErrorStatus = 400
 const firstServerErrorStatus = 500
+const requestTimeoutStatus = 408
+const tooEarlyStatus = 425
+const retryableClientErrorStatuses: readonly number[] = [requestTimeoutStatus, tooEarlyStatus]
 
 export function createQueryClient(persister: Persister): QueryClient {
   const queryClient: QueryClient = new QueryClient({
@@ -47,13 +50,13 @@ export function createQueryClient(persister: Persister): QueryClient {
 }
 
 function shouldRetryQuery(failureCount: number, error: Error): boolean {
-  if (error instanceof ApiError && isClientErrorStatus(error.httpStatus)) {
+  if (error instanceof ApiError && isClientErrorStatus(error.httpStatus) && !retryableClientErrorStatuses.includes(error.httpStatus)) {
     return false
   }
   return failureCount < maxQueryRetries
 }
 
-function isClientErrorStatus(httpStatus: number | null): boolean {
+function isClientErrorStatus(httpStatus: number | null): httpStatus is number {
   return httpStatus !== null && httpStatus >= firstClientErrorStatus && httpStatus < firstServerErrorStatus
 }
 

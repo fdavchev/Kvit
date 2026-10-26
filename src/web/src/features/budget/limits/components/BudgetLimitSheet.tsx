@@ -100,7 +100,7 @@ export function BudgetLimitSheet({ target, viewedMonth, currentMonth, opener, on
       <KvitForm
         submitLabel={t('groupSettings.save')}
         isPending={isBusy}
-        canSubmit={amountMinor !== null && amountMinor !== target.limitMinor}
+        canSubmit={amountMinor !== null && (viewedMonth !== currentMonth || amountMinor !== target.limitMinor)}
         errorMessage={shownError === null ? null : t(errorMessageKey(shownError))}
         onSubmit={save}
         footer={

@@ -55,6 +55,24 @@ describe('useChangeCountsInBudget', () => {
     expect(queryClient.getQueryData(['groups', testGroupId])).toEqual({ ...testGroup, countsInBudget })
   })
 
+  it('does nothing to the cache and counts as a success when the group is not cached', async () => {
+    stubFetch(new Response(null, { status: 204 }))
+    const { result, queryClient } = await renderHookWithProviders(() => useChangeCountsInBudget(testGroupId), {
+      seedCache: (client) => {
+        client.setQueryData(['groups', otherGroup.id], otherGroup)
+      },
+    })
+
+    await act(() => result.current.mutateAsync(false))
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+    expect(result.current.error).toBeNull()
+    expect(queryClient.getQueryData(['groups', testGroupId])).toBeUndefined()
+    expect(queryClient.getQueryData(['groups', otherGroup.id])).toEqual(otherGroup)
+  })
+
   it('leaves the cached group of another group alone', async () => {
     stubFetch(new Response(null, { status: 204 }))
     const { result, queryClient } = await renderHookWithProviders(() => useChangeCountsInBudget(testGroupId), {
