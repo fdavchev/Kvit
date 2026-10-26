@@ -1,6 +1,12 @@
 import type { PersonalEntry, PersonalEntryMonth } from '@/core/services/personalEntries/personalEntriesService'
 import { coffeeCategory, personalFoodCategory } from './personalCategoryTestData'
-import { coffeeEntry, octoberMonth, salaryIncomeEntry, untitledEuroIncomeEntry } from './personalEntryTestData'
+import {
+  coffeeEntry,
+  noGroupSharesOrLimits,
+  octoberMonth,
+  salaryIncomeEntry,
+  untitledEuroIncomeEntry,
+} from './personalEntryTestData'
 
 export const largestSafeMinor = Number.MAX_SAFE_INTEGER
 
@@ -24,6 +30,7 @@ export const octoberIncomeAndTwoSpendings: PersonalEntryMonth = {
     { currency: 'EUR', totalMinor: 5000, categories: [{ category: personalFoodCategory, totalMinor: 5000, count: 1 }] },
   ],
   incomeTotals: [{ currency: 'MKD', totalMinor: 4500000, count: 1 }],
+  ...noGroupSharesOrLimits,
 }
 
 const smallSalaryEntry = entryOf(salaryIncomeEntry, 'f1000000-0000-4000-8000-000000000004', 1000000)
@@ -35,6 +42,7 @@ export const octoberOverspent: PersonalEntryMonth = {
     { currency: 'MKD', totalMinor: 1240000, categories: [{ category: coffeeCategory, totalMinor: 1240000, count: 1 }] },
   ],
   incomeTotals: [{ currency: 'MKD', totalMinor: 1000000, count: 1 }],
+  ...noGroupSharesOrLimits,
 }
 
 export const octoberEuroIncomeAndDenarSpending: PersonalEntryMonth = {
@@ -42,6 +50,7 @@ export const octoberEuroIncomeAndDenarSpending: PersonalEntryMonth = {
   entries: [coffeeEntry, untitledEuroIncomeEntry],
   totals: [octoberMonth.totals[0]],
   incomeTotals: [{ currency: 'EUR', totalMinor: 20000, count: 1 }],
+  ...noGroupSharesOrLimits,
 }
 
 export const octoberIncomeInBothCurrenciesSpendingInBoth: PersonalEntryMonth = {
@@ -55,6 +64,7 @@ export const octoberIncomeInBothCurrenciesSpendingInBoth: PersonalEntryMonth = {
     { currency: 'MKD', totalMinor: 6500000, count: 1 },
     { currency: 'EUR', totalMinor: 20000, count: 1 },
   ],
+  ...noGroupSharesOrLimits,
 }
 
 const septemberSalaryEntry: PersonalEntry = {
@@ -74,6 +84,7 @@ export const septemberWithIncome: PersonalEntryMonth = {
     { currency: 'MKD', totalMinor: 150000, categories: [{ category: coffeeCategory, totalMinor: 150000, count: 1 }] },
   ],
   incomeTotals: [{ currency: 'MKD', totalMinor: 3000000, count: 1 }],
+  ...noGroupSharesOrLimits,
 }
 
 const hugeEuroIncomeEntry: PersonalEntry = {
@@ -91,6 +102,7 @@ export const octoberWithLargestSafeIncome: PersonalEntryMonth = {
     { currency: 'EUR', totalMinor: 1, categories: [{ category: personalFoodCategory, totalMinor: 1, count: 1 }] },
   ],
   incomeTotals: [{ currency: 'EUR', totalMinor: largestSafeMinor, count: 1 }],
+  ...noGroupSharesOrLimits,
 }
 
 export const octoberWithLargestSafeIncomeAndSpending: PersonalEntryMonth = {
@@ -104,6 +116,7 @@ export const octoberWithLargestSafeIncomeAndSpending: PersonalEntryMonth = {
     },
   ],
   incomeTotals: [{ currency: 'EUR', totalMinor: largestSafeMinor, count: 1 }],
+  ...noGroupSharesOrLimits,
 }
 
 const longDenarIncomeEntry = entryOf(salaryIncomeEntry, 'f1000000-0000-4000-8000-000000000009', 999999999900)
@@ -122,4 +135,5 @@ export const octoberWithLongAmounts: PersonalEntryMonth = {
     { currency: 'MKD', totalMinor: 999999999900, count: 1 },
     { currency: 'EUR', totalMinor: 99999999999, count: 1 },
   ],
+  ...noGroupSharesOrLimits,
 }

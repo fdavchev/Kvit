@@ -21,6 +21,7 @@ import { amountField, saveButton, sentBody, typeAmount } from '@/test/expenseFor
 import { plainSpaces } from '@/test/expenseTestHelpers'
 import { coffeeCategory, personalFoodCategory } from '@/test/personalCategoryTestData'
 import {
+  emptyMonth,
   entryAnswerRow,
   euroIncomeOnlyOctober,
   incomeOnlyOctober,
@@ -342,7 +343,7 @@ describe('BudgetScreen with income', () => {
 
   describe('a month with no entries at all', () => {
     it('is unchanged: the empty text with no list', async () => {
-      await renderBudget({ months: [{ month: '2026-10', entries: [], totals: [], incomeTotals: [] }] })
+      await renderBudget({ months: [emptyMonth('2026-10')] })
 
       expect(await screen.findByText(translated('en', 'budget.screen.emptyTitle'))).toBeTruthy()
       expect(screen.queryByRole('list', { name: translated('en', 'budget.screen.entries') })).toBeNull()

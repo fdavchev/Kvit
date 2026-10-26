@@ -14,7 +14,14 @@ import { amountField, dismissSheetByTappingBackdrop, saveButton, typeAmount } fr
 import { stubDesktopScreen } from '@/test/matchMediaTestHelpers'
 import { coffeeCategory, createdTeaCategory, personalFoodCategory } from '@/test/personalCategoryTestData'
 import { personalCategoryCreatePost } from '@/test/personalCategoryTestHelpers'
-import { coffeeEntry, entryAnswerRow, lunchInEuroEntry, monthAnswerBody, octoberMonth } from '@/test/personalEntryTestData'
+import {
+  coffeeEntry,
+  entryAnswerRow,
+  lunchInEuroEntry,
+  monthAnswerBody,
+  noGroupSharesOrLimits,
+  octoberMonth,
+} from '@/test/personalEntryTestData'
 import {
   chooseSpending,
   createCategoryFromGrid,
@@ -48,6 +55,7 @@ const octoberWithNewCoffee: PersonalEntryMonth = {
     },
   ],
   incomeTotals: [],
+  ...noGroupSharesOrLimits,
 }
 
 function liveOctober(): { answer: () => Response; next: (month: PersonalEntryMonth) => void } {

@@ -16,6 +16,7 @@ import {
   readPositiveNumber,
   readText,
   readTextOrNull,
+  readWholeNumber,
   type Fields,
 } from '@/core/services/readFields'
 import type { Currency } from '@/shared/utils/formatMoney'
@@ -57,11 +58,46 @@ export interface PersonalIncomeTotal {
   count: number
 }
 
+export interface GroupShare {
+  expenseId: string
+  groupId: string
+  groupName: string
+  title: string | null
+  categoryId: string | null
+  entryDate: string
+  currency: Currency
+  shareMinor: number
+}
+
+export interface ConvertedTotals {
+  currency: Currency
+  spendingMinor: number
+  incomeMinor: number
+  groupSharesMinor: number
+  leftMinor: number
+}
+
+export interface LimitRow {
+  categoryId: string | null
+  limitMinor: number
+  spentMinor: number
+  overMinor: number
+  includedEurMinor: number
+}
+
+export interface MonthLimits {
+  month: LimitRow | null
+  categories: LimitRow[]
+}
+
 export interface PersonalEntryMonth {
   month: string
   entries: PersonalEntry[]
   totals: PersonalCurrencyTotal[]
   incomeTotals: PersonalIncomeTotal[]
+  groupShares: GroupShare[]
+  convertedTotals: ConvertedTotals | null
+  limits: MonthLimits
 }
 
 interface PersonalEntryMoneyFields {
@@ -92,6 +128,12 @@ export async function getPersonalEntries(month: string): Promise<PersonalEntryMo
     entries: readList(fields, 'entries', what).map(parseEntry),
     totals: readList(fields, 'totals', what).map(parseCurrencyTotal),
     incomeTotals: readList(fields, 'incomeTotals', what).map(parseIncomeTotal),
+    groupShares: readList(fields, 'groupShares', what).map(parseGroupShare),
+    convertedTotals:
+      fields.convertedTotals === null
+        ? null
+        : parseConvertedTotals(readObject(fields.convertedTotals, `"convertedTotals" of ${what}`)),
+    limits: parseMonthLimits(readObject(fields.limits, `"limits" of ${what}`)),
   }
 }
 
@@ -158,6 +200,52 @@ function parseCategoryTotal(row: unknown): PersonalCategoryTotal {
     category: readCategoryWithItsId(fields, what),
     totalMinor: readCount(fields, 'totalMinor', what),
     count: readCount(fields, 'count', what),
+  }
+}
+
+function parseGroupShare(row: unknown): GroupShare {
+  const what = 'a group share of the month'
+  const fields = readObject(row, what)
+  return {
+    expenseId: readText(fields, 'expenseId', what),
+    groupId: readText(fields, 'groupId', what),
+    groupName: readText(fields, 'groupName', what),
+    title: readTextOrNull(fields, 'title', what),
+    categoryId: readTextOrNull(fields, 'categoryId', what),
+    entryDate: readDate(fields, 'entryDate', what),
+    currency: readOneOf(fields, 'currency', groupCurrencies, what),
+    shareMinor: readCount(fields, 'shareMinor', what),
+  }
+}
+
+function parseConvertedTotals(fields: Fields): ConvertedTotals {
+  const what = 'the converted totals of the month'
+  return {
+    currency: readOneOf(fields, 'currency', groupCurrencies, what),
+    spendingMinor: readCount(fields, 'spendingMinor', what),
+    incomeMinor: readCount(fields, 'incomeMinor', what),
+    groupSharesMinor: readCount(fields, 'groupSharesMinor', what),
+    leftMinor: readWholeNumber(fields, 'leftMinor', what),
+  }
+}
+
+function parseMonthLimits(fields: Fields): MonthLimits {
+  return {
+    month: fields.month === null ? null : parseLimitRow(fields.month, 'the "month" limit of the whole month'),
+    categories: readList(fields, 'categories', 'the limits of the month').map((row) =>
+      parseLimitRow(row, 'a category limit of the month'),
+    ),
+  }
+}
+
+function parseLimitRow(row: unknown, what: string): LimitRow {
+  const fields = readObject(row, what)
+  return {
+    categoryId: readTextOrNull(fields, 'categoryId', what),
+    limitMinor: readCount(fields, 'limitMinor', what),
+    spentMinor: readCount(fields, 'spentMinor', what),
+    overMinor: readCount(fields, 'overMinor', what),
+    includedEurMinor: readCount(fields, 'includedEurMinor', what),
   }
 }
 

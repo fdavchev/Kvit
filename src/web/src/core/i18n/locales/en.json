@@ -618,6 +618,15 @@
       "months": "Month",
       "categoryTotals": "Totals by category",
       "entries": "Entries"
+    },
+    "groupShares": {
+      "title": "From groups"
+    },
+    "card": {
+      "inMkd": "in MKD",
+      "inEur": "in EUR",
+      "includesConvertedEuro": "includes converted euro amounts",
+      "includesConvertedDenars": "includes converted denar amounts"
     }
   },
   "addName": {

@@ -1,4 +1,5 @@
 import type {
+  MonthLimits,
   PersonalEntry,
   PersonalEntryMonth,
 } from '@/core/services/personalEntries/personalEntriesService'
@@ -8,6 +9,14 @@ import {
   personalFoodCategory,
   personalGroceriesCategory,
 } from './personalCategoryTestData'
+
+export const noLimits: MonthLimits = { month: null, categories: [] }
+
+export const noGroupSharesOrLimits: Pick<PersonalEntryMonth, 'groupShares' | 'convertedTotals' | 'limits'> = {
+  groupShares: [],
+  convertedTotals: null,
+  limits: noLimits,
+}
 
 export const coffeeEntry: PersonalEntry = {
   id: 'f0000000-0000-4000-8000-000000000001',
@@ -112,6 +121,7 @@ export const octoberMonth: PersonalEntryMonth = {
     },
   ],
   incomeTotals: [],
+  ...noGroupSharesOrLimits,
 }
 
 export function monthAnswerBody(month: PersonalEntryMonth): Record<string, unknown> {
@@ -123,6 +133,9 @@ export function monthAnswerBody(month: PersonalEntryMonth): Record<string, unkno
       categories: total.categories.map((row) => ({ ...row, categoryId: row.category.id })),
     })),
     incomeTotals: month.incomeTotals,
+    groupShares: month.groupShares,
+    convertedTotals: month.convertedTotals,
+    limits: month.limits,
   }
 }
 
@@ -170,6 +183,7 @@ export const mkdOnlyMonth: PersonalEntryMonth = {
     },
   ],
   incomeTotals: [],
+  ...noGroupSharesOrLimits,
 }
 
 export const euroDinnerEntry: PersonalEntry = {
@@ -198,6 +212,7 @@ export const euroOnlyAugust: PersonalEntryMonth = {
     },
   ],
   incomeTotals: [],
+  ...noGroupSharesOrLimits,
 }
 
 export const septemberWithArchivedCategory: PersonalEntryMonth = {
@@ -211,10 +226,11 @@ export const septemberWithArchivedCategory: PersonalEntryMonth = {
     },
   ],
   incomeTotals: [],
+  ...noGroupSharesOrLimits,
 }
 
 export function emptyMonth(month: string): PersonalEntryMonth {
-  return { month, entries: [], totals: [], incomeTotals: [] }
+  return { month, entries: [], totals: [], incomeTotals: [], ...noGroupSharesOrLimits }
 }
 
 export const octoberWithSalary: PersonalEntryMonth = {
@@ -222,6 +238,7 @@ export const octoberWithSalary: PersonalEntryMonth = {
   entries: [coffeeEntry, lunchInEuroEntry, salaryIncomeEntry],
   totals: octoberMonth.totals,
   incomeTotals: [{ currency: 'MKD', totalMinor: 6500000, count: 1 }],
+  ...noGroupSharesOrLimits,
 }
 
 export const octoberWithTwoIncomes: PersonalEntryMonth = {
@@ -232,6 +249,7 @@ export const octoberWithTwoIncomes: PersonalEntryMonth = {
     { currency: 'MKD', totalMinor: 6500000, count: 1 },
     { currency: 'EUR', totalMinor: 20000, count: 1 },
   ],
+  ...noGroupSharesOrLimits,
 }
 
 export const incomeOnlyOctober: PersonalEntryMonth = {
@@ -239,6 +257,7 @@ export const incomeOnlyOctober: PersonalEntryMonth = {
   entries: [salaryIncomeEntry],
   totals: [],
   incomeTotals: [{ currency: 'MKD', totalMinor: 6500000, count: 1 }],
+  ...noGroupSharesOrLimits,
 }
 
 export const euroIncomeOnlyOctober: PersonalEntryMonth = {
@@ -246,4 +265,5 @@ export const euroIncomeOnlyOctober: PersonalEntryMonth = {
   entries: [untitledEuroIncomeEntry],
   totals: [],
   incomeTotals: [{ currency: 'EUR', totalMinor: 20000, count: 1 }],
+  ...noGroupSharesOrLimits,
 }

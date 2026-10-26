@@ -618,6 +618,15 @@
       "months": "Месец",
       "categoryTotals": "Вкупно по категории",
       "entries": "Внесови"
+    },
+    "groupShares": {
+      "title": "Од групи"
+    },
+    "card": {
+      "inMkd": "во денари",
+      "inEur": "во евра",
+      "includesConvertedEuro": "вклучува претворени износи во евра",
+      "includesConvertedDenars": "вклучува претворени износи во денари"
     }
   },
   "addName": {

@@ -19,6 +19,7 @@ import { currentMonthInTimeZone } from '@/shared/utils/calendarMonth'
 import { cn } from '@/shared/utils/cn'
 import { todayInTimeZone } from '@/shared/utils/formatDate'
 import { budgetMonths } from '../../budgetMonths'
+import { usePersonalCategories } from '../../categories/hooks/usePersonalCategories'
 import { PersonalIncomeSheet } from '../../entries/components/PersonalIncomeSheet'
 import { PersonalSpendingSheet } from '../../entries/components/PersonalSpendingSheet'
 import { usePersonalEntries } from '../../entries/hooks/usePersonalEntries'
@@ -29,8 +30,10 @@ import { useRecurringIncomes } from '../../recurring/hooks/useRecurringIncomes'
 import { liveRecurringIncome } from '../../recurring/recurringIncomeCache'
 import { BudgetAddChoiceSheet } from './BudgetAddChoiceSheet'
 import { BudgetFloatingAddButton, BudgetRoundAddButton } from './BudgetAddButton'
-import { BudgetTotalCard } from './BudgetTotalCard'
+import { spendingWithGroupShares } from '../groupShareTotals'
+import { BudgetConvertedTotalCard, BudgetTotalCard } from './BudgetTotalCard'
 import { CategoryTotals } from './CategoryTotals'
+import { GroupSharesBlock } from './GroupSharesBlock'
 import { MonthStrip } from './MonthStrip'
 import { PersonalEntryListItem } from './PersonalEntryListItem'
 
@@ -53,6 +56,7 @@ export function BudgetScreen() {
   const [handOnOpener, setHandOnOpener] = useState<Element | null>(null)
   const navigate = useNavigate()
   const entriesQuery = usePersonalEntries(selectedMonth)
+  const categoriesQuery = usePersonalCategories()
   const recurringQuery = useRecurringIncomes()
   const entriesRef = useListAnimation<HTMLUListElement>()
   useCatchUpOnOpen()
@@ -89,37 +93,31 @@ export function BudgetScreen() {
   }
 
   function renderMonth(repeatingRow: ReactNode) {
-    if (entriesQuery.isPending) {
-      return (
-        <KvitLoading>
-          <KvitSkeleton className="mt-5 h-28 rounded-[20px]" />
-          <KvitSkeleton className="mt-3 h-16 rounded-[20px]" />
-          <div className="mt-5 grid grid-cols-4 gap-x-1.5">
-            <KvitSkeleton className="h-20 rounded-[14px]" />
-            <KvitSkeleton className="h-20 rounded-[14px]" />
-            <KvitSkeleton className="h-20 rounded-[14px]" />
-            <KvitSkeleton className="h-20 rounded-[14px]" />
-          </div>
-          <div className="mt-5 flex flex-col gap-2">
-            <KvitSkeleton className="h-16" />
-            <KvitSkeleton className="h-16" />
-          </div>
-        </KvitLoading>
-      )
-    }
-    if (entriesQuery.isError) {
+    function renderLoadError(error: Error, onRetry: () => void) {
       return (
         <>
           {repeatingRow}
-          <KvitError
-            message={t(errorMessageKey(entriesQuery.error))}
-            onRetry={() => void entriesQuery.refetch()}
-          />
+          <KvitError message={t(errorMessageKey(error))} onRetry={onRetry} />
         </>
       )
     }
-    const { entries, totals, incomeTotals } = entriesQuery.data
-    if (entries.length === 0) {
+
+    if (entriesQuery.isPending) {
+      return <BudgetMonthSkeleton />
+    }
+    if (entriesQuery.isError) {
+      return renderLoadError(entriesQuery.error, () => void entriesQuery.refetch())
+    }
+    const { entries, totals, incomeTotals, groupShares, convertedTotals } = entriesQuery.data
+    const sharesNeedCategories = groupShares.some((share) => share.categoryId !== null)
+    if (sharesNeedCategories && categoriesQuery.isPending) {
+      return <BudgetMonthSkeleton />
+    }
+    if (sharesNeedCategories && categoriesQuery.isError) {
+      return renderLoadError(categoriesQuery.error, () => void categoriesQuery.refetch())
+    }
+    const categories = categoriesQuery.data ?? []
+    if (entries.length === 0 && groupShares.length === 0) {
       return (
         <>
           {repeatingRow}
@@ -129,9 +127,13 @@ export function BudgetScreen() {
         </>
       )
     }
+    const spending = spendingWithGroupShares(totals, groupShares, categories)
+    const tileTotals = spending.filter((total) => total.categories.length > 0)
+    const converted =
+      convertedTotals !== null && convertedTotals.currency === me.budgetTotalCurrency ? convertedTotals : null
     return (
       <>
-        {totals.length === 0 && incomeTotals.length === 0 ? (
+        {spending.length === 0 && incomeTotals.length === 0 ? (
           <>
             <p className={cn(balancesCardLook, 'mt-5 py-4 text-center font-semibold text-muted-foreground')}>
               {t('budget.screen.emptyTitle')}
@@ -140,20 +142,35 @@ export function BudgetScreen() {
           </>
         ) : (
           <>
-            <BudgetTotalCard totals={totals} incomeTotals={incomeTotals} />
+            {converted === null ? (
+              <BudgetTotalCard totals={spending} incomeTotals={incomeTotals} />
+            ) : (
+              <BudgetConvertedTotalCard
+                converted={converted}
+                hasConvertedItems={
+                  entries.some((entry) => entry.currency !== converted.currency) ||
+                  groupShares.some((share) => share.currency !== converted.currency)
+                }
+              />
+            )}
             {repeatingRow}
-            {totals.length > 0 && <CategoryTotals totals={totals} />}
+            {tileTotals.length > 0 && <CategoryTotals totals={tileTotals} />}
           </>
         )}
-        <ul
-          ref={entriesRef}
-          aria-label={t('budget.screen.entries')}
-          className="mt-5 flex flex-col gap-0.5 rounded-[20px] bg-card p-1.5 text-card-foreground"
-        >
-          {entries.map((entry) => (
-            <PersonalEntryListItem key={entry.id} entry={entry} today={today} onOpen={setOpenedEntry} />
-          ))}
-        </ul>
+        {entries.length > 0 && (
+          <ul
+            ref={entriesRef}
+            aria-label={t('budget.screen.entries')}
+            className="mt-5 flex flex-col gap-0.5 rounded-[20px] bg-card p-1.5 text-card-foreground"
+          >
+            {entries.map((entry) => (
+              <PersonalEntryListItem key={entry.id} entry={entry} today={today} onOpen={setOpenedEntry} />
+            ))}
+          </ul>
+        )}
+        {groupShares.length > 0 && (
+          <GroupSharesBlock groupShares={groupShares} categories={categories} today={today} />
+        )}
       </>
     )
   }
@@ -192,5 +209,24 @@ export function BudgetScreen() {
           <PersonalSpendingSheet key={openedEntry.id} entry={openedEntry} onClose={() => setOpenedEntry(null)} />
         ))}
     </KvitScreen>
+  )
+}
+
+function BudgetMonthSkeleton() {
+  return (
+    <KvitLoading>
+      <KvitSkeleton className="mt-5 h-28 rounded-[20px]" />
+      <KvitSkeleton className="mt-3 h-16 rounded-[20px]" />
+      <div className="mt-5 grid grid-cols-4 gap-x-1.5">
+        <KvitSkeleton className="h-20 rounded-[14px]" />
+        <KvitSkeleton className="h-20 rounded-[14px]" />
+        <KvitSkeleton className="h-20 rounded-[14px]" />
+        <KvitSkeleton className="h-20 rounded-[14px]" />
+      </div>
+      <div className="mt-5 flex flex-col gap-2">
+        <KvitSkeleton className="h-16" />
+        <KvitSkeleton className="h-16" />
+      </div>
+    </KvitLoading>
   )
 }
