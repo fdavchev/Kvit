@@ -20,7 +20,7 @@ _Last updated: 2026-10-26 (Phase 15 built, browser-checked and code-reviewed; wa
 
 ## Blockers and open questions
 - Nothing blocks the next step.
-- Filip to decide: DECISIONS items 8 to 11 (deploy gap, Macedonian wording, Back from Summary, bars without animation); whether `START-HERE-PROMPT.md` stays in the public repository; whether the light theme gets a lighter peach.
+- DECISIONS items 8 to 11 are answered (2026-10-26) and built. Filip to decide: whether `START-HERE-PROMPT.md` stays in the public repository; whether the light theme gets a lighter peach.
 
 ## Verification state
 - VERIFIED by automated test (2026-10-26, run by me after the last coder run): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 5388/5388; `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 10663/10663.
