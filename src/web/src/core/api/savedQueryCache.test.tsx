@@ -144,6 +144,10 @@ describe('savedQueryCacheOptions', () => {
     expect(savedQueryCacheVersion).not.toBe('')
   })
 
+  it('is at version 3 because the saved me and group answers gained budgetTotalCurrency and countsInBudget', () => {
+    expect(savedQueryCacheVersion).toBe('3')
+  })
+
   it('uses the persister it is given', () => {
     const persister = createTestPersister()
 

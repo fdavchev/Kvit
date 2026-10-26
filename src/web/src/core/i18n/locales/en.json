@@ -243,6 +243,14 @@
       "logOutTitle": "Log out as a guest?",
       "logOutBody": "After logging out you can't get back in by yourself. Ask the group owner to let you in again. Or make an account first.",
       "logOutAnyway": "Log out anyway"
+    },
+    "budget": {
+      "title": "Budget",
+      "showOneTotal": "Show one total",
+      "apart": "No, keep MKD and EUR apart",
+      "inMkd": "In MKD",
+      "inEur": "In EUR",
+      "hint": "Euro amounts are converted with the rate saved on each entry."
     }
   },
   "privacy": {
@@ -626,7 +634,9 @@
     "deleted": "Group deleted",
     "leave": "Leave group",
     "left": "You left {{name}}",
-    "ownerCannotLeave": "You are the owner. Make someone else the owner before you leave."
+    "ownerCannotLeave": "You are the owner. Make someone else the owner before you leave.",
+    "countInBudget": "Count my shares in my budget",
+    "countInBudgetHint": "From now on. Past months stay as they were."
   },
   "members": {
     "title": "Members",

@@ -5,7 +5,7 @@ import { del, get, set } from 'idb-keyval'
 import { meQueryKey } from '@/core/auth/useMe'
 import type { Me } from '@/core/services/me/meService'
 
-export const savedQueryCacheVersion = '2'
+export const savedQueryCacheVersion = '3'
 export const savedQueryCacheMaxAge = 24 * 60 * 60 * 1000
 export const savedCopyReadTimeLimitMs = 3000
 

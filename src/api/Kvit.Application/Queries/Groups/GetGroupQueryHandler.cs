@@ -61,7 +61,8 @@ namespace Kvit.Application.Queries.Groups
                 Group.ClosingEndsAtOf(group.ClosingStartedAt),
                 confirmedBy,
                 waitingFor,
-                await CanStartClosingAsync(group, userId.Value, now, cancellationToken)));
+                await CanStartClosingAsync(group, userId.Value, now, cancellationToken),
+                detail.CountsInBudget));
         }
 
         private static ClosingMemberRow ClosingMemberRowOf(NamedMember row)
@@ -96,7 +97,10 @@ namespace Kvit.Application.Queries.Groups
             return _context.GroupsWithCurrentMember(userId)
                 .AsNoTracking()
                 .Where(group => group.Id == groupId && group.DeletedAt == null)
-                .Select(group => new GroupDetailDto(group, currentMembers.Count(member => member.GroupId == group.Id)));
+                .Select(group => new GroupDetailDto(
+                    group,
+                    currentMembers.Count(member => member.GroupId == group.Id),
+                    currentMembers.Any(member => member.GroupId == group.Id && member.UserId == userId && member.CountsInBudget)));
         }
     }
 }

@@ -33,7 +33,7 @@ Third phase of Release 2 ("budget"). Your share of group expenses now counts in 
 - [x] Step 2: backend, budget currency
 - [x] Step 3: backend, limits
 - [x] Step 4: backend, monthly summary
-- [ ] Step 5: frontend, Settings (budget currency, per-group switch)
+- [x] Step 5: frontend, Settings (budget currency, per-group switch)
 - [ ] Step 6: frontend, group shares on the Budget tab
 - [ ] Step 7: frontend, limits
 - [ ] Step 8: frontend, monthly summary
@@ -46,3 +46,4 @@ Third phase of Release 2 ("budget"). Your share of group expenses now counts in 
 - Step 2: Add the budget total currency: optional converted total setting, the conversion rule and convertedTotals in the Budget month answer, with the BudgetTotalCurrency migration.
 - Step 3: Add monthly limits with history: set and remove per category and for the whole month, and limits with spent and over amounts in the Budget month answer, with the BudgetLimits migration.
 - Step 4: Add the monthly summary: this month against the previous one per currency and category, with converted totals, as GET /api/personal/summary.
+- Step 5: Add the Budget card to Settings and the Count my shares switch to group settings, with the countsInBudget field on the group.

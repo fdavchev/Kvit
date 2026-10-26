@@ -181,6 +181,8 @@ describe('getGroup', () => {
     ['status', 'Finished'],
     ['defaultCurrency', 'EUR'],
     ['isOwner', false],
+    ['countsInBudget', false],
+    ['countsInBudget', true],
   ])('accepts %s with the value %j', async (field, value) => {
     stubFetch(Response.json({ ...testGroup, [field]: value }))
 
@@ -220,6 +222,9 @@ describe('getGroup', () => {
     ['memberCount', null],
     ['inviteToken', null],
     ['inviteToken', 12],
+    ['countsInBudget', 'yes'],
+    ['countsInBudget', 1],
+    ['countsInBudget', null],
   ])('throws an error naming "%s" when its value is %j', async (field, value) => {
     stubFetch(Response.json({ ...testGroup, [field]: value }))
 

@@ -18,6 +18,7 @@ import { KvitThemeSwitch } from '@/shared/components/KvitThemeSwitch'
 import { cn } from '@/shared/utils/cn'
 import { useChangeLanguage } from '../hooks/useChangeLanguage'
 import { useLogOut } from '../hooks/useLogOut'
+import { BudgetTotalSettings } from './BudgetTotalSettings'
 import { GuestLogOutSheet } from './GuestLogOutSheet'
 
 export function SettingsScreen() {
@@ -67,6 +68,7 @@ export function SettingsScreen() {
       <div className="pb-8">
         <KvitThemeSwitch theme={theme} onChange={setTheme} />
       </div>
+      {me && !me.isGuest && <BudgetTotalSettings budgetTotalCurrency={me.budgetTotalCurrency} />}
       <div className="flex flex-col gap-3">
         {!isGuest && me?.hasPassword === true && (
           <KvitLinkButton to={routes.changePassword} variant="secondary">

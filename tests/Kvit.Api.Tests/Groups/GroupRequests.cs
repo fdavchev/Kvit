@@ -27,6 +27,7 @@ namespace Kvit.Api.Tests.Groups
             "closingEndsAt",
             "closingStartedAt",
             "closingWaitingFor",
+            "countsInBudget",
             "defaultCurrency",
             "emoji",
             "id",

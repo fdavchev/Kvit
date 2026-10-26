@@ -39,6 +39,7 @@ export const testGroup: Group = {
   closingConfirmedBy: [],
   closingWaitingFor: [],
   canStartClosing: false,
+  countsInBudget: true,
 }
 
 export const flatGroupRow: GroupListRow = {

@@ -11,6 +11,7 @@ export const endpoints = {
   googleUpgradeGuest: '/api/auth/google/upgrade',
   me: '/api/me',
   meLanguage: '/api/me/language',
+  meBudgetCurrency: '/api/me/budget-currency',
   meActive: '/api/me/active',
   dashboard: '/api/dashboard',
   groups: '/api/groups',
@@ -43,6 +44,7 @@ export const endpoints = {
   groupClosingObject: (groupId: string) => `/api/groups/${groupId}/closing/object`,
   groupUnlock: (groupId: string) => `/api/groups/${groupId}/unlock`,
   groupMembers: (groupId: string) => `/api/groups/${groupId}/members`,
+  groupCountsInBudget: (groupId: string) => `/api/groups/${groupId}/members/me/counts-in-budget`,
   groupMember: (groupId: string, memberId: string) => `/api/groups/${groupId}/members/${memberId}`,
   groupMemberLetBackIn: (groupId: string, memberId: string) =>
     `/api/groups/${groupId}/members/${memberId}/let-back-in`,

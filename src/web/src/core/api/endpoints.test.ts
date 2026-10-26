@@ -24,6 +24,7 @@ describe('endpoints', () => {
     ['personalCategories', '/api/personal/categories'],
     ['personalCategoriesWithArchived', '/api/personal/categories?includeArchived=true'],
     ['personalEntries', '/api/personal/entries'],
+    ['meBudgetCurrency', '/api/me/budget-currency'],
   ] as const)('has the path %s at %s', (name, path) => {
     expect(endpoints[name]).toBe(path)
   })
@@ -41,6 +42,7 @@ describe('endpoints', () => {
     ['groupActivity', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/activity'],
     ['groupBalances', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/balances'],
     ['groupSettlements', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/settlements'],
+    ['groupCountsInBudget', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/members/me/counts-in-budget'],
   ] as const)('builds the path %s for a group id as %s', (name, path) => {
     expect(endpoints[name](groupId)).toBe(path)
   })

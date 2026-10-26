@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Kvit.Api.Tests.Auth;
 using Kvit.Api.Tests.Expenses;
 using Kvit.Api.Tests.Groups;
 using Kvit.Api.Tests.Persistence;
@@ -74,6 +75,14 @@ namespace Kvit.Api.Tests.BudgetShares
         public static JsonElement RowOfExpense(JsonElement shares, Guid expenseId)
         {
             return shares.EnumerateArray().Single(row => row.GetProperty("expenseId").GetGuid() == expenseId);
+        }
+
+        public static async Task<bool> CountsInBudgetOfAsync(HttpClient client, Guid groupId)
+        {
+            HttpResponseMessage response = await GroupRequests.GetAsync(client, groupId);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return (await AuthRequests.ReadJsonAsync(response)).GetProperty("countsInBudget").GetBoolean();
         }
 
         public static async Task<bool> MemberCountsAsync(MigratedDatabase database, Guid memberRowId)

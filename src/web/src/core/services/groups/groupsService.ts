@@ -60,6 +60,7 @@ export interface Group {
   closingConfirmedBy: ClosingPerson[]
   closingWaitingFor: ClosingPerson[]
   canStartClosing: boolean
+  countsInBudget: boolean
 }
 
 export interface GroupInput {
@@ -114,6 +115,10 @@ export async function unlockGroup(groupId: string): Promise<void> {
 
 export async function addMember(groupId: string, name: string): Promise<void> {
   await apiRequest(endpoints.groupMembers(groupId), jsonRequest('POST', { name }))
+}
+
+export async function changeCountsInBudget(groupId: string, countsInBudget: boolean): Promise<void> {
+  await apiRequest(endpoints.groupCountsInBudget(groupId), jsonRequest('PUT', { countsInBudget }))
 }
 
 function parseGroupList(body: unknown): GroupList {
@@ -172,6 +177,7 @@ function parseGroup(body: unknown): Group {
     closingConfirmedBy: readClosingPeople(fields, 'closingConfirmedBy', what),
     closingWaitingFor: readClosingPeople(fields, 'closingWaitingFor', what),
     canStartClosing: readYesNo(fields, 'canStartClosing', what),
+    countsInBudget: readYesNo(fields, 'countsInBudget', what),
   }
 }
 

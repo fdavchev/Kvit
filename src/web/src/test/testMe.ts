@@ -12,6 +12,7 @@ export const testMe: Me & { email: string } = {
   hasPassword: true,
   pictureUrl: null,
   isGuest: false,
+  budgetTotalCurrency: null,
 }
 
 export const testGuestMe: Me = {
@@ -24,6 +25,7 @@ export const testGuestMe: Me = {
   hasPassword: false,
   pictureUrl: null,
   isGuest: true,
+  budgetTotalCurrency: null,
 }
 
 export function seedMe(me: Me | null): (queryClient: QueryClient) => void {
