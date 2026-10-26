@@ -220,7 +220,7 @@ One big phase (Filip, 2026-10-24). Prompt: `guides/phase-15-budget-prompt.md`; f
 - [x] **Done 2026-10-24 (VERIFIED by automated test: backend 4958 of 4959 pass, frontend 9717; the one failure is the old `ExpenseSharesTableTests.Table_HasExactlyTheFourColumns`, which still lists four columns and needs `counts_in_budget` added).** Step 1: backend, budget share (per-group switch, remembered flag, claimed names; migration `BudgetShare`)
 - [x] **Done 2026-10-24 (VERIFIED by automated test: backend 5087 of 5087 pass, frontend 9721).** Step 2: backend, budget currency (optional converted total setting, the conversion rule, `convertedTotals` in the Budget month answer; migration `BudgetTotalCurrency`)
 - [x] **Done 2026-10-24 (VERIFIED by automated test: backend 5284 of 5284 pass, frontend 9728).** Step 3: backend, limits with history (set and remove per category and for the whole month, same-moment saves and removals answer 204, `limits` in the Budget month answer; migration `BudgetLimits`) and the any-letter-case budget currency fix
-- [ ] Step 4: backend, monthly summary
+- [x] **Done 2026-10-26 (VERIFIED by automated test: backend 5373 of 5374 pass, frontend 9728; the one failure is the new `SummaryConvertedTotalsTests.Summary_ItemsAlreadyInTheTargetCurrency_AreLeftUntouched`, whose setup saves 12 345 deni in MKD, which is not whole denars and is refused before the summary is read; it needs a whole-denar amount such as 12 300).** Step 4: backend, monthly summary (`GET /api/personal/summary`, no migration)
 - [ ] Step 5: frontend, Settings (budget currency, per-group switch)
 - [ ] Step 6: frontend, group shares on the Budget tab
 - [ ] Step 7: frontend, limits

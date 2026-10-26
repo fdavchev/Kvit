@@ -25,7 +25,7 @@ namespace Kvit.Application.Queries.PersonalEntries
                 .GroupBy(row => row.CategoryId)
                 .Select(categoryRows => categoryRows.OrderByDescending(row => row.EffectiveFrom).First())
                 .Where(row => row.LimitMinor is not null)];
-            List<SpentItemDto> spending = SpentItemsOf(entries, groupShares);
+            List<SpentItemDto> spending = BudgetItems.SpentItemsOf(entries, groupShares);
 
             BudgetLimitDto? monthLimit = limitsInForce.SingleOrDefault(row => row.CategoryId is null);
             LimitRow? monthRow = monthLimit is null ? null : LimitRowOf(monthLimit, spending);
@@ -48,21 +48,10 @@ namespace Kvit.Application.Queries.PersonalEntries
                 [.. categoryIdsInOrder.Select(categoryId => LimitRowOf(categoryLimits[categoryId], [.. spending.Where(item => item.CategoryId == categoryId)]))]);
         }
 
-        private static List<SpentItemDto> SpentItemsOf(IReadOnlyList<PersonalEntryDto> entries, IReadOnlyList<GroupShareDto> groupShares)
-        {
-            IEnumerable<SpentItemDto> personal = entries
-                .Where(entry => entry.Kind == PersonalEntryKind.Spending)
-                .Select(entry => new SpentItemDto(entry.CategoryId, entry.AmountMinor, entry.Currency, entry.MkdPerEur));
-            IEnumerable<SpentItemDto> shares = groupShares
-                .Select(share => new SpentItemDto(share.Row.CategoryId, share.Row.ShareMinor, share.Row.Currency, share.MkdPerEur));
-
-            return [.. personal.Concat(shares)];
-        }
-
         private static LimitRow LimitRowOf(BudgetLimitDto limit, IReadOnlyList<SpentItemDto> items)
         {
             long limitMinor = limit.LimitMinor ?? throw new InvalidOperationException($"The limit row from {limit.EffectiveFrom} for category {limit.CategoryId} has no amount, so it is not a limit in force.");
-            long spentMinor = items.Sum(item => CurrencyConversion.Convert(item.AmountMinor, item.Currency, BudgetLimit.LimitCurrency, item.MkdPerEur));
+            long spentMinor = BudgetItems.ConvertedSumOf(items, BudgetLimit.LimitCurrency);
             long includedEurMinor = items.Where(item => item.Currency == Currency.EUR).Sum(item => item.AmountMinor);
 
             return new LimitRow(limit.CategoryId, limitMinor, spentMinor, Math.Max(0, spentMinor - limitMinor), includedEurMinor);

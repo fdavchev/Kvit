@@ -16,6 +16,12 @@ namespace Kvit.Application.Queries.PersonalEntries
                 .Where(entry => entry.UserId == userId && entry.DeletedAt == null);
         }
 
+        public static IQueryable<PersonalEntry> EntriesOf(this AppDbContext context, Guid userId, DateOnly firstDay, DateOnly firstDayAfter)
+        {
+            return context.EntriesOf(userId)
+                .Where(entry => entry.EntryDate >= firstDay && entry.EntryDate < firstDayAfter);
+        }
+
         public static IQueryable<PersonalEntryDto> PersonalEntryDtos(this IQueryable<PersonalEntry> entries)
         {
             return entries
@@ -66,7 +72,12 @@ namespace Kvit.Application.Queries.PersonalEntries
 
         public static Task<List<PersonalCategoryRow>> PersonalCategoryRowsOfAsync(this AppDbContext context, IReadOnlyCollection<PersonalEntryDto> entries, CancellationToken cancellationToken)
         {
-            List<Guid> categoryIds = [.. entries.Select(entry => entry.CategoryId).OfType<Guid>().Distinct()];
+            return context.PersonalCategoryRowsOfAsync(entries.Select(entry => entry.CategoryId), cancellationToken);
+        }
+
+        public static Task<List<PersonalCategoryRow>> PersonalCategoryRowsOfAsync(this AppDbContext context, IEnumerable<Guid?> optionalCategoryIds, CancellationToken cancellationToken)
+        {
+            List<Guid> categoryIds = [.. optionalCategoryIds.OfType<Guid>().Distinct()];
 
             return context.Categories
                 .AsNoTracking()

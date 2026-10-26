@@ -35,8 +35,7 @@ namespace Kvit.Application.Queries.PersonalEntries
             }
 
             DateOnly firstDayOfNextMonth = firstDay.Value.AddMonths(1);
-            List<PersonalEntryDto> entries = await _context.EntriesOf(me.Value.Id)
-                .Where(entry => entry.EntryDate >= firstDay.Value && entry.EntryDate < firstDayOfNextMonth)
+            List<PersonalEntryDto> entries = await _context.EntriesOf(me.Value.Id, firstDay.Value, firstDayOfNextMonth)
                 .PersonalEntryDtos()
                 .ToListAsync(cancellationToken);
             List<PersonalCategoryRow> categories = await _context.PersonalCategoryRowsOfAsync(entries, cancellationToken);
@@ -54,7 +53,7 @@ namespace Kvit.Application.Queries.PersonalEntries
                 limits));
         }
 
-        private static Result<DateOnly> FirstDayOf(string? month)
+        public static Result<DateOnly> FirstDayOf(string? month)
         {
             if (!DateOnly.TryParseExact(month, MonthFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly firstDay))
             {
@@ -100,18 +99,11 @@ namespace Kvit.Application.Queries.PersonalEntries
                 return null;
             }
 
-            long spendingMinor = ConvertedSumOf(entries, PersonalEntryKind.Spending, target);
-            long incomeMinor = ConvertedSumOf(entries, PersonalEntryKind.Income, target);
-            long groupSharesMinor = groupShares.Sum(share => CurrencyConversion.Convert(share.Row.ShareMinor, share.Row.Currency, target, share.MkdPerEur));
+            long spendingMinor = BudgetItems.ConvertedSumOf(BudgetItems.SpentItemsOf(entries), target);
+            long incomeMinor = BudgetItems.ConvertedIncomeOf(entries, target);
+            long groupSharesMinor = BudgetItems.ConvertedSumOf(BudgetItems.SpentItemsOf(groupShares), target);
 
             return new ConvertedTotalsResponse(target, spendingMinor, incomeMinor, groupSharesMinor, checked(incomeMinor - spendingMinor - groupSharesMinor));
-        }
-
-        private static long ConvertedSumOf(IEnumerable<PersonalEntryDto> entries, PersonalEntryKind kind, Currency target)
-        {
-            return entries
-                .Where(entry => entry.Kind == kind)
-                .Sum(entry => CurrencyConversion.Convert(entry.AmountMinor, entry.Currency, target, entry.MkdPerEur));
         }
 
         private static List<PersonalCategoryTotalRow> CategoryTotalsOf(IEnumerable<PersonalEntryDto> currencyEntries, IReadOnlyList<PersonalCategoryRow> categoriesInOrder)
