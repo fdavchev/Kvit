@@ -36,7 +36,7 @@ export function GroupShareListItem({ share, category, today }: GroupShareListIte
           <KvitEmojiTile emoji={category.emoji} background={categoryColor(category)} />
         )}
         <span data-share-text className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
-          <span data-share-title className="font-semibold break-words">
+          <span data-share-title className="max-w-full font-semibold break-words">
             {title}
           </span>
           <span
@@ -45,7 +45,7 @@ export function GroupShareListItem({ share, category, today }: GroupShareListIte
           >
             {share.groupName}
           </span>
-          <span data-share-details className="text-[0.8125rem] break-words text-muted-foreground">
+          <span data-share-details className="max-w-full text-[0.8125rem] break-words text-muted-foreground">
             {share.title !== null && categoryName !== null ? `${categoryName} · ${dayText}` : dayText}
           </span>
         </span>

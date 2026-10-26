@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useEffect, useId, useRef, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { errorMessageKey } from '@/core/api/errors'
 import { useLanguage } from '@/core/i18n/useLanguage'
@@ -17,6 +17,7 @@ import { personalCategoryName } from '../../categories/personalCategoryName'
 import {
   hasAnyLimit,
   limitFillPercent,
+  limitMinorOf,
   limitStateOf,
   wholeMonthEmoji,
   type LimitState,
@@ -31,39 +32,90 @@ const fillLooks: Record<LimitState, string> = {
   over: 'bg-negative',
 }
 
-interface BudgetLimitsProps {
+export interface LimitFocusRequest {
+  target: LimitTarget
+  opener: Element | null
+}
+
+type LimitFocus = ({ part: 'row'; categoryId: string | null } | { part: 'setLimit' }) & { opener: Element | null }
+
+interface LimitsPartProps {
   limits: MonthLimits
+  focus: LimitFocus | null
   onOpenLimit: (target: LimitTarget) => void
   onSetLimit: () => void
+  onFocusHandled: () => void
 }
 
-export function BudgetLimits({ limits, onOpenLimit, onSetLimit }: BudgetLimitsProps) {
+interface BudgetLimitsProps extends Omit<LimitsPartProps, 'focus'> {
+  focusRequest: LimitFocusRequest | null
+}
+
+export function BudgetLimits({ focusRequest, ...props }: BudgetLimitsProps) {
+  const part: LimitsPartProps = { ...props, focus: focusOf(props.limits, focusRequest) }
+
+  if (!hasAnyLimit(props.limits)) {
+    return <FirstLimitRow {...part} />
+  }
+  if (props.limits.categories.length === 0) {
+    return <LimitsCard {...part} categories={[]} />
+  }
+  return <LimitsCardWithCategoryNames {...part} />
+}
+
+function focusOf(limits: MonthLimits, request: LimitFocusRequest | null): LimitFocus | null {
+  if (request === null) {
+    return null
+  }
+  const categoryId = request.target.category?.id ?? null
+  if (limitMinorOf(limits, categoryId) === null) {
+    return { part: 'setLimit', opener: request.opener }
+  }
+  return { part: 'row', categoryId, opener: request.opener }
+}
+
+function useFocusWhenOpenerIsGone<T extends HTMLElement>(
+  focus: LimitFocus | null,
+  isTarget: boolean,
+  onFocusHandled: () => void,
+): RefObject<T | null> {
+  const ref = useRef<T>(null)
+
+  useEffect(() => {
+    if (focus === null || !isTarget) {
+      return
+    }
+    if (focus.opener?.isConnected !== true) {
+      ref.current?.focus()
+    }
+    onFocusHandled()
+  }, [focus, isTarget, onFocusHandled])
+  return ref
+}
+
+function FirstLimitRow({ focus, onSetLimit, onFocusHandled }: LimitsPartProps) {
   const { t } = useTranslation()
+  const buttonRef = useFocusWhenOpenerIsGone<HTMLButtonElement>(focus, focus?.part === 'setLimit', onFocusHandled)
 
-  if (!hasAnyLimit(limits)) {
-    return (
-      <button
-        type="button"
-        className="pressable mt-3 flex min-h-11 w-full items-center gap-3 rounded-[20px] bg-card px-4 py-2.5 text-left text-card-foreground hover:bg-secondary-hover"
-        onClick={onSetLimit}
-      >
-        <span aria-hidden="true" className="text-[1.375rem] leading-none">
-          {targetEmoji}
-        </span>
-        <span className="min-w-0 flex-1 font-semibold break-words">{t('budget.limits.setLimit')}</span>
-        <span aria-hidden="true" className="text-xl text-muted-foreground">
-          ›
-        </span>
-      </button>
-    )
-  }
-  if (limits.categories.length === 0) {
-    return <LimitsCard limits={limits} categories={[]} onOpenLimit={onOpenLimit} onSetLimit={onSetLimit} />
-  }
-  return <LimitsCardWithCategoryNames limits={limits} onOpenLimit={onOpenLimit} onSetLimit={onSetLimit} />
+  return (
+    <button
+      ref={buttonRef}
+      type="button"
+      className="pressable mt-3 flex min-h-11 w-full items-center gap-3 rounded-[20px] bg-card px-4 py-2.5 text-left text-card-foreground hover:bg-secondary-hover"
+      onClick={onSetLimit}
+    >
+      <span aria-hidden="true" className="text-[1.375rem] leading-none">
+        {targetEmoji}
+      </span>
+      <span className="min-w-0 flex-1 font-semibold break-words">{t('budget.limits.setLimit')}</span>
+      <span aria-hidden="true" className="text-xl text-muted-foreground">
+        ›
+      </span>
+    </button>
+  )
 }
 
-function LimitsCardWithCategoryNames({ limits, onOpenLimit, onSetLimit }: BudgetLimitsProps) {
+function LimitsCardWithCategoryNames(props: LimitsPartProps) {
   const { t } = useTranslation()
   const categoriesQuery = usePersonalCategoriesWithArchived()
 
@@ -79,18 +131,17 @@ function LimitsCardWithCategoryNames({ limits, onOpenLimit, onSetLimit }: Budget
       <KvitError message={t(errorMessageKey(categoriesQuery.error))} onRetry={() => void categoriesQuery.refetch()} />
     )
   }
-  return (
-    <LimitsCard limits={limits} categories={categoriesQuery.data} onOpenLimit={onOpenLimit} onSetLimit={onSetLimit} />
-  )
+  return <LimitsCard {...props} categories={categoriesQuery.data} />
 }
 
-interface LimitsCardProps extends BudgetLimitsProps {
+interface LimitsCardProps extends LimitsPartProps {
   categories: readonly PersonalCategory[]
 }
 
-function LimitsCard({ limits, categories, onOpenLimit, onSetLimit }: LimitsCardProps) {
+function LimitsCard({ limits, categories, focus, onOpenLimit, onSetLimit, onFocusHandled }: LimitsCardProps) {
   const { t } = useTranslation()
   const headingId = useId()
+  const setLimitRef = useFocusWhenOpenerIsGone<HTMLButtonElement>(focus, focus?.part === 'setLimit', onFocusHandled)
   const monthRow = limits.month
 
   return (
@@ -103,7 +154,10 @@ function LimitsCard({ limits, categories, onOpenLimit, onSetLimit }: LimitsCardP
           <LimitListItem
             row={monthRow}
             category={null}
+            focus={focus}
+            isFocusTarget={focus?.part === 'row' && focus.categoryId === null}
             onOpen={() => onOpenLimit({ category: null, limitMinor: monthRow.limitMinor })}
+            onFocusHandled={onFocusHandled}
           />
         )}
         {limits.categories.map((row) => {
@@ -113,12 +167,15 @@ function LimitsCard({ limits, categories, onOpenLimit, onSetLimit }: LimitsCardP
               key={category.id}
               row={row}
               category={category}
+              focus={focus}
+              isFocusTarget={focus?.part === 'row' && focus.categoryId === category.id}
               onOpen={() => onOpenLimit({ category, limitMinor: row.limitMinor })}
+              onFocusHandled={onFocusHandled}
             />
           )
         })}
       </ul>
-      <KvitButton variant="smallLink" className="w-auto self-center px-3" onClick={onSetLimit}>
+      <KvitButton ref={setLimitRef} variant="smallLink" className="w-auto self-center px-3" onClick={onSetLimit}>
         {t('budget.limits.setLimit')}
       </KvitButton>
     </section>
@@ -128,18 +185,23 @@ function LimitsCard({ limits, categories, onOpenLimit, onSetLimit }: LimitsCardP
 interface LimitListItemProps {
   row: LimitRow
   category: PersonalCategory | null
+  focus: LimitFocus | null
+  isFocusTarget: boolean
   onOpen: () => void
+  onFocusHandled: () => void
 }
 
-function LimitListItem({ row, category, onOpen }: LimitListItemProps) {
+function LimitListItem({ row, category, focus, isFocusTarget, onOpen, onFocusHandled }: LimitListItemProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
+  const buttonRef = useFocusWhenOpenerIsGone<HTMLButtonElement>(focus, isFocusTarget, onFocusHandled)
   const name = category === null ? t('budget.limits.wholeMonth') : personalCategoryName(category, t)
   const state = limitStateOf(row)
 
   return (
     <li>
       <button
+        ref={buttonRef}
         type="button"
         className="pressable flex min-h-11 w-full flex-col gap-1.5 rounded-2xl px-3 py-2.5 text-left hover:bg-secondary-hover"
         onClick={onOpen}

@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -27,9 +28,10 @@ import { usePersonalCategories } from '../../categories/hooks/usePersonalCategor
 import { PersonalIncomeSheet } from '../../entries/components/PersonalIncomeSheet'
 import { PersonalSpendingSheet } from '../../entries/components/PersonalSpendingSheet'
 import { usePersonalEntries } from '../../entries/hooks/usePersonalEntries'
+import { personalEntriesQueryKey } from '../../entries/personalEntryCache'
 import type { LimitTarget } from '../../limits/budgetLimits'
 import { BudgetLimitChoiceSheet } from '../../limits/components/BudgetLimitChoiceSheet'
-import { BudgetLimits } from '../../limits/components/BudgetLimits'
+import { BudgetLimits, type LimitFocusRequest } from '../../limits/components/BudgetLimits'
 import { BudgetLimitSheet } from '../../limits/components/BudgetLimitSheet'
 import { RecurringIncomeListSheet } from '../../recurring/components/RecurringIncomeListSheet'
 import { RecurringIncomeRow, RecurringIncomeRowError } from '../../recurring/components/RecurringIncomeRow'
@@ -52,6 +54,10 @@ type AddingStep = 'choice' | PersonalEntryKind
 
 const mostIncomesInSheet = 2
 
+interface ClosedLimitSheet extends LimitFocusRequest {
+  monthUpdatedAt: number
+}
+
 export function BudgetScreen() {
   const { t } = useTranslation()
   const me = useSignedInMe()
@@ -65,7 +71,9 @@ export function BudgetScreen() {
   const [handOnOpener, setHandOnOpener] = useState<Element | null>(null)
   const [limitsToChooseFrom, setLimitsToChooseFrom] = useState<MonthLimits | null>(null)
   const [openedLimit, setOpenedLimit] = useState<LimitTarget | null>(null)
+  const [closedLimitSheet, setClosedLimitSheet] = useState<ClosedLimitSheet | null>(null)
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const entriesQuery = usePersonalEntries(selectedMonth)
   const categoriesQuery = usePersonalCategories()
   const recurringQuery = useRecurringIncomes()
@@ -107,6 +115,12 @@ export function BudgetScreen() {
     setOpenedLimit(chosen)
   }
 
+  function closeLimit(target: LimitTarget): void {
+    const monthUpdatedAt = queryClient.getQueryState(personalEntriesQueryKey(selectedMonth))?.dataUpdatedAt ?? 0
+    setOpenedLimit(null)
+    setClosedLimitSheet({ target, opener: handOnOpener, monthUpdatedAt })
+  }
+
   function renderRepeatingRow(): ReactNode {
     if (recurringQuery.isPending) {
       return null
@@ -143,8 +157,16 @@ export function BudgetScreen() {
       return renderLoadError(categoriesQuery.error, () => void categoriesQuery.refetch())
     }
     const categories = categoriesQuery.data ?? []
+    const isClosedSheetMonthShown =
+      closedLimitSheet !== null && entriesQuery.dataUpdatedAt >= closedLimitSheet.monthUpdatedAt
     const limitsPart = (
-      <BudgetLimits limits={limits} onOpenLimit={openLimit} onSetLimit={() => startSettingLimit(limits)} />
+      <BudgetLimits
+        limits={limits}
+        focusRequest={isClosedSheetMonthShown ? closedLimitSheet : null}
+        onOpenLimit={openLimit}
+        onSetLimit={() => startSettingLimit(limits)}
+        onFocusHandled={() => setClosedLimitSheet(null)}
+      />
     )
     const summaryRow = <BudgetSummaryRow month={selectedMonth} />
     if (entries.length === 0 && groupShares.length === 0) {
@@ -245,7 +267,7 @@ export function BudgetScreen() {
           viewedMonth={selectedMonth}
           currentMonth={currentMonth}
           opener={handOnOpener}
-          onClose={() => setOpenedLimit(null)}
+          onClose={() => closeLimit(openedLimit)}
         />
       )}
       {openedEntry !== null &&

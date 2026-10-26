@@ -101,7 +101,20 @@ describe('createQueryClient', () => {
     })
 
     it.each([
+      ['a 400 answer', apiError(400, 'PERSONAL_ENTRY_MONTH_INVALID')],
+      ['a 401 answer', apiError(401, 'AUTH_NOT_SIGNED_IN')],
+      ['a 403 answer', apiError(403, 'GUEST_NOT_ALLOWED')],
+      ['a 409 answer', apiError(409, 'SOMETHING_CHANGED')],
+      ['a 422 answer', apiError(422, null)],
+    ])('does not retry %s, because asking again cannot change it', (_name, error) => {
+      const retry = defaultQueryRetry()
+
+      expect(retry(0, error)).toBe(false)
+    })
+
+    it.each([
       ['a 500 answer', apiError(500, null)],
+      ['a 503 answer', apiError(503, null)],
       ['a network failure', apiError(null, null)],
       ['an error that is not an ApiError', new Error('boom')],
     ])('retries %s up to three times and then gives up', (_name, error) => {

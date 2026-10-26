@@ -4,13 +4,7 @@ import { keepCacheToOnePerson } from '@/core/auth/keepCacheToOnePerson'
 import { meQueryKey } from '@/core/auth/useMe'
 import type { Me } from '@/core/services/me/meService'
 import { refreshEveryGroup } from '@/features/groups/shared/groupCache'
-import {
-  ApiError,
-  forbiddenStatus,
-  notFoundStatus,
-  tooManyRequestsStatus,
-  unauthorizedStatus,
-} from './apiClient'
+import { ApiError, forbiddenStatus, unauthorizedStatus } from './apiClient'
 import { savedQueryCacheMaxAge } from './savedQueryCache'
 
 const wrongPasswordAtLogInCode = 'AUTH_INVALID_CREDENTIALS'
@@ -23,6 +17,8 @@ export const groupStateChangedCodes: readonly string[] = [
   'GROUP_NOT_FINISHED',
 ]
 const maxQueryRetries = 3
+const firstClientErrorStatus = 400
+const firstServerErrorStatus = 500
 
 export function createQueryClient(persister: Persister): QueryClient {
   const queryClient: QueryClient = new QueryClient({
@@ -51,14 +47,14 @@ export function createQueryClient(persister: Persister): QueryClient {
 }
 
 function shouldRetryQuery(failureCount: number, error: Error): boolean {
-  if (
-    error instanceof ApiError &&
-    (error.httpStatus === notFoundStatus ||
-      error.httpStatus === tooManyRequestsStatus)
-  ) {
+  if (error instanceof ApiError && isClientErrorStatus(error.httpStatus)) {
     return false
   }
   return failureCount < maxQueryRetries
+}
+
+function isClientErrorStatus(httpStatus: number | null): boolean {
+  return httpStatus !== null && httpStatus >= firstClientErrorStatus && httpStatus < firstServerErrorStatus
 }
 
 function updateMeAfterFailure(queryClient: QueryClient, error: Error): void {

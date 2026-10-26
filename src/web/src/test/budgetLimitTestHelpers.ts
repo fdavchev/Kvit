@@ -116,6 +116,22 @@ export function querySetLimitButton(language: Language = 'en'): HTMLElement | nu
   return screen.queryByRole('button', { name: translated(language, 'budget.limits.setLimit') })
 }
 
+export function limitRowButtonNamed(name: string, language: Language = 'en'): HTMLElement {
+  const card = queryLimitsCard(language)
+  if (card === null) {
+    throw new Error('The Limits card is not on the screen')
+  }
+  return limitRowButton(limitRowNamed(card, name))
+}
+
+export function setLimitButtonInCard(language: Language = 'en'): HTMLElement {
+  const card = queryLimitsCard(language)
+  if (card === null) {
+    throw new Error('The Limits card is not on the screen')
+  }
+  return within(card).getByRole('button', { name: translated(language, 'budget.limits.setLimit') })
+}
+
 export function wholeMonthName(language: Language = 'en'): string {
   return translated(language, 'budget.limits.wholeMonth')
 }

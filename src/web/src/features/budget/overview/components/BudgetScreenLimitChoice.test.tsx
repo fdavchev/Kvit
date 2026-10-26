@@ -7,19 +7,27 @@ import {
   findLimitSheet,
   findLimitsCard,
   limitAmountField,
+  limitRowButtonNamed,
   limitRowText,
   limitRows,
   monthLimitPut,
   monthThatChanges,
+  queryLimitsCard,
   queryRemoveLimitButton,
   removeLimitButton,
   renderBudgetWithLimits,
   saveLimitButton,
   setLimitButton,
+  setLimitButtonInCard,
   typeLimit,
   wholeMonthName,
 } from '@/test/budgetLimitTestHelpers'
-import { octoberWithLimits, octoberWithOnlyACoffeeLimit } from '@/test/budgetLimitTestData'
+import {
+  coffeeLimitOver,
+  octoberWithLimits,
+  octoberWithOnlyACoffeeLimit,
+  wholeMonthLimit,
+} from '@/test/budgetLimitTestData'
 import { budgetNow, findTotalCard, personalEntriesGet } from '@/test/budgetTestHelpers'
 import { dismissSheetByTappingBackdrop } from '@/test/expenseFormTestHelpers'
 import { octoberMonth } from '@/test/personalEntryTestData'
@@ -35,6 +43,11 @@ import { requestsOf } from '@/test/requestTestHelpers'
 import { translated } from '@/test/translated'
 
 vi.mock('sonner', async () => (await import('@/test/sonnerMock')).sonnerMock)
+
+const coffeeAndWholeMonthLimits = {
+  ...octoberWithOnlyACoffeeLimit,
+  limits: { month: wholeMonthLimit, categories: [coffeeLimitOver] },
+}
 
 function expectButtonsInOrder(sheet: HTMLElement, names: readonly string[]): void {
   const expected = names.map((name) => within(sheet).getByRole('button', { name }))
@@ -224,6 +237,89 @@ describe('BudgetScreen, choosing what to set a limit for', () => {
       await waitFor(() => {
         expect(screen.queryByRole('dialog')).toBeNull()
       })
+    })
+
+    it('brings the focus to the row with the same name in the new Limits card, because the "Set a limit" row is gone', async () => {
+      const month = monthThatChanges(octoberMonth, octoberWithOnlyACoffeeLimit)
+      await renderBudgetWithLimits({
+        months: [octoberMonth],
+        answers: {
+          [personalEntriesGet('2026-10')]: month.monthAnswer,
+          [categoryLimitPut(coffeeCategory.id)]: month.acceptChange,
+        },
+      })
+      await findTotalCard()
+      const button = setLimitButton()
+      button.focus()
+      fireEvent.click(button)
+      fireEvent.click(within(await findChooseSheet()).getByRole('button', { name: 'Coffee' }))
+      const sheet = await findLimitSheet('Coffee')
+
+      typeLimit(sheet, '4500')
+      fireEvent.click(saveLimitButton(sheet))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      await waitFor(() => {
+        expect(document.activeElement).toBe(limitRowButtonNamed('Coffee'))
+      })
+    })
+
+    it('brings the focus to the "Whole month" row of the new Limits card after the first limit of the month is saved', async () => {
+      const month = monthThatChanges(octoberMonth, octoberWithLimits)
+      await renderBudgetWithLimits({
+        months: [octoberMonth],
+        answers: {
+          [personalEntriesGet('2026-10')]: month.monthAnswer,
+          [monthLimitPut]: month.acceptChange,
+        },
+      })
+      await findTotalCard()
+      const button = setLimitButton()
+      button.focus()
+      fireEvent.click(button)
+      fireEvent.click(within(await findChooseSheet()).getByRole('button', { name: wholeMonthName() }))
+      const sheet = await findLimitSheet(wholeMonthName())
+
+      typeLimit(sheet, '25000')
+      fireEvent.click(saveLimitButton(sheet))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      await waitFor(() => {
+        expect(document.activeElement).toBe(limitRowButtonNamed(wholeMonthName()))
+      })
+    })
+
+    it('keeps the focus on the "Set a limit" button of the card when a second limit is saved', async () => {
+      const month = monthThatChanges(octoberWithOnlyACoffeeLimit, coffeeAndWholeMonthLimits)
+      await renderBudgetWithLimits({
+        months: [octoberWithOnlyACoffeeLimit],
+        answers: {
+          [personalEntriesGet('2026-10')]: month.monthAnswer,
+          [monthLimitPut]: month.acceptChange,
+        },
+      })
+      await findLimitsCard()
+      const button = setLimitButtonInCard()
+      button.focus()
+      fireEvent.click(button)
+      fireEvent.click(within(await findChooseSheet()).getByRole('button', { name: wholeMonthName() }))
+      const sheet = await findLimitSheet(wholeMonthName())
+
+      typeLimit(sheet, '25000')
+      fireEvent.click(saveLimitButton(sheet))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      await waitFor(() => {
+        expect(limitRows(queryLimitsCard() ?? document.body).map((row) => limitRowText(row).name)).toEqual([wholeMonthName(), 'Coffee'])
+      })
+      await settle()
+      expect(document.activeElement).toBe(setLimitButtonInCard())
     })
 
     it('sets the limit of the whole month with PUT /api/personal/limits/month', async () => {

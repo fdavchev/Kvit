@@ -30,6 +30,8 @@ import {
   groupSharesOnlyOctober,
   hotelShare,
   longGroupNameShare,
+  longTitleShare,
+  longTitleWord,
   octoberWithGroupShares,
   untitledGroceriesShare,
   untitledPlainShare,
@@ -311,6 +313,20 @@ describe('BudgetScreen, the "From groups" block', () => {
       expect(classesOf(shareTextColumnOf(row))).toEqual(expect.arrayContaining(['min-w-0', 'flex-1']))
       expect(classesOf(shareTitleOf(row))).toContain('break-words')
       expect(classesOf(shareAmountOf(row))).toContain('whitespace-nowrap')
+    })
+
+    it('keeps a very long one-word title inside the column: it breaks inside the word and is never wider than its column', async () => {
+      await renderBudget({ months: [{ ...octoberWithGroupShares, groupShares: [longTitleShare] }] })
+
+      const [row] = shareRows(await findGroupSharesBlock())
+      const title = shareTitleOf(row)
+
+      expect(shareRowText(row).title).toBe(longTitleWord)
+      expect(classesOf(title)).toContain('break-words')
+      expect(classesOf(title)).toContain('max-w-full')
+      expect(classesOf(title)).not.toContain('whitespace-nowrap')
+      expect(classesOf(title)).not.toContain('truncate')
+      expect(classesOf(shareTextColumnOf(row))).toEqual(expect.arrayContaining(['min-w-0', 'flex-1']))
     })
 
     it('makes every row at least 44 px high', async () => {

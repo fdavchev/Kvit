@@ -1,3 +1,4 @@
+import type { QueryClient } from '@tanstack/react-query'
 import { screen, within } from '@testing-library/react'
 import { endpoints } from '@/core/api/endpoints'
 import type { Language } from '@/core/i18n/language'
@@ -40,6 +41,7 @@ interface SummaryScreenOptions {
   timeZone?: string
   categories?: readonly PersonalCategory[]
   answers?: Record<string, AnswerFactory>
+  seedCache?: (queryClient: QueryClient) => void
 }
 
 export async function renderSummaryScreen(options: SummaryScreenOptions = {}) {
@@ -48,6 +50,7 @@ export async function renderSummaryScreen(options: SummaryScreenOptions = {}) {
   return renderGroupApp(options.path ?? summaryPath('2026-10'), {
     language,
     timeZone: options.timeZone,
+    seedCache: options.seedCache,
     answers: {
       'GET /api/me': jsonAnswer({
         ...testMe,

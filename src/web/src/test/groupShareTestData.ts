@@ -79,6 +79,14 @@ export const longGroupNameShare: GroupShare = {
   groupName: 'Thessaloniki-and-Halkidiki-summer-holiday-with-the-whole-family-2026',
 }
 
+export const longTitleWord = 'Supercalifragilisticexpialidociousandonwardstotheveryendxyzq'
+
+export const longTitleShare: GroupShare = {
+  ...dinnerShare,
+  expenseId: 'e1000000-0000-4000-8000-000000000007',
+  title: longTitleWord,
+}
+
 export const allGroupShares: GroupShare[] = [
   untitledPlainShare,
   hotelShare,

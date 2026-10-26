@@ -14,6 +14,7 @@ import {
   plusButton,
   renderBudget,
 } from '@/test/budgetTestHelpers'
+import { restoreRealRetryPolicy } from '@/test/expenseTestHelpers'
 import { emptyMonth, octoberMonth } from '@/test/personalEntryTestData'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { networkFailureAnswer, neverAnswer, problemAnswer, requestCount, type AnswerFactory } from '@/test/requestTestHelpers'
@@ -131,6 +132,18 @@ describe('BudgetScreen states', () => {
       const alert = await screen.findByRole('alert')
 
       expect(within(alert).getByText(translated('en', 'errors.PERSONAL_ENTRY_MONTH_INVALID'))).toBeTruthy()
+    })
+
+    it('asks the server only once and shows the error at once when the month is refused, with the retry policy of the app', async () => {
+      const { fetchMock } = await renderBudget({
+        seedCache: restoreRealRetryPolicy,
+        answers: { [personalEntriesGet('2026-10')]: problemAnswer(400, 'PERSONAL_ENTRY_MONTH_INVALID') },
+      })
+
+      const alert = await screen.findByRole('alert')
+
+      expect(within(alert).getByText(translated('en', 'errors.PERSONAL_ENTRY_MONTH_INVALID'))).toBeTruthy()
+      expect(requestCount(fetchMock, 'GET', '/api/personal/entries?month=2026-10')).toBe(1)
     })
 
     it('asks the server again and shows the month when Try again is pressed', async () => {

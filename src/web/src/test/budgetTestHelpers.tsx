@@ -1,3 +1,4 @@
+import type { QueryClient } from '@tanstack/react-query'
 import { screen, within } from '@testing-library/react'
 import { StrictMode } from 'react'
 import { endpoints } from '@/core/api/endpoints'
@@ -37,6 +38,7 @@ interface BudgetOptions {
   recurringIncomes?: readonly RecurringIncome[]
   answers?: Record<string, AnswerFactory>
   isStrictMode?: boolean
+  seedCache?: (queryClient: QueryClient) => void
 }
 
 export async function renderBudget(options: BudgetOptions = {}) {
@@ -53,7 +55,10 @@ export async function renderBudget(options: BudgetOptions = {}) {
   const screenElement = options.isStrictMode === true ? <StrictMode><BudgetScreen /></StrictMode> : <BudgetScreen />
   const rendered = await renderElementWithProviders(screenElement, routes.budget, {
     language,
-    seedCache: seedMe(me),
+    seedCache: (queryClient) => {
+      seedMe(me)(queryClient)
+      options.seedCache?.(queryClient)
+    },
   })
   return { fetchMock, language, ...rendered }
 }

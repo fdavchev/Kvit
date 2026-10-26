@@ -4,7 +4,7 @@ import { languages } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import { money, readableText } from '@/test/budgetLeftCardTestHelpers'
 import { budgetNow, monthAnswers } from '@/test/budgetTestHelpers'
-import { isBefore } from '@/test/expenseTestHelpers'
+import { isBefore, restoreRealRetryPolicy } from '@/test/expenseTestHelpers'
 import { stubGoogleSignIn } from '@/test/googleTestHelpers'
 import { personalCategoriesWithArchivedGet } from '@/test/personalCategoryTestHelpers'
 import { personalCategoriesWithArchived, personalFoodCategory } from '@/test/personalCategoryTestData'
@@ -485,6 +485,41 @@ describe('the monthly summary screen', () => {
       const alert = await screen.findByRole('alert')
 
       expect(within(alert).getByText(translated('en', 'errors.PERSONAL_ENTRY_MONTH_INVALID'))).toBeTruthy()
+    })
+
+    it.each(['9999-12', '1999-12'])('asks the server only once and shows the error at once when the month %s is refused, with the retry policy of the app', async (month) => {
+      const { fetchMock } = await renderSummaryScreen({
+        path: summaryPath(month),
+        seedCache: restoreRealRetryPolicy,
+        answers: { [personalSummaryGet(month)]: problemAnswer(400, 'PERSONAL_ENTRY_MONTH_INVALID') },
+      })
+
+      const alert = await screen.findByRole('alert')
+
+      expect(within(alert).getByText(translated('en', 'errors.PERSONAL_ENTRY_MONTH_INVALID'))).toBeTruthy()
+      expect(requestCount(fetchMock, 'GET', `/api/personal/summary?month=${month}`)).toBe(1)
+    })
+
+    it.each(languages)('offers a link back to the Budget tab and no Try again when the month is refused (%s)', async (language) => {
+      await renderSummaryScreen({
+        language,
+        answers: { [personalSummaryGet('2026-10')]: problemAnswer(400, 'PERSONAL_ENTRY_MONTH_INVALID') },
+      })
+
+      const alert = await screen.findByRole('alert')
+
+      expect(within(alert).getByText(translated(language, 'errors.PERSONAL_ENTRY_MONTH_INVALID'))).toBeTruthy()
+      expect(within(alert).getByRole('link', { name: translated(language, 'budget.summary.toBudget') }).getAttribute('href')).toBe(routes.budget)
+      expect(within(alert).queryByRole('button', { name: translated(language, 'common.retry') })).toBeNull()
+    })
+
+    it('keeps Try again, and no link to the Budget tab, for an error that asking again can fix', async () => {
+      await renderSummaryScreen({ answers: { [personalSummaryGet('2026-10')]: networkFailureAnswer() } })
+
+      const alert = await screen.findByRole('alert')
+
+      expect(within(alert).getByRole('button', { name: translated('en', 'common.retry') })).toBeTruthy()
+      expect(within(alert).queryByRole('link')).toBeNull()
     })
 
     it('shows the generic message when the answer cannot be read', async () => {

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
-import { errorMessageKey } from '@/core/api/errors'
+import { errorMessageKey, hasErrorCode } from '@/core/api/errors'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import { routes } from '@/core/router/routes'
@@ -23,6 +23,7 @@ import { usePersonalSummary } from '../hooks/usePersonalSummary'
 import { SummaryCards } from './SummaryCards'
 
 const chartEmoji = '\u{1F4CA}'
+const monthRefusedCode = 'PERSONAL_ENTRY_MONTH_INVALID'
 
 export function BudgetSummaryScreen() {
   const { t } = useTranslation()
@@ -39,7 +40,20 @@ export function BudgetSummaryScreen() {
       return <SummarySkeleton />
     }
     if (summaryQuery.isError) {
-      return <KvitError message={t(errorMessageKey(summaryQuery.error))} onRetry={() => void summaryQuery.refetch()} />
+      const message = t(errorMessageKey(summaryQuery.error))
+      if (hasErrorCode(summaryQuery.error, monthRefusedCode)) {
+        return (
+          <KvitError
+            message={message}
+            action={
+              <KvitLinkButton to={routes.budget} variant="secondary">
+                {t('budget.summary.toBudget')}
+              </KvitLinkButton>
+            }
+          />
+        )
+      }
+      return <KvitError message={message} onRetry={() => void summaryQuery.refetch()} />
     }
     const { currencies, convertedTotals } = summaryQuery.data
     if (currencies.length === 0) {

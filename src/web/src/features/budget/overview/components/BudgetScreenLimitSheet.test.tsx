@@ -25,6 +25,7 @@ import {
   removeLimitButton,
   renderBudgetWithLimits,
   saveLimitButton,
+  setLimitButtonInCard,
   typeLimit,
   wholeMonthName,
 } from '@/test/budgetLimitTestHelpers'
@@ -489,6 +490,64 @@ describe('BudgetScreen, the set-a-limit sheet', () => {
         expect(queryLimitsCard()).toBeNull()
       })
       expect(querySetLimitButton()).toBeTruthy()
+    })
+
+    it('brings the focus to the "Set a limit" button when the last limit is removed, because the row it came from is gone', async () => {
+      const month = monthThatChanges(octoberWithOnlyACoffeeLimit, octoberMonth)
+      await renderBudgetWithLimits({
+        months: [octoberWithOnlyACoffeeLimit],
+        answers: { [personalEntriesGet('2026-10')]: month.monthAnswer, [coffeeDelete()]: month.acceptChange },
+      })
+      const sheet = await openLimitSheetFromRow(await findLimitsCard(), 'Coffee')
+
+      fireEvent.click(removeLimitButton(sheet))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      await waitFor(() => {
+        expect(document.activeElement).toBe(querySetLimitButton())
+      })
+    })
+
+    it('brings the focus to the "Set a limit" button of the card when a limit is removed and others stay', async () => {
+      const month = monthThatChanges(octoberWithLimits, octoberWithoutCoffee)
+      const { sheet } = await renderCoffeeSheet({
+        answers: { [personalEntriesGet('2026-10')]: month.monthAnswer, [coffeeDelete()]: month.acceptChange },
+      })
+
+      fireEvent.click(removeLimitButton(sheet))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      await waitFor(() => {
+        expect(limitRows(queryLimitsCard() ?? document.body).map((row) => limitRowText(row).name)).not.toContain('Coffee')
+      })
+      await waitFor(() => {
+        expect(document.activeElement).toBe(setLimitButtonInCard())
+      })
+    })
+
+    it('brings the focus to the "Set a limit" button of the card when the whole-month limit is removed and others stay', async () => {
+      const month = monthThatChanges(octoberWithLimits, octoberWithoutMonthLimit)
+      await renderBudgetWithLimits({
+        months: [octoberWithLimits],
+        answers: { [personalEntriesGet('2026-10')]: month.monthAnswer, [monthLimitDelete]: month.acceptChange },
+      })
+      const sheet = await openLimitSheetFromRow(await findLimitsCard(), wholeMonthName())
+
+      fireEvent.click(removeLimitButton(sheet))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      await waitFor(() => {
+        expect(limitRows(queryLimitsCard() ?? document.body).map((row) => limitRowText(row).name)).not.toContain(wholeMonthName())
+      })
+      await waitFor(() => {
+        expect(document.activeElement).toBe(setLimitButtonInCard())
+      })
     })
 
     it('removes from an earlier month with the same request and keeps that month selected', async () => {
