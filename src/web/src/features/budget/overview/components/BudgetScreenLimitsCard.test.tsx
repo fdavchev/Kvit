@@ -294,12 +294,12 @@ describe('BudgetScreen, the "Limits" card', () => {
 
   describe('the bar', () => {
     it.each([
-      [null, 1750000, 2500000, 'ok', '70%'],
-      [foodLabel, 720000, 1000000, 'ok', '72%'],
-      [groceriesLabel, 900000, 1000000, 'near', '90%'],
-      ['Coffee', 450000, 450000, 'over', '100%'],
-      ['Dog', 500000, 500000, 'near', '100%'],
-    ])('on the row %s has the value %s of %s, the state "%s" and a fill %s wide', async (name, valueNow, valueMax, state, width) => {
+      [null, 1750000, 2500000, 'ok', 'scaleX(0.7)'],
+      [foodLabel, 720000, 1000000, 'ok', 'scaleX(0.72)'],
+      [groceriesLabel, 900000, 1000000, 'near', 'scaleX(0.9)'],
+      ['Coffee', 450000, 450000, 'over', 'scaleX(1)'],
+      ['Dog', 500000, 500000, 'near', 'scaleX(1)'],
+    ])('on the row %s has the value %s of %s, the state "%s" and a fill scaled to %s', async (name, valueNow, valueMax, state, transform) => {
       await renderBudgetWithLimits({ months: [octoberWithLimits] })
       const card = await findLimitsCard()
 
@@ -310,7 +310,7 @@ describe('BudgetScreen, the "Limits" card', () => {
       expect(bar.getAttribute('aria-valuenow')).toBe(String(valueNow))
       expect(bar.getAttribute('aria-valuemax')).toBe(String(valueMax))
       expect(bar.getAttribute('data-limit-state')).toBe(state)
-      expect(limitFillOf(row).style.width).toBe(width)
+      expect(limitFillOf(row).style.transform).toBe(transform)
     })
 
     it('names every bar like its row, for screen readers', async () => {
@@ -326,11 +326,11 @@ describe('BudgetScreen, the "Limits" card', () => {
       ])
     })
 
-    it('keeps the fill at 100 % wide when the spending is over the limit', async () => {
+    it('keeps the fill scaled to 1 when the spending is over the limit', async () => {
       await renderBudgetWithLimits({ months: [octoberWithLimits] })
       const card = await findLimitsCard()
 
-      expect(limitFillOf(limitRowNamed(card, 'Coffee')).style.width).toBe('100%')
+      expect(limitFillOf(limitRowNamed(card, 'Coffee')).style.transform).toBe('scaleX(1)')
     })
 
     it('shows an empty fill when nothing is spent', async () => {
@@ -341,9 +341,52 @@ describe('BudgetScreen, the "Limits" card', () => {
 
       expect(limitBarOf(row).getAttribute('aria-valuenow')).toBe('0')
       expect(limitBarOf(row).getAttribute('data-limit-state')).toBe('ok')
-      expect(limitFillOf(row).style.width).toBe('0%')
+      expect(limitFillOf(row).style.transform).toBe('scaleX(0)')
     })
 
+    it.each([
+      [333300, 'ok'],
+      [799900, 'ok'],
+      [1000000, 'near'],
+      [1000100, 'over'],
+    ])('scales the fill to the exact ratio of spending %s to a limit of 1000000 deni, with the state "%s"', async (spentMinor, state) => {
+      await renderBudgetWithLimits({ months: [octoberWithMonthLimitSpent(spentMinor)] })
+      const card = await findLimitsCard()
+
+      const [row] = limitRows(card)
+
+      expect(limitFillOf(row).style.transform).toBe(`scaleX(${Math.min(spentMinor, 1000000) / 1000000})`)
+      expect(limitBarOf(row).getAttribute('data-limit-state')).toBe(state)
+    })
+
+    it('does not pin the width of the fill, because the transform draws the length', async () => {
+      await renderBudgetWithLimits({ months: [octoberWithLimits] })
+      const card = await findLimitsCard()
+
+      for (const row of limitRows(card)) {
+        expect(limitFillOf(row).style.width).toBe('')
+      }
+    })
+
+    it('draws the fill from its left edge, so it grows to the right', async () => {
+      await renderBudgetWithLimits({ months: [octoberWithLimits] })
+      const card = await findLimitsCard()
+
+      for (const row of limitRows(card)) {
+        expect(classesOf(limitFillOf(row))).toContain('origin-left')
+      }
+    })
+
+    it('animates only the transform of the fill, and not under reduced motion', async () => {
+      await renderBudgetWithLimits({ months: [octoberWithLimits] })
+      const card = await findLimitsCard()
+
+      for (const row of limitRows(card)) {
+        const classes = classesOf(limitFillOf(row))
+        expect(classes.filter((name) => name.startsWith('transition'))).toEqual(['transition-transform'])
+        expect(classes).toContain('motion-reduce:transition-none')
+      }
+    })
     it.each([
       [799900, 'ok'],
       [800000, 'near'],

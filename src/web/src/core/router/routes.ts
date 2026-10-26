@@ -15,6 +15,7 @@ export const routes = {
   newBill: '/groups/new/bill',
   recentlyDeletedGroups: '/groups/recently-deleted',
   budget: '/budget',
+  budgetOf: (month: string) => `/budget?month=${month}`,
   budgetRepeating: '/budget/repeating',
   budgetSummary: '/budget/summary',
   budgetSummaryOf: (month: string) => `/budget/summary?month=${month}`,

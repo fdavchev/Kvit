@@ -16,7 +16,7 @@ import { usePersonalCategoriesWithArchived } from '../../categories/hooks/usePer
 import { personalCategoryName } from '../../categories/personalCategoryName'
 import {
   hasAnyLimit,
-  limitFillPercent,
+  limitFillRatio,
   limitMinorOf,
   limitStateOf,
   wholeMonthEmoji,
@@ -232,8 +232,11 @@ function LimitListItem({ row, category, focus, isFocusTarget, onOpen, onFocusHan
         >
           <span
             data-limit-fill
-            className={cn('block h-full rounded-full', fillLooks[state])}
-            style={{ width: `${limitFillPercent(row)}%` }}
+            className={cn(
+              'block h-full origin-left rounded-full transition-transform duration-200 ease-out motion-reduce:transition-none',
+              fillLooks[state],
+            )}
+            style={{ transform: `scaleX(${limitFillRatio(row)})` }}
           />
         </span>
         {row.overMinor > 0 && (

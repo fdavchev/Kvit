@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
 import { routes } from '@/core/router/routes'
@@ -63,7 +63,10 @@ export function BudgetScreen() {
   const me = useSignedInMe()
   const isDesktop = useIsDesktop()
   const [currentMonth] = useState<string>(() => currentMonthInTimeZone(me.timeZone, new Date()))
-  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const months = budgetMonths(currentMonth)
+  const monthInAddress = searchParams.get('month')
+  const selectedMonth = monthInAddress !== null && months.includes(monthInAddress) ? monthInAddress : currentMonth
   const [addingStep, setAddingStep] = useState<AddingStep | null>(null)
   const [openedEntry, setOpenedEntry] = useState<PersonalEntry | null>(null)
   const [isRepeatingListOpen, setIsRepeatingListOpen] = useState<boolean>(false)
@@ -80,6 +83,10 @@ export function BudgetScreen() {
   const entriesRef = useListAnimation<HTMLUListElement>()
   useCatchUpOnOpen()
   const today = todayInTimeZone(me.timeZone, new Date())
+
+  function selectMonth(month: string): void {
+    setSearchParams({ month }, { replace: true })
+  }
 
   function startAdding(): void {
     setHandOnOpener(document.activeElement)
@@ -238,10 +245,10 @@ export function BudgetScreen() {
       <div className="min-h-12" />
       <KvitScreenTitle>{t('nav.budget')}</KvitScreenTitle>
       <MonthStrip
-        months={budgetMonths(currentMonth)}
+        months={months}
         currentMonth={currentMonth}
         selectedMonth={selectedMonth}
-        onSelect={setSelectedMonth}
+        onSelect={selectMonth}
       />
       {isDesktop && <BudgetRoundAddButton onClick={startAdding} />}
       {renderMonth(renderRepeatingRow())}

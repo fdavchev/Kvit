@@ -74,12 +74,12 @@ describe('the monthly summary screen', () => {
   })
 
   describe('the header', () => {
-    it.each(languages)('has the two months as the page heading and a Back link to the Budget tab (%s)', async (language) => {
+    it.each(languages)('has the two months as the page heading and a Back link to the Budget tab with the same month (%s)', async (language) => {
       const { router } = await renderSummaryScreen({ language })
 
       expect(await findSummaryHeading(summaryTitle('2026-10', '2026-09', '2026-10', language))).toBeTruthy()
       const back = screen.getByRole('link', { name: translated(language, 'common.back') })
-      expect(back.getAttribute('href')).toBe(routes.budget)
+      expect(back.getAttribute('href')).toBe(routes.budgetOf('2026-10'))
       expect(router.state.location.pathname).toBe(routes.budgetSummary)
     })
 
@@ -159,6 +159,15 @@ describe('the monthly summary screen', () => {
       await findCurrencyCard('MKD')
       expect(requestCount(fetchMock, 'GET', '/api/personal/summary?month=2026-11')).toBe(1)
       expect(requestCount(fetchMock, 'GET', '/api/personal/summary?month=2026-10')).toBe(0)
+    })
+
+    it('points the Back link at the Budget tab with the month of the address, also for another year', async () => {
+      await renderSummaryScreen({ path: summaryPath('2026-01'), summaries: [januarySummary] })
+      await findSummaryHeading(summaryTitle('2026-01', '2025-12', '2026-10'))
+
+      const back = screen.getByRole('link', { name: translated('en', 'common.back') })
+
+      expect(back.getAttribute('href')).toBe(routes.budgetOf('2026-01'))
     })
 
     it('shows the title and the Back link at once for a month in the address, before the answer', async () => {

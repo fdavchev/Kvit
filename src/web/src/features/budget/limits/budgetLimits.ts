@@ -12,8 +12,6 @@ export const wholeMonthEmoji = '\u{1F5D3}\u{FE0F}'
 
 const nearShareNumerator = 4
 const nearShareDenominator = 5
-const fullPercent = 100
-
 export function limitStateOf(row: LimitRow): LimitState {
   if (row.spentMinor > row.limitMinor) {
     return 'over'
@@ -21,11 +19,11 @@ export function limitStateOf(row: LimitRow): LimitState {
   return row.spentMinor * nearShareDenominator >= row.limitMinor * nearShareNumerator ? 'near' : 'ok'
 }
 
-export function limitFillPercent(row: LimitRow): number {
+export function limitFillRatio(row: LimitRow): number {
   if (row.limitMinor <= 0) {
     throw new Error(`Expected a limit above 0 for the category ${row.categoryId ?? 'of the whole month'}, got ${row.limitMinor}`)
   }
-  return Math.floor((Math.min(row.spentMinor, row.limitMinor) * fullPercent) / row.limitMinor)
+  return Math.min(row.spentMinor, row.limitMinor) / row.limitMinor
 }
 
 export function limitMinorOf(limits: MonthLimits, categoryId: string | null): number | null {

@@ -77,7 +77,7 @@ export function BudgetSummaryScreen() {
   return (
     <KvitScreen>
       <div className="flex min-h-12">
-        <KvitBackButton to={routes.budget} />
+        <KvitBackButton to={routes.budgetOf(month)} />
       </div>
       <KvitScreenTitle>
         {t('budget.summary.title', {

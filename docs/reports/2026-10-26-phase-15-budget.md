@@ -21,7 +21,7 @@ Branch `feat/15-budget`. Written 2026-10-26 for Filip, readable on a phone. Ever
 Currency apart by default with an optional converted total; group shares in their own "From groups" block; limits as a card with a set-a-limit sheet and an "N over" line; summary on its own screen; switch in each group's settings; limits keep history (so a changed limit never rewrites past months); limits count euro spending converted.
 
 ## Verification
-- VERIFIED by automated test (run by me after the last coder run, 2026-10-26): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 5388 of 5388; `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 10618 of 10618.
+- VERIFIED by automated test (run by me after the last coder run, 2026-10-26): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 5388 of 5388; `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 10663 of 10663.
 - VERIFIED by live run (the tester, headless Chromium, local stack): all Phase 15 screens at 320 / 360 / 768 / 1280 / 1920 px, EN and MK, light and dark, reduced motion. 3 bugs found, none a blocker: report `docs/reports/2026-10-26-phase-15-browser-pass.md`.
 - The fixes to those 3 bugs and the 4 code review fixes: VERIFIED by automated test only, NOT VERIFIED again in a browser.
 - NOT VERIFIED: a real phone, iOS Safari, Firefox, a screen reader, other time zones, Neon and Render (3 new migrations), the Macedonian drafts, the deploy gap (new website against the old API for a few minutes).

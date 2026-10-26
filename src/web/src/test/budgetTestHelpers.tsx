@@ -12,7 +12,7 @@ import { activePersonalCategories } from './personalCategoryTestData'
 import { categoryListAnswer, personalCategoriesGet } from './personalCategoryTestHelpers'
 import { monthAnswerBody, octoberMonth } from './personalEntryTestData'
 import { catchUpAnswer, catchUpPost, recurringIncomesGet, recurringListAnswer } from './recurringIncomeTestData'
-import { renderElementWithProviders } from './renderWithProviders'
+import { renderRoutesWithProviders } from './renderWithProviders'
 import { jsonAnswer, stubFetchByRequest, type AnswerFactory } from './requestTestHelpers'
 import { seedMe, testMe } from './testMe'
 import { translated } from './translated'
@@ -38,6 +38,7 @@ interface BudgetOptions {
   recurringIncomes?: readonly RecurringIncome[]
   answers?: Record<string, AnswerFactory>
   isStrictMode?: boolean
+  startAt?: string
   seedCache?: (queryClient: QueryClient) => void
 }
 
@@ -53,13 +54,20 @@ export async function renderBudget(options: BudgetOptions = {}) {
     ...options.answers,
   })
   const screenElement = options.isStrictMode === true ? <StrictMode><BudgetScreen /></StrictMode> : <BudgetScreen />
-  const rendered = await renderElementWithProviders(screenElement, routes.budget, {
-    language,
-    seedCache: (queryClient) => {
-      seedMe(me)(queryClient)
-      options.seedCache?.(queryClient)
+  const rendered = await renderRoutesWithProviders(
+    [
+      { path: routes.budget, element: screenElement },
+      { path: '*', element: <p>another page</p> },
+    ],
+    options.startAt ?? routes.budget,
+    {
+      language,
+      seedCache: (queryClient) => {
+        seedMe(me)(queryClient)
+        options.seedCache?.(queryClient)
+      },
     },
-  })
+  )
   return { fetchMock, language, ...rendered }
 }
 
@@ -69,6 +77,12 @@ export function monthStrip(language: Language = 'en'): HTMLElement {
 
 export function monthButton(label: string, language: Language = 'en'): HTMLElement {
   return within(monthStrip(language)).getByRole('button', { name: label })
+}
+
+export function pressedMonthLabels(language: Language = 'en'): string[] {
+  return within(monthStrip(language))
+    .getAllByRole('button', { pressed: true })
+    .map((button) => button.textContent ?? '')
 }
 
 export function findTotalCard(language: Language = 'en'): Promise<HTMLElement> {

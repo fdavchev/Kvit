@@ -8,7 +8,14 @@
 3. **Deleted groups:** leave (their shares disappear until Undo). Closing and Finished groups: their shares keep counting (checked in the code: only deleted groups and deleted expenses are left out); tests for Closing, Finished and One bill are added.
 6. **Currency setting spelling:** fixed to accept "mkd", "eur", "Eur" and store MKD / EUR (the coder does it in the Step 3 run).
 
-### New items for Filip (Claude's recommendation first)
+### Filip's answers to items 8 to 11 (2026-10-26)
+8. Deploy gap: leave it. 9. Macedonian hint wording «цената на еврото»: OK. 10. Back from the Summary: CHANGE it (the Budget tab keeps its month in the address, `?month=yyyy-MM`, so Back returns to the month you came from). 11. Limit bar: ANIMATE it (grows with a transform, off under reduced motion).
+
+### Items 10 and 11 built (2026-10-26)
+- **10:** the Budget tab reads its month from the address (`/budget?month=yyyy-MM`, built by `routes.budgetOf`). A month the strip cannot show (text, a later month, older than the strip) falls back to the current month with no error. A tap on a month replaces the history entry instead of adding one, so the browser Back leaves the tab at once instead of walking through every month. The Summary's Back goes to `routes.budgetOf(month)`, the month on screen. The bottom bar's Budget tab stays `/budget`, so it always opens the current month.
+- **11:** the limit bar's fill keeps its full width and is drawn with `transform: scaleX(spent / limit)` (capped at 1, not rounded) from its left edge, with a 0.2 s transition on the transform only, off under reduced motion. The ok / near / over colours still come from `limitStateOf`. The bar animates when its amount changes on screen (for example after adding spending); when a month is opened it appears already filled, because the month first shows its loading placeholder.
+
+### New items for Filip (Claude's recommendation first; answered above)
 8. **Deploy gap:** the website now treats a missing `budgetTotalCurrency` (in `GET /api/me`) and a missing `countsInBudget` (in the group answer) as an error, like the other fields. Cloudflare publishes in seconds and Render takes a few minutes, so for those minutes the new website talking to the old API would show the load error. Recommendation: leave it (the app is used by a few people, the gap is short; it is the same as every earlier phase that added a field). If you want zero gap, the website could treat a missing field as "unknown" for one release.
 9. **Macedonian wording:** the hint under the budget choice uses «цената на еврото» instead of «курсот» (a test forbids «курс», which you dislike). Part of the Macedonian drafts you still need to read.
 
