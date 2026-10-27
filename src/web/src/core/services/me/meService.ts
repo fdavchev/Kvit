@@ -1,7 +1,9 @@
 import { ApiError, apiRequest, jsonRequest, unauthorizedStatus } from '@/core/api/apiClient'
 import { endpoints } from '@/core/api/endpoints'
 import { isLanguage, type Language } from '@/core/i18n/language'
-import { readTextOrNull } from '@/core/services/readFields'
+import { groupCurrencies } from '@/core/services/groups/groupsService'
+import { readOneOf, readTextOrNull } from '@/core/services/readFields'
+import type { Currency } from '@/shared/utils/formatMoney'
 
 export interface Me {
   id: string
@@ -13,6 +15,7 @@ export interface Me {
   hasPassword: boolean
   pictureUrl: string | null
   isGuest: boolean
+  budgetTotalCurrency: Currency | null
 }
 
 type MeFields = Record<string, unknown>
@@ -34,6 +37,7 @@ export function parseMe(body: unknown): Me {
     hasPassword: readYesNo(fields, 'hasPassword'),
     pictureUrl: readTextOrNull(fields, 'pictureUrl', 'the signed-in person'),
     isGuest: readYesNo(fields, 'isGuest'),
+    budgetTotalCurrency: readBudgetTotalCurrency(fields),
   }
 }
 
@@ -52,6 +56,10 @@ export async function getMe(): Promise<Me | null> {
 
 export async function changeLanguage(language: Language): Promise<void> {
   await apiRequest(endpoints.meLanguage, jsonRequest('PUT', { language }))
+}
+
+export async function changeBudgetTotalCurrency(budgetTotalCurrency: Currency | null): Promise<void> {
+  await apiRequest(endpoints.meBudgetCurrency, jsonRequest('PUT', { budgetTotalCurrency }))
 }
 
 function readText(fields: MeFields, name: keyof Me): string {
@@ -82,6 +90,12 @@ function readLanguage(fields: MeFields): Language {
     )
   }
   return value
+}
+
+function readBudgetTotalCurrency(fields: MeFields): Currency | null {
+  return fields.budgetTotalCurrency === null
+    ? null
+    : readOneOf(fields, 'budgetTotalCurrency', groupCurrencies, 'the signed-in person')
 }
 
 function describeValue(value: unknown): string {

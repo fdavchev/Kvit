@@ -53,13 +53,17 @@ export function formatMonthLabel(month: string, currentMonth: string, language: 
   return showsYear ? `${name} ${year}` : `${name}`
 }
 
-function readCalendarMonth(text: string): CalendarMonth {
+export function isCalendarMonth(text: string): boolean {
   const match = calendarMonthPattern.exec(text)
   const monthNumber = Number(match?.[2])
-  if (match === null || monthNumber < 1 || monthNumber > monthsPerYear) {
+  return match !== null && monthNumber >= 1 && monthNumber <= monthsPerYear
+}
+
+function readCalendarMonth(text: string): CalendarMonth {
+  if (!isCalendarMonth(text)) {
     throw new Error(`Expected a month like 2026-10, got "${text}"`)
   }
-  return { year: Number(match[1]), monthIndex: monthNumber - 1 }
+  return { year: Number(text.slice(0, 4)), monthIndex: Number(text.slice(5, 7)) - 1 }
 }
 
 function calendarMonthText({ year, monthIndex }: CalendarMonth): string {

@@ -18,5 +18,6 @@ namespace Kvit.Contracts.Groups
         DateTimeOffset? ClosingEndsAt,
         IReadOnlyList<ClosingMemberRow> ClosingConfirmedBy,
         IReadOnlyList<ClosingMemberRow> ClosingWaitingFor,
-        bool CanStartClosing);
+        bool CanStartClosing,
+        bool CountsInBudget);
 }

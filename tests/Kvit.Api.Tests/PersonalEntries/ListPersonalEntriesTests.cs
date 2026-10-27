@@ -12,7 +12,7 @@ namespace Kvit.Api.Tests.PersonalEntries
 {
     public class ListPersonalEntriesTests(ExpensesApp _app) : IClassFixture<ExpensesApp>
     {
-        private static readonly string[] MonthFieldNames = ["entries", "incomeTotals", "month", "totals"];
+        private static readonly string[] MonthFieldNames = ["convertedTotals", "entries", "groupShares", "incomeTotals", "limits", "month", "totals"];
         private static readonly string[] CurrencyTotalFieldNames = ["categories", "currency", "totalMinor"];
         private static readonly string[] CategoryTotalFieldNames = ["category", "categoryId", "count", "totalMinor"];
 
@@ -28,6 +28,7 @@ namespace Kvit.Api.Tests.PersonalEntries
             Assert.Equal(0, body.GetProperty("entries").GetArrayLength());
             Assert.Equal(0, body.GetProperty("totals").GetArrayLength());
             Assert.Equal(0, body.GetProperty("incomeTotals").GetArrayLength());
+            Assert.Equal(0, body.GetProperty("groupShares").GetArrayLength());
         }
 
         [Fact]

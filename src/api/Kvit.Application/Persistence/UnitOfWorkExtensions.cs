@@ -53,6 +53,12 @@ namespace Kvit.Application.Persistence
             return unitOfWork.RunInTransactionOnceMoreIfAsync(work, exception => exception is MemberChangedMeanwhileException, cancellationToken);
         }
 
+        public static Task<TResult> RunInTransactionOnceMoreIfBudgetLimitChangedMeanwhileAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
+            where TResult : Result
+        {
+            return unitOfWork.RunInTransactionOnceMoreIfAsync(work, exception => exception is BudgetLimitChangedMeanwhileException, cancellationToken);
+        }
+
         private static async Task<TResult> RunInTransactionOnceMoreIfAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, Func<Exception, bool> isWorthOneMoreRun, CancellationToken cancellationToken)
             where TResult : Result
         {

@@ -1,9 +1,11 @@
 using System.Globalization;
 using Kvit.Application.Dispatching;
 using Kvit.Application.Queries.Me;
+using Kvit.Contracts.Me;
 using Kvit.Contracts.PersonalCategories;
 using Kvit.Contracts.PersonalEntries;
 using Kvit.Domain.Entities;
+using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -20,10 +22,10 @@ namespace Kvit.Application.Queries.PersonalEntries
 
         public async Task<Result<PersonalEntryMonthResponse>> Handle(GetPersonalEntriesQuery query, CancellationToken cancellationToken)
         {
-            Result<Guid> userId = await _dispatcher.IdOfCallerAsync(cancellationToken);
-            if (!userId.IsSuccess)
+            Result<MeResponse> me = await _dispatcher.FullAccountOfCallerAsync(cancellationToken);
+            if (!me.IsSuccess)
             {
-                return userId.ToFailure<PersonalEntryMonthResponse>();
+                return me.ToFailure<PersonalEntryMonthResponse>();
             }
 
             Result<DateOnly> firstDay = FirstDayOf(query.Month);
@@ -33,21 +35,25 @@ namespace Kvit.Application.Queries.PersonalEntries
             }
 
             DateOnly firstDayOfNextMonth = firstDay.Value.AddMonths(1);
-            List<PersonalEntryDto> entries = await _context.EntriesOf(userId.Value)
-                .Where(entry => entry.EntryDate >= firstDay.Value && entry.EntryDate < firstDayOfNextMonth)
+            List<PersonalEntryDto> entries = await _context.EntriesOf(me.Value.Id, firstDay.Value, firstDayOfNextMonth)
                 .PersonalEntryDtos()
                 .ToListAsync(cancellationToken);
             List<PersonalCategoryRow> categories = await _context.PersonalCategoryRowsOfAsync(entries, cancellationToken);
             Dictionary<Guid, PersonalCategoryRow> categoriesById = categories.ToDictionary(category => category.Id);
+            List<GroupShareDto> groupShares = await _context.GroupSharesOf(me.Value.Id, firstDay.Value, firstDayOfNextMonth).ToListAsync(cancellationToken);
+            LimitsResponse limits = await _context.LimitsResponseOfAsync(me.Value.Id, firstDay.Value, entries, groupShares, cancellationToken);
 
             return Result.Ok(new PersonalEntryMonthResponse(
                 firstDay.Value.ToString(MonthFormat, CultureInfo.InvariantCulture),
                 [.. entries.Select(entry => PersonalEntryQueries.PersonalEntryRowOf(entry, categoriesById))],
                 SpendingTotalsOf(entries, categories),
-                IncomeTotalsOf(entries)));
+                IncomeTotalsOf(entries),
+                [.. groupShares.Select(share => share.Row)],
+                ConvertedTotalsOf(me.Value.BudgetTotalCurrency, entries, groupShares),
+                limits));
         }
 
-        private static Result<DateOnly> FirstDayOf(string? month)
+        public static Result<DateOnly> FirstDayOf(string? month)
         {
             if (!DateOnly.TryParseExact(month, MonthFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly firstDay))
             {
@@ -84,6 +90,20 @@ namespace Kvit.Application.Queries.PersonalEntries
                     currencyEntries.Key,
                     currencyEntries.Sum(entry => entry.AmountMinor),
                     currencyEntries.Count()))];
+        }
+
+        private static ConvertedTotalsResponse? ConvertedTotalsOf(Currency? budgetTotalCurrency, IReadOnlyList<PersonalEntryDto> entries, IReadOnlyList<GroupShareDto> groupShares)
+        {
+            if (budgetTotalCurrency is not Currency target)
+            {
+                return null;
+            }
+
+            long spendingMinor = BudgetItems.ConvertedSumOf(BudgetItems.SpentItemsOf(entries), target);
+            long incomeMinor = BudgetItems.ConvertedIncomeOf(entries, target);
+            long groupSharesMinor = BudgetItems.ConvertedSumOf(BudgetItems.SpentItemsOf(groupShares), target);
+
+            return new ConvertedTotalsResponse(target, spendingMinor, incomeMinor, groupSharesMinor, checked(incomeMinor - spendingMinor - groupSharesMinor));
         }
 
         private static List<PersonalCategoryTotalRow> CategoryTotalsOf(IEnumerable<PersonalEntryDto> currencyEntries, IReadOnlyList<PersonalCategoryRow> categoriesInOrder)

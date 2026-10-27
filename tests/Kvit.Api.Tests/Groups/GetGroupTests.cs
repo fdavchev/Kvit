@@ -10,7 +10,7 @@ namespace Kvit.Api.Tests.Groups
     public class GetGroupTests(GroupsApp _app) : IClassFixture<GroupsApp>
     {
         [Fact]
-        public async Task Get_Owner_AnswersExactlyTheFifteenGroupFields()
+        public async Task Get_Owner_AnswersExactlyTheSixteenGroupFields()
         {
             SignedInUser owner = await _app.SignUpAsync();
             Guid groupId = await GroupRows.InsertGroupWithOwnerAsync(_app, owner.UserId);

@@ -33,7 +33,7 @@ namespace Kvit.Application.Queries.Me
             return _context.Users
                 .AsNoTracking()
                 .Where(user => user.Id == userId)
-                .Select(user => new MeResponse(user.Id, user.DisplayName, user.Email, user.Language, user.TimeZone, user.MustChangePassword, user.PasswordHash != null, user.GooglePictureUrl, user.IsGuest));
+                .Select(user => new MeResponse(user.Id, user.DisplayName, user.Email, user.Language, user.TimeZone, user.MustChangePassword, user.PasswordHash != null, user.GooglePictureUrl, user.IsGuest, user.BudgetTotalCurrency));
         }
     }
 }

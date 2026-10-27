@@ -33,6 +33,7 @@
     "AUTH_NOT_SIGNED_IN": "Your session ended. Log in again.",
     "TIME_ZONE_INVALID": "We couldn't read your phone's time zone, so this isn't possible on this device for now.",
     "LANGUAGE_INVALID": "That language isn't supported.",
+    "ME_BUDGET_CURRENCY_INVALID": "That budget currency isn't supported.",
     "RATE_LIMITED": "Too many tries. Wait a few minutes and try again.",
     "AUTH_MUST_CHANGE_PASSWORD": "Choose a new password to continue.",
     "AUTH_CURRENT_PASSWORD_WRONG": "Wrong password.",
@@ -136,6 +137,7 @@
     "RECURRING_INCOME_LIMIT_REACHED": "You can have up to 20 repeating incomes. Stop one first.",
     "RECURRING_INCOME_NOT_STOPPED": "This repeating income is not stopped.",
     "RECURRING_INCOME_RESTART_EXPIRED": "This repeating income was stopped more than 5 days ago and can't be restarted.",
+    "BUDGET_LIMIT_AMOUNT_INVALID": "Enter a limit in whole denars, more than 0.",
     "SETTLEMENT_NOT_FOUND": "This payment doesn't exist or was deleted.",
     "SETTLEMENT_NOT_ALLOWED": "You can't do this with this payment.",
     "SETTLEMENT_NOT_PENDING": "This payment is no longer waiting for an answer.",
@@ -241,6 +243,14 @@
       "logOutTitle": "Log out as a guest?",
       "logOutBody": "After logging out you can't get back in by yourself. Ask the group owner to let you in again. Or make an account first.",
       "logOutAnyway": "Log out anyway"
+    },
+    "budget": {
+      "title": "Budget",
+      "showOneTotal": "Show one total",
+      "apart": "No, keep MKD and EUR apart",
+      "inMkd": "In MKD",
+      "inEur": "In EUR",
+      "hint": "Euro amounts are converted with the rate saved on each entry."
     }
   },
   "privacy": {
@@ -608,6 +618,40 @@
       "months": "Month",
       "categoryTotals": "Totals by category",
       "entries": "Entries"
+    },
+    "groupShares": {
+      "title": "From groups"
+    },
+    "card": {
+      "inMkd": "in MKD",
+      "inEur": "in EUR",
+      "includesConvertedEuro": "includes converted euro amounts",
+      "includesConvertedDenars": "includes converted denar amounts"
+    },
+    "limits": {
+      "title": "Limits",
+      "wholeMonth": "Whole month",
+      "setLimit": "Set a limit",
+      "chooseTitle": "Set a limit for",
+      "sheetTitle": "{{name}} · monthly limit",
+      "appliesFromNow": "Applies from this month on. Earlier months keep their limit.",
+      "viewingPast": "You are looking at {{month}}. The change starts this month.",
+      "remove": "Remove limit",
+      "removed": "Limit removed",
+      "over": "{{amount}} over",
+      "includesConverted": "includes {{amount}} converted to MKD"
+    },
+    "summary": {
+      "title": "{{month}} vs {{previousMonth}}",
+      "row": "Summary",
+      "was": "was",
+      "up": "up {{percent}} percent",
+      "down": "down {{percent}} percent",
+      "same": "no change",
+      "new": "new",
+      "percent": "{{percent}} %",
+      "empty": "Nothing to compare yet",
+      "toBudget": "Go to Budget"
     }
   },
   "addName": {
@@ -624,7 +668,9 @@
     "deleted": "Group deleted",
     "leave": "Leave group",
     "left": "You left {{name}}",
-    "ownerCannotLeave": "You are the owner. Make someone else the owner before you leave."
+    "ownerCannotLeave": "You are the owner. Make someone else the owner before you leave.",
+    "countInBudget": "Count my shares in my budget",
+    "countInBudgetHint": "From now on. Past months stay as they were."
   },
   "members": {
     "title": "Members",

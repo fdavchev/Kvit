@@ -16,7 +16,9 @@ namespace Kvit.Domain.Entities
 
         public long ShareMinor { get; private set; }
 
-        public static ExpenseShare Create(Guid expenseId, SplitShare share)
+        public bool CountsInBudget { get; private set; }
+
+        public static ExpenseShare Create(Guid expenseId, SplitShare share, bool countsInBudget)
         {
             return new ExpenseShare
             {
@@ -24,6 +26,7 @@ namespace Kvit.Domain.Entities
                 MemberId = share.MemberId,
                 InputValue = share.InputValue,
                 ShareMinor = share.Share.MinorUnits,
+                CountsInBudget = countsInBudget,
             };
         }
 

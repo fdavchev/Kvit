@@ -19,6 +19,16 @@ namespace Kvit.Infrastructure.Persistence
                 await DiscardAsync(context, cancellationToken);
                 throw new MemberChangedMeanwhileException(exception);
             }
+            catch (DbUpdateConcurrencyException exception) when (exception.Entries.Any(entry => entry.Entity is BudgetLimit))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new BudgetLimitChangedMeanwhileException(exception);
+            }
+            catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, BudgetLimitConfiguration.UserCategoryMonthIndexName))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new BudgetLimitChangedMeanwhileException(exception);
+            }
             catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, ExpenseConfiguration.ClientRequestIdIndexName, SettlementConfiguration.ClientRequestIdIndexName, PersonalEntryConfiguration.ClientRequestIdIndexName, RecurringIncomeConfiguration.ClientRequestIdIndexName))
             {
                 await DiscardAsync(context, cancellationToken);

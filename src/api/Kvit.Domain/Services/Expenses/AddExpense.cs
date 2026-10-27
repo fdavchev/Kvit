@@ -79,7 +79,7 @@ namespace Kvit.Domain.Services.Expenses
                 return rate.ToFailure<Guid>();
             }
 
-            Expense expense = Expense.Create(groupId, fields.Value, input.PaidByMemberId, shares.Value, rate.Value, userId, clientRequestId, now);
+            Expense expense = Expense.Create(groupId, fields.Value, input.PaidByMemberId, shares.Value, roster, rate.Value, userId, clientRequestId, now);
             _expenses.Add(expense);
             _activityEvents.Add(ActivityEvent.ExpenseAdded(groupId, userId, expense.Id, expense.Title, expense.AmountMinor, expense.Currency, now));
             _usageEvents.Add(UsageEvent.ExpenseAdded(userId, now));

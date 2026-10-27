@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addMonths, currentMonthInTimeZone, formatMonthLabel, recentMonths } from './calendarMonth'
+import { addMonths, currentMonthInTimeZone, formatMonthLabel, isCalendarMonth, recentMonths } from './calendarMonth'
 
 describe('currentMonthInTimeZone', () => {
   it('gives the month of the moment as year and month', () => {
@@ -43,6 +43,19 @@ describe('addMonths', () => {
     'throws for "%s", which is not a month like 2026-10',
     (text) => {
       expect(() => addMonths(text, 1)).toThrow(`Expected a month like 2026-10, got "${text}"`)
+    },
+  )
+})
+
+describe('isCalendarMonth', () => {
+  it.each(['2026-10', '2026-01', '2026-12', '0001-01', '9999-12'])('accepts "%s", a month like 2026-10', (text) => {
+    expect(isCalendarMonth(text)).toBe(true)
+  })
+
+  it.each(['2026-13', '2026-00', '2026-1', '26-10', '2026-10-01', 'October', ' 2026-10', ''])(
+    'refuses "%s", which is not a month like 2026-10',
+    (text) => {
+      expect(isCalendarMonth(text)).toBe(false)
     },
   )
 })

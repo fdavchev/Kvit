@@ -22,6 +22,7 @@ namespace Kvit.Api.Tests.Persistence
             string[] expectedTables =
             [
                 "activity_events",
+                "budget_limits",
                 "categories",
                 "closing_responses",
                 "data_protection_keys",

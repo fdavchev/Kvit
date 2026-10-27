@@ -28,6 +28,13 @@ namespace Kvit.Api.Controllers
             return Result(result);
         }
 
+        [HttpPut("budget-currency")]
+        public async Task<ActionResult> SetBudgetTotalCurrency(SetBudgetTotalCurrencyRequest request, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new SetBudgetTotalCurrencyCommand(request.BudgetTotalCurrency), cancellationToken);
+            return Result(result);
+        }
+
         [HttpPost("active")]
         public async Task<ActionResult> RecordActive(CancellationToken cancellationToken)
         {

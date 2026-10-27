@@ -1,5 +1,6 @@
 using Kvit.Contracts.Me;
 using Kvit.Domain.Accounts;
+using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 
 namespace Kvit.Contracts.Auth
@@ -29,5 +30,7 @@ namespace Kvit.Contracts.Auth
         Task LogOutAsync();
 
         Task<Result> ChangeLanguageAsync(Guid userId, string language, CancellationToken cancellationToken);
+
+        Task<Result> SetBudgetTotalCurrencyAsync(Guid userId, Currency? budgetTotalCurrency, CancellationToken cancellationToken);
     }
 }

@@ -81,6 +81,11 @@ namespace Kvit.Domain.Entities
             return (OwnerUserId is null || OwnerUserId == userId) && ArchivedAt is null;
         }
 
+        public bool CanHaveALimitOf(Guid userId)
+        {
+            return OwnerUserId is null || OwnerUserId == userId;
+        }
+
         public string BuiltInKey()
         {
             return Key ?? throw new InvalidOperationException($"Category {Id} is a custom category without a key, but only built-in categories can be on a group expense.");

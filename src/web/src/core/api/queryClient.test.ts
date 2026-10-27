@@ -101,7 +101,45 @@ describe('createQueryClient', () => {
     })
 
     it.each([
+      ['a 400 answer', apiError(400, 'PERSONAL_ENTRY_MONTH_INVALID')],
+      ['a 401 answer', apiError(401, 'AUTH_NOT_SIGNED_IN')],
+      ['a 403 answer', apiError(403, 'GUEST_NOT_ALLOWED')],
+      ['a 409 answer', apiError(409, 'SOMETHING_CHANGED')],
+      ['a 422 answer', apiError(422, null)],
+    ])('does not retry %s, because asking again cannot change it', (_name, error) => {
+      const retry = defaultQueryRetry()
+
+      expect(retry(0, error)).toBe(false)
+    })
+
+    it.each([
+      ['a 408 answer', apiError(408, null)],
+      ['a 425 answer', apiError(425, null)],
+    ])('retries %s up to three times and then gives up, because asking again can work', (_name, error) => {
+      const retry = defaultQueryRetry()
+
+      expect([0, 1, 2, 3].map((failureCount) => retry(failureCount, error))).toEqual([
+        true,
+        true,
+        true,
+        false,
+      ])
+    })
+
+    it.each([
+      ['a 407 answer', apiError(407, null)],
+      ['a 410 answer', apiError(410, null)],
+      ['a 426 answer', apiError(426, null)],
+      ['a 499 answer', apiError(499, null)],
+    ])('does not retry %s, the 4xx answers next to the ones worth retrying', (_name, error) => {
+      const retry = defaultQueryRetry()
+
+      expect(retry(0, error)).toBe(false)
+    })
+
+    it.each([
       ['a 500 answer', apiError(500, null)],
+      ['a 503 answer', apiError(503, null)],
       ['a network failure', apiError(null, null)],
       ['an error that is not an ApiError', new Error('boom')],
     ])('retries %s up to three times and then gives up', (_name, error) => {

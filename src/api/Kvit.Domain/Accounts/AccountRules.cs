@@ -1,5 +1,6 @@
 using System.Net.Mail;
 using System.Text.RegularExpressions;
+using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 
 namespace Kvit.Domain.Accounts
@@ -104,6 +105,24 @@ namespace Kvit.Domain.Accounts
             }
 
             return Result.Ok();
+        }
+
+        public static Result<Currency?> ValidateBudgetTotalCurrency(string? budgetTotalCurrency)
+        {
+            if (budgetTotalCurrency is null)
+            {
+                return Result.Ok<Currency?>(null);
+            }
+
+            foreach (Currency currency in Enum.GetValues<Currency>())
+            {
+                if (string.Equals(currency.ToString(), budgetTotalCurrency, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Result.Ok<Currency?>(currency);
+                }
+            }
+
+            return Result.Failure<Currency?>($"The budget total currency must be empty or one of: {string.Join(", ", Enum.GetNames<Currency>())}, not '{budgetTotalCurrency}'.", ResultCodes.ME_BUDGET_CURRENCY_INVALID);
         }
 
         public static Result ValidateTimeZone(string timeZone)

@@ -59,6 +59,7 @@ namespace Kvit.Domain.Entities
             ExpenseFields fields,
             Guid paidByMemberId,
             IReadOnlyList<SplitShare> shares,
+            GroupRoster roster,
             ExchangeRateSnapshot rate,
             Guid createdByUserId,
             Guid clientRequestId,
@@ -74,7 +75,7 @@ namespace Kvit.Domain.Entities
             };
             expense.ApplyFields(fields, paidByMemberId);
             expense.SaveRate(rate);
-            expense.ReplaceShares(shares);
+            expense.ReplaceShares(shares, roster);
 
             return expense;
         }
@@ -121,10 +122,10 @@ namespace Kvit.Domain.Entities
             return Result.Ok();
         }
 
-        public void Update(ExpenseFields fields, Guid paidByMemberId, IReadOnlyList<SplitShare> shares, Guid byUserId, DateTimeOffset updatedAt)
+        public void Update(ExpenseFields fields, Guid paidByMemberId, IReadOnlyList<SplitShare> shares, GroupRoster roster, Guid byUserId, DateTimeOffset updatedAt)
         {
             ApplyFields(fields, paidByMemberId);
-            ReplaceShares(shares);
+            ReplaceShares(shares, roster);
             UpdatedByUserId = byUserId;
             UpdatedAt = updatedAt;
         }
@@ -171,7 +172,7 @@ namespace Kvit.Domain.Entities
             PaidByMemberId = paidByMemberId;
         }
 
-        private void ReplaceShares(IReadOnlyList<SplitShare> shares)
+        private void ReplaceShares(IReadOnlyList<SplitShare> shares, GroupRoster roster)
         {
             _shares.RemoveAll(existing => !shares.Any(share => share.MemberId == existing.MemberId));
             foreach (SplitShare share in shares)
@@ -179,7 +180,7 @@ namespace Kvit.Domain.Entities
                 ExpenseShare? existing = _shares.SingleOrDefault(candidate => candidate.MemberId == share.MemberId);
                 if (existing is null)
                 {
-                    _shares.Add(ExpenseShare.Create(Id, share));
+                    _shares.Add(ExpenseShare.Create(Id, share, roster.RowOf(share.MemberId).Member.CountsInBudget));
                 }
                 else
                 {

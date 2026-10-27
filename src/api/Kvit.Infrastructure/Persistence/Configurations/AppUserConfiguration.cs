@@ -1,3 +1,4 @@
+using Kvit.Domain.MoneyRules;
 using Kvit.Infrastructure.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -20,6 +21,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
                 table.HasCheckConstraint(
                     "ck_users_guest_has_no_email_or_password",
                     "NOT is_guest OR (email IS NULL AND normalized_email IS NULL AND password_hash IS NULL)");
+                table.HasCheckConstraint("ck_users_budget_total_currency", EnumCheck.OneOf<Currency>("budget_total_currency"));
             });
 
             builder.HasIndex(user => user.NormalizedEmail).HasDatabaseName(NormalizedEmailIndexName).IsUnique();
@@ -30,6 +32,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
             builder.Property(user => user.LockoutCount).HasDefaultValue(0);
             builder.Property(user => user.MustChangePassword).HasDefaultValue(false);
             builder.Property(user => user.IsGuest).HasDefaultValue(false);
+            builder.Property(user => user.BudgetTotalCurrency).HasConversion<string>();
         }
     }
 }

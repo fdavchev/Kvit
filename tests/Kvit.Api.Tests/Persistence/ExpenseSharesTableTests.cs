@@ -34,7 +34,7 @@ namespace Kvit.Api.Tests.Persistence
         {
             List<string?> columns = await SchemaQueries.ColumnNamesAsync(_database, "expense_shares");
 
-            Assert.Equal(["expense_id", "input_value", "member_id", "share_minor"], columns);
+            Assert.Equal(["counts_in_budget", "expense_id", "input_value", "member_id", "share_minor"], columns);
         }
 
         [Fact]

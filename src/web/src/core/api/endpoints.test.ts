@@ -24,6 +24,8 @@ describe('endpoints', () => {
     ['personalCategories', '/api/personal/categories'],
     ['personalCategoriesWithArchived', '/api/personal/categories?includeArchived=true'],
     ['personalEntries', '/api/personal/entries'],
+    ['personalLimitsMonth', '/api/personal/limits/month'],
+    ['meBudgetCurrency', '/api/me/budget-currency'],
   ] as const)('has the path %s at %s', (name, path) => {
     expect(endpoints[name]).toBe(path)
   })
@@ -41,6 +43,7 @@ describe('endpoints', () => {
     ['groupActivity', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/activity'],
     ['groupBalances', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/balances'],
     ['groupSettlements', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/settlements'],
+    ['groupCountsInBudget', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/members/me/counts-in-budget'],
   ] as const)('builds the path %s for a group id as %s', (name, path) => {
     expect(endpoints[name](groupId)).toBe(path)
   })
@@ -85,6 +88,12 @@ describe('endpoints', () => {
     ['personalEntryRestore', '/api/personal/entries/f0000000-0000-4000-8000-000000000001/restore'],
   ] as const)('builds the path %s for a personal entry id as %s', (name, path) => {
     expect(endpoints[name](entryId)).toBe(path)
+  })
+
+  it('builds the path personalLimitsCategory for a personal category id as /api/personal/limits/categories/{id}', () => {
+    expect(endpoints.personalLimitsCategory(categoryId)).toBe(
+      '/api/personal/limits/categories/d0000000-0000-4000-8000-000000000001',
+    )
   })
 
   it('builds the path of one month of personal entries with the month as a query', () => {

@@ -2,6 +2,7 @@ import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import type {
+  ConvertedTotals,
   PersonalCurrencyTotal,
   PersonalIncomeTotal,
 } from '@/core/services/personalEntries/personalEntriesService'
@@ -10,6 +11,7 @@ import { KvitFitAmount, KvitFitRollingAmount } from '@/shared/components/KvitFit
 import { cn } from '@/shared/utils/cn'
 import { moneyParts, type Currency } from '@/shared/utils/formatMoney'
 import { signedMoneyParts } from '@/shared/utils/formatSignedMoney'
+import { includesConvertedKeys, inCurrencyKeys } from '../../convertedTotals'
 
 interface BudgetTotalCardProps {
   totals: readonly PersonalCurrencyTotal[]
@@ -104,6 +106,68 @@ export function BudgetTotalCard({ totals, incomeTotals }: BudgetTotalCardProps) 
           />
         </p>
       ))}
+    </section>
+  )
+}
+
+interface BudgetConvertedTotalCardProps {
+  converted: ConvertedTotals
+  hasConvertedItems: boolean
+}
+
+export function BudgetConvertedTotalCard({ converted, hasConvertedItems }: BudgetConvertedTotalCardProps) {
+  const { t } = useTranslation()
+  const { language } = useLanguage()
+  const labelId = useId()
+  const { currency } = converted
+  const spentMinor = converted.spendingMinor + converted.groupSharesMinor
+  const hasIncome = converted.incomeMinor > 0
+  const currencyLine = <p className={labelLook}>{t(inCurrencyKeys[currency])}</p>
+
+  return (
+    <section
+      aria-labelledby={labelId}
+      className={cn(balancesCardLook, 'mt-5 flex flex-col items-center gap-1 py-4 text-center')}
+    >
+      <p id={labelId} className={labelLook}>
+        {t(hasIncome ? 'budget.screen.leftThisMonth' : 'budget.screen.spentThisMonth')}
+      </p>
+      {hasIncome ? (
+        <>
+          <KvitFitRollingAmount
+            parts={moneyParts(converted.leftMinor, currency, language)}
+            data-total-amount="main"
+            className={cn(mainAmountLook, converted.leftMinor < 0 && 'text-negative')}
+          />
+          {currencyLine}
+          <div className="mt-1 grid w-full grid-cols-2 gap-2">
+            <p className="flex min-w-0 flex-col">
+              <span className={labelLook}>{t('budget.screen.income')}</span>
+              <KvitFitAmount
+                parts={signedMoneyParts(converted.incomeMinor, currency, language)}
+                data-income-amount=""
+                className="font-bold text-positive"
+              />
+            </p>
+            <p className="flex min-w-0 flex-col">
+              <span className={labelLook}>{t('budget.screen.spent')}</span>
+              <KvitFitAmount parts={moneyParts(spentMinor, currency, language)} data-spent-amount="" className="font-bold" />
+            </p>
+          </div>
+        </>
+      ) : (
+        <>
+          <KvitFitRollingAmount
+            parts={moneyParts(spentMinor, currency, language)}
+            data-total-amount="main"
+            className={mainAmountLook}
+          />
+          {currencyLine}
+        </>
+      )}
+      {hasConvertedItems && (
+        <p className="mt-1 text-[0.8125rem] text-muted-foreground">{t(includesConvertedKeys[currency])}</p>
+      )}
     </section>
   )
 }

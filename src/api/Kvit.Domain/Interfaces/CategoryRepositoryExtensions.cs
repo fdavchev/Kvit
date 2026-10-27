@@ -32,6 +32,17 @@ namespace Kvit.Domain.Interfaces
             return Result.Ok();
         }
 
+        public static async Task<Result> CheckBudgetLimitCategoryAsync(this ICategoryRepository categories, Guid userId, Guid categoryId, CancellationToken cancellationToken)
+        {
+            Category? category = await categories.FindAsync(categoryId, cancellationToken);
+            if (category is null || !category.CanHaveALimitOf(userId))
+            {
+                return Result.NotFound($"Category {categoryId} is neither a built-in category nor one of your own categories.", ResultCodes.CATEGORY_NOT_FOUND);
+            }
+
+            return Result.Ok();
+        }
+
         public static async Task<string> StoredKeyAsync(this ICategoryRepository categories, Guid? categoryId, CancellationToken cancellationToken)
         {
             if (categoryId is not Guid id)

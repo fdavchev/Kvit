@@ -20,6 +20,7 @@ namespace Kvit.Api.Tests.Persistence
         [InlineData("lockout_count", "integer")]
         [InlineData("must_change_password", "boolean")]
         [InlineData("is_guest", "boolean")]
+        [InlineData("budget_total_currency", "text")]
         public async Task Column_HasTheExpectedType(string column, string expectedDataType)
         {
             string? dataType = await SchemaQueries.DataTypeAsync(_database, "users", column);
@@ -37,6 +38,7 @@ namespace Kvit.Api.Tests.Persistence
         [InlineData("lockout_count", "NO")]
         [InlineData("must_change_password", "NO")]
         [InlineData("is_guest", "NO")]
+        [InlineData("budget_total_currency", "YES")]
         public async Task Column_HasTheExpectedNullability(string column, string expectedIsNullable)
         {
             string? isNullable = await SchemaQueries.IsNullableAsync(_database, "users", column);

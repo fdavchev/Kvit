@@ -8,6 +8,7 @@ import { SignUpScreen } from '@/features/auth/signUp/components/SignUpScreen'
 import { WelcomeScreen } from '@/features/auth/welcome/components/WelcomeScreen'
 import { BudgetScreen } from '@/features/budget/overview/components/BudgetScreen'
 import { RecurringIncomeScreen } from '@/features/budget/recurring/components/RecurringIncomeScreen'
+import { BudgetSummaryScreen } from '@/features/budget/summary/components/BudgetSummaryScreen'
 import { AddExpenseScreen } from '@/features/expenses/add/components/AddExpenseScreen'
 import { RecentlyDeletedExpensesScreen } from '@/features/expenses/deleted/components/RecentlyDeletedExpensesScreen'
 import { ExpenseDetailScreen } from '@/features/expenses/detail/components/ExpenseDetailScreen'
@@ -59,6 +60,7 @@ export const routeObjects: RouteObject[] = [
                 children: [
                   { path: routes.budget, element: <BudgetScreen /> },
                   { path: routes.budgetRepeating, element: <RecurringIncomeScreen /> },
+                  { path: routes.budgetSummary, element: <BudgetSummaryScreen /> },
                 ],
               },
               { path: routes.settings, element: <SettingsScreen /> },
