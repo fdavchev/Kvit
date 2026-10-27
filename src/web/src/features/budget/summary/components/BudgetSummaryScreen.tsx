@@ -17,8 +17,9 @@ import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
-import { addMonths, currentMonthInTimeZone, formatMonthLabel } from '@/shared/utils/calendarMonth'
+import { addMonths, currentMonthInTimeZone, formatMonthLabel, isCalendarMonth } from '@/shared/utils/calendarMonth'
 import { usePersonalCategoriesWithArchived } from '../../categories/hooks/usePersonalCategoriesWithArchived'
+import { convertedTotalsInSetting } from '../../convertedTotals'
 import { usePersonalSummary } from '../hooks/usePersonalSummary'
 import { SummaryCards } from './SummaryCards'
 
@@ -27,11 +28,34 @@ const monthRefusedCode = 'PERSONAL_ENTRY_MONTH_INVALID'
 
 export function BudgetSummaryScreen() {
   const { t } = useTranslation()
-  const { language } = useLanguage()
   const me = useSignedInMe()
   const [searchParams] = useSearchParams()
   const [currentMonth] = useState<string>(() => currentMonthInTimeZone(me.timeZone, new Date()))
   const month = searchParams.get('month') ?? currentMonth
+
+  if (!isCalendarMonth(month)) {
+    return (
+      <KvitScreen>
+        <div className="flex min-h-12">
+          <KvitBackButton to={routes.budget} />
+        </div>
+        <KvitScreenTitle>{t('budget.summary.row')}</KvitScreenTitle>
+        <RefusedMonthError message={t(`errors.${monthRefusedCode}`)} />
+      </KvitScreen>
+    )
+  }
+  return <MonthSummary month={month} currentMonth={currentMonth} />
+}
+
+interface MonthSummaryProps {
+  month: string
+  currentMonth: string
+}
+
+function MonthSummary({ month, currentMonth }: MonthSummaryProps) {
+  const { t } = useTranslation()
+  const { language } = useLanguage()
+  const me = useSignedInMe()
   const previousMonth = addMonths(month, -1)
   const summaryQuery = usePersonalSummary(month)
 
@@ -42,16 +66,7 @@ export function BudgetSummaryScreen() {
     if (summaryQuery.isError) {
       const message = t(errorMessageKey(summaryQuery.error))
       if (hasErrorCode(summaryQuery.error, monthRefusedCode)) {
-        return (
-          <KvitError
-            message={message}
-            action={
-              <KvitLinkButton to={routes.budget} variant="secondary">
-                {t('budget.summary.toBudget')}
-              </KvitLinkButton>
-            }
-          />
-        )
+        return <RefusedMonthError message={message} />
       }
       return <KvitError message={message} onRetry={() => void summaryQuery.refetch()} />
     }
@@ -66,8 +81,7 @@ export function BudgetSummaryScreen() {
         </div>
       )
     }
-    const converted =
-      convertedTotals !== null && convertedTotals.currency === me.budgetTotalCurrency ? convertedTotals : null
+    const converted = convertedTotalsInSetting(convertedTotals, me.budgetTotalCurrency)
     if (currencies.every((row) => row.categories.length === 0)) {
       return <SummaryCards currencies={currencies} converted={converted} categories={[]} />
     }
@@ -87,6 +101,25 @@ export function BudgetSummaryScreen() {
       </KvitScreenTitle>
       {renderContent()}
     </KvitScreen>
+  )
+}
+
+interface RefusedMonthErrorProps {
+  message: string
+}
+
+function RefusedMonthError({ message }: RefusedMonthErrorProps) {
+  const { t } = useTranslation()
+
+  return (
+    <KvitError
+      message={message}
+      action={
+        <KvitLinkButton to={routes.budget} variant="secondary">
+          {t('budget.summary.toBudget')}
+        </KvitLinkButton>
+      }
+    />
   )
 }
 

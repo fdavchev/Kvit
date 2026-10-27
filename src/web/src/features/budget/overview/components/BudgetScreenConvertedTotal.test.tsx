@@ -313,6 +313,16 @@ describe('BudgetScreen, the converted total', () => {
       expect(within(card).queryByText(translated('en', 'budget.card.inMkd'))).toBeNull()
     })
 
+    it('keeps the card per currency when the converted totals of a saved month are in euro and the setting is MKD', async () => {
+      await renderBudget({ me: meWithTotalIn('MKD'), months: [octoberWithGroupSharesConvertedToEur] })
+
+      const card = await findTotalCard()
+
+      expect(amountTexts(card, leftAttribute)).toEqual([money(629000, 'MKD'), money(2050, 'EUR')])
+      expect(within(card).queryByText(translated('en', 'budget.card.inMkd'))).toBeNull()
+      expect(within(card).queryByText(translated('en', 'budget.card.inEur'))).toBeNull()
+    })
+
     it('keeps the Left card per currency when the setting is off', async () => {
       await renderBudget({ me: meWithTotalIn(null), months: [{ ...octoberWithSalaryAndGroupSharesConvertedToMkd, convertedTotals: null }] })
 

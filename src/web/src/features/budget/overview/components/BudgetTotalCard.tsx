@@ -11,6 +11,7 @@ import { KvitFitAmount, KvitFitRollingAmount } from '@/shared/components/KvitFit
 import { cn } from '@/shared/utils/cn'
 import { moneyParts, type Currency } from '@/shared/utils/formatMoney'
 import { signedMoneyParts } from '@/shared/utils/formatSignedMoney'
+import { includesConvertedKeys, inCurrencyKeys } from '../../convertedTotals'
 
 interface BudgetTotalCardProps {
   totals: readonly PersonalCurrencyTotal[]
@@ -112,12 +113,6 @@ export function BudgetTotalCard({ totals, incomeTotals }: BudgetTotalCardProps) 
 interface BudgetConvertedTotalCardProps {
   converted: ConvertedTotals
   hasConvertedItems: boolean
-}
-
-const inCurrencyKeys: Record<Currency, string> = { MKD: 'budget.card.inMkd', EUR: 'budget.card.inEur' }
-const includesConvertedKeys: Record<Currency, string> = {
-  MKD: 'budget.card.includesConvertedEuro',
-  EUR: 'budget.card.includesConvertedDenars',
 }
 
 export function BudgetConvertedTotalCard({ converted, hasConvertedItems }: BudgetConvertedTotalCardProps) {

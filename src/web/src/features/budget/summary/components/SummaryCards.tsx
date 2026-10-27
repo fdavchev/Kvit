@@ -13,6 +13,7 @@ import { cn } from '@/shared/utils/cn'
 import { currencyLabel, moneyParts, type Currency } from '@/shared/utils/formatMoney'
 import { signedMoneyParts } from '@/shared/utils/formatSignedMoney'
 import { personalCategoryName } from '../../categories/personalCategoryName'
+import { includesConvertedKeys, inCurrencyKeys } from '../../convertedTotals'
 import { summaryChangeOf, type SummaryChange, type SummaryDirection } from '../summaryChange'
 
 type TotalKind = 'spending' | 'income'
@@ -23,11 +24,6 @@ interface SummaryCardsProps {
   categories: readonly PersonalCategory[]
 }
 
-const inCurrencyKeys: Record<Currency, string> = { MKD: 'budget.card.inMkd', EUR: 'budget.card.inEur' }
-const includesConvertedKeys: Record<Currency, string> = {
-  MKD: 'budget.card.includesConvertedEuro',
-  EUR: 'budget.card.includesConvertedDenars',
-}
 const arrows: Record<'up' | 'down' | 'new', string> = { up: '\u{25B2}', down: '\u{25BC}', new: '\u{25B2}' }
 const smallLook = 'text-[0.8125rem]'
 

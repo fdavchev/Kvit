@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { languages } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import { money, readableText } from '@/test/budgetLeftCardTestHelpers'
@@ -48,6 +48,11 @@ import { translated } from '@/test/translated'
 vi.mock('sonner', async () => (await import('@/test/sonnerMock')).sonnerMock)
 
 const categoriesUrl = '/api/personal/categories?includeArchived=true'
+const malformedMonths = ['abc', 'october', '2026-13', '2026-00', '2026-8', '2026-08-05', '']
+
+function requestsStartingWith(fetchMock: Mock<typeof fetch>, urlStart: string): string[] {
+  return fetchMock.mock.calls.map((call) => String(call[0])).filter((url) => url.startsWith(urlStart))
+}
 
 function failingThenAnswering(failure: AnswerFactory, success: AnswerFactory): AnswerFactory {
   let calls = 0
@@ -180,14 +185,59 @@ describe('the monthly summary screen', () => {
       expect(screen.getByRole('link', { name: translated('en', 'common.back') })).toBeTruthy()
     })
 
-    it('fails with the screen error and sends no request when the month in the address is not a month', async () => {
-      vi.spyOn(console, 'error').mockImplementation(() => {})
+    it.each(malformedMonths)('shows the message of a refused month, with a link to the Budget tab and no Try again, when the month in the address is "%s"', async (month) => {
+      await renderSummaryScreen({ path: summaryPath(month) })
 
-      const { fetchMock } = await renderSummaryScreen({ path: `${routes.budgetSummary}?month=october` })
+      const alert = await screen.findByRole('alert')
 
-      expect(await screen.findByRole('alert')).toBeTruthy()
-      expect(screen.getByText(translated('en', 'errors.generic'))).toBeTruthy()
-      expect(requestCount(fetchMock, 'GET', '/api/personal/summary?month=october')).toBe(0)
+      expect(within(alert).getByText(translated('en', 'errors.PERSONAL_ENTRY_MONTH_INVALID'))).toBeTruthy()
+      expect(within(alert).getByRole('link', { name: translated('en', 'budget.summary.toBudget') }).getAttribute('href')).toBe(routes.budget)
+      expect(within(alert).queryByRole('button', { name: translated('en', 'common.retry') })).toBeNull()
+      expect(screen.queryByText(translated('en', 'errors.generic'))).toBeNull()
+    })
+
+    it.each(languages)('translates the message of a malformed month (%s)', async (language) => {
+      await renderSummaryScreen({ language, path: summaryPath('abc') })
+
+      const alert = await screen.findByRole('alert')
+
+      expect(within(alert).getByText(translated(language, 'errors.PERSONAL_ENTRY_MONTH_INVALID'))).toBeTruthy()
+      expect(within(alert).getByRole('link', { name: translated(language, 'budget.summary.toBudget') })).toBeTruthy()
+    })
+
+    it.each(malformedMonths)('sends no request for the summary or the categories when the month in the address is "%s"', async (month) => {
+      const { fetchMock } = await renderSummaryScreen({ path: summaryPath(month) })
+      await screen.findByRole('alert')
+
+      expect(requestsStartingWith(fetchMock, '/api/personal/summary')).toEqual([])
+      expect(requestCount(fetchMock, 'GET', categoriesUrl)).toBe(0)
+    })
+
+    it.each(languages)('shows the plain heading "Summary" instead of two months when the month in the address is malformed (%s)', async (language) => {
+      await renderSummaryScreen({ language, path: summaryPath('2026-13') })
+
+      expect(await findSummaryHeading(translated(language, 'budget.summary.row'))).toBeTruthy()
+      expect(screen.queryByText(translated(language, 'errors.generic'))).toBeNull()
+    })
+
+    it('points the Back link at the Budget tab without a month when the month in the address is malformed', async () => {
+      await renderSummaryScreen({ path: summaryPath('abc') })
+      await screen.findByRole('alert')
+
+      const back = screen.getByRole('link', { name: translated('en', 'common.back') })
+
+      expect(back.getAttribute('href')).toBe(routes.budget)
+    })
+
+    it('goes to the Budget tab with one tap on the link of a malformed month', async () => {
+      const { router } = await renderSummaryScreen({ path: summaryPath('abc') })
+      const alert = await screen.findByRole('alert')
+
+      fireEvent.click(within(alert).getByRole('link', { name: translated('en', 'budget.summary.toBudget') }))
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.budget)
+      })
     })
   })
 

@@ -25,6 +25,7 @@ import { cn } from '@/shared/utils/cn'
 import { todayInTimeZone } from '@/shared/utils/formatDate'
 import { budgetMonths } from '../../budgetMonths'
 import { usePersonalCategories } from '../../categories/hooks/usePersonalCategories'
+import { convertedTotalsInSetting } from '../../convertedTotals'
 import { PersonalIncomeSheet } from '../../entries/components/PersonalIncomeSheet'
 import { PersonalSpendingSheet } from '../../entries/components/PersonalSpendingSheet'
 import { usePersonalEntries } from '../../entries/hooks/usePersonalEntries'
@@ -190,8 +191,7 @@ export function BudgetScreen() {
     }
     const spending = spendingWithGroupShares(totals, groupShares, categories)
     const tileTotals = spending.filter((total) => total.categories.length > 0)
-    const converted =
-      convertedTotals !== null && convertedTotals.currency === me.budgetTotalCurrency ? convertedTotals : null
+    const converted = convertedTotalsInSetting(convertedTotals, me.budgetTotalCurrency)
     return (
       <>
         {spending.length === 0 && incomeTotals.length === 0 ? (
