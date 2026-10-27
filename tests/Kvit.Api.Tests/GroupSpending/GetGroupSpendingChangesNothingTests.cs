@@ -11,6 +11,8 @@ namespace Kvit.Api.Tests.GroupSpending
 {
     public class GetGroupSpendingChangesNothingTests(ExpensesApp _app) : IClassFixture<ExpensesApp>
     {
+        private const string PlanFieldPrefix = "\"plan";
+
         private static readonly string[] ForbiddenWords = ["\"plan\"", "\"spending\"", "\"categories\"", "\"totalMinor\""];
 
         [Fact]
@@ -67,11 +69,16 @@ namespace Kvit.Api.Tests.GroupSpending
                 {
                     Assert.DoesNotContain(word, body, StringComparison.Ordinal);
                 }
+
+                if (response != groupAnswer)
+                {
+                    Assert.DoesNotContain(PlanFieldPrefix, body, StringComparison.Ordinal);
+                }
             }
         }
 
         [Fact]
-        public async Task GetGroup_AfterTheSpendingAnswer_StillHasExactlyTheSixteenGroupFields()
+        public async Task GetGroup_AfterTheSpendingAnswer_HasExactlyTheEighteenGroupFields()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             await GroupSpendingSteps.AddAsync(_app, group, ExpenseInputs.OneThousandMkd, categoryId: GroupSpendingSteps.Food);

@@ -75,7 +75,7 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                     b.ToTable("activity_events", null, t =>
                         {
-                            t.HasCheckConstraint("ck_activity_events_type", "type IN ('GroupCreated', 'GroupRenamed', 'GroupSettingsChanged', 'InviteLinkReset', 'MemberAdded', 'MemberJoined', 'MemberClaimed', 'ClaimUndone', 'MemberRemoved', 'MemberLeft', 'OwnershipTransferred', 'MemberLetBackIn', 'InviteLinkRestored', 'ExpenseAdded', 'ExpenseEdited', 'ExpenseDeleted', 'ExpenseRestored', 'SettlementRecorded', 'SettlementConfirmed', 'SettlementRejected', 'SettlementCancelled', 'SettlementDeleted', 'SettlementRestored', 'ClosingStarted', 'ClosingConfirmed', 'ClosingObjected', 'ClosingCancelled', 'GroupFinished', 'GroupReopened', 'GroupDeleted', 'GroupRestored', 'GuestLetInAgain')");
+                            t.HasCheckConstraint("ck_activity_events_type", "type IN ('GroupCreated', 'GroupRenamed', 'GroupSettingsChanged', 'InviteLinkReset', 'MemberAdded', 'MemberJoined', 'MemberClaimed', 'ClaimUndone', 'MemberRemoved', 'MemberLeft', 'OwnershipTransferred', 'MemberLetBackIn', 'InviteLinkRestored', 'ExpenseAdded', 'ExpenseEdited', 'ExpenseDeleted', 'ExpenseRestored', 'SettlementRecorded', 'SettlementConfirmed', 'SettlementRejected', 'SettlementCancelled', 'SettlementDeleted', 'SettlementRestored', 'ClosingStarted', 'ClosingConfirmed', 'ClosingObjected', 'ClosingCancelled', 'GroupFinished', 'GroupReopened', 'GroupDeleted', 'GroupRestored', 'GuestLetInAgain', 'GroupPlanSet', 'GroupPlanRemoved')");
                         });
                 });
 
@@ -601,6 +601,14 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("owner_user_id");
 
+                    b.Property<long?>("PlanAmountMinor")
+                        .HasColumnType("bigint")
+                        .HasColumnName("plan_amount_minor");
+
+                    b.Property<string>("PlanCurrency")
+                        .HasColumnType("text")
+                        .HasColumnName("plan_currency");
+
                     b.Property<string>("PreviousInviteToken")
                         .HasColumnType("text")
                         .HasColumnName("previous_invite_token");
@@ -627,6 +635,14 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_groups_kind", "kind IN ('OneBill', 'Group')");
 
                             t.HasCheckConstraint("ck_groups_name_not_empty", "char_length(name) >= 1");
+
+                            t.HasCheckConstraint("ck_groups_plan_amount_minor", "plan_amount_minor > 0 AND plan_amount_minor <= 999999999999");
+
+                            t.HasCheckConstraint("ck_groups_plan_both_or_neither", "(plan_amount_minor IS NULL) = (plan_currency IS NULL)");
+
+                            t.HasCheckConstraint("ck_groups_plan_currency", "plan_currency IN ('MKD', 'EUR')");
+
+                            t.HasCheckConstraint("ck_groups_plan_mkd_whole_denars", "plan_currency <> 'MKD' OR plan_amount_minor % 100 = 0");
 
                             t.HasCheckConstraint("ck_groups_status", "status IN ('Open', 'Closing', 'Finished')");
                         });

@@ -34,13 +34,24 @@ namespace Kvit.Domain.Entities
                 return Result.Failure<GroupSettings>($"The group emoji must have 1 to {EmojiMaxLength} characters.", ResultCodes.GROUP_EMOJI_INVALID);
             }
 
-            string[] currencyNames = Enum.GetNames<Currency>();
-            if (!currencyNames.Contains(currency, StringComparer.Ordinal))
+            Result<Currency> defaultCurrency = CurrencyOf(currency);
+            if (!defaultCurrency.IsSuccess)
             {
-                return Result.Failure<GroupSettings>($"'{currency}' is not a supported currency. Use one of: {string.Join(", ", currencyNames)}.", ResultCodes.GROUP_CURRENCY_INVALID);
+                return defaultCurrency.ToFailure<GroupSettings>();
             }
 
-            return Result.Ok(new GroupSettings(trimmedName, emoji, Enum.Parse<Currency>(currency)));
+            return Result.Ok(new GroupSettings(trimmedName, emoji, defaultCurrency.Value));
+        }
+
+        public static Result<Currency> CurrencyOf(string? currency)
+        {
+            string[] currencyNames = Enum.GetNames<Currency>();
+            if (currency is null || !currencyNames.Contains(currency, StringComparer.Ordinal))
+            {
+                return Result.Failure<Currency>($"'{currency}' is not a supported currency. Use one of: {string.Join(", ", currencyNames)}.", ResultCodes.GROUP_CURRENCY_INVALID);
+            }
+
+            return Result.Ok(Enum.Parse<Currency>(currency));
         }
     }
 }

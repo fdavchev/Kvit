@@ -208,6 +208,10 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
         return [t('activity.groupFinished')]
       case 'GroupReopened':
         return [t('activity.groupReopened', { name })]
+      case 'GroupPlanSet':
+        return [t('activity.groupPlanSet', { name, amount: money(dataOf(event), `the data of the ${event.type} event`) })]
+      case 'GroupPlanRemoved':
+        return [t('activity.groupPlanRemoved', { name })]
       default:
         throw new Error(`The activity has an event type Kvit has no sentence for: "${event.type}"`)
     }

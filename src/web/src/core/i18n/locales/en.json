@@ -50,6 +50,7 @@
     "GROUP_NAME_INVALID": "Enter a name (up to 60 characters).",
     "GROUP_EMOJI_INVALID": "Pick an emoji.",
     "GROUP_CURRENCY_INVALID": "Pick MKD or EUR.",
+    "GROUP_PLAN_AMOUNT_INVALID": "Type a plan amount above 0 (whole denars for MKD).",
     "GROUP_NOT_DELETED": "This group is not deleted.",
     "GROUP_RESTORE_EXPIRED": "This group was deleted more than 30 days ago and can't be restored.",
     "GROUP_BALANCES_NOT_ZERO": "Settle up first. A group can be deleted only when everyone's balance is 0.",
@@ -434,7 +435,9 @@
     "closingObjectedWithReason": "{{name}} objected to the closing: “{{reason}}”",
     "closingCancelled": "{{name}} cancelled the closing",
     "groupFinished": "The group finished",
-    "groupReopened": "{{name}} unlocked the group"
+    "groupReopened": "{{name}} unlocked the group",
+    "groupPlanSet": "{{name}} set the plan to {{amount}}",
+    "groupPlanRemoved": "{{name}} removed the plan"
   },
   "balances": {
     "title": "Balances",

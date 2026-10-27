@@ -50,6 +50,7 @@
     "GROUP_NAME_INVALID": "Внеси име (најмногу 60 знаци).",
     "GROUP_EMOJI_INVALID": "Избери емоџи.",
     "GROUP_CURRENCY_INVALID": "Избери MKD или EUR.",
+    "GROUP_PLAN_AMOUNT_INVALID": "Внеси износ за планот поголем од 0 (цели денари за MKD).",
     "GROUP_NOT_DELETED": "Оваа група не е избришана.",
     "GROUP_RESTORE_EXPIRED": "Оваа група е избришана пред повеќе од 30 дена и не може да се врати.",
     "GROUP_BALANCES_NOT_ZERO": "Прво порамнете се. Групата може да се избрише само кога салдото на секого е 0.",
@@ -434,7 +435,9 @@
     "closingObjectedWithReason": "{{name}} приговори на затворањето: „{{reason}}“",
     "closingCancelled": "{{name}} го откажа затворањето",
     "groupFinished": "Групата заврши",
-    "groupReopened": "{{name}} ја отклучи групата"
+    "groupReopened": "{{name}} ја отклучи групата",
+    "groupPlanSet": "{{name}} постави план од {{amount}}",
+    "groupPlanRemoved": "{{name}} го отстрани планот"
   },
   "balances": {
     "title": "Салда",

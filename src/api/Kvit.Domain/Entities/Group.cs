@@ -46,6 +46,10 @@ namespace Kvit.Domain.Entities
 
         public Guid? DeletedByUserId { get; private set; }
 
+        public long? PlanAmountMinor { get; private set; }
+
+        public Currency? PlanCurrency { get; private set; }
+
         public static Result<Group> Create(string name, string emoji, string currency, Guid ownerUserId, string inviteToken, DateTimeOffset createdAt)
         {
             return New(GroupKind.Group, name, emoji, currency, ownerUserId, inviteToken, createdAt);
@@ -242,6 +246,53 @@ namespace Kvit.Domain.Entities
             return Result.Ok(new GroupChanges(nameChange, settingsChanges));
         }
 
+        public static Result<Money> CheckPlan(long? amountMinor, string? currency)
+        {
+            if (amountMinor is not long amount || amount <= 0 || amount > ExpenseFields.AmountMaxMinorUnits)
+            {
+                return PlanAmountInvalid(amountMinor);
+            }
+
+            Result<Currency> planCurrency = GroupSettings.CurrencyOf(currency);
+            if (!planCurrency.IsSuccess)
+            {
+                return planCurrency.ToFailure<Money>();
+            }
+
+            if (amount % CurrencyRules.StepMinorUnits(planCurrency.Value) != 0)
+            {
+                return PlanAmountInvalid(amountMinor);
+            }
+
+            return Money.Create(amount, planCurrency.Value);
+        }
+
+        public bool SetPlan(Money plan)
+        {
+            if (PlanAmountMinor == plan.MinorUnits && PlanCurrency == plan.Currency)
+            {
+                return false;
+            }
+
+            PlanAmountMinor = plan.MinorUnits;
+            PlanCurrency = plan.Currency;
+
+            return true;
+        }
+
+        public bool RemovePlan()
+        {
+            if (PlanAmountMinor is null && PlanCurrency is null)
+            {
+                return false;
+            }
+
+            PlanAmountMinor = null;
+            PlanCurrency = null;
+
+            return true;
+        }
+
         public void ResetInvite(string newToken, DateTimeOffset resetAt)
         {
             PreviousInviteToken = InviteToken;
@@ -318,6 +369,13 @@ namespace Kvit.Domain.Entities
             }
 
             return null;
+        }
+
+        private static Result<Money> PlanAmountInvalid(long? amountMinor)
+        {
+            return Result.Failure<Money>(
+                $"A plan must be a whole number of minor units, more than 0, at most {ExpenseFields.AmountMaxMinorUnits} and whole denars for MKD; got {amountMinor?.ToString(CultureInfo.InvariantCulture) ?? "no whole number"}.",
+                ResultCodes.GROUP_PLAN_AMOUNT_INVALID);
         }
 
         private static Result<Group> New(GroupKind kind, string name, string emoji, string currency, Guid ownerUserId, string inviteToken, DateTimeOffset createdAt)

@@ -9,7 +9,7 @@ _Last updated: 2026-10-26 (Phase 15 built, browser-checked and code-reviewed; wa
 - Nothing is pushed.
 
 ## Next step
-1. Steps 0 to 2 are done (backend 5603 of 5603). Step 3: backend, group spending plan (migration `GroupPlan`): tester first, then coder after Filip's go.
+1. Steps 0 to 3 are done (backend 5884 of 5884, frontend 10704). Filip: apply the `GroupPlan` migration locally. Next is Step 4: frontend, possible duplicates (tester first, coder after Filip's go).
 
 ## Then
 - Filip, once on the real site: one real EUR expense (first real NBRM call), a real Google picture in a circle, the Google button inside the Log in sheet and "Make an account", the invite link on his phone, and a read of the Macedonian drafts of Phases 9 to 15.

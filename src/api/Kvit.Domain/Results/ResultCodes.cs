@@ -95,6 +95,7 @@ namespace Kvit.Domain.Results
         public const string GROUP_NAME_INVALID = "GROUP_NAME_INVALID";
         public const string GROUP_EMOJI_INVALID = "GROUP_EMOJI_INVALID";
         public const string GROUP_CURRENCY_INVALID = "GROUP_CURRENCY_INVALID";
+        public const string GROUP_PLAN_AMOUNT_INVALID = "GROUP_PLAN_AMOUNT_INVALID";
         public const string GROUP_NOT_DELETED = "GROUP_NOT_DELETED";
         public const string GROUP_RESTORE_EXPIRED = "GROUP_RESTORE_EXPIRED";
         public const string GROUP_BALANCES_NOT_ZERO = "GROUP_BALANCES_NOT_ZERO";

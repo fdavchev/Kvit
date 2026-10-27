@@ -34,5 +34,7 @@ namespace Kvit.Domain.Entities
         GroupDeleted,
         GroupRestored,
         GuestLetInAgain,
+        GroupPlanSet,
+        GroupPlanRemoved,
     }
 }

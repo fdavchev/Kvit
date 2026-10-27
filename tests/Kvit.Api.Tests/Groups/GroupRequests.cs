@@ -37,6 +37,8 @@ namespace Kvit.Api.Tests.Groups
             "memberCount",
             "name",
             "ownerUserId",
+            "planAmountMinor",
+            "planCurrency",
             "status",
         ];
 

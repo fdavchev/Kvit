@@ -62,7 +62,9 @@ namespace Kvit.Application.Queries.Groups
                 confirmedBy,
                 waitingFor,
                 await CanStartClosingAsync(group, userId.Value, now, cancellationToken),
-                detail.CountsInBudget));
+                detail.CountsInBudget,
+                group.PlanAmountMinor,
+                group.PlanCurrency));
         }
 
         private static ClosingMemberRow ClosingMemberRowOf(NamedMember row)

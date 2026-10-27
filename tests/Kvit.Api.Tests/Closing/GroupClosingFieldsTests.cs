@@ -10,7 +10,7 @@ namespace Kvit.Api.Tests.Closing
     public class GroupClosingFieldsTests(ExpensesApp _app) : IClassFixture<ExpensesApp>
     {
         [Fact]
-        public async Task Get_OpenGroup_AnswersExactlyTheSixteenFieldsWithNoClosingTimesAndEmptyLists()
+        public async Task Get_OpenGroup_AnswersExactlyTheEighteenFieldsWithNoClosingTimesAndEmptyLists()
         {
             SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
 

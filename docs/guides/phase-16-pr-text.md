@@ -24,13 +24,13 @@ Last phase of Release 2 ("budget"). Kvit asks once when a group share looks like
 
 ### Database changes
 - Migration `DuplicateAnswers` (done): new table `duplicate_answers` (starts empty, so nothing changes for anyone until a question is answered).
-- Migration `GroupPlan` (still to come): adds `groups.plan_amount_minor` and `groups.plan_currency` (empty for every existing group).
+- Migration `GroupPlan` (done): adds `groups.plan_amount_minor` and `groups.plan_currency` (empty for every existing group).
 
 ### Checklist
 - [x] Step 0: mockup, picks logged in DECISIONS
 - [x] Step 1: backend, possible duplicates
 - [x] Step 2: backend, group totals per category
-- [ ] Step 3: backend, group spending plan
+- [x] Step 3: backend, group spending plan
 - [ ] Step 4: frontend, possible duplicates
 - [ ] Step 5: frontend, group totals
 - [ ] Step 6: frontend, group plan and the two leftovers
@@ -40,4 +40,6 @@ Last phase of Release 2 ("budget"). Kvit asks once when a group share looks like
 ## Later one-line commit subjects
 - Step 2 tests (red on purpose, before the coder): Add the failing tests for the group totals per category endpoint.
 - Step 2 (after the coder): Add the group totals per category endpoint with its tests.
+- Steps 2 and 3 tests together (red on purpose): Add the group totals per category endpoint, and the failing tests for the group spending plan.
+- Steps 2 and 3 after the coder: Add the group totals per category endpoint and the group spending plan, with the GroupPlan migration.
 (more are added after each step)

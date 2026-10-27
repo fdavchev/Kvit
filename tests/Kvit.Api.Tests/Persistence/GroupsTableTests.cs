@@ -25,6 +25,8 @@ namespace Kvit.Api.Tests.Persistence
         [InlineData("created_at", "timestamp with time zone")]
         [InlineData("deleted_at", "timestamp with time zone")]
         [InlineData("deleted_by_user_id", "uuid")]
+        [InlineData("plan_amount_minor", "bigint")]
+        [InlineData("plan_currency", "text")]
         public async Task Column_HasTheExpectedType(string column, string expectedDataType)
         {
             string? dataType = await SchemaQueries.DataTypeAsync(_database, "groups", column);
@@ -49,6 +51,8 @@ namespace Kvit.Api.Tests.Persistence
         [InlineData("created_at", "NO")]
         [InlineData("deleted_at", "YES")]
         [InlineData("deleted_by_user_id", "YES")]
+        [InlineData("plan_amount_minor", "YES")]
+        [InlineData("plan_currency", "YES")]
         public async Task Column_HasTheExpectedNullability(string column, string expectedIsNullable)
         {
             string? isNullable = await SchemaQueries.IsNullableAsync(_database, "groups", column);
