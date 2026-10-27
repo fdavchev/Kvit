@@ -626,6 +626,16 @@
     "groupShares": {
       "title": "From groups"
     },
+    "duplicates": {
+      "title": "Is this the same?",
+      "body": "Your “{{entry}}” ({{entryAmount}}, {{entryDay}}) and your share of “{{expense}}” in {{group}} ({{shareAmount}}, {{expenseDay}}).",
+      "same": "Same, merge",
+      "new": "No, it's new",
+      "mergedWith": "Merged with {{expense}} · {{group}}",
+      "mergedWithGroupExpense": "Merged with a group expense",
+      "notTheSame": "Not the same",
+      "countedAgain": "Counted again in your budget"
+    },
     "card": {
       "inMkd": "in MKD",
       "inEur": "in EUR",

@@ -32,6 +32,7 @@ export const endpoints = {
   personalSummary: (month: string) => `/api/personal/summary?month=${month}`,
   personalLimitsMonth: '/api/personal/limits/month',
   personalLimitsCategory: (categoryId: string) => `/api/personal/limits/categories/${categoryId}`,
+  personalDuplicateAnswers: '/api/personal/duplicate-answers',
   recurringIncomes: '/api/personal/recurring-incomes',
   recurringIncomesCatchUp: '/api/personal/recurring-incomes/catch-up',
   recurringIncome: (recurringIncomeId: string) => `/api/personal/recurring-incomes/${recurringIncomeId}`,

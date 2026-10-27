@@ -61,6 +61,14 @@ export function readCount(fields: Fields, name: string, what: string): number {
   return value
 }
 
+export function readCountAboveZero(fields: Fields, name: string, what: string): number {
+  const value = fields[name]
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`Expected "${name}" of ${what} to be a whole number above 0, got ${describeValue(value)}`)
+  }
+  return value
+}
+
 export function readWholeNumber(fields: Fields, name: string, what: string): number {
   const value = fields[name]
   if (typeof value !== 'number' || !Number.isSafeInteger(value)) {

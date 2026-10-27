@@ -26,7 +26,7 @@ export const notFoundStatus = 404
 const jsonMediaTypes = ['application/json', 'application/problem+json']
 const noContentStatus = 204
 
-export function jsonRequest(method: 'POST' | 'PUT', body: unknown): RequestInit {
+export function jsonRequest(method: 'POST' | 'PUT' | 'DELETE', body: unknown): RequestInit {
   return {
     method,
     headers: { 'content-type': 'application/json' },

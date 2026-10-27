@@ -108,6 +108,7 @@ export const groupSharesOnlyOctober: PersonalEntryMonth = {
   groupShares: [hotelShare, dinnerShare, euroTaxiShare],
   convertedTotals: null,
   limits: noLimits,
+  possibleDuplicates: [],
 }
 
 export const convertedToMkd: ConvertedTotals = {
@@ -192,6 +193,7 @@ export const euroOnlyOctoberWithShareConvertedToEur: PersonalEntryMonth = {
   groupShares: [euroTaxiShare],
   convertedTotals: { currency: 'EUR', spendingMinor: 1250, incomeMinor: 0, groupSharesMinor: 800, leftMinor: -2050 },
   limits: noLimits,
+  possibleDuplicates: [],
 }
 
 export const euroOnlyOctoberWithShareConvertedToMkd: PersonalEntryMonth = {
@@ -207,6 +209,7 @@ export const octoberWithEuroIncomeOnlyOtherCurrency: PersonalEntryMonth = {
   groupShares: [],
   convertedTotals: { currency: 'MKD', spendingMinor: 12000, incomeMinor: 1230000, groupSharesMinor: 0, leftMinor: 1218000 },
   limits: noLimits,
+  possibleDuplicates: [],
 }
 
 export const foodLimitRow: LimitRow = {

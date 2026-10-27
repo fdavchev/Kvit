@@ -626,6 +626,16 @@
     "groupShares": {
       "title": "Од групи"
     },
+    "duplicates": {
+      "title": "Дали е ова исто?",
+      "body": "Вашиот „{{entry}}“ ({{entryAmount}}, {{entryDay}}) и вашиот дел од „{{expense}}“ во {{group}} ({{shareAmount}}, {{expenseDay}}).",
+      "same": "Исто, спој",
+      "new": "Не, ново е",
+      "mergedWith": "Споено со {{expense}} · {{group}}",
+      "mergedWithGroupExpense": "Споено со групен трошок",
+      "notTheSame": "Не е исто",
+      "countedAgain": "Повторно се брои во вашиот буџет"
+    },
     "card": {
       "inMkd": "во денари",
       "inEur": "во евра",

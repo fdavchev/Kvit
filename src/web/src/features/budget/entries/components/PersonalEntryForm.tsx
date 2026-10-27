@@ -61,6 +61,11 @@ export function PersonalEntryForm({
         onSubmit={onSubmit}
         footer={
           <>
+            {entry !== undefined && entry.mergedWithExpenseId !== null && (
+              <KvitButton variant="secondary" disabled={form.isBusy} onClick={() => form.separateFromGroupExpense(entry)}>
+                {t('budget.duplicates.notTheSame')}
+              </KvitButton>
+            )}
             {entry !== undefined && (
               <KvitButton variant="danger" disabled={form.isBusy} onClick={() => form.deleteEntry(entry)}>
                 {t('expense.delete')}
