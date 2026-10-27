@@ -8,6 +8,7 @@ const otherGroupId = 'f0e1d2c3-b4a5-4968-8776-655443322110'
 
 function seedGroup(queryClient: QueryClient, groupId: string): void {
   queryClient.setQueryData(['groups', groupId, 'balances'], { isEveryoneKvit: false, currencies: [] })
+  queryClient.setQueryData(['groups', groupId, 'spending'], { currencies: [], plan: null })
   queryClient.setQueryData(['groups', groupId, 'activity'], [])
   queryClient.setQueryData(['groups', groupId, 'expenses'], [])
   queryClient.setQueryData(['groups', groupId], { id: groupId })
@@ -27,6 +28,7 @@ describe('refreshAfterExpenseChange', () => {
     ['the expenses of the group', ['groups', testGroupId, 'expenses']],
     ['the activity of the group', ['groups', testGroupId, 'activity']],
     ['the balances of the group', ['groups', testGroupId, 'balances']],
+    ['the spending of the group, because the totals by category depend on the expenses', ['groups', testGroupId, 'spending']],
     ['the group itself, because canStartClosing and a One bill finishing depend on the expenses', ['groups', testGroupId]],
     ['the group list, because a group can move to Finished', ['groups']],
   ])('marks %s as out of date', async (_name, queryKey) => {
@@ -41,6 +43,7 @@ describe('refreshAfterExpenseChange', () => {
     ['the expenses of another group', ['groups', otherGroupId, 'expenses']],
     ['the activity of another group', ['groups', otherGroupId, 'activity']],
     ['the balances of another group', ['groups', otherGroupId, 'balances']],
+    ['the spending of another group', ['groups', otherGroupId, 'spending']],
     ['another group itself', ['groups', otherGroupId]],
     ['a query that is not about groups', ['other']],
   ])('does not mark %s as out of date', async (_name, queryKey) => {
@@ -113,6 +116,38 @@ describe('refreshAfterExpenseChange', () => {
     await refreshAfterExpenseChange(queryClient, testGroupId)
 
     expect(loadBalances).toHaveBeenCalledTimes(1)
+    stopWatching()
+  })
+
+  it('asks the server again for the spending that is on screen and resolves only after the answer came, so the totals change without a reload', async () => {
+    const queryClient = seededClient()
+    const loadSpending = vi.fn(() => Promise.resolve({ currencies: [], plan: null }))
+    const watcher = new QueryObserver(queryClient, {
+      queryKey: ['groups', testGroupId, 'spending'],
+      queryFn: loadSpending,
+      staleTime: Infinity,
+    })
+    const stopWatching = watcher.subscribe(() => {})
+
+    await refreshAfterExpenseChange(queryClient, testGroupId)
+
+    expect(loadSpending).toHaveBeenCalledTimes(1)
+    stopWatching()
+  })
+
+  it('does not ask the server again for the spending of another group that is on screen', async () => {
+    const queryClient = seededClient()
+    const loadOtherSpending = vi.fn(() => Promise.resolve({ currencies: [], plan: null }))
+    const watcher = new QueryObserver(queryClient, {
+      queryKey: ['groups', otherGroupId, 'spending'],
+      queryFn: loadOtherSpending,
+      staleTime: Infinity,
+    })
+    const stopWatching = watcher.subscribe(() => {})
+
+    await refreshAfterExpenseChange(queryClient, testGroupId)
+
+    expect(loadOtherSpending).not.toHaveBeenCalled()
     stopWatching()
   })
 })

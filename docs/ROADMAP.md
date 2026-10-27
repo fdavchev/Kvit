@@ -237,7 +237,7 @@ One big phase (Filip, 2026-10-24). Prompt: `guides/phase-15-budget-prompt.md`; f
 - [x] **Done 2026-10-27 (VERIFIED by automated test: backend 5603 of 5603; no screen yet).** Step 2: backend, group totals per category
 - [x] **Done 2026-10-27 (VERIFIED by automated test: backend 5884 of 5884, frontend 10704; no plan screen yet).** Step 3: backend, group spending plan (migration `GroupPlan`)
 - [x] **Done 2026-10-27 (VERIFIED by automated test: frontend 10949 of 10949, backend 5884 of 5884 unchanged; not seen in a browser).** Step 4: frontend, possible duplicates
-- [ ] Step 5: frontend, group totals
+- [x] **Done 2026-10-27 (VERIFIED by automated test: frontend 11211 of 11211, backend 5884 unchanged; not seen in a browser).** Step 5: frontend, group totals
 - [ ] Step 6: frontend, group plan, plus two Phase 15 leftovers (limit amount message, "near" in words)
 - [ ] Step 7: desktop layout and the 360 px browser pass
 - [ ] Step 8: code review, report, guide

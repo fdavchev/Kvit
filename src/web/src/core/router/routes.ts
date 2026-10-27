@@ -22,6 +22,7 @@ export const routes = {
   group: (groupId: string) => `/groups/${groupId}`,
   groupActivity: (groupId: string) => `/groups/${groupId}/activity`,
   groupBalances: (groupId: string) => `/groups/${groupId}/balances`,
+  groupTotals: (groupId: string) => `/groups/${groupId}/totals`,
   groupSettings: (groupId: string) => `/groups/${groupId}/settings`,
   groupMembers: (groupId: string) => `/groups/${groupId}/members`,
   groupExpenseNew: (groupId: string) => `/groups/${groupId}/expenses/new`,

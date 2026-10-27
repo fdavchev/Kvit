@@ -1,5 +1,10 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { activityQueryKey, balancesQueryKey, refreshGroupAndList } from '@/features/groups/shared/groupCache'
+import {
+  activityQueryKey,
+  balancesQueryKey,
+  refreshGroupAndList,
+  spendingQueryKey,
+} from '@/features/groups/shared/groupCache'
 
 export const categoriesQueryKey = ['categories'] as const
 
@@ -38,6 +43,7 @@ async function refreshGroupAfterExpenseChange(queryClient: QueryClient, groupId:
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: activityQueryKey(groupId) }),
     queryClient.invalidateQueries({ queryKey: balancesQueryKey(groupId) }),
+    queryClient.invalidateQueries({ queryKey: spendingQueryKey(groupId) }),
     refreshGroupAndList(queryClient, groupId),
   ])
 }

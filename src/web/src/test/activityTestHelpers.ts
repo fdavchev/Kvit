@@ -24,6 +24,7 @@ import {
   membersPath,
   plainSpaces,
 } from './expenseTestHelpers'
+import { noSpendingYet, spendingPath } from './groupSpendingTestData'
 import { testGroup } from './groupTestData'
 import { catchUpAnswer, catchUpPost, recurringIncomesGet, recurringListAnswer } from './recurringIncomeTestData'
 import { ownerViewMembers } from './memberTestData'
@@ -44,6 +45,7 @@ export interface GroupAppOptions {
   expenses?: ExpenseListRow[]
   events?: ActivityEventJson[]
   balances?: GroupBalances
+  spending?: unknown
   settlements?: Settlement[]
   timeZone?: string
   answers?: Record<string, AnswerFactory>
@@ -67,6 +69,7 @@ export function stubGroupApp(options: GroupAppOptions = {}): Mock<typeof fetch> 
     [`GET ${activityPath}`]: jsonAnswer({ events: numberEvents(options.events ?? []) }),
     [`GET ${balancesPath}`]: jsonAnswer(options.balances ?? noExpensesYetBalances),
     [`GET ${settlementsPath}`]: jsonAnswer({ settlements: options.settlements ?? [] }),
+    [`GET ${spendingPath}`]: jsonAnswer(options.spending ?? noSpendingYet),
     [`GET ${expensePathOf(hotelExpenseId)}`]: jsonAnswer(hotelDetail),
     [recurringIncomesGet]: recurringListAnswer([]),
     [catchUpPost]: catchUpAnswer(0),
@@ -109,4 +112,8 @@ export function activityTab(language: Language = 'en'): HTMLElement {
 
 export function balancesTab(language: Language = 'en'): HTMLElement {
   return screen.getByRole('link', { name: translated(language, 'balances.title') })
+}
+
+export function totalsTab(language: Language = 'en'): HTMLElement {
+  return screen.getByRole('link', { name: translated(language, 'groupTotals.tab') })
 }

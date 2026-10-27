@@ -32,7 +32,7 @@ Last phase of Release 2 ("budget"). Kvit asks once when a group share looks like
 - [x] Step 2: backend, group totals per category
 - [x] Step 3: backend, group spending plan
 - [x] Step 4: frontend, possible duplicates
-- [ ] Step 5: frontend, group totals
+- [x] Step 5: frontend, group totals
 - [ ] Step 6: frontend, group plan and the two leftovers
 - [ ] Step 7: desktop layout and the 360 px browser pass
 - [ ] Step 8: code review, report, guide

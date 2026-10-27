@@ -40,6 +40,8 @@ export const testGroup: Group = {
   closingWaitingFor: [],
   canStartClosing: false,
   countsInBudget: true,
+  planAmountMinor: null,
+  planCurrency: null,
 }
 
 export const flatGroupRow: GroupListRow = {

@@ -2,6 +2,7 @@ import { apiRequest, jsonRequest } from '@/core/api/apiClient'
 import { endpoints } from '@/core/api/endpoints'
 import {
   readCount,
+  readCountAboveZero,
   readDate,
   readDateOrNull,
   readList,
@@ -61,6 +62,8 @@ export interface Group {
   closingWaitingFor: ClosingPerson[]
   canStartClosing: boolean
   countsInBudget: boolean
+  planAmountMinor: number | null
+  planCurrency: Currency | null
 }
 
 export interface GroupInput {
@@ -178,7 +181,19 @@ function parseGroup(body: unknown): Group {
     closingWaitingFor: readClosingPeople(fields, 'closingWaitingFor', what),
     canStartClosing: readYesNo(fields, 'canStartClosing', what),
     countsInBudget: readYesNo(fields, 'countsInBudget', what),
+    ...readGroupPlan(fields, what),
   }
+}
+
+function readGroupPlan(fields: Fields, what: string): Pick<Group, 'planAmountMinor' | 'planCurrency'> {
+  const planAmountMinor = fields.planAmountMinor === null ? null : readCountAboveZero(fields, 'planAmountMinor', what)
+  const planCurrency = fields.planCurrency === null ? null : readOneOf(fields, 'planCurrency', groupCurrencies, what)
+  if ((planAmountMinor === null) !== (planCurrency === null)) {
+    throw new Error(
+      `Expected "planAmountMinor" and "planCurrency" of ${what} to be both set or both null, got ${planAmountMinor} and ${planCurrency}`,
+    )
+  }
+  return { planAmountMinor, planCurrency }
 }
 
 function readClosingPeople(fields: Fields, name: string, what: string): ClosingPerson[] {

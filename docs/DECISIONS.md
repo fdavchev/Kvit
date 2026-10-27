@@ -40,6 +40,14 @@
 - **Needs Filip's decision (risk found by the coder; recommendation first):** a merged entry dated mid-month whose group share is not in that month's answer makes the Budget tab show its error page. It can happen when the entry's date is moved to another month, or when another member moves the group expense to another month (your tab breaks because of someone else's edit). *Recommendation:* always show "Merged with a group expense" when the share is not in the month's answer (small change, two tests change), instead of an error. *Alternative:* the backend drops the merge when the dates drift apart (bigger, changes totals silently). Not built yet.
 - **Deploy gap (same as every earlier phase that added a field):** the website reads the new fields strictly, so between Cloudflare publishing and Render going live the Budget tab shows its load error. Merge, then wait for the green deploy.
 
+### Step 5, group totals (frontend)
+- **Tab:** a 4th group tab "Totals" (MK «Вкупно») after Expenses, Balances, Activity, route `/groups/:groupId/totals` (`routes.groupTotals`); the desktop Expenses tab still shows balances beside it. Everyone who sees the group sees it (guests, Closing, Finished).
+- **Reading:** `getGroupSpending` (`core/services/groups/groupSpendingService.ts`) strict, including the plan object (null or all 6 fields), which is read but not drawn until Step 6; `Group` gets `planAmountMinor` / `planCurrency` (both null or both set). Saved-copy version stays 5 (Step 4 already raised it in this phase and nothing has been released).
+- **Requests:** the spending answer (cache key `['groups', id, 'spending']`, `useGroupSpending`) is asked only when the Totals tab is open; expense add, edit, delete and restore mark it out of date (`expenseCache.ts`), payments do not. The categories list is asked only when a row has a category (`useCategories` got the `enabled` switch that `useMembers` has). *Rejected:* two sub-components that each fetch (the "one level watches the data" rule).
+- **Panel:** skeletons while loading, translated error with Retry (a "group not found" answer shows "Go to Groups"), empty state (📊 "No spending yet" + hint), one card per currency (MKD then EUR, never added) with the big total (`KvitAmount`, the Balances card look) and rows (`CategoryTile`, name wraps, amount never breaks); "No category" last with a dashed 🏷️ tile; an unknown category id throws naming the id. No bars, no percentages, no list animation (Filip's mockup showed bars only in the tab option B; ask whether he wants bars later).
+- **Texts:** `groupTotals.*` (5 keys) EN and MK drafts; the MK empty title uses the Cyrillic «Сѐ уште нема трошоци», like `expenses.emptyTitle`.
+- **Open for the browser pass:** do four tabs fit at 320 and 360 px, especially in Macedonian (pick 4 risk).
+
 ## 2026-10-24: Phase 15 (budget share, budget currency, limits, monthly summary), in progress
 
 ### Answered by Filip (2026-10-24)

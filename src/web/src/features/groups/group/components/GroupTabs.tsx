@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { routes } from '@/core/router/routes'
 import { KvitTabPill } from '@/shared/components/KvitTabPill'
 
-export type GroupTab = 'expenses' | 'balances' | 'activity'
+export type GroupTab = 'expenses' | 'balances' | 'activity' | 'totals'
 
 interface GroupTabsProps {
   groupId: string
@@ -19,6 +19,7 @@ export function GroupTabs({ groupId, currentTab }: GroupTabsProps) {
     { tab: 'expenses', to: routes.group(groupId), label: t('expenses.title') },
     { tab: 'balances', to: routes.groupBalances(groupId), label: t('balances.title') },
     { tab: 'activity', to: routes.groupActivity(groupId), label: t('activity.title') },
+    { tab: 'totals', to: routes.groupTotals(groupId), label: t('groupTotals.tab') },
   ]
 
   return (

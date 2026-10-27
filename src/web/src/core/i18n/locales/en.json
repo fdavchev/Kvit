@@ -469,6 +469,13 @@
     "kvitHint": "Nobody owes anything.",
     "recordAnother": "Record another payment"
   },
+  "groupTotals": {
+    "tab": "Totals",
+    "title": "Totals by category",
+    "emptyTitle": "No spending yet",
+    "emptyHint": "Totals by category show up here once someone adds an expense.",
+    "noCategory": "No category"
+  },
   "closing": {
     "readyTitle": "Everyone's kvit – close the group?",
     "checkBalances": "All balances are 0",
