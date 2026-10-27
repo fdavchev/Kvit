@@ -231,8 +231,17 @@ One big phase (Filip, 2026-10-24). Prompt: `guides/phase-15-budget-prompt.md`; f
   - [x] **Done 2026-10-26.** Report `reports/2026-10-26-phase-15-budget.md`, guide `guides/phase-15-budget.md`
 - [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the migrations on Neon)
 
-## Later phases
-- Phase 16: possible duplicates, group totals per category, group spending plan
+## Phase 16: Possible duplicates, group totals, group spending plan · `feat/16-group-insights`
+- [x] **Done 2026-10-27.** Step 0: mockup and Filip's picks (`DECISIONS.md`)
+- [x] **Done 2026-10-27 (VERIFIED by automated test: backend 5545 of 5545, frontend 10700; no screen yet).** Step 1: backend, possible duplicates (migration `DuplicateAnswers`)
+- [ ] Step 2: backend, group totals per category
+- [ ] Step 3: backend, group spending plan (migration `GroupPlan`)
+- [ ] Step 4: frontend, possible duplicates
+- [ ] Step 5: frontend, group totals
+- [ ] Step 6: frontend, group plan, plus two Phase 15 leftovers (limit amount message, "near" in words)
+- [ ] Step 7: desktop layout and the 360 px browser pass
+- [ ] Step 8: code review, report, guide
+- [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the 2 migrations on Neon)
 
 # Release 3: "polish"
 - Phase 17: the outbox (queue while the server wakes, "All up to date ✓", failed items with Retry / Discard)

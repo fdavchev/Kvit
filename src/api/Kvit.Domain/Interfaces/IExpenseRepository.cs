@@ -15,5 +15,7 @@ namespace Kvit.Domain.Interfaces
         Task<Result<Expense>> FindIncludingDeletedInGroupAsync(Guid groupId, Guid expenseId, CancellationToken cancellationToken);
 
         Task<Currency?> FindCurrencyAsync(Guid groupId, Guid expenseId, CancellationToken cancellationToken);
+
+        Task<bool> BringsCountedShareToAsync(Guid userId, Guid expenseId, CancellationToken cancellationToken);
     }
 }

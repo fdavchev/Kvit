@@ -1,5 +1,23 @@
 ﻿# Decisions
 
+## 2026-10-27: Phase 16 (possible duplicates, group totals, group spending plan), in progress
+
+### Filip's picks (2026-10-27, mockup `design/2026-10-27-phase-16/index.html`)
+1. **When the duplicate question shows: A.** A card at the top of the Budget tab, the next time it opens, one pair at a time (so it also works when someone else adds the group expense). *Rejected:* B a sheet on every open (interrupts), C only right after saving (misses expenses added by others).
+2. **Matching rule: A (Claude's call, Filip: "dont know what it is").** Same category and same currency, dates within 3 days either way, amount within 10 % of your share, or of the whole expense when you paid it. Either order (entry first or share first). Easy to change later. *Rejected:* B (1 day, exact amount: misses rounded entries), C (7 days, 25 %: asks about different things).
+3. **"Same, merge": B.** The personal entry stays in the list, greyed and labelled "Merged with ...", and stops counting; the group share keeps counting (it follows later edits of the group expense). "Not the same" on the entry undoes it. If the group expense is deleted, the entry counts again by itself. *Rejected:* A (delete the entry), C (stop counting the group share).
+4. **Group totals: B, a 4th tab "Totals"** (Expenses, Balances, Activity, Totals). *Risk noted:* four tabs are tight at 360 px, especially in Macedonian; check at 320 and 360 px in the browser pass and go back to Filip if it does not fit. (Claude had recommended A, a card on the Expenses tab.)
+5. **Group plan: A.** The owner sets it from a "Set a plan" row (in the Totals tab, since the Spending card idea became the tab), sheet with amount and currency chips (default the group currency), Save. Everyone sees the bar: green under 80 %, amber with words "Near the plan" from 80 %, red "N over" above. Other-currency expenses are converted with each expense's saved rate ("includes N converted"). "Each" = plan divided by current members. Closing group: owner only; Finished: shown, read-only. Setting or removing a plan writes a line in the group's Activity.
+- **Also included (Filip, 2026-10-27):** two Phase 15 leftovers, (c) a message for an invalid limit amount and (d) "near the limit" in words.
+
+### Step 1, possible duplicates (backend, migration `DuplicateAnswers`)
+- **Table** `duplicate_answers` (`id`, `user_id`, `personal_entry_id`, `expense_id`, `answer` `'Same'` or `'New'` with `ck_duplicate_answers_answer`, `created_at`); three foreign keys restrict deletes; unique (`user_id`, `personal_entry_id`, `expense_id`).
+- **Endpoints:** `PUT` and `DELETE /api/personal/duplicate-answers`, body `{ entryId, expenseId, answer }` / `{ entryId, expenseId }`, 204. Guest 403 `GUEST_NOT_ALLOWED` first. PUT checks the entry (404 `PERSONAL_ENTRY_NOT_FOUND`: own, spending, not deleted), then the expense (404 `EXPENSE_NOT_FOUND`: a counted share above 0 for you, expense and group not deleted), then the answer (400 `DUPLICATE_ANSWER_INVALID`, exact text `Same` or `New`, `same` is refused). DELETE checks nothing and always answers 204. No activity or usage event. Changing an answer keeps `created_at`; the same answer again writes nothing.
+- **Same moment (rejected the limits pattern):** PUT is one upsert (`INSERT ... ON CONFLICT DO UPDATE`), DELETE one set-based delete (`ExecuteDeleteAsync`), so Postgres settles any same-moment mix with no error and no retry. *Rejected:* the `BudgetLimitChangedMeanwhile` exception plus run-once-more wrapper: a real DELETE between a PUT's two tries is a second failure and answered 500 in 5 runs of 5.
+- **Month answer:** `possibleDuplicates` (always present; 14 fields; `matchedOn` `Share` wins over `Whole`, `Whole` only when you paid) and `mergedWithExpenseId` on every entry row. Rule in `PossibleDuplicateQueries` (`MaxDaysApart = 3`, `AmountTolerancePercent = 10`, whole minor units: `|entry - ref| * 100 <= ref * 10`). Shares are read 3 days beyond the month on each side; a pair shows in the entry's month. The share rules live once in `BudgetShareQueries.CountedSharesOf`.
+- **Merge effect:** one rule, `BudgetItems.CountedSpendingOf`, used by totals, converted totals, limits and the summary; computed live, so deleting the group expense un-merges and Undo merges again. The summary lists the currencies of income plus counted spending, so a merged-only currency shows no row of zeros.
+- **Order:** pairs oldest first (entry date, then expense date).
+
 ## 2026-10-24: Phase 15 (budget share, budget currency, limits, monthly summary), in progress
 
 ### Answered by Filip (2026-10-24)

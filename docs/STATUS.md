@@ -3,16 +3,13 @@
 _Last updated: 2026-10-26 (Phase 15 built, browser-checked and code-reviewed; waiting for Filip: migrations, push, PR, decisions)_
 
 ## Where we stopped
-- Release 1 was accepted on 2026-10-16. Phases 12, 12b, 13 and 14 are merged.
-- Branch: `feat/15-budget`. Phase 15 (budget share, budget currency, limits with history, monthly summary, third phase of Release 2) is built, step after step, and committed (11 commits; the last is `2e31eb3` plus the close-out docs). Three migrations: `BudgetShare`, `BudgetTotalCurrency`, `BudgetLimits`.
-- Report: `docs/reports/2026-10-26-phase-15-budget.md`; browser pass: `docs/reports/2026-10-26-phase-15-browser-pass.md`; guide: `docs/guides/phase-15-budget.md`; first-push texts: `docs/guides/phase-15-pr-text.md`; mockup: `docs/design/2026-10-24-phase-15/`.
+- Release 1 accepted 2026-10-16. Phases 12 to 15 are merged (Phase 15 as PR #19).
+- Branch: `feat/16-group-insights` (from `main`). Phase 16 (possible duplicates, group totals per category, group spending plan; last phase of Release 2) finished Step 0 (mockup `docs/design/2026-10-27-phase-16/index.html`, Filip's picks logged). Prompt: `docs/guides/phase-16-group-insights-prompt.md`; first-push texts: `docs/guides/phase-16-pr-text.md`.
+- Filip chose to include two Phase 15 leftovers: the limit amount message and "near the limit" in words.
 - Nothing is pushed.
 
 ## Next step
-1. Filip: apply the migrations locally (`dotnet ef database update ...`, see the guide), try the app with `docs/guides/phase-15-budget.md`.
-2. Filip: answer the open items in `docs/DECISIONS.md` ("Needs Filip's decision", items 8 to 11).
-3. Filip: push, open the PR with the texts in `docs/guides/phase-15-pr-text.md` (tick Step 0), CI green, merge (CI applies the 3 migrations on Neon).
-4. Then Phase 16 (possible duplicates, group totals per category, group spending plan); its prompt is not written yet.
+1. Step 0 is done (picks in `DECISIONS.md`). Step 1: backend, possible duplicates (migration `DuplicateAnswers`): tester first, then coder after Filip's go.
 
 ## Then
 - Filip, once on the real site: one real EUR expense (first real NBRM call), a real Google picture in a circle, the Google button inside the Log in sheet and "Make an account", the invite link on his phone, and a read of the Macedonian drafts of Phases 9 to 15.

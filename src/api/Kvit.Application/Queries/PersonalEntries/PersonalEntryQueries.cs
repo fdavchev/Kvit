@@ -22,8 +22,10 @@ namespace Kvit.Application.Queries.PersonalEntries
                 .Where(entry => entry.EntryDate >= firstDay && entry.EntryDate < firstDayAfter);
         }
 
-        public static IQueryable<PersonalEntryDto> PersonalEntryDtos(this IQueryable<PersonalEntry> entries)
+        public static IQueryable<PersonalEntryDto> PersonalEntryDtos(this IQueryable<PersonalEntry> entries, AppDbContext context, Guid userId)
         {
+            IQueryable<DuplicateAnswer> merges = context.MergesOf(userId);
+
             return entries
                 .OrderByDescending(entry => entry.EntryDate)
                 .ThenByDescending(entry => entry.CreatedAt)
@@ -39,22 +41,21 @@ namespace Kvit.Application.Queries.PersonalEntries
                     entry.MkdPerEur,
                     entry.RateDate,
                     entry.RecurringIncomeId,
+                    merges
+                        .Where(merge => merge.PersonalEntryId == entry.Id)
+                        .OrderBy(merge => merge.CreatedAt)
+                        .ThenBy(merge => merge.Id)
+                        .Select(merge => (Guid?)merge.ExpenseId)
+                        .FirstOrDefault(),
                     entry.CreatedAt,
                     entry.UpdatedAt));
         }
 
         public static IQueryable<GroupShareDto> GroupSharesOf(this AppDbContext context, Guid userId, DateOnly firstDay, DateOnly firstDayAfter)
         {
-            return context.ExpenseShares
+            return context.CountedSharesOf(userId)
                 .AsNoTracking()
-                .Where(share => share.CountsInBudget && share.ShareMinor > 0)
-                .Join(context.GroupMembers.Where(member => member.UserId == userId), share => share.MemberId, member => member.Id, (share, member) => share)
-                .Join(
-                    context.Expenses.Where(expense => expense.DeletedAt == null && expense.ExpenseDate >= firstDay && expense.ExpenseDate < firstDayAfter),
-                    share => share.ExpenseId,
-                    expense => expense.Id,
-                    (share, expense) => new { Share = share, Expense = expense })
-                .Join(context.Groups.Where(group => group.DeletedAt == null), row => row.Expense.GroupId, group => group.Id, (row, group) => new { row.Share, row.Expense, Group = group })
+                .Where(row => row.Expense.ExpenseDate >= firstDay && row.Expense.ExpenseDate < firstDayAfter)
                 .OrderBy(row => row.Expense.ExpenseDate)
                 .ThenBy(row => row.Expense.Id)
                 .Select(row => new GroupShareDto(
@@ -67,7 +68,20 @@ namespace Kvit.Application.Queries.PersonalEntries
                         row.Expense.ExpenseDate,
                         row.Expense.Currency,
                         row.Share.ShareMinor),
-                    row.Expense.MkdPerEur));
+                    row.Expense.MkdPerEur,
+                    row.Expense.AmountMinor,
+                    context.GroupMembers.Any(member => member.Id == row.Expense.PaidByMemberId && member.UserId == userId)));
+        }
+
+        private static IQueryable<DuplicateAnswer> MergesOf(this AppDbContext context, Guid userId)
+        {
+            IQueryable<CountedShare> countedShares = context.CountedSharesOf(userId);
+
+            return context.DuplicateAnswers
+                .AsNoTracking()
+                .Where(answer => answer.UserId == userId
+                    && answer.Answer == DuplicateAnswerChoice.Same
+                    && countedShares.Any(row => row.Expense.Id == answer.ExpenseId));
         }
 
         public static Task<List<PersonalCategoryRow>> PersonalCategoryRowsOfAsync(this AppDbContext context, IReadOnlyCollection<PersonalEntryDto> entries, CancellationToken cancellationToken)
@@ -100,6 +114,7 @@ namespace Kvit.Application.Queries.PersonalEntries
                 entry.MkdPerEur,
                 entry.RateDate,
                 entry.RecurringIncomeId,
+                entry.MergedWithExpenseId,
                 entry.CreatedAt,
                 entry.UpdatedAt);
         }

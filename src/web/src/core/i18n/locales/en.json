@@ -138,6 +138,7 @@
     "RECURRING_INCOME_NOT_STOPPED": "This repeating income is not stopped.",
     "RECURRING_INCOME_RESTART_EXPIRED": "This repeating income was stopped more than 5 days ago and can't be restarted.",
     "BUDGET_LIMIT_AMOUNT_INVALID": "Enter a limit in whole denars, more than 0.",
+    "DUPLICATE_ANSWER_INVALID": "Choose whether this is the same expense or a new one.",
     "SETTLEMENT_NOT_FOUND": "This payment doesn't exist or was deleted.",
     "SETTLEMENT_NOT_ALLOWED": "You can't do this with this payment.",
     "SETTLEMENT_NOT_PENDING": "This payment is no longer waiting for an answer.",

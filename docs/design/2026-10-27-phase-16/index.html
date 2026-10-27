@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit Phase 16 mockup</title>
+<style>
+:root{--bg:#ffd9a8;--fg:#3d2610;--card:#fff1dc;--primary:#b54a00;--onp:#fff;--muted:#7a3300;--line:#9c6f47;--track:#fff1dc;--pos:#1d6b2e;--neg:#b71f1f;--warn:#9a5b00;--pill:#fff}
+[data-theme=dark]{--bg:#1f1816;--fg:#fff1dc;--card:#2c2220;--primary:#ffd9a8;--onp:#1f1816;--muted:#ffd9a8;--line:#72625c;--track:#161110;--pos:#7fd68f;--neg:#ff9a9a;--warn:#f2b046;--pill:#1f1816}
+*{box-sizing:border-box}
+body{margin:0;font:16px system-ui,sans-serif;background:var(--bg);color:var(--fg);padding:16px}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:17px;margin:28px 0 4px}
+p.n{margin:2px 0 10px;color:var(--muted);font-size:14px}
+.top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--pill);color:var(--fg);border-radius:999px;padding:8px 14px;min-height:44px}
+button.on{background:var(--primary);color:var(--onp);border-color:var(--primary)}
+.opts{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.phone{width:360px;max-width:100%;border:1px solid var(--line);border-radius:18px;padding:12px;background:var(--bg)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:8px 0}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.small{font-size:13px;color:var(--muted)}
+.bar{height:10px;border-radius:6px;background:var(--track);overflow:hidden;margin:6px 0;border:1px solid var(--line)}
+.bar i{display:block;height:100%;transform-origin:left}
+.ok{background:var(--pos)}.near{background:var(--warn)}.over{background:var(--neg)}
+.grey{opacity:.6}.neg{color:var(--neg)}.warn{color:var(--warn)}.pos{color:var(--pos)}
+.btns{display:flex;gap:8px;margin-top:8px}.btns button{flex:1;border-radius:12px}
+.rec{font-size:12px;background:var(--primary);color:var(--onp);padding:2px 8px;border-radius:999px;margin-left:6px}
+.tabs{display:flex;gap:6px;margin:6px 0}.tabs span{padding:6px 10px;border-radius:999px;background:var(--pill);border:1px solid var(--line);font-size:13px}.tabs .a{background:var(--primary);color:var(--onp)}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:18px 18px 0 0;padding:14px;margin-top:10px}
+table{border-collapse:collapse;font-size:14px;width:100%}td,th{border-bottom:1px solid var(--line);padding:6px;text-align:left}
+.v{display:none}.v.show{display:block}
+</style>
+</head>
+<body>
+<div class="top"><h1>Phase 16 mockup</h1>
+<button id="th">Light / Dark</button></div>
+<p class="n">Tap the options (A, B, C) to see each one. The recommended one is marked. Numbers are made up. Tell Claude your picks, for example "1A 2 as recommended 3B 4A 5A".</p>
+
+<h2>1. When does "Is this the same?" show up?</h2>
+<p class="n">Example: you logged "Dinner 1,200" on Friday. Marko adds "Dinner Ohrid" 4,800, split 4, so your share is 1,200.</p>
+<div class="opts" data-q="q1"><button class="on" data-v="a">A · Card on Budget tab <span class="rec">recommended</span></button><button data-v="b">B · Sheet when Budget opens</button><button data-v="c">C · Only right after you save</button></div>
+<div class="phone">
+<div class="v show" data-q="q1" data-v="a"><div class="tabs"><span>‹ Oct 2026 ›</span></div>
+<div class="card"><b>Is this the same?</b><div class="small">"Dinner · 1,200 MKD" you added on Friday, and your share of "Dinner Ohrid" (Ohrid trip, 1,200 MKD).</div><div class="btns"><button>Same, merge</button><button>No, it's new</button></div></div>
+<div class="card">Spent this month · <b>14,300 MKD</b></div>
+<p class="small">Waits quietly at the top the next time you open Budget, whoever added the group expense. One pair at a time. 1 tap.</p></div>
+<div class="v" data-q="q1" data-v="b"><div class="card grey">Budget tab behind…</div><div class="sheet"><b>Is this the same?</b><div class="small">"Dinner · 1,200 MKD" (Friday) and your share of "Dinner Ohrid" (1,200 MKD)</div><div class="btns"><button>Same, merge</button><button>No, it's new</button></div></div>
+<p class="small">Pops up every time you open Budget until answered. Harder to ignore, but interrupts.</p></div>
+<div class="v" data-q="q1" data-v="c"><div class="card"><b>Saved ✓</b><div class="small">Looks like your "Dinner Ohrid" share. Same?</div><div class="btns"><button>Same, merge</button><button>No</button></div></div>
+<p class="small">Only when you save the entry or the group expense yourself. Misses the common case where someone else adds the group expense, so the question never comes.</p></div>
+</div>
+
+<h2>2. How alike must two things be? (matching rule)</h2>
+<p class="n">Same category, same currency, always. These differ in days and amount.</p>
+<div class="opts" data-q="q2"><button class="on" data-v="a">A · 3 days, 10 % <span class="rec">recommended</span></button><button data-v="b">B · 1 day, exact amount</button><button data-v="c">C · 7 days, 25 %</button></div>
+<div class="phone">
+<div class="v show" data-q="q2" data-v="a"><table><tr><th>Your entry</th><th>Group expense</th><th>Asks?</th></tr><tr><td>Dinner 1,200 · Fri</td><td>Your share 1,200 · Sat</td><td>Yes</td></tr><tr><td>Dinner 4,800 (you paid) · Fri</td><td>Whole bill 4,800 · Sat</td><td>Yes</td></tr><tr><td>Dinner 1,100 · Fri</td><td>Share 1,200 · Sun</td><td>Yes</td></tr><tr><td>Coffee 150 · Mon</td><td>Share 1,200 · Mon</td><td>No</td></tr></table><p class="small">Also matches the whole bill when you were the payer, because people often log what they paid.</p></div>
+<div class="v" data-q="q2" data-v="b"><table><tr><th>Your entry</th><th>Group expense</th><th>Asks?</th></tr><tr><td>Dinner 1,200 · Fri</td><td>Share 1,200 · Sat</td><td>Yes</td></tr><tr><td>Dinner 1,100 · Fri</td><td>Share 1,200 · Sat</td><td class="neg">No</td></tr><tr><td>Dinner 1,200 · Fri</td><td>Share 1,200 · Sun</td><td class="neg">No</td></tr></table><p class="small">Few wrong questions, but misses rounded or approximate entries.</p></div>
+<div class="v" data-q="q2" data-v="c"><table><tr><th>Your entry</th><th>Group expense</th><th>Asks?</th></tr><tr><td>Dinner 1,200 · Fri</td><td>Share 1,500 · next Thu</td><td>Yes</td></tr><tr><td>Coffee 200 · Mon</td><td>Share 240 · Wed</td><td>Yes</td></tr></table><p class="small">Catches more, but asks about things that are clearly different. Annoying fast.</p></div>
+</div>
+
+<h2>3. What does "Same, merge" do?</h2>
+<div class="opts" data-q="q3"><button class="on" data-v="b">B · Entry stays, stops counting <span class="rec">recommended</span></button><button data-v="a">A · Entry is deleted</button><button data-v="c">C · Group share stops counting</button></div>
+<div class="phone">
+<div class="v show" data-q="q3" data-v="b"><div class="card grey"><div class="row"><span>🍽️ Dinner</span><span>1,200 MKD</span></div><div class="small">Merged with Ohrid trip · Dinner Ohrid</div></div><div class="card"><div class="row"><span>From groups · Dinner Ohrid</span><b>1,200 MKD</b></div></div><p class="small">Counted once, from the group (it follows later edits of the group expense). Tap the grey entry → "Not the same" brings it back. If the group expense is deleted, your entry counts again by itself.</p></div>
+<div class="v" data-q="q3" data-v="a"><div class="card"><b>Merged ✓</b> <span class="small">Dinner removed · Undo</span></div><div class="card"><div class="row"><span>From groups · Dinner Ohrid</span><b>1,200 MKD</b></div></div><p class="small">Your note and date are gone (Recently deleted keeps it 5 days). If the group expense is later deleted, your money disappears from the Budget.</p></div>
+<div class="v" data-q="q3" data-v="c"><div class="card"><div class="row"><span>🍽️ Dinner</span><b>1,200 MKD</b></div></div><div class="card grey"><div class="row"><span>From groups · Dinner Ohrid</span><span>1,200 MKD</span></div><div class="small">Not counted (merged)</div></div><p class="small">Your own entry is the one that counts. But the group share is the real split, and if the group expense is edited to 1,500 your Budget still shows 1,200.</p></div>
+</div>
+
+<h2>4. Where do group totals per category live?</h2>
+<div class="opts" data-q="q4"><button class="on" data-v="a">A · Card on the Expenses tab <span class="rec">recommended</span></button><button data-v="b">B · A 4th tab "Totals"</button><button data-v="c">C · Sheet from a header chip</button></div>
+<div class="phone">
+<div class="v show" data-q="q4" data-v="a"><div class="tabs"><span class="a">Expenses</span><span>Balances</span><span>Activity</span></div>
+<div class="card"><div class="row"><b>Spending</b><span class="small">Tap to open ▾</span></div><div class="row"><span>Accommodation</span><b>18,000 MKD</b></div><div class="row"><span>Food</span><b>7,400 MKD</b></div><div class="row"><span>Transport</span><b>2,100 MKD</b></div><hr><div class="row"><span>Accommodation</span><b>120 EUR</b></div><div class="small">MKD and EUR are never added together.</div></div><div class="card grey">Expenses list…</div></div>
+<div class="v" data-q="q4" data-v="b"><div class="tabs"><span>Expenses</span><span>Balances</span><span>Activity</span><span class="a">Totals</span></div><div class="card"><div class="row"><span>Accommodation</span><b>18,000</b></div><div class="bar"><i class="ok" style="width:100%"></i></div><div class="row"><span>Food</span><b>7,400</b></div><div class="bar"><i class="ok" style="width:41%"></i></div></div><p class="small">Room for bars, but four tabs are tight at 360 px in Macedonian, and it is one more tap.</p></div>
+<div class="v" data-q="q4" data-v="c"><div class="tabs"><span class="a">Expenses</span><span>Balances</span><span>Activity</span></div><div class="row" style="gap:6px"><button>Members</button><button>Settings</button><button>📊 Totals</button></div><div class="sheet"><b>Totals by category</b><div class="row"><span>Accommodation</span><b>18,000 MKD</b></div><div class="row"><span>Food</span><b>7,400 MKD</b></div></div><p class="small">Always hidden until tapped, so people forget it is there.</p></div>
+</div>
+
+<h2>5. The group spending plan</h2>
+<p class="n">Only the owner sets it. Everyone sees it. Example: "600 EUR planned, 4 people = 150 each".</p>
+<div class="opts" data-q="q5"><button class="on" data-v="a">A · "Set a plan" in the Spending card <span class="rec">recommended</span></button><button data-v="b">B · Inside Group settings</button></div>
+<div class="opts" data-q="q5s"><button class="on" data-v="ok">Under 80 %</button><button data-v="near">80 % to the plan</button><button data-v="over">Over</button></div>
+<div class="phone">
+<div class="v show" data-q="q5" data-v="a"><div class="card"><b>Spending</b>
+<div class="v show" data-q="q5s" data-v="ok"><div class="row"><span>412 of 600 EUR</span><span class="small">150 each · 4 people</span></div><div class="bar"><i class="ok" style="width:69%"></i></div><div class="small pos">On track</div></div>
+<div class="v" data-q="q5s" data-v="near"><div class="row"><span>520 of 600 EUR</span><span class="small">150 each · 4 people</span></div><div class="bar"><i class="near" style="width:87%"></i></div><div class="small warn">Near the plan · 80 left</div></div>
+<div class="v" data-q="q5s" data-v="over"><div class="row"><span>640 of 600 EUR</span><span class="small">150 each · 4 people</span></div><div class="bar"><i class="over" style="width:100%"></i></div><div class="small neg">40 EUR over</div></div>
+<div class="small">includes 6,150 MKD converted to EUR</div><hr><div class="row"><span>Accommodation</span><b>380 EUR</b></div><div class="row"><span>Food</span><b>32 EUR</b></div></div>
+<div class="sheet"><b>Group plan</b><div class="card">600 <span class="small">EUR · MKD</span></div><div class="btns"><button class="on">Save</button></div><div class="small">Owner only. Set plan → type amount → Save: 2 taps, 1 field. Currency starts as the group currency.</div></div></div>
+<div class="v" data-q="q5" data-v="b"><div class="card"><b>Group settings</b><div class="row"><span>Name</span><span>Ohrid trip</span></div><div class="row"><span>Currency</span><span>EUR</span></div><div class="row"><span>Spending plan</span><span>600 EUR ›</span></div></div><p class="small">Tidy, but members only see the plan if the card is also shown on the Expenses tab, and the owner needs 3 taps (Settings, Plan, Save).</p></div>
+</div>
+<p class="n">Rules already proposed (shout if you disagree): other-currency expenses are converted with the rate saved on each expense (same as limits). "Each" = plan ÷ people now in the group. Closing group: only the owner can change it. Finished group: shown, read-only. Setting the plan writes a line in the group's Activity.</p>
+
+<script>
+document.querySelectorAll('.opts').forEach(g=>{g.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const q=g.dataset.q;g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v[data-q="'+q+'"]').forEach(v=>v.classList.toggle('show',v.dataset.v===b.dataset.v))})});
+document.getElementById('th').onclick=()=>{const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'light':'dark'};
+</script>
+</body>
+</html>

@@ -306,6 +306,53 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Kvit.Domain.Entities.DuplicateAnswer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("answer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("ExpenseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("expense_id");
+
+                    b.Property<Guid>("PersonalEntryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("personal_entry_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_duplicate_answers");
+
+                    b.HasIndex("ExpenseId")
+                        .HasDatabaseName("ix_duplicate_answers_expense_id");
+
+                    b.HasIndex("PersonalEntryId")
+                        .HasDatabaseName("ix_duplicate_answers_personal_entry_id");
+
+                    b.HasIndex("UserId", "PersonalEntryId", "ExpenseId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_duplicate_answers_user_id_personal_entry_id_expense_id");
+
+                    b.ToTable("duplicate_answers", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_duplicate_answers_answer", "answer IN ('Same', 'New')");
+                        });
+                });
+
             modelBuilder.Entity("Kvit.Domain.Entities.ExchangeRate", b =>
                 {
                     b.Property<DateOnly>("RateDate")
@@ -1370,6 +1417,30 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_closing_responses_group_members_member_id");
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.DuplicateAnswer", b =>
+                {
+                    b.HasOne("Kvit.Domain.Entities.Expense", null)
+                        .WithMany()
+                        .HasForeignKey("ExpenseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_duplicate_answers_expenses_expense_id");
+
+                    b.HasOne("Kvit.Domain.Entities.PersonalEntry", null)
+                        .WithMany()
+                        .HasForeignKey("PersonalEntryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_duplicate_answers_personal_entries_personal_entry_id");
+
+                    b.HasOne("Kvit.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_duplicate_answers_users_user_id");
                 });
 
             modelBuilder.Entity("Kvit.Domain.Entities.Expense", b =>
