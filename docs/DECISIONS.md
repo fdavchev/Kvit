@@ -18,6 +18,11 @@
 - **Merge effect:** one rule, `BudgetItems.CountedSpendingOf`, used by totals, converted totals, limits and the summary; computed live, so deleting the group expense un-merges and Undo merges again. The summary lists the currencies of income plus counted spending, so a merged-only currency shows no row of zeros.
 - **Order:** pairs oldest first (entry date, then expense date).
 
+### Step 2, group totals per category (backend, no migration)
+- **Endpoint:** `GET /api/groups/{groupId}/spending`, its own controller. Any current member, guests included; anyone else, an unknown or a deleted group 404 `GROUP_NOT_FOUND`; Closing and Finished groups stay readable. Answer `{ currencies: [{ currency, totalMinor, categories: [{ categoryId, totalMinor }] }], plan }`; `plan` is always present and `null` until Step 3 (typed `GroupSpendingPlanResponse?`). `GET /api/groups/{id}` and the other group answers are unchanged (pinned by tests).
+- **What counts:** every expense that is not deleted, its whole amount in its own currency; settlements never; MKD and EUR never added or converted. One row per currency that has expenses (MKD first, then EUR, the `Currency` list order, not text order); categories in the built-in order, "no category" last. Group expenses use built-in categories only, so custom categories cannot appear.
+- **One rule for "counted":** `BalanceQueries.CountedExpenses` is now public and used by balances and totals. *Rejected:* copying the filter. Postgres does the adding (group by currency and category); the code adds categories into a currency total with overflow checks. *Test fix:* one expected total in `GetGroupSpendingLargeAmountsTests` was a copy-paste slip (...700 instead of ...600) and was corrected.
+
 ## 2026-10-24: Phase 15 (budget share, budget currency, limits, monthly summary), in progress
 
 ### Answered by Filip (2026-10-24)

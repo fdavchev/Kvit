@@ -29,7 +29,7 @@ Last phase of Release 2 ("budget"). Kvit asks once when a group share looks like
 ### Checklist
 - [x] Step 0: mockup, picks logged in DECISIONS
 - [x] Step 1: backend, possible duplicates
-- [ ] Step 2: backend, group totals per category
+- [x] Step 2: backend, group totals per category
 - [ ] Step 3: backend, group spending plan
 - [ ] Step 4: frontend, possible duplicates
 - [ ] Step 5: frontend, group totals
@@ -38,4 +38,6 @@ Last phase of Release 2 ("budget"). Kvit asks once when a group share looks like
 - [ ] Step 8: code review, report, guide
 
 ## Later one-line commit subjects
-(added after each step)
+- Step 2 tests (red on purpose, before the coder): Add the failing tests for the group totals per category endpoint.
+- Step 2 (after the coder): Add the group totals per category endpoint with its tests.
+(more are added after each step)

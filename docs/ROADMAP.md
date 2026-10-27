@@ -234,7 +234,7 @@ One big phase (Filip, 2026-10-24). Prompt: `guides/phase-15-budget-prompt.md`; f
 ## Phase 16: Possible duplicates, group totals, group spending plan · `feat/16-group-insights`
 - [x] **Done 2026-10-27.** Step 0: mockup and Filip's picks (`DECISIONS.md`)
 - [x] **Done 2026-10-27 (VERIFIED by automated test: backend 5545 of 5545, frontend 10700; no screen yet).** Step 1: backend, possible duplicates (migration `DuplicateAnswers`)
-- [ ] Step 2: backend, group totals per category
+- [x] **Done 2026-10-27 (VERIFIED by automated test: backend 5603 of 5603; no screen yet).** Step 2: backend, group totals per category
 - [ ] Step 3: backend, group spending plan (migration `GroupPlan`)
 - [ ] Step 4: frontend, possible duplicates
 - [ ] Step 5: frontend, group totals
