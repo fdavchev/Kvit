@@ -4,6 +4,7 @@ import type { Language } from '@/core/i18n/language'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import type { Category } from '@/core/services/categories/categoriesService'
 import type { CurrencySpending, GroupSpending } from '@/core/services/groups/groupSpendingService'
+import type { Group } from '@/core/services/groups/groupsService'
 import { categoryOf } from '@/features/expenses/shared/expenseCategories'
 import { CategoryTile } from '@/features/expenses/shared/components/CategoryTile'
 import { useCategories } from '@/features/expenses/shared/hooks/useCategories'
@@ -16,6 +17,7 @@ import { categoryNameKey } from '@/shared/utils/categoryLooks'
 import { cn } from '@/shared/utils/cn'
 import { currencyLabel, moneyParts } from '@/shared/utils/formatMoney'
 import { balancesCardLook } from '../../balances/balancesLooks'
+import { GroupPlan } from '../../plan/components/GroupPlan'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
 import { useGroupSpending } from '../hooks/useGroupSpending'
 
@@ -23,13 +25,13 @@ const chartEmoji = '\u{1F4CA}'
 const noCategoryEmoji = '\u{1F3F7}\u{FE0F}'
 
 interface GroupTotalsProps {
-  groupId: string
+  group: Group
 }
 
-export function GroupTotals({ groupId }: GroupTotalsProps) {
+export function GroupTotals({ group }: GroupTotalsProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
-  const spendingQuery = useGroupSpending(groupId)
+  const spendingQuery = useGroupSpending(group.id)
   const needsCategories: boolean = spendingQuery.data !== undefined && hasAnyCategory(spendingQuery.data)
   const categoriesQuery = useCategories(needsCategories)
 
@@ -50,13 +52,20 @@ export function GroupTotals({ groupId }: GroupTotalsProps) {
       </KvitLoading>
     )
   }
-  const { currencies } = spendingQuery.data
+  const { currencies, plan } = spendingQuery.data
+  const planPart = <GroupPlan group={group} plan={plan} />
   if (currencies.length === 0) {
-    return <KvitEmpty emoji={chartEmoji} title={t('groupTotals.emptyTitle')} message={t('groupTotals.emptyHint')} />
+    return (
+      <>
+        {planPart}
+        <KvitEmpty emoji={chartEmoji} title={t('groupTotals.emptyTitle')} message={t('groupTotals.emptyHint')} />
+      </>
+    )
   }
   const categories: readonly Category[] = categoriesQuery.data ?? []
   return (
     <div className="flex flex-col pb-6">
+      {planPart}
       <h2 className="mx-1 mb-2 text-[0.8125rem] font-bold text-muted-foreground">{t('groupTotals.title')}</h2>
       {currencies.map((spending) => (
         <CurrencyTotals key={spending.currency} spending={spending} categories={categories} language={language} />

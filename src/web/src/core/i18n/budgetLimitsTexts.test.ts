@@ -38,6 +38,12 @@ const limitsTexts: LimitsText[] = [
     en: 'includes {{amount}} converted to MKD',
     mk: 'вклучува {{amount}} претворени во денари',
   },
+  { key: 'budget.limits.nearWords', en: 'Near the limit', mk: 'Близу до лимитот' },
+  {
+    key: 'budget.limits.amountInvalid',
+    en: 'Type an amount above 0, in whole denars.',
+    mk: 'Внеси износ поголем од 0, во цели денари.',
+  },
 ]
 
 function keysUnder(texts: object, prefix: string): string[] {

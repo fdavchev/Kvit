@@ -9,7 +9,7 @@ _Last updated: 2026-10-26 (Phase 15 built, browser-checked and code-reviewed; wa
 - Nothing is pushed.
 
 ## Next step
-1. Steps 0 to 5 are done (backend 5884, frontend 11211). Still open for Filip: the merged-entry crash fix (DECISIONS Step 4). Next is Step 6: frontend, group plan plus the two Phase 15 leftovers (limit amount message, "near" in words).
+1. Steps 0 to 6 are done (backend 5884, frontend 11562). Next is Step 7: desktop layout and the 360 px browser pass (tester, Playwright, headless; check four tabs fit at 320 and 360 px in Macedonian, the plan card and sheet, the duplicates card, dark mode).
 
 ## Then
 - Filip, once on the real site: one real EUR expense (first real NBRM call), a real Google picture in a circle, the Google button inside the Log in sheet and "Make an account", the invite link on his phone, and a read of the Macedonian drafts of Phases 9 to 15.

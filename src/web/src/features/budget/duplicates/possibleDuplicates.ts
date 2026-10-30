@@ -5,12 +5,8 @@ import type {
   GroupShare,
   PersonalEntry,
 } from '@/core/services/personalEntries/personalEntriesService'
-import { monthOfDate } from '@/shared/utils/calendarMonth'
-import { addDays } from '@/shared/utils/formatDate'
 import { personalCategoryName } from '../categories/personalCategoryName'
 import { groupShareCategory } from '../overview/groupShareTotals'
-
-const maxDaysApart = 3
 
 export function duplicatePairKey({ entryId, expenseId }: DuplicatePairIds): string {
   return `${entryId}:${expenseId}`
@@ -48,24 +44,12 @@ export function mergedEntryLabel(
     return null
   }
   const share = groupShares.find((candidate) => candidate.expenseId === expenseId)
-  if (share !== undefined) {
-    const category = groupShareCategory(share, categories) ?? spendingCategoryOf(entry)
-    return t('budget.duplicates.mergedWith', {
-      expense: groupExpenseName(share.title, category, t),
-      group: share.groupName,
-    })
-  }
-  if (canMatchOutsideItsMonth(entry.entryDate)) {
+  if (share === undefined) {
     return t('budget.duplicates.mergedWithGroupExpense')
   }
-  throw new Error(
-    `The entry ${entry.id} is merged with the expense ${expenseId}, which is not among the group shares of ${monthOfDate(entry.entryDate)}`,
-  )
-}
-
-function canMatchOutsideItsMonth(entryDate: string): boolean {
-  const month = monthOfDate(entryDate)
-  return (
-    monthOfDate(addDays(entryDate, -maxDaysApart)) !== month || monthOfDate(addDays(entryDate, maxDaysApart)) !== month
-  )
+  const category = groupShareCategory(share, categories) ?? spendingCategoryOf(entry)
+  return t('budget.duplicates.mergedWith', {
+    expense: groupExpenseName(share.title, category, t),
+    group: share.groupName,
+  })
 }

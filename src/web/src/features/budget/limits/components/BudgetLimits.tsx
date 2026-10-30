@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type RefObject } from 'react'
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { errorMessageKey } from '@/core/api/errors'
 import { useLanguage } from '@/core/i18n/useLanguage'
@@ -9,28 +9,17 @@ import { KvitAmount } from '@/shared/components/KvitAmount'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitError } from '@/shared/components/KvitError'
 import { KvitLoading } from '@/shared/components/KvitLoading'
+import { KvitProgressBar } from '@/shared/components/KvitProgressBar'
 import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
+import { useFocusWhenOpenerIsGone } from '@/shared/hooks/useFocusWhenOpenerIsGone'
 import { cn } from '@/shared/utils/cn'
 import { formatMoney, moneyParts } from '@/shared/utils/formatMoney'
+import { progressStateOf } from '@/shared/utils/progressState'
 import { usePersonalCategoriesWithArchived } from '../../categories/hooks/usePersonalCategoriesWithArchived'
 import { personalCategoryName } from '../../categories/personalCategoryName'
-import {
-  hasAnyLimit,
-  limitFillRatio,
-  limitMinorOf,
-  limitStateOf,
-  wholeMonthEmoji,
-  type LimitState,
-  type LimitTarget,
-} from '../budgetLimits'
+import { hasAnyLimit, limitMinorOf, wholeMonthEmoji, type LimitTarget } from '../budgetLimits'
 
 const targetEmoji = '\u{1F3AF}'
-
-const fillLooks: Record<LimitState, string> = {
-  ok: 'bg-positive',
-  near: 'bg-warning',
-  over: 'bg-negative',
-}
 
 export interface LimitFocusRequest {
   target: LimitTarget
@@ -72,25 +61,6 @@ function focusOf(limits: MonthLimits, request: LimitFocusRequest | null): LimitF
     return { part: 'setLimit', opener: request.opener }
   }
   return { part: 'row', categoryId, opener: request.opener }
-}
-
-function useFocusWhenOpenerIsGone<T extends HTMLElement>(
-  focus: LimitFocus | null,
-  isTarget: boolean,
-  onFocusHandled: () => void,
-): RefObject<T | null> {
-  const ref = useRef<T>(null)
-
-  useEffect(() => {
-    if (focus === null || !isTarget) {
-      return
-    }
-    if (focus.opener?.isConnected !== true) {
-      ref.current?.focus()
-    }
-    onFocusHandled()
-  }, [focus, isTarget, onFocusHandled])
-  return ref
 }
 
 function FirstLimitRow({ focus, onSetLimit, onFocusHandled }: LimitsPartProps) {
@@ -196,13 +166,15 @@ function LimitListItem({ row, category, focus, isFocusTarget, onOpen, onFocusHan
   const { language } = useLanguage()
   const buttonRef = useFocusWhenOpenerIsGone<HTMLButtonElement>(focus, isFocusTarget, onFocusHandled)
   const name = category === null ? t('budget.limits.wholeMonth') : personalCategoryName(category, t)
-  const state = limitStateOf(row)
+  const nearWordsId = useId()
+  const state = progressStateOf(row.spentMinor, row.limitMinor)
 
   return (
     <li>
       <button
         ref={buttonRef}
         type="button"
+        aria-describedby={state === 'near' ? nearWordsId : undefined}
         className="pressable flex min-h-11 w-full flex-col gap-1.5 rounded-2xl px-3 py-2.5 text-left hover:bg-secondary-hover"
         onClick={onOpen}
       >
@@ -221,24 +193,12 @@ function LimitListItem({ row, category, focus, isFocusTarget, onOpen, onFocusHan
             <KvitAmount parts={moneyParts(row.limitMinor, 'MKD', language)} />
           </span>
         </span>
-        <span
-          role="progressbar"
-          aria-label={name}
-          aria-valuemin={0}
-          aria-valuenow={Math.min(row.spentMinor, row.limitMinor)}
-          aria-valuemax={row.limitMinor}
-          data-limit-state={state}
-          className="block h-2 w-full overflow-hidden rounded-full bg-background"
-        >
-          <span
-            data-limit-fill
-            className={cn(
-              'block h-full origin-left rounded-full transition-transform duration-200 ease-out motion-reduce:transition-none',
-              fillLooks[state],
-            )}
-            style={{ transform: `scaleX(${limitFillRatio(row)})` }}
-          />
-        </span>
+        <KvitProgressBar label={name} spentMinor={row.spentMinor} limitMinor={row.limitMinor} />
+        {state === 'near' && (
+          <span id={nearWordsId} className="text-[0.8125rem] font-semibold text-warning">
+            {t('budget.limits.nearWords')}
+          </span>
+        )}
         {row.overMinor > 0 && (
           <span data-limit-over className="text-[0.8125rem] font-semibold text-negative">
             {t('budget.limits.over', { amount: formatMoney(row.overMinor, 'MKD', language) })}

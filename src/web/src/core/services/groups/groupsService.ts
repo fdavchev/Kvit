@@ -72,6 +72,11 @@ export interface GroupInput {
   currency: Currency
 }
 
+export interface GroupPlanInput {
+  amountMinor: number
+  currency: Currency
+}
+
 export async function getGroups(): Promise<GroupList> {
   return parseGroupList(await apiRequest(endpoints.groups))
 }
@@ -122,6 +127,14 @@ export async function addMember(groupId: string, name: string): Promise<void> {
 
 export async function changeCountsInBudget(groupId: string, countsInBudget: boolean): Promise<void> {
   await apiRequest(endpoints.groupCountsInBudget(groupId), jsonRequest('PUT', { countsInBudget }))
+}
+
+export async function setGroupPlan(groupId: string, plan: GroupPlanInput): Promise<void> {
+  await apiRequest(endpoints.groupPlan(groupId), jsonRequest('PUT', plan))
+}
+
+export async function removeGroupPlan(groupId: string): Promise<void> {
+  await apiRequest(endpoints.groupPlan(groupId), { method: 'DELETE' })
 }
 
 function parseGroupList(body: unknown): GroupList {

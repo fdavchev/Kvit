@@ -1,10 +1,9 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import {
   mergedDinnerOutEntry,
-  missingShareExpenseId,
   octoberWithEntryOnTheFirstMergedWithShareOfSeptember,
   octoberWithMergedDinnerAndCoffee,
   octoberWithMergedEntryWhoseShareIsMissing,
@@ -133,15 +132,13 @@ describe('BudgetScreen, a merged entry in the list', () => {
       expect(row).not.toContain('Merged with Dinner')
     })
 
-    it('fails with an error that names the expense id when an entry in the middle of the month is merged with an expense that is not in the answer', async () => {
-      vi.spyOn(console, 'error').mockImplementation(() => {})
+    it.each(languages)('says "Merged with a group expense" for an entry in the middle of the month whose expense is not in the answer (%s)', async (language) => {
+      await renderBudget({ language, months: [octoberWithMergedEntryWhoseShareIsMissing] })
+      const list = await findEntryList(language)
 
-      await renderBudget({ months: [octoberWithMergedEntryWhoseShareIsMissing] })
+      const row = entryRowContaining(list, 'Dinner out')
 
-      await waitFor(() => {
-        expect(document.body.textContent).toContain(missingShareExpenseId)
-      })
-      expect(screen.queryByRole('list', { name: translated('en', 'budget.screen.entries') })).toBeNull()
+      expect(readableText(row)).toContain(mergedFallbackLabel(language))
     })
   })
 

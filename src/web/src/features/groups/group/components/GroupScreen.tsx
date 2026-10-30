@@ -154,7 +154,7 @@ function GroupContent({ group, tab }: GroupContentProps) {
         )}
         {tab === 'balances' && balances}
         {tab === 'activity' && <GroupActivity groupId={group.id} />}
-        {tab === 'totals' && <GroupTotals groupId={group.id} />}
+        {tab === 'totals' && <GroupTotals group={group} />}
       </div>
       {(showsFloatingAddExpense || hasBar) && (
         <FloatingActions hasBar={hasBar}>
