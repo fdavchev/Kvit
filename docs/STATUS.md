@@ -9,7 +9,7 @@ _Last updated: 2026-10-26 (Phase 15 built, browser-checked and code-reviewed; wa
 - Nothing is pushed.
 
 ## Next step
-1. Steps 0 to 6 are done (backend 5884, frontend 11562). Next is Step 7: desktop layout and the 360 px browser pass (tester, Playwright, headless; check four tabs fit at 320 and 360 px in Macedonian, the plan card and sheet, the duplicates card, dark mode).
+1. Steps 0 to 7 are done (backend 5884, frontend 11649). Open: Filip's yes/no on "Not the same" (save "No, it's new" instead of deleting the answer; browser-pass bug 2). Next is Step 8: `/code-review high`, then the Phase 16 report and guide, DECISIONS "rules that stay", BACKLOG, final PR text.
 
 ## Then
 - Filip, once on the real site: one real EUR expense (first real NBRM call), a real Google picture in a circle, the Google button inside the Log in sheet and "Make an account", the invite link on his phone, and a read of the Macedonian drafts of Phases 9 to 15.

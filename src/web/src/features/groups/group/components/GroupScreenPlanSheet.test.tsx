@@ -33,7 +33,14 @@ import { translated } from '@/test/translated'
 
 vi.mock('sonner', async () => (await import('@/test/sonnerMock')).sonnerMock)
 
-const amountInvalidText = 'Type an amount above 0 (whole denars for MKD).'
+const amountInvalidText = {
+  MKD: 'Type an amount above 0, in whole denars.',
+  EUR: 'Type an amount above 0, with up to two decimals.',
+} as const
+
+function queryAmountMessage(sheet: HTMLElement): HTMLElement | null {
+  return within(sheet).queryByText(amountInvalidText.MKD) ?? within(sheet).queryByText(amountInvalidText.EUR)
+}
 const eurDefaultGroup = groupOf({ defaultCurrency: 'EUR' })
 
 describe('GroupScreen Totals tab, the plan sheet', () => {
@@ -299,7 +306,7 @@ describe('GroupScreen Totals tab, the plan sheet', () => {
 
       typePlanAmount(sheet, text)
 
-      const message = within(sheet).getByText(amountInvalidText)
+      const message = within(sheet).getByText(amountInvalidText.MKD)
       expect(isBefore(planAmountField(sheet), message)).toBe(true)
       expect(isBefore(message, savePlanButton(sheet))).toBe(true)
       expect(isDescribedBy(planAmountField(sheet), message)).toBe(true)
@@ -313,7 +320,8 @@ describe('GroupScreen Totals tab, the plan sheet', () => {
 
       typePlanAmount(sheet, text)
 
-      const message = within(sheet).getByText(amountInvalidText)
+      const message = within(sheet).getByText(amountInvalidText.EUR)
+      expect(queryAmountMessage(sheet)).toBe(message)
       expect(isDescribedBy(planAmountField(sheet), message)).toBe(true)
       expect(planAmountField(sheet).getAttribute('aria-invalid')).toBe('true')
       expect(savePlanButton(sheet).disabled).toBe(true)
@@ -322,7 +330,7 @@ describe('GroupScreen Totals tab, the plan sheet', () => {
     it('shows no message and no red edge while the field is empty', async () => {
       const { sheet } = await openNewPlanSheet()
 
-      expect(within(sheet).queryByText(amountInvalidText)).toBeNull()
+      expect(queryAmountMessage(sheet)).toBeNull()
       expect(planAmountField(sheet).getAttribute('aria-invalid')).toBe('false')
     })
 
@@ -331,7 +339,7 @@ describe('GroupScreen Totals tab, the plan sheet', () => {
 
       typePlanAmount(sheet, text)
 
-      expect(within(sheet).queryByText(amountInvalidText)).toBeNull()
+      expect(queryAmountMessage(sheet)).toBeNull()
       expect(planAmountField(sheet).getAttribute('aria-invalid')).toBe('false')
     })
 
@@ -341,36 +349,36 @@ describe('GroupScreen Totals tab, the plan sheet', () => {
 
       typePlanAmount(sheet, text)
 
-      expect(within(sheet).queryByText(amountInvalidText)).toBeNull()
+      expect(queryAmountMessage(sheet)).toBeNull()
       expect(planAmountField(sheet).getAttribute('aria-invalid')).toBe('false')
     })
 
     it('shows no message for the amount of the plan that exists', async () => {
       const { sheet } = await openExistingPlanSheet()
 
-      expect(within(sheet).queryByText(amountInvalidText)).toBeNull()
+      expect(queryAmountMessage(sheet)).toBeNull()
     })
 
     it('goes away once the amount is corrected', async () => {
       const { sheet } = await openNewPlanSheet()
       typePlanAmount(sheet, '12.5')
-      expect(within(sheet).getByText(amountInvalidText)).toBeTruthy()
+      expect(within(sheet).getByText(amountInvalidText.MKD)).toBeTruthy()
 
       typePlanAmount(sheet, '12')
 
-      expect(within(sheet).queryByText(amountInvalidText)).toBeNull()
+      expect(queryAmountMessage(sheet)).toBeNull()
       expect(planAmountField(sheet).getAttribute('aria-invalid')).toBe('false')
     })
 
     it('goes away when the currency is switched to euros, which accept cents', async () => {
       const { sheet } = await openNewPlanSheet()
       typePlanAmount(sheet, '12.5')
-      expect(within(sheet).getByText(amountInvalidText)).toBeTruthy()
+      expect(within(sheet).getByText(amountInvalidText.MKD)).toBeTruthy()
 
       chooseCurrency(sheet, 'EUR')
 
       await waitFor(() => {
-        expect(within(sheet).queryByText(amountInvalidText)).toBeNull()
+        expect(queryAmountMessage(sheet)).toBeNull()
       })
     })
 
@@ -378,22 +386,85 @@ describe('GroupScreen Totals tab, the plan sheet', () => {
       const { sheet } = await openNewPlanSheet()
       chooseCurrency(sheet, 'EUR')
       typePlanAmount(sheet, '12.5')
-      expect(within(sheet).queryByText(amountInvalidText)).toBeNull()
+      expect(queryAmountMessage(sheet)).toBeNull()
 
       chooseCurrency(sheet, 'MKD')
 
       await waitFor(() => {
-        expect(within(sheet).getByText(amountInvalidText)).toBeTruthy()
+        expect(within(sheet).getByText(amountInvalidText.MKD)).toBeTruthy()
       })
     })
 
-    it.each(languages)('writes the message in the language of the app (%s)', async (language) => {
+    it.each(languages)('writes the denar message in the language of the app (%s)', async (language) => {
       const { sheet } = await openNewPlanSheet({ language })
 
       typePlanAmount(sheet, '0', language)
 
-      const message = within(sheet).getByText(translated(language, 'groupPlan.amountInvalid'))
+      const message = within(sheet).getByText(translated(language, 'groupPlan.amountInvalidMkd'))
       expect(isDescribedBy(planAmountField(sheet, language), message)).toBe(true)
+    })
+
+    it.each(languages)('writes the euro message in the language of the app (%s)', async (language) => {
+      const { sheet } = await openNewPlanSheet({ language })
+      chooseCurrency(sheet, 'EUR', language)
+
+      typePlanAmount(sheet, '0', language)
+
+      const message = within(sheet).getByText(translated(language, 'groupPlan.amountInvalidEur'))
+      expect(isDescribedBy(planAmountField(sheet, language), message)).toBe(true)
+    })
+
+    it('names the whole denars while the MKD chip is chosen and the decimals while the EUR chip is chosen', async () => {
+      const { sheet } = await openNewPlanSheet()
+      typePlanAmount(sheet, 'abc')
+      expect(within(sheet).getByText(amountInvalidText.MKD)).toBeTruthy()
+      expect(within(sheet).queryByText(amountInvalidText.EUR)).toBeNull()
+
+      chooseCurrency(sheet, 'EUR')
+
+      await waitFor(() => {
+        expect(within(sheet).getByText(amountInvalidText.EUR)).toBeTruthy()
+      })
+      expect(within(sheet).queryByText(amountInvalidText.MKD)).toBeNull()
+    })
+
+    it('follows the chip back to the denar message when the chip is switched back to MKD', async () => {
+      const { sheet } = await openNewPlanSheet()
+      chooseCurrency(sheet, 'EUR')
+      typePlanAmount(sheet, 'abc')
+      await waitFor(() => {
+        expect(within(sheet).getByText(amountInvalidText.EUR)).toBeTruthy()
+      })
+
+      chooseCurrency(sheet, 'MKD')
+
+      await waitFor(() => {
+        expect(within(sheet).getByText(amountInvalidText.MKD)).toBeTruthy()
+      })
+      expect(within(sheet).queryByText(amountInvalidText.EUR)).toBeNull()
+    })
+
+    it('keeps the field linked to the message after the chip switch changes its wording', async () => {
+      const { sheet } = await openNewPlanSheet()
+      typePlanAmount(sheet, 'abc')
+
+      chooseCurrency(sheet, 'EUR')
+
+      await waitFor(() => {
+        expect(within(sheet).getByText(amountInvalidText.EUR)).toBeTruthy()
+      })
+      expect(isDescribedBy(planAmountField(sheet), within(sheet).getByText(amountInvalidText.EUR))).toBe(true)
+      expect(planAmountField(sheet).getAttribute('aria-invalid')).toBe('true')
+    })
+
+    it('does not mention MKD in the message shown with the EUR chip', async () => {
+      const { sheet } = await openNewPlanSheet()
+      chooseCurrency(sheet, 'EUR')
+
+      typePlanAmount(sheet, 'abc')
+
+      const message = within(sheet).getByText(amountInvalidText.EUR)
+      expect(message.textContent).not.toContain('MKD')
     })
   })
 

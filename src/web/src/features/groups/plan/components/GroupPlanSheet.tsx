@@ -122,7 +122,7 @@ export function GroupPlanSheet({ group, plan, opener, onClose }: GroupPlanSheetP
           amountText={amountText}
           currency={currency}
           invalid={isAmountRefused}
-          invalidMessage={t('groupPlan.amountInvalid')}
+          invalidMessage={t(currency === 'MKD' ? 'groupPlan.amountInvalidMkd' : 'groupPlan.amountInvalidEur')}
           onAmountTextChange={(nextAmountText) => {
             setAmountText(nextAmountText)
             setIsAmountChangedSinceSave(true)

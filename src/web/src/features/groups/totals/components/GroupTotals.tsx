@@ -98,16 +98,16 @@ function CurrencyTotals({ spending, categories, language }: CurrencyTotalsProps)
         {spending.categories.map((row) => {
           const category = categoryOf(categories, row.categoryId)
           return (
-            <li key={row.categoryId ?? 'none'} className="flex items-center gap-3 border-t border-field-border pt-2.5">
+            <li key={row.categoryId ?? 'none'} className="flex flex-wrap items-center gap-3 border-t border-field-border pt-2.5">
               {category === null ? (
                 <KvitEmojiTile emoji={noCategoryEmoji} variant="dashed" />
               ) : (
                 <CategoryTile category={category} />
               )}
-              <span className="min-w-0 flex-1 font-semibold break-words">
+              <span className="min-w-0 flex-1 basis-20 font-semibold break-words">
                 {category === null ? t('groupTotals.noCategory') : t(categoryNameKey(category))}
               </span>
-              <span className="font-bold whitespace-nowrap">
+              <span className="ml-auto font-bold whitespace-nowrap">
                 <KvitAmount parts={moneyParts(row.totalMinor, spending.currency, language)} />
               </span>
             </li>

@@ -11,7 +11,7 @@ interface GroupTabsProps {
 }
 
 const tabLook =
-  'pressable relative flex min-h-11 flex-1 items-center justify-center rounded-full font-bold text-muted-foreground hover:text-foreground aria-[current=page]:text-tab-active-foreground'
+  'pressable relative flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-full px-0.5 text-center text-[11px] font-bold whitespace-nowrap text-muted-foreground min-[360px]:text-xs min-[480px]:text-base hover:text-foreground aria-[current=page]:text-tab-active-foreground'
 
 export function GroupTabs({ groupId, currentTab }: GroupTabsProps) {
   const { t } = useTranslation()

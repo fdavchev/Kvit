@@ -57,6 +57,13 @@
 - **Step 4 rule changed (Filip, 2026-10-30, "yes add it"):** a merged entry whose share is not among the month's `groupShares` always says "Merged with a group expense"; the 3-day edge rule and the error page are gone (`possibleDuplicates.ts`). The one test that pinned the old rule was changed.
 - **Small follow-ups (not built):** `PersonalEntryRun` (a budget type) is used by the group plan code and reads oddly; moving it to `shared/` is small. At exactly 100 % the near line reads "Near the plan · 0 MKD left"; "Plan reached" would read better. The sheet shows the currency both beside the field and in the chips: needs a look in the browser.
 
+### Step 7, browser pass fixes (frontend; `reports/2026-10-30-phase-16-browser-pass.md`)
+- **Four tabs (pick 4 risk, Filip chose A on 2026-10-30 from `design/2026-10-30-phase-16-tabs/index.html`):** the four group tabs are equal-width cells (`flex-1 min-w-0`, `px-0.5`, centred, no wrap) so the quarter-width pill lines up; labels are 11 px under 360 px, 12 px from 360 px, 16 px from 480 px (first fix was 12 px / 16 px at 400 px; the Macedonian «Активности», the widest label, overshot its 66 px cell by 2.5 px at 320 and 2.7 px a side at 400, so the steps moved). The word stays. *Rejected:* B a swipe bar (the 4th tab hides at 320), C "Totals" as a chip (reverses pick 4), a pill that measures the real link, a shorter Macedonian word.
+- **Totals rows:** the row wraps, the name column is `min-w-0 flex-1 basis-20` (80 px), the amount `ml-auto whitespace-nowrap`; a huge amount drops under the name instead of squeezing it. First fix used `basis-32` (128 px) and moved even "15.00 EUR" under the name at 320 px; so `basis-20`.
+- **Plan sheet message:** two texts chosen by the selected chip (`groupPlan.amountInvalidMkd` / `amountInvalidEur`), live; MKD "Type an amount above 0, in whole denars." EUR "Type an amount above 0, with up to two decimals."; no Latin "MKD" in the Macedonian. Replaces the single `groupPlan.amountInvalid`.
+- **Open (browser-pass bug 2, Filip to decide):** "Not the same" deletes the stored answer, so the card asks "Is this the same?" again at once. *Recommendation:* store "No, it's new" (PUT `New`) instead, so Kvit never asks twice about the pair. Website-only change plus tests. Not built.
+- **Not checked:** a real phone, iOS, Firefox, a screen reader, widths between the tested ones, the Macedonian wording (all drafts), the deploy gap.
+
 ## 2026-10-24: Phase 15 (budget share, budget currency, limits, monthly summary), in progress
 
 ### Answered by Filip (2026-10-24)

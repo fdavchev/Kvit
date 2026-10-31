@@ -15,6 +15,7 @@ const cyrillicLetters = /[Ѐ-ӿ]/
 const placeholders = /\{\{\w+\}\}/g
 const currencyCodes = /MKD|EUR/g
 const planPrefix = 'groupPlan.'
+const invalidAmountKeys = ['groupPlan.amountInvalidMkd', 'groupPlan.amountInvalidEur']
 
 const planTexts: PlanText[] = [
   { key: 'groupPlan.title', en: 'Spending plan', mk: 'План за трошоците' },
@@ -33,9 +34,14 @@ const planTexts: PlanText[] = [
   },
   { key: 'groupPlan.hint', en: 'Everyone in the group sees the plan.', mk: 'Сите во групата го гледаат планот.' },
   {
-    key: 'groupPlan.amountInvalid',
-    en: 'Type an amount above 0 (whole denars for MKD).',
-    mk: 'Внеси износ поголем од 0 (цели денари за MKD).',
+    key: 'groupPlan.amountInvalidMkd',
+    en: 'Type an amount above 0, in whole denars.',
+    mk: 'Внеси износ поголем од 0, во цели денари.',
+  },
+  {
+    key: 'groupPlan.amountInvalidEur',
+    en: 'Type an amount above 0, with up to two decimals.',
+    mk: 'Внеси износ поголем од 0, најмногу две децимали.',
   },
   { key: 'groupPlan.remove', en: 'Remove plan', mk: 'Отстрани го планот' },
   { key: 'groupPlan.removed', en: 'Plan removed', mk: 'Планот е отстранет' },
@@ -78,6 +84,20 @@ describe('the texts of the group spending plan', () => {
 
   it.each(planTexts)('uses the same placeholders in the English and the Macedonian text of $key', ({ key }) => {
     expect(placeholdersOf(translated('mk', key))).toEqual(placeholdersOf(translated('en', key)))
+  })
+
+  it.each(invalidAmountKeys)('writes no currency code in Latin letters in the text of %s in either language', (key) => {
+    for (const language of ['en', 'mk'] as const) {
+      expect(translated(language, key)).not.toContain('MKD')
+      expect(translated(language, key)).not.toContain('EUR')
+    }
+  })
+
+  it('has the denar message with the same words as the limit sheet and no text under the old key groupPlan.amountInvalid', () => {
+    expect(translated('mk', 'groupPlan.amountInvalidMkd')).toBe(translated('mk', 'budget.limits.amountInvalid'))
+    expect(translated('en', 'groupPlan.amountInvalidMkd')).toBe(translated('en', 'budget.limits.amountInvalid'))
+    expect(keysUnder(en, planPrefix)).not.toContain('groupPlan.amountInvalid')
+    expect(keysUnder(mk, planPrefix)).not.toContain('groupPlan.amountInvalid')
   })
 
   it('has the same keys under groupPlan in English and in Macedonian', () => {

@@ -488,7 +488,8 @@
     "over": "{{amount}} over",
     "included": "includes {{amount}} converted to {{currency}}",
     "hint": "Everyone in the group sees the plan.",
-    "amountInvalid": "Type an amount above 0 (whole denars for MKD).",
+    "amountInvalidMkd": "Type an amount above 0, in whole denars.",
+    "amountInvalidEur": "Type an amount above 0, with up to two decimals.",
     "remove": "Remove plan",
     "removed": "Plan removed"
   },

@@ -588,6 +588,48 @@ describe('GroupScreen with the Totals tab: the totals by category', () => {
       expect(hasClassOnItselfOrAncestorsBelow(name, row, ['min-w-0', 'flex-1'])).toBe(true)
       expect(amount.closest('.whitespace-nowrap')).not.toBeNull()
       expect(row.contains(amount.closest('.whitespace-nowrap'))).toBe(true)
+      expect(amount.closest('.whitespace-nowrap')?.classList.contains('ml-auto')).toBe(true)
+    })
+
+    it('lets the row wrap, so a huge amount can drop under the name instead of squeezing it', async () => {
+      await renderGroupApp(routes.groupTotals(groupId), { spending: bigDenarSpending })
+
+      const [row] = categoryRowsOf(await findCurrencyRegion('MKD'))
+
+      expect(Array.from(row.classList)).toContain('flex-wrap')
+    })
+
+    it('lets every row of every currency wrap', async () => {
+      await renderGroupApp(routes.groupTotals(groupId), { spending: mkdAndEurSpending })
+
+      await findCurrencyRegion('MKD')
+      const rows = [...categoryRowsOf(currencyRegion('MKD')), ...categoryRowsOf(currencyRegion('EUR'))]
+
+      expect(rows).toHaveLength(5)
+      for (const row of rows) {
+        expect(Array.from(row.classList), `the row "${row.textContent}"`).toContain('flex-wrap')
+      }
+    })
+
+    it('keeps at least 5 rem (80 px) for the name before the amount drops under it: min-w-0, flex-1 and basis-20', async () => {
+      await renderGroupApp(routes.groupTotals(groupId), { spending: bigDenarSpending })
+
+      const [row] = categoryRowsOf(await findCurrencyRegion('MKD'))
+      const name = nameElementIn(row, 'Stay')
+
+      expect(hasClassOnItselfOrAncestorsBelow(name, row, ['min-w-0', 'flex-1', 'basis-20'])).toBe(true)
+      expect(hasClassOnItselfOrAncestorsBelow(name, row, ['basis-32'])).toBe(false)
+    })
+
+    it('gives the name of every row the basis-20 column', async () => {
+      await renderGroupApp(routes.groupTotals(groupId), { spending: mkdOnlySpending })
+
+      const rows = categoryRowsOf(await findCurrencyRegion('MKD'))
+
+      for (const [index, expectedName] of ['Food & drinks', 'Transport', 'No category'].entries()) {
+        const name = nameElementIn(rows[index], expectedName)
+        expect(hasClassOnItselfOrAncestorsBelow(name, rows[index], ['min-w-0', 'flex-1', 'basis-20']), `the name "${expectedName}"`).toBe(true)
+      }
     })
 
     it('keeps the amount of every row on one line', async () => {
