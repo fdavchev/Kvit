@@ -19,6 +19,10 @@ export function balancesQueryKey(groupId: string): readonly ['groups', string, '
   return ['groups', groupId, 'balances']
 }
 
+export function spendingQueryKey(groupId: string): readonly ['groups', string, 'spending'] {
+  return ['groups', groupId, 'spending']
+}
+
 export async function refreshGroupList(queryClient: QueryClient): Promise<void> {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: groupsQueryKey, exact: true }),

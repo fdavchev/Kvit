@@ -7,6 +7,7 @@ import {
 } from '@/core/services/personalCategories/personalCategoriesService'
 import {
   readCount,
+  readCountAboveZero,
   readDate,
   readDateOrNull,
   readList,
@@ -38,6 +39,7 @@ export interface PersonalEntry {
   createdAt: string
   updatedAt: string | null
   recurringIncomeId: string | null
+  mergedWithExpenseId: string | null
 }
 
 export interface PersonalCategoryTotal {
@@ -90,6 +92,34 @@ export interface MonthLimits {
   categories: LimitRow[]
 }
 
+export type DuplicateMatch = 'Share' | 'Whole'
+
+const duplicateMatches: readonly DuplicateMatch[] = ['Share', 'Whole']
+
+export interface PossibleDuplicate {
+  entryId: string
+  entryNote: string | null
+  entryAmountMinor: number
+  entryDate: string
+  entryCategoryId: string
+  expenseId: string
+  groupId: string
+  groupName: string
+  expenseTitle: string | null
+  currency: Currency
+  shareMinor: number
+  expenseAmountMinor: number
+  expenseDate: string
+  matchedOn: DuplicateMatch
+}
+
+export type DuplicateAnswer = 'Same' | 'New'
+
+export interface DuplicatePairIds {
+  entryId: string
+  expenseId: string
+}
+
 export interface PersonalEntryMonth {
   month: string
   entries: PersonalEntry[]
@@ -98,6 +128,7 @@ export interface PersonalEntryMonth {
   groupShares: GroupShare[]
   convertedTotals: ConvertedTotals | null
   limits: MonthLimits
+  possibleDuplicates: PossibleDuplicate[]
 }
 
 interface PersonalEntryMoneyFields {
@@ -134,6 +165,7 @@ export async function getPersonalEntries(month: string): Promise<PersonalEntryMo
         ? null
         : parseConvertedTotals(readObject(fields.convertedTotals, `"convertedTotals" of ${what}`)),
     limits: parseMonthLimits(readObject(fields.limits, `"limits" of ${what}`)),
+    possibleDuplicates: readList(fields, 'possibleDuplicates', what).map(parsePossibleDuplicate),
   }
 }
 
@@ -153,6 +185,14 @@ export async function restorePersonalEntry(entryId: string): Promise<void> {
   await apiRequest(endpoints.personalEntryRestore(entryId), { method: 'POST' })
 }
 
+export async function addDuplicateAnswer({ entryId, expenseId }: DuplicatePairIds, answer: DuplicateAnswer): Promise<void> {
+  await apiRequest(endpoints.personalDuplicateAnswers, jsonRequest('PUT', { entryId, expenseId, answer }))
+}
+
+export async function removeDuplicateAnswer({ entryId, expenseId }: DuplicatePairIds): Promise<void> {
+  await apiRequest(endpoints.personalDuplicateAnswers, jsonRequest('DELETE', { entryId, expenseId }))
+}
+
 function parseEntry(row: unknown): PersonalEntry {
   const what = 'a personal entry'
   const fields = readObject(row, what)
@@ -170,6 +210,7 @@ function parseEntry(row: unknown): PersonalEntry {
     createdAt: readDate(fields, 'createdAt', what),
     updatedAt: readDateOrNull(fields, 'updatedAt', what),
     recurringIncomeId: readOrNullWhenMissing(fields, 'recurringIncomeId', what, readTextOrNull),
+    mergedWithExpenseId: readTextOrNull(fields, 'mergedWithExpenseId', what),
   }
 }
 
@@ -215,6 +256,27 @@ function parseGroupShare(row: unknown): GroupShare {
     entryDate: readDate(fields, 'entryDate', what),
     currency: readOneOf(fields, 'currency', groupCurrencies, what),
     shareMinor: readCount(fields, 'shareMinor', what),
+  }
+}
+
+function parsePossibleDuplicate(row: unknown): PossibleDuplicate {
+  const what = 'a possible duplicate of the month'
+  const fields = readObject(row, what)
+  return {
+    entryId: readText(fields, 'entryId', what),
+    entryNote: readTextOrNull(fields, 'entryNote', what),
+    entryAmountMinor: readCount(fields, 'entryAmountMinor', what),
+    entryDate: readDate(fields, 'entryDate', what),
+    entryCategoryId: readText(fields, 'entryCategoryId', what),
+    expenseId: readText(fields, 'expenseId', what),
+    groupId: readText(fields, 'groupId', what),
+    groupName: readText(fields, 'groupName', what),
+    expenseTitle: readTextOrNull(fields, 'expenseTitle', what),
+    currency: readOneOf(fields, 'currency', groupCurrencies, what),
+    shareMinor: readCountAboveZero(fields, 'shareMinor', what),
+    expenseAmountMinor: readCount(fields, 'expenseAmountMinor', what),
+    expenseDate: readDate(fields, 'expenseDate', what),
+    matchedOn: readOneOf(fields, 'matchedOn', duplicateMatches, what),
   }
 }
 

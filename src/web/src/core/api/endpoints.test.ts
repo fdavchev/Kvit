@@ -42,6 +42,7 @@ describe('endpoints', () => {
     ['groupExpensesDeleted', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/expenses/deleted'],
     ['groupActivity', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/activity'],
     ['groupBalances', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/balances'],
+    ['groupSpending', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/spending'],
     ['groupSettlements', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/settlements'],
     ['groupCountsInBudget', '/api/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/members/me/counts-in-budget'],
   ] as const)('builds the path %s for a group id as %s', (name, path) => {

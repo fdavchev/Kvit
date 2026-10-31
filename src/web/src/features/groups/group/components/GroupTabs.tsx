@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { routes } from '@/core/router/routes'
 import { KvitTabPill } from '@/shared/components/KvitTabPill'
 
-export type GroupTab = 'expenses' | 'balances' | 'activity'
+export type GroupTab = 'expenses' | 'balances' | 'activity' | 'totals'
 
 interface GroupTabsProps {
   groupId: string
@@ -11,7 +11,7 @@ interface GroupTabsProps {
 }
 
 const tabLook =
-  'pressable relative flex min-h-11 flex-1 items-center justify-center rounded-full font-bold text-muted-foreground hover:text-foreground aria-[current=page]:text-tab-active-foreground'
+  'pressable relative flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-full px-0.5 text-center text-[11px] font-bold whitespace-nowrap text-muted-foreground min-[360px]:text-xs min-[480px]:text-base hover:text-foreground aria-[current=page]:text-tab-active-foreground'
 
 export function GroupTabs({ groupId, currentTab }: GroupTabsProps) {
   const { t } = useTranslation()
@@ -19,6 +19,7 @@ export function GroupTabs({ groupId, currentTab }: GroupTabsProps) {
     { tab: 'expenses', to: routes.group(groupId), label: t('expenses.title') },
     { tab: 'balances', to: routes.groupBalances(groupId), label: t('balances.title') },
     { tab: 'activity', to: routes.groupActivity(groupId), label: t('activity.title') },
+    { tab: 'totals', to: routes.groupTotals(groupId), label: t('groupTotals.tab') },
   ]
 
   return (

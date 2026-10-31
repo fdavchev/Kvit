@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit group tab bar mockup</title>
+<style>
+:root{--bg:#ffd9a8;--fg:#3d2610;--card:#fff1dc;--muted:#7a3300;--line:#9c6f47;--pill:#ffffff;--tabfg:#3d2610;--ok:#1d6b2e;--bad:#b71f1f;--ring:transparent}
+[data-theme=dark]{--bg:#1f1816;--fg:#fff1dc;--card:#2c2220;--muted:#ffd9a8;--line:#72625c;--pill:#d9b48a;--tabfg:#1f1816;--ok:#7fd68f;--bad:#ff9a9a;--ring:#8d7d77}
+*{box-sizing:border-box}
+body{margin:0;font:16px system-ui,sans-serif;background:var(--bg);color:var(--fg);padding:16px}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:17px;margin:26px 0 4px}
+.n{margin:2px 0 10px;color:var(--muted);font-size:14px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+button.c{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:8px 14px;min-height:44px}
+button.c.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.rec{font-size:12px;background:var(--fg);color:var(--bg);padding:2px 8px;border-radius:999px;margin-left:6px}
+.phone{border:1px solid var(--line);border-radius:18px;padding:16px;background:var(--bg);margin:8px 0;overflow:hidden}
+.title{font-weight:800;font-size:20px;margin:0 0 10px}
+.tabs{position:relative;display:flex;border-radius:999px;background:var(--card);padding:4px;box-shadow:inset 0 0 0 1px var(--ring);margin-bottom:10px}
+.tabs a{position:relative;z-index:1;display:flex;min-height:44px;align-items:center;justify-content:center;border-radius:999px;font-weight:700;color:var(--muted);text-decoration:none;cursor:pointer;white-space:nowrap;flex:1 1 0}
+.tabs a.act{color:var(--tabfg)}
+.pill{position:absolute;top:4px;bottom:4px;left:4px;border-radius:999px;background:var(--pill);box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+.cell{display:flex;align-items:center;justify-content:center;flex:1 1 0}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;min-height:44px;display:flex;align-items:center;font-weight:700;cursor:pointer}
+.chip.act{background:var(--pill);color:var(--tabfg)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;font-size:14px}
+.fit{font-size:13px;margin-top:6px}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.v{display:none}.v.show{display:block}
+.scroll{overflow-x:auto;scrollbar-width:none}
+</style>
+</head>
+<body>
+<h1>Group tab bar mockup</h1>
+<p class="n">Four tabs do not fit at 320 px. Pick A, B or C below. Change the width, language and theme to see each one at the sizes that matter. Tap the tabs to move the highlight. Each option shows a ✓ or ✗ for every label that fits or gets cut.</p>
+<div class="bar" id="width"><button class="c" data-w="320">320 px</button><button class="c on" data-w="360">360 px</button><button class="c" data-w="400">400 px</button></div>
+<div class="bar" id="lang"><button class="c on" data-l="en">English</button><button class="c" data-l="mk">Македонски</button></div>
+<div class="bar"><button class="c" id="theme">Light / Dark</button></div>
+
+<h2>Today (the problem)</h2>
+<p class="n">Quarter-width highlight, but labels need different widths.</p>
+<div class="phone" data-opt="today"><div class="title">Ohrid trip</div><div class="tabs" data-mode="today"></div><div class="fit"></div></div>
+
+<h2>A · Four equal tabs, smaller text on narrow phones <span class="rec">recommended</span></h2>
+<p class="n">Each tab is exactly a quarter, the highlight lines up, text is 12 px under 400 px wide (16 px otherwise). The Macedonian word «Активности» is the tightest label; the checkbox shows a possible shorter word for comparison.</p>
+<label class="n"><input type="checkbox" id="short"> Use a shorter Macedonian word instead of «Активности»: «Дневник» (my proposal, not decided)</label>
+<div class="phone" data-opt="a"><div class="title">Ohrid trip</div><div class="tabs" data-mode="a"></div><div class="fit"></div></div>
+
+<h2>B · A tab bar you can swipe sideways</h2>
+<p class="n">Full-size labels. The 4th tab peeks out and hides off the edge on narrow phones (swipe it with the mouse or touch).</p>
+<div class="phone" data-opt="b"><div class="title">Ohrid trip</div><div class="scroll"><div class="tabs" data-mode="b" style="width:max-content;min-width:100%"></div></div><div class="fit"></div></div>
+
+<h2>C · Totals as a chip next to Members and Settings</h2>
+<p class="n">Three tabs (they fit everywhere); "Totals" sits with the chips under the title. Your pick 4 was a tab, so this changes that decision.</p>
+<div class="phone" data-opt="c"><div class="title">Ohrid trip</div><div class="chips"><span class="chip">Members</span><span class="chip">Settings</span><span class="chip" data-totals>📊 Totals</span></div><div class="tabs" data-mode="c"></div><div class="fit"></div><div class="panel" id="cpanel" style="display:none;margin-top:8px">Totals by category… (opens as a screen of its own)</div></div>
+
+<script>
+const L={en:{t:['Expenses','Balances','Activity','Totals'],chip:['Members','Settings','📊 Totals']},mk:{t:['Трошоци','Салда','Активности','Вкупно'],chip:['Членови','Поставки','📊 Вкупно']}};
+let w=360,lang='en',active=0;
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+function labels(mode){const a=L[lang].t.slice();if(mode==='a'&&lang==='mk'&&$('#short').checked)a[2]='Дневник';return mode==='c'?a.slice(0,3):a}
+function draw(){
+  $$('.phone').forEach(p=>{p.style.width=w+'px';p.style.maxWidth='none'});
+  $$('.tabs').forEach(t=>{
+    const mode=t.dataset.mode,ls=labels(mode);t.innerHTML='';
+    const pill=document.createElement('span');pill.className='pill';
+    const n=ls.length;
+    if(mode==='today'||mode==='a'||mode==='c'){pill.style.width=`calc((100% - 0.5rem) / ${n})`;pill.style.transform=`translateX(${Math.min(active,n-1)*100}%)`;t.appendChild(pill)}
+    ls.forEach((x,i)=>{
+      const a=document.createElement('a');a.textContent=x;
+      if(i===Math.min(active,n-1))a.classList.add('act');
+      a.style.fontSize=(mode==='a'&&w<400)?'12px':'16px';
+      if(mode==='today'){a.style.padding='0'}
+      if(mode==='a'){a.style.minWidth='0';a.style.padding='0 2px'}
+      if(mode==='b'){a.style.flex='0 0 auto';a.style.padding='0 16px'}
+      if(mode==='c'){a.style.padding='0 4px'}
+      a.onclick=()=>{active=i;draw()};
+      t.appendChild(a)});
+    if(mode==='b'){const act=t.children[Math.min(active,n-1)];act.style.background='var(--pill)';act.style.boxShadow='0 1px 3px rgba(0,0,0,.2)';act.style.color='var(--tabfg)'}
+  });
+  requestAnimationFrame(()=>{
+    $$('.phone').forEach(p=>{
+      const f=p.querySelector('.fit');if(!f)return;
+      const t=p.querySelector('.tabs');const cells=[...t.querySelectorAll('a')];
+      const cw=cells.map(a=>a.getBoundingClientRect().width);
+      const bad=[];
+      cells.forEach((a,i)=>{
+        const r=document.createRange();r.selectNodeContents(a);const tw=r.getBoundingClientRect().width;
+        const mode=t.dataset.mode;
+        if(mode==='b'){const box=t.parentElement.getBoundingClientRect();const ar=a.getBoundingClientRect();if(ar.right>box.right+1)bad.push(a.textContent+' (off the edge)')}
+        else if(tw>a.getBoundingClientRect().width-2)bad.push(a.textContent+` (needs ${Math.round(tw)} px, has ${Math.round(a.getBoundingClientRect().width)} px)`)
+        });
+      f.className='fit '+(bad.length?'bad':'ok');
+      f.textContent=bad.length?'✗ Does not fit: '+bad.join(', '):'✓ Every label fits'
+    });
+  });
+}
+$('#width').onclick=e=>{const b=e.target.closest('button');if(!b)return;w=+b.dataset.w;$$('#width button').forEach(x=>x.classList.toggle('on',x===b));draw()};
+$('#lang').onclick=e=>{const b=e.target.closest('button');if(!b)return;lang=b.dataset.l;$$('#lang button').forEach(x=>x.classList.toggle('on',x===b));
+  $$('.chip:not([data-totals])').forEach((c,i)=>c.textContent=L[lang].chip[i]);$('[data-totals]').textContent=L[lang].chip[2];document.documentElement.lang=lang;draw()};
+$('#theme').onclick=()=>{const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'light':'dark';draw()};
+$('#short').onchange=draw;
+$('[data-totals]').onclick=()=>{const p=$('#cpanel');p.style.display=p.style.display==='none'?'block':'none'};
+draw();
+</script>
+</body>
+</html>

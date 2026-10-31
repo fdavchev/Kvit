@@ -12,13 +12,14 @@ import { personalCategoryName } from '../../categories/personalCategoryName'
 interface PersonalEntryListItemProps {
   entry: PersonalEntry
   today: string
+  mergedLabel: string | null
   onOpen: (entry: PersonalEntry) => void
 }
 
 const incomeEmoji = '\u{1F4B0}'
 const incomeTileColor = 'var(--category-green)'
 
-export function PersonalEntryListItem({ entry, today, onOpen }: PersonalEntryListItemProps) {
+export function PersonalEntryListItem({ entry, today, mergedLabel, onOpen }: PersonalEntryListItemProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const { category } = entry
@@ -29,7 +30,10 @@ export function PersonalEntryListItem({ entry, today, onOpen }: PersonalEntryLis
       <button
         type="button"
         onClick={() => onOpen(entry)}
-        className="pressable flex min-h-16 w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left hover:bg-secondary-hover"
+        className={cn(
+          'pressable flex min-h-16 w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left hover:bg-secondary-hover',
+          mergedLabel !== null && 'opacity-80',
+        )}
       >
         {category === null ? (
           <KvitEmojiTile emoji={incomeEmoji} background={incomeTileColor} />
@@ -44,6 +48,11 @@ export function PersonalEntryListItem({ entry, today, onOpen }: PersonalEntryLis
             {dayText}
             {category !== null && entry.note !== null && ` · ${entry.note}`}
           </span>
+          {mergedLabel !== null && (
+            <span data-entry-merged className="line-clamp-2 text-[0.8125rem] break-words text-muted-foreground">
+              {mergedLabel}
+            </span>
+          )}
         </span>
         <span
           data-entry-amount

@@ -26,6 +26,7 @@ namespace Kvit.Api.Tests.Persistence
                 "categories",
                 "closing_responses",
                 "data_protection_keys",
+                "duplicate_answers",
                 "exchange_rates",
                 "expense_shares",
                 "expenses",

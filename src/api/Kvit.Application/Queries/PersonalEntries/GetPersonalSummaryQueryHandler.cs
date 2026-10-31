@@ -48,7 +48,7 @@ namespace Kvit.Application.Queries.PersonalEntries
         {
             DateOnly firstDayOfNextMonth = firstDay.AddMonths(1);
             List<PersonalEntryDto> entries = await _context.EntriesOf(userId, firstDay, firstDayOfNextMonth)
-                .PersonalEntryDtos()
+                .PersonalEntryDtos(_context, userId)
                 .ToListAsync(cancellationToken);
             List<GroupShareDto> groupShares = await _context.GroupSharesOf(userId, firstDay, firstDayOfNextMonth).ToListAsync(cancellationToken);
 
@@ -57,7 +57,9 @@ namespace Kvit.Application.Queries.PersonalEntries
 
         private static IEnumerable<Currency> CurrenciesOf(SummaryMonthDto thisMonth, SummaryMonthDto previousMonth)
         {
-            return thisMonth.Entries.Concat(previousMonth.Entries).Select(entry => entry.Currency)
+            return thisMonth.Entries.Concat(previousMonth.Entries)
+                .Where(entry => entry.Kind == PersonalEntryKind.Income)
+                .Select(entry => entry.Currency)
                 .Concat(thisMonth.SpentItems.Concat(previousMonth.SpentItems).Select(item => item.Currency))
                 .Distinct()
                 .Order();

@@ -49,6 +49,21 @@ namespace Kvit.Api.Controllers
             return Result(result);
         }
 
+        [HttpPut("{groupId:guid}/plan")]
+        public async Task<ActionResult> SetPlan(Guid groupId, SetGroupPlanRequest request, CancellationToken cancellationToken)
+        {
+            SetGroupPlanCommand command = new(groupId, request.AmountMinorAsWholeNumber(), request.CurrencyAsText());
+            Result result = await _dispatcher.Send(command, cancellationToken);
+            return Result(result);
+        }
+
+        [HttpDelete("{groupId:guid}/plan")]
+        public async Task<ActionResult> RemovePlan(Guid groupId, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new RemoveGroupPlanCommand(groupId), cancellationToken);
+            return Result(result);
+        }
+
         [HttpPost("{groupId:guid}/restore")]
         public async Task<ActionResult> Restore(Guid groupId, CancellationToken cancellationToken)
         {

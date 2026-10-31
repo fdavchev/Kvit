@@ -21,6 +21,7 @@ import { GroupStatusBadge } from '../../closing/components/GroupStatusBadge'
 import { useClosingBar } from '../../closing/hooks/useClosingBar'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
 import { GroupSizeLine } from '../../shared/components/GroupSizeLine'
+import { GroupTotals } from '../../totals/components/GroupTotals'
 import { canChangeGroup, canInviteToGroup } from '../../shared/groupAccess'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
 import { useGroup } from '../hooks/useGroup'
@@ -33,7 +34,8 @@ export function GroupScreen() {
   const groupId = useGroupIdParam()
   const isActivityTab: boolean = useMatch(routes.groupActivity(':groupId')) !== null
   const isBalancesTab: boolean = useMatch(routes.groupBalances(':groupId')) !== null
-  const tab: GroupTab = currentTabOf(isActivityTab, isBalancesTab)
+  const isTotalsTab: boolean = useMatch(routes.groupTotals(':groupId')) !== null
+  const tab: GroupTab = currentTabOf(isActivityTab, isBalancesTab, isTotalsTab)
   const groupQuery = useGroup(groupId)
 
   function renderContent() {
@@ -152,6 +154,7 @@ function GroupContent({ group, tab }: GroupContentProps) {
         )}
         {tab === 'balances' && balances}
         {tab === 'activity' && <GroupActivity groupId={group.id} />}
+        {tab === 'totals' && <GroupTotals group={group} />}
       </div>
       {(showsFloatingAddExpense || hasBar) && (
         <FloatingActions hasBar={hasBar}>
@@ -192,12 +195,15 @@ function FloatingActions({ hasBar, children }: FloatingActionsProps) {
   )
 }
 
-function currentTabOf(isActivityTab: boolean, isBalancesTab: boolean): GroupTab {
+function currentTabOf(isActivityTab: boolean, isBalancesTab: boolean, isTotalsTab: boolean): GroupTab {
   if (isActivityTab) {
     return 'activity'
   }
   if (isBalancesTab) {
     return 'balances'
+  }
+  if (isTotalsTab) {
+    return 'totals'
   }
   return 'expenses'
 }

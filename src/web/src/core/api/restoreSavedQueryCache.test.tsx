@@ -243,6 +243,28 @@ describe('restoring the saved data when the app starts', () => {
     expect(removeClient).toHaveBeenCalled()
   })
 
+  it('throws away a copy saved at version 4, which has Budget month answers without possibleDuplicates and mergedWithExpenseId', async () => {
+    stubFetchThatNeverAnswers()
+    const { persister, removeClient } = await persisterHolding(savedCopy(testMe, '4'))
+
+    const queryClient = await startApp(persister)
+
+    expect(await screen.findByRole('status')).toBeTruthy()
+    expect(screen.queryByText('Greece trip')).toBeNull()
+    expect(queryClient.getQueryData(groupsKey)).toBeUndefined()
+    expect(removeClient).toHaveBeenCalled()
+  })
+
+  it('keeps a copy saved at version 5', async () => {
+    stubFetchThatNeverAnswers()
+    const { persister, removeClient } = await persisterHolding(savedCopy(testMe, '5'))
+
+    await startApp(persister)
+
+    expect(await screen.findByText('Greece trip')).toBeTruthy()
+    expect(removeClient).not.toHaveBeenCalled()
+  })
+
   it('shows loading and then the screen when nothing was saved', async () => {
     stubFetch(Response.json(testMe))
     const { persister } = await persisterHolding(undefined)

@@ -50,6 +50,7 @@
     "GROUP_NAME_INVALID": "Enter a name (up to 60 characters).",
     "GROUP_EMOJI_INVALID": "Pick an emoji.",
     "GROUP_CURRENCY_INVALID": "Pick MKD or EUR.",
+    "GROUP_PLAN_AMOUNT_INVALID": "Type a plan amount above 0 (whole denars for MKD).",
     "GROUP_NOT_DELETED": "This group is not deleted.",
     "GROUP_RESTORE_EXPIRED": "This group was deleted more than 30 days ago and can't be restored.",
     "GROUP_BALANCES_NOT_ZERO": "Settle up first. A group can be deleted only when everyone's balance is 0.",
@@ -138,6 +139,7 @@
     "RECURRING_INCOME_NOT_STOPPED": "This repeating income is not stopped.",
     "RECURRING_INCOME_RESTART_EXPIRED": "This repeating income was stopped more than 5 days ago and can't be restarted.",
     "BUDGET_LIMIT_AMOUNT_INVALID": "Enter a limit in whole denars, more than 0.",
+    "DUPLICATE_ANSWER_INVALID": "Choose whether this is the same expense or a new one.",
     "SETTLEMENT_NOT_FOUND": "This payment doesn't exist or was deleted.",
     "SETTLEMENT_NOT_ALLOWED": "You can't do this with this payment.",
     "SETTLEMENT_NOT_PENDING": "This payment is no longer waiting for an answer.",
@@ -433,7 +435,9 @@
     "closingObjectedWithReason": "{{name}} objected to the closing: “{{reason}}”",
     "closingCancelled": "{{name}} cancelled the closing",
     "groupFinished": "The group finished",
-    "groupReopened": "{{name}} unlocked the group"
+    "groupReopened": "{{name}} unlocked the group",
+    "groupPlanSet": "{{name}} set the plan to {{amount}}",
+    "groupPlanRemoved": "{{name}} removed the plan"
   },
   "balances": {
     "title": "Balances",
@@ -464,6 +468,30 @@
     "kvitTitle": "Everyone is kvit 🎉",
     "kvitHint": "Nobody owes anything.",
     "recordAnother": "Record another payment"
+  },
+  "groupTotals": {
+    "tab": "Totals",
+    "title": "Totals by category",
+    "emptyTitle": "No spending yet",
+    "emptyHint": "Totals by category show up here once someone adds an expense.",
+    "noCategory": "No category"
+  },
+  "groupPlan": {
+    "title": "Spending plan",
+    "heading": "Spending plan",
+    "setRow": "Set a plan",
+    "ofAmount": "{{spent}} of {{amount}}",
+    "each_one": "{{amount}} each · {{count}} person",
+    "each_other": "{{amount}} each · {{count}} people",
+    "onTrack": "On track",
+    "near": "Near the plan · {{amount}} left",
+    "over": "{{amount}} over",
+    "included": "includes {{amount}} converted to {{currency}}",
+    "hint": "Everyone in the group sees the plan.",
+    "amountInvalidMkd": "Type an amount above 0, in whole denars.",
+    "amountInvalidEur": "Type an amount above 0, with up to two decimals.",
+    "remove": "Remove plan",
+    "removed": "Plan removed"
   },
   "closing": {
     "readyTitle": "Everyone's kvit – close the group?",
@@ -622,6 +650,16 @@
     "groupShares": {
       "title": "From groups"
     },
+    "duplicates": {
+      "title": "Is this the same?",
+      "body": "Your “{{entry}}” ({{entryAmount}}, {{entryDay}}) and your share of “{{expense}}” in {{group}} ({{shareAmount}}, {{expenseDay}}).",
+      "same": "Same, merge",
+      "new": "No, it's new",
+      "mergedWith": "Merged with {{expense}} · {{group}}",
+      "mergedWithGroupExpense": "Merged with a group expense",
+      "notTheSame": "Not the same",
+      "countedAgain": "Counted again in your budget"
+    },
     "card": {
       "inMkd": "in MKD",
       "inEur": "in EUR",
@@ -639,7 +677,9 @@
       "remove": "Remove limit",
       "removed": "Limit removed",
       "over": "{{amount}} over",
-      "includesConverted": "includes {{amount}} converted to MKD"
+      "includesConverted": "includes {{amount}} converted to MKD",
+      "nearWords": "Near the limit",
+      "amountInvalid": "Type an amount above 0, in whole denars."
     },
     "summary": {
       "title": "{{month}} vs {{previousMonth}}",

@@ -22,7 +22,7 @@ namespace Kvit.Api.Tests.PersonalEntries
         public const string IncomeTotalAmountProperty = "totalMinor";
         public const string KindCannotChangeCode = ResultCodes.PERSONAL_ENTRY_KIND_CANNOT_CHANGE;
 
-        public static readonly string[] EntryFieldNames = ["amountMinor", "category", "categoryId", "createdAt", "currency", "entryDate", "id", "kind", "mkdPerEur", "note", "rateDate", "recurringIncomeId", "updatedAt"];
+        public static readonly string[] EntryFieldNames = ["amountMinor", "category", "categoryId", "createdAt", "currency", "entryDate", "id", "kind", "mergedWithExpenseId", "mkdPerEur", "note", "rateDate", "recurringIncomeId", "updatedAt"];
 
         public static TheoryData<string> AllEndpoints => ["list", "add", "edit", "delete", "restore"];
 

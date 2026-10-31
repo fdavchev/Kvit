@@ -45,3 +45,4 @@ secrets.json
 appsettings.*.local.json
 .wrangler/
 .dev.vars
+.vitest/

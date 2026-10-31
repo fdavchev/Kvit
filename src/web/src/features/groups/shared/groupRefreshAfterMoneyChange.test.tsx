@@ -47,6 +47,8 @@ const expenseChanges = {
 function seedGroupsAndList(queryClient: QueryClient): void {
   queryClient.setQueryData(['groups', testGroupId], testGroup)
   queryClient.setQueryData(['groups', otherGroupId], { ...testGroup, id: otherGroupId })
+  queryClient.setQueryData(['groups', testGroupId, 'spending'], { currencies: [], plan: null })
+  queryClient.setQueryData(['groups', otherGroupId, 'spending'], { currencies: [], plan: null })
   queryClient.setQueryData(['groups'], groupListOf({ groups: [greeceGroupRow] }))
 }
 
@@ -136,11 +138,14 @@ const mountRestoreSettlement: Mount = async () => {
   return { queryClient, answer: noContent(), run: () => act(() => result.current.mutateAsync(settlementId)) }
 }
 
-const moneyChanges: [string, Mount][] = [
+const expenseMoneyChanges: [string, Mount][] = [
   ['adding an expense', mountCreateExpense],
   ['editing an expense', mountUpdateExpense],
   ['deleting an expense', mountDeleteExpense],
   ['restoring an expense', mountRestoreExpense],
+]
+
+const settlementMoneyChanges: [string, Mount][] = [
   ['recording a payment', mountRecordSettlement],
   ['confirming a payment', mountAnswerSettlement('confirm')],
   ['rejecting a payment', mountAnswerSettlement('reject')],
@@ -148,6 +153,8 @@ const moneyChanges: [string, Mount][] = [
   ['deleting a payment', mountDeleteSettlement],
   ['restoring a payment', mountRestoreSettlement],
 ]
+
+const moneyChanges: [string, Mount][] = [...expenseMoneyChanges, ...settlementMoneyChanges]
 
 describe.each(moneyChanges)('the group after a successful money change: %s', (_name, mount) => {
   afterEach(() => {
@@ -198,6 +205,81 @@ describe.each(moneyChanges)('the group after a successful money change: %s', (_n
       expect(loadGroup).toHaveBeenCalledTimes(1)
     })
     expect(queryClient.getQueryData(['groups', testGroupId])).toEqual(readyToCloseGroup)
+    stopWatching()
+  })
+})
+
+describe.each(expenseMoneyChanges)('the totals by category after a successful expense change: %s', (_name, mount) => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('marks the spending of the group as out of date', async () => {
+    const { run, queryClient, answer } = await mount()
+    stubFetch(answer)
+
+    await run()
+
+    expect(queryClient.getQueryState(['groups', testGroupId, 'spending'])?.isInvalidated).toBe(true)
+  })
+
+  it('does not mark the spending of another group as out of date', async () => {
+    const { run, queryClient, answer } = await mount()
+    stubFetch(answer)
+
+    await run()
+
+    expect(queryClient.getQueryState(['groups', otherGroupId, 'spending'])?.isInvalidated).toBe(false)
+  })
+
+  it('asks the server again for the spending that is on screen, so the new totals show without a reload', async () => {
+    const { run, queryClient, answer } = await mount()
+    stubFetch(answer)
+    const loadSpending = vi.fn(() => Promise.resolve({ currencies: [], plan: null }))
+    const watcher = new QueryObserver(queryClient, {
+      queryKey: ['groups', testGroupId, 'spending'],
+      queryFn: loadSpending,
+      staleTime: Infinity,
+    })
+    const stopWatching = watcher.subscribe(() => {})
+
+    await run()
+
+    await waitFor(() => {
+      expect(loadSpending).toHaveBeenCalledTimes(1)
+    })
+    stopWatching()
+  })
+})
+
+describe.each(settlementMoneyChanges)('the totals by category after a successful payment change: %s', (_name, mount) => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('does not mark the spending of the group as out of date, because payments do not count in the totals', async () => {
+    const { run, queryClient, answer } = await mount()
+    stubFetch(answer)
+
+    await run()
+
+    expect(queryClient.getQueryState(['groups', testGroupId, 'spending'])?.isInvalidated).toBe(false)
+  })
+
+  it('does not ask the server again for the spending that is on screen', async () => {
+    const { run, queryClient, answer } = await mount()
+    stubFetch(answer)
+    const loadSpending = vi.fn(() => Promise.resolve({ currencies: [], plan: null }))
+    const watcher = new QueryObserver(queryClient, {
+      queryKey: ['groups', testGroupId, 'spending'],
+      queryFn: loadSpending,
+      staleTime: Infinity,
+    })
+    const stopWatching = watcher.subscribe(() => {})
+
+    await run()
+
+    expect(loadSpending).not.toHaveBeenCalled()
     stopWatching()
   })
 })

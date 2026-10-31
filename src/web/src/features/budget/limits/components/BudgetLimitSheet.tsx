@@ -115,6 +115,7 @@ export function BudgetLimitSheet({ target, viewedMonth, currentMonth, opener, on
           amountText={amountText}
           currency="MKD"
           invalid={isAmountRefused}
+          invalidMessage={t('budget.limits.amountInvalid')}
           onAmountTextChange={(nextAmountText) => {
             setAmountText(nextAmountText)
             setIsAmountChangedSinceSave(true)

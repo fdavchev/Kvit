@@ -57,6 +57,7 @@ namespace Kvit.Domain.Results
         public const string RECURRING_INCOME_NOT_STOPPED = "RECURRING_INCOME_NOT_STOPPED";
         public const string RECURRING_INCOME_RESTART_EXPIRED = "RECURRING_INCOME_RESTART_EXPIRED";
         public const string BUDGET_LIMIT_AMOUNT_INVALID = "BUDGET_LIMIT_AMOUNT_INVALID";
+        public const string DUPLICATE_ANSWER_INVALID = "DUPLICATE_ANSWER_INVALID";
         public const string SETTLEMENT_NOT_FOUND = "SETTLEMENT_NOT_FOUND";
         public const string SETTLEMENT_NOT_ALLOWED = "SETTLEMENT_NOT_ALLOWED";
         public const string SETTLEMENT_NOT_PENDING = "SETTLEMENT_NOT_PENDING";
@@ -94,6 +95,7 @@ namespace Kvit.Domain.Results
         public const string GROUP_NAME_INVALID = "GROUP_NAME_INVALID";
         public const string GROUP_EMOJI_INVALID = "GROUP_EMOJI_INVALID";
         public const string GROUP_CURRENCY_INVALID = "GROUP_CURRENCY_INVALID";
+        public const string GROUP_PLAN_AMOUNT_INVALID = "GROUP_PLAN_AMOUNT_INVALID";
         public const string GROUP_NOT_DELETED = "GROUP_NOT_DELETED";
         public const string GROUP_RESTORE_EXPIRED = "GROUP_RESTORE_EXPIRED";
         public const string GROUP_BALANCES_NOT_ZERO = "GROUP_BALANCES_NOT_ZERO";

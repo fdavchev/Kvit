@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
@@ -26,6 +26,8 @@ import { todayInTimeZone } from '@/shared/utils/formatDate'
 import { budgetMonths } from '../../budgetMonths'
 import { usePersonalCategories } from '../../categories/hooks/usePersonalCategories'
 import { convertedTotalsInSetting } from '../../convertedTotals'
+import { PossibleDuplicateCard } from '../../duplicates/components/PossibleDuplicateCard'
+import { duplicatePairKey, entryOfPair, mergedEntryLabel } from '../../duplicates/possibleDuplicates'
 import { PersonalIncomeSheet } from '../../entries/components/PersonalIncomeSheet'
 import { PersonalSpendingSheet } from '../../entries/components/PersonalSpendingSheet'
 import { usePersonalEntries } from '../../entries/hooks/usePersonalEntries'
@@ -59,6 +61,10 @@ interface ClosedLimitSheet extends LimitFocusRequest {
   monthUpdatedAt: number
 }
 
+interface AnsweredPair {
+  pairKey: string
+}
+
 export function BudgetScreen() {
   const { t } = useTranslation()
   const me = useSignedInMe()
@@ -76,6 +82,10 @@ export function BudgetScreen() {
   const [limitsToChooseFrom, setLimitsToChooseFrom] = useState<MonthLimits | null>(null)
   const [openedLimit, setOpenedLimit] = useState<LimitTarget | null>(null)
   const [closedLimitSheet, setClosedLimitSheet] = useState<ClosedLimitSheet | null>(null)
+  const [answeredPair, setAnsweredPair] = useState<AnsweredPair | null>(null)
+  const focusedAfterPairRef = useRef<AnsweredPair | null>(null)
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  const nextPairButtonRef = useRef<HTMLButtonElement>(null)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const entriesQuery = usePersonalEntries(selectedMonth)
@@ -84,8 +94,20 @@ export function BudgetScreen() {
   const entriesRef = useListAnimation<HTMLUListElement>()
   useCatchUpOnOpen()
   const today = todayInTimeZone(me.timeZone, new Date())
+  const shownPair = entriesQuery.data?.possibleDuplicates[0]
+  const shownPairKey = shownPair === undefined ? null : duplicatePairKey(shownPair)
+
+  useEffect(() => {
+    if (answeredPair === null || answeredPair === focusedAfterPairRef.current || answeredPair.pairKey === shownPairKey) {
+      return
+    }
+    focusedAfterPairRef.current = answeredPair
+    const focusTarget = nextPairButtonRef.current ?? titleRef.current
+    focusTarget?.focus()
+  }, [answeredPair, shownPairKey])
 
   function selectMonth(month: string): void {
+    setAnsweredPair(null)
     setSearchParams({ month }, { replace: true })
   }
 
@@ -156,7 +178,8 @@ export function BudgetScreen() {
     if (entriesQuery.isError) {
       return renderLoadError(entriesQuery.error, () => void entriesQuery.refetch())
     }
-    const { entries, totals, incomeTotals, groupShares, convertedTotals, limits } = entriesQuery.data
+    const { entries, totals, incomeTotals, groupShares, convertedTotals, limits, possibleDuplicates } =
+      entriesQuery.data
     const sharesNeedCategories = groupShares.some((share) => share.categoryId !== null)
     if (sharesNeedCategories && categoriesQuery.isPending) {
       return <BudgetMonthSkeleton />
@@ -177,9 +200,21 @@ export function BudgetScreen() {
       />
     )
     const summaryRow = <BudgetSummaryRow month={selectedMonth} />
+    const firstPair = possibleDuplicates[0]
+    const duplicateCard = firstPair !== undefined && (
+      <PossibleDuplicateCard
+        key={duplicatePairKey(firstPair)}
+        pair={firstPair}
+        entry={entryOfPair(firstPair, entries)}
+        today={today}
+        sameButtonRef={nextPairButtonRef}
+        onPairDone={() => setAnsweredPair({ pairKey: duplicatePairKey(firstPair) })}
+      />
+    )
     if (entries.length === 0 && groupShares.length === 0) {
       return (
         <>
+          {duplicateCard}
           {repeatingRow}
           {summaryRow}
           {limitsPart}
@@ -194,6 +229,7 @@ export function BudgetScreen() {
     const converted = convertedTotalsInSetting(convertedTotals, me.budgetTotalCurrency)
     return (
       <>
+        {duplicateCard}
         {spending.length === 0 && incomeTotals.length === 0 ? (
           <>
             <p className={cn(balancesCardLook, 'mt-5 py-4 text-center font-semibold text-muted-foreground')}>
@@ -229,7 +265,13 @@ export function BudgetScreen() {
             className="mt-5 flex flex-col gap-0.5 rounded-[20px] bg-card p-1.5 text-card-foreground"
           >
             {entries.map((entry) => (
-              <PersonalEntryListItem key={entry.id} entry={entry} today={today} onOpen={setOpenedEntry} />
+              <PersonalEntryListItem
+                key={entry.id}
+                entry={entry}
+                today={today}
+                mergedLabel={mergedEntryLabel(entry, groupShares, categories, t)}
+                onOpen={setOpenedEntry}
+              />
             ))}
           </ul>
         )}
@@ -243,7 +285,7 @@ export function BudgetScreen() {
   return (
     <KvitScreen>
       <div className="min-h-12" />
-      <KvitScreenTitle>{t('nav.budget')}</KvitScreenTitle>
+      <KvitScreenTitle ref={titleRef}>{t('nav.budget')}</KvitScreenTitle>
       <MonthStrip
         months={months}
         currentMonth={currentMonth}

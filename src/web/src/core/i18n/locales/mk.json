@@ -50,6 +50,7 @@
     "GROUP_NAME_INVALID": "Внеси име (најмногу 60 знаци).",
     "GROUP_EMOJI_INVALID": "Избери емоџи.",
     "GROUP_CURRENCY_INVALID": "Избери MKD или EUR.",
+    "GROUP_PLAN_AMOUNT_INVALID": "Внеси износ за планот поголем од 0 (цели денари за MKD).",
     "GROUP_NOT_DELETED": "Оваа група не е избришана.",
     "GROUP_RESTORE_EXPIRED": "Оваа група е избришана пред повеќе од 30 дена и не може да се врати.",
     "GROUP_BALANCES_NOT_ZERO": "Прво порамнете се. Групата може да се избрише само кога салдото на секого е 0.",
@@ -138,6 +139,7 @@
     "RECURRING_INCOME_NOT_STOPPED": "Овој редовен приход не е запрен.",
     "RECURRING_INCOME_RESTART_EXPIRED": "Овој редовен приход е запрен пред повеќе од 5 дена и не може повторно да се вклучи.",
     "BUDGET_LIMIT_AMOUNT_INVALID": "Внеси лимит во цели денари, поголем од 0.",
+    "DUPLICATE_ANSWER_INVALID": "Избери дали ова е истиот трошок или нов.",
     "SETTLEMENT_NOT_FOUND": "Ова плаќање не постои или е избришано.",
     "SETTLEMENT_NOT_ALLOWED": "Не можеш да го направиш ова со ова плаќање.",
     "SETTLEMENT_NOT_PENDING": "Ова плаќање веќе не чека одговор.",
@@ -433,7 +435,9 @@
     "closingObjectedWithReason": "{{name}} приговори на затворањето: „{{reason}}“",
     "closingCancelled": "{{name}} го откажа затворањето",
     "groupFinished": "Групата заврши",
-    "groupReopened": "{{name}} ја отклучи групата"
+    "groupReopened": "{{name}} ја отклучи групата",
+    "groupPlanSet": "{{name}} постави план од {{amount}}",
+    "groupPlanRemoved": "{{name}} го отстрани планот"
   },
   "balances": {
     "title": "Салда",
@@ -464,6 +468,30 @@
     "kvitTitle": "Сите се квит 🎉",
     "kvitHint": "Никој никому не должи.",
     "recordAnother": "Запиши друго плаќање"
+  },
+  "groupTotals": {
+    "tab": "Вкупно",
+    "title": "Збирови по категорија",
+    "emptyTitle": "Сѐ уште нема трошоци",
+    "emptyHint": "Збировите по категорија ќе се појават тука кога некој ќе додаде трошок.",
+    "noCategory": "Без категорија"
+  },
+  "groupPlan": {
+    "title": "План за трошоците",
+    "heading": "План за трошоците",
+    "setRow": "Постави план",
+    "ofAmount": "{{spent}} од {{amount}}",
+    "each_one": "{{amount}} по човек · {{count}} лице",
+    "each_other": "{{amount}} по човек · {{count}} лица",
+    "onTrack": "Во рамки",
+    "near": "Близу до планот · уште {{amount}}",
+    "over": "{{amount}} над планот",
+    "included": "вклучува {{amount}} претворени во {{currency}}",
+    "hint": "Сите во групата го гледаат планот.",
+    "amountInvalidMkd": "Внеси износ поголем од 0, во цели денари.",
+    "amountInvalidEur": "Внеси износ поголем од 0, најмногу две децимали.",
+    "remove": "Отстрани го планот",
+    "removed": "Планот е отстранет"
   },
   "closing": {
     "readyTitle": "Сите се квит – да ја затвориме групата?",
@@ -622,6 +650,16 @@
     "groupShares": {
       "title": "Од групи"
     },
+    "duplicates": {
+      "title": "Дали е ова исто?",
+      "body": "Вашиот „{{entry}}“ ({{entryAmount}}, {{entryDay}}) и вашиот дел од „{{expense}}“ во {{group}} ({{shareAmount}}, {{expenseDay}}).",
+      "same": "Исто, спој",
+      "new": "Не, ново е",
+      "mergedWith": "Споено со {{expense}} · {{group}}",
+      "mergedWithGroupExpense": "Споено со групен трошок",
+      "notTheSame": "Не е исто",
+      "countedAgain": "Повторно се брои во вашиот буџет"
+    },
     "card": {
       "inMkd": "во денари",
       "inEur": "во евра",
@@ -639,7 +677,9 @@
       "remove": "Отстрани го лимитот",
       "removed": "Лимитот е отстранет",
       "over": "{{amount}} над лимитот",
-      "includesConverted": "вклучува {{amount}} претворени во денари"
+      "includesConverted": "вклучува {{amount}} претворени во денари",
+      "nearWords": "Близу до лимитот",
+      "amountInvalid": "Внеси износ поголем од 0, во цели денари."
     },
     "summary": {
       "title": "{{month}} наспроти {{previousMonth}}",

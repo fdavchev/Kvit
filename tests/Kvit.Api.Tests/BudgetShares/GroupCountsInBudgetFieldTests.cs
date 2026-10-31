@@ -112,7 +112,7 @@ namespace Kvit.Api.Tests.BudgetShares
         }
 
         [Fact]
-        public async Task Get_GuestMember_AnswersExactlyTheSixteenGroupFields()
+        public async Task Get_GuestMember_AnswersExactlyTheEighteenGroupFields()
         {
             GroupSetup setup = await _app.CreateGroupWithMemberAsync();
             GuestMember guest = await GuestSteps.JoinWithNewNameAsync(_app, setup.GroupId, "Gost");
