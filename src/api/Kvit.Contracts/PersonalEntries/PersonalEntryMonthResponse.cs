@@ -7,5 +7,6 @@ namespace Kvit.Contracts.PersonalEntries
         IReadOnlyList<PersonalIncomeTotalRow> IncomeTotals,
         IReadOnlyList<GroupShareRow> GroupShares,
         ConvertedTotalsResponse? ConvertedTotals,
-        LimitsResponse Limits);
+        LimitsResponse Limits,
+        IReadOnlyList<PossibleDuplicateRow> PossibleDuplicates);
 }

@@ -8,6 +8,7 @@ const otherGroupId = 'f0e1d2c3-b4a5-4968-8776-655443322110'
 
 function seedGroup(queryClient: QueryClient, groupId: string): void {
   queryClient.setQueryData(['groups', groupId, 'balances'], { isEveryoneKvit: false, currencies: [] })
+  queryClient.setQueryData(['groups', groupId, 'spending'], { currencies: [], plan: null })
   queryClient.setQueryData(['groups', groupId, 'settlements'], [])
   queryClient.setQueryData(['groups', groupId, 'activity'], [])
   queryClient.setQueryData(['groups', groupId, 'expenses'], [])
@@ -53,7 +54,9 @@ describe('refreshAfterSettlementChange', () => {
   })
 
   it.each([
+    ['the spending of the group, because settlements do not count in the totals by category', ['groups', testGroupId, 'spending']],
     ['the balances of another group', ['groups', otherGroupId, 'balances']],
+    ['the spending of another group', ['groups', otherGroupId, 'spending']],
     ['the payments of another group', ['groups', otherGroupId, 'settlements']],
     ['the activity of another group', ['groups', otherGroupId, 'activity']],
     ['the expenses of another group', ['groups', otherGroupId, 'expenses']],

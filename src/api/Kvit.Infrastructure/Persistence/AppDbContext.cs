@@ -36,6 +36,8 @@ namespace Kvit.Infrastructure.Persistence
 
         public DbSet<BudgetLimit> BudgetLimits => Set<BudgetLimit>();
 
+        public DbSet<DuplicateAnswer> DuplicateAnswers => Set<DuplicateAnswer>();
+
         public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
         protected override void OnModelCreating(ModelBuilder builder)

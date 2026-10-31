@@ -17,6 +17,7 @@ import { todayInTimeZone } from '@/shared/utils/formatDate'
 import type { Currency } from '@/shared/utils/formatMoney'
 import { moneyInputText, parseMoneyInput } from '@/shared/utils/parseMoneyInput'
 import { useSaveOnce } from '../../categories/hooks/useSaveOnce'
+import { useAnswerDuplicate } from '../../duplicates/hooks/useAnswerDuplicate'
 import { readLastEntryCurrency, saveLastEntryCurrency } from '../lastEntryCurrency'
 import { refreshPersonalEntries } from '../personalEntryCache'
 import { useAddPersonalEntry } from './useAddPersonalEntry'
@@ -58,6 +59,7 @@ export interface PersonalEntryFormState {
   closeBecauseGone: (error: Error) => void
   save: (kindFields: PersonalEntryKindFields) => void
   deleteEntry: (deleted: PersonalEntry) => void
+  separateFromGroupExpense: (merged: PersonalEntry) => void
 }
 
 const entryNotFoundCode = 'PERSONAL_ENTRY_NOT_FOUND'
@@ -96,6 +98,7 @@ export function usePersonalEntryForm(
   const edit = useEditPersonalEntry(oneAtATime)
   const remove = useDeletePersonalEntry(oneAtATime)
   const restore = useRestorePersonalEntry()
+  const unmerge = useAnswerDuplicate(oneAtATime)
   const initialNote = start?.note ?? ''
   const [clientRequestId] = useState<string>(() => crypto.randomUUID())
   const [today] = useState<string>(() => todayInTimeZone(me.timeZone, new Date()))
@@ -181,6 +184,23 @@ export function usePersonalEntryForm(
     )
   }
 
+  function separateFromGroupExpense(merged: PersonalEntry): void {
+    const expenseId = merged.mergedWithExpenseId
+    if (expenseId === null) {
+      throw new Error(`"Not the same" was pressed for the entry ${merged.id}, which is not merged with a group expense`)
+    }
+    unmerge.run(
+      { pair: { entryId: merged.id, expenseId }, answer: 'New' },
+      () => {
+        toast.success(t('budget.duplicates.countedAgain'))
+        sheet.close()
+      },
+      (error) => {
+        toast.error(t(errorMessageKey(error)))
+      },
+    )
+  }
+
   return {
     entry,
     sheet,
@@ -193,7 +213,7 @@ export function usePersonalEntryForm(
     isNoteEmptyAtStart: initialNote === '',
     isNoteOpen,
     isDateOpen,
-    isBusy: add.isPending || edit.isPending || remove.isPending,
+    isBusy: add.isPending || edit.isPending || remove.isPending || unmerge.isPending,
     shownError,
     changeAmountText: (nextAmountText) => {
       setAmountText(nextAmountText)
@@ -221,5 +241,6 @@ export function usePersonalEntryForm(
     closeBecauseGone,
     save,
     deleteEntry,
+    separateFromGroupExpense,
   }
 }

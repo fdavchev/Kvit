@@ -40,6 +40,11 @@ namespace Kvit.Infrastructure.Repositories
                 .SingleOrDefaultAsync(cancellationToken);
         }
 
+        public Task<bool> BringsCountedShareToAsync(Guid userId, Guid expenseId, CancellationToken cancellationToken)
+        {
+            return _context.CountedSharesOf(userId).AnyAsync(row => row.Expense.Id == expenseId, cancellationToken);
+        }
+
         private static async Task<Result<Expense>> SingleOrNotFoundAsync(IQueryable<Expense> expenses, Guid groupId, Guid expenseId, CancellationToken cancellationToken)
         {
             Expense? expense = await expenses

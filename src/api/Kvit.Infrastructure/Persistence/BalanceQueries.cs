@@ -27,7 +27,7 @@ namespace Kvit.Infrastructure.Persistence
                 .OrderBy(member => member.JoinedAt)
                 .ThenBy(member => member.Id)
                 .ToListAsync(cancellationToken);
-            List<Expense> expenses = await CountedExpenses(context)
+            List<Expense> expenses = await CountedExpensesWithShares(context)
                 .Where(expense => groupIds.Contains(expense.GroupId))
                 .ToListAsync(cancellationToken);
             List<Settlement> settlements = await CountedSettlements(context)
@@ -47,7 +47,7 @@ namespace Kvit.Infrastructure.Persistence
 
         public static async Task<List<BalanceExpense>> CountedBalanceExpensesOfAsync(this AppDbContext context, Guid groupId, CancellationToken cancellationToken)
         {
-            List<Expense> expenses = await CountedExpenses(context)
+            List<Expense> expenses = await CountedExpensesWithShares(context)
                 .Where(expense => expense.GroupId == groupId)
                 .ToListAsync(cancellationToken);
 
@@ -63,12 +63,16 @@ namespace Kvit.Infrastructure.Persistence
             return [.. settlements.Select(BalanceSettlementOf)];
         }
 
-        private static IQueryable<Expense> CountedExpenses(AppDbContext context)
+        public static IQueryable<Expense> CountedExpenses(this AppDbContext context)
         {
             return context.Expenses
                 .AsNoTracking()
-                .Include(expense => expense.Shares)
                 .Where(expense => expense.DeletedAt == null);
+        }
+
+        private static IQueryable<Expense> CountedExpensesWithShares(AppDbContext context)
+        {
+            return context.CountedExpenses().Include(expense => expense.Shares);
         }
 
         private static IQueryable<Settlement> CountedSettlements(AppDbContext context)

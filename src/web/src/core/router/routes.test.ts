@@ -29,6 +29,7 @@ describe('routes', () => {
     ['groupExpensesDeleted', '/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/expenses/deleted'],
     ['groupActivity', '/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/activity'],
     ['groupBalances', '/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/balances'],
+    ['groupTotals', '/groups/7c1d4e0a-3b52-4a7e-9d6f-1e2a3b4c5d6e/totals'],
   ] as const)('builds the route %s for a group id as %s', (name, path) => {
     expect(routes[name](groupId)).toBe(path)
   })
@@ -55,6 +56,7 @@ describe('routes', () => {
     ['groupExpensesDeleted', '/groups/:groupId/expenses/deleted'],
     ['groupActivity', '/groups/:groupId/activity'],
     ['groupBalances', '/groups/:groupId/balances'],
+    ['groupTotals', '/groups/:groupId/totals'],
   ] as const)('turns %s into the route pattern when it is given :groupId', (name, pattern) => {
     expect(routes[name](':groupId')).toBe(pattern)
   })

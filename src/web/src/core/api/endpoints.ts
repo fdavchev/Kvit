@@ -32,6 +32,7 @@ export const endpoints = {
   personalSummary: (month: string) => `/api/personal/summary?month=${month}`,
   personalLimitsMonth: '/api/personal/limits/month',
   personalLimitsCategory: (categoryId: string) => `/api/personal/limits/categories/${categoryId}`,
+  personalDuplicateAnswers: '/api/personal/duplicate-answers',
   recurringIncomes: '/api/personal/recurring-incomes',
   recurringIncomesCatchUp: '/api/personal/recurring-incomes/catch-up',
   recurringIncome: (recurringIncomeId: string) => `/api/personal/recurring-incomes/${recurringIncomeId}`,
@@ -67,6 +68,8 @@ export const endpoints = {
   groupExpenseRestore: (groupId: string, expenseId: string) =>
     `/api/groups/${groupId}/expenses/${expenseId}/restore`,
   groupBalances: (groupId: string) => `/api/groups/${groupId}/balances`,
+  groupSpending: (groupId: string) => `/api/groups/${groupId}/spending`,
+  groupPlan: (groupId: string) => `/api/groups/${groupId}/plan`,
   groupSettlements: (groupId: string) => `/api/groups/${groupId}/settlements`,
   groupSettlement: (groupId: string, settlementId: string) =>
     `/api/groups/${groupId}/settlements/${settlementId}`,

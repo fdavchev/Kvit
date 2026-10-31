@@ -57,6 +57,19 @@ namespace Kvit.Domain.Entities
             return New(groupId, actorUserId, ActivityEventType.GroupRestored, createdAt);
         }
 
+        public static ActivityEvent GroupPlanSet(Guid groupId, Guid actorUserId, Money plan, DateTimeOffset createdAt)
+        {
+            ActivityEvent activityEvent = New(groupId, actorUserId, ActivityEventType.GroupPlanSet, createdAt);
+            activityEvent.Data = JsonSerializer.Serialize(new { amountMinor = plan.MinorUnits, currency = plan.Currency.ToString() });
+
+            return activityEvent;
+        }
+
+        public static ActivityEvent GroupPlanRemoved(Guid groupId, Guid actorUserId, DateTimeOffset createdAt)
+        {
+            return New(groupId, actorUserId, ActivityEventType.GroupPlanRemoved, createdAt);
+        }
+
         public static ActivityEvent ClosingStarted(Guid groupId, Guid actorUserId, DateTimeOffset createdAt)
         {
             return New(groupId, actorUserId, ActivityEventType.ClosingStarted, createdAt);

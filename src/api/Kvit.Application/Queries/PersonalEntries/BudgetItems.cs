@@ -5,10 +5,14 @@ namespace Kvit.Application.Queries.PersonalEntries
 {
     public static class BudgetItems
     {
+        public static IEnumerable<PersonalEntryDto> CountedSpendingOf(IEnumerable<PersonalEntryDto> entries)
+        {
+            return entries.Where(entry => entry.Kind == PersonalEntryKind.Spending && entry.MergedWithExpenseId is null);
+        }
+
         public static IEnumerable<SpentItemDto> SpentItemsOf(IEnumerable<PersonalEntryDto> entries)
         {
-            return entries
-                .Where(entry => entry.Kind == PersonalEntryKind.Spending)
+            return CountedSpendingOf(entries)
                 .Select(entry => new SpentItemDto(entry.CategoryId, entry.AmountMinor, entry.Currency, entry.MkdPerEur));
         }
 

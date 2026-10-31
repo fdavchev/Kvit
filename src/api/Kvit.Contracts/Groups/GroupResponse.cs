@@ -19,5 +19,7 @@ namespace Kvit.Contracts.Groups
         IReadOnlyList<ClosingMemberRow> ClosingConfirmedBy,
         IReadOnlyList<ClosingMemberRow> ClosingWaitingFor,
         bool CanStartClosing,
-        bool CountsInBudget);
+        bool CountsInBudget,
+        long? PlanAmountMinor,
+        Currency? PlanCurrency);
 }

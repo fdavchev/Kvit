@@ -23,7 +23,7 @@ namespace Kvit.Application.Queries.PersonalEntries
 
             PersonalEntryDto? entry = await _context.EntriesOf(userId.Value)
                 .Where(candidate => candidate.Id == query.EntryId)
-                .PersonalEntryDtos()
+                .PersonalEntryDtos(_context, userId.Value)
                 .SingleOrDefaultAsync(cancellationToken);
             if (entry is null)
             {

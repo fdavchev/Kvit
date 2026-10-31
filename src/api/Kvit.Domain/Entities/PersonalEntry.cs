@@ -125,6 +125,11 @@ namespace Kvit.Domain.Entities
             return Result.Ok();
         }
 
+        public DuplicateMatchFields FieldsDuplicatesMatchOn()
+        {
+            return new DuplicateMatchFields(AmountMinor, Currency, CategoryId, EntryDate);
+        }
+
         public void Update(PersonalEntryFields fields, DateTimeOffset updatedAt)
         {
             ThrowUnlessKindIs(PersonalEntryKind.Spending);

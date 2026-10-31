@@ -12,10 +12,14 @@ import {
 
 export const noLimits: MonthLimits = { month: null, categories: [] }
 
-export const noGroupSharesOrLimits: Pick<PersonalEntryMonth, 'groupShares' | 'convertedTotals' | 'limits'> = {
+export const noGroupSharesOrLimits: Pick<
+  PersonalEntryMonth,
+  'groupShares' | 'convertedTotals' | 'limits' | 'possibleDuplicates'
+> = {
   groupShares: [],
   convertedTotals: null,
   limits: noLimits,
+  possibleDuplicates: [],
 }
 
 export const coffeeEntry: PersonalEntry = {
@@ -31,6 +35,7 @@ export const coffeeEntry: PersonalEntry = {
   createdAt: '2026-10-19T08:00:00Z',
   updatedAt: null,
   recurringIncomeId: null,
+  mergedWithExpenseId: null,
 }
 
 export const lunchInEuroEntry: PersonalEntry = {
@@ -46,6 +51,7 @@ export const lunchInEuroEntry: PersonalEntry = {
   createdAt: '2026-10-18T12:00:00Z',
   updatedAt: '2026-10-18T12:30:00Z',
   recurringIncomeId: null,
+  mergedWithExpenseId: null,
 }
 
 export const gymEntryWithArchivedCategory: PersonalEntry = {
@@ -61,6 +67,7 @@ export const gymEntryWithArchivedCategory: PersonalEntry = {
   createdAt: '2026-09-02T18:00:00Z',
   updatedAt: null,
   recurringIncomeId: null,
+  mergedWithExpenseId: null,
 }
 
 export function entryAnswerRow(entry: PersonalEntry): Record<string, unknown> {
@@ -80,6 +87,7 @@ export const salaryIncomeEntry: PersonalEntry = {
   createdAt: '2026-10-15T07:00:00Z',
   updatedAt: null,
   recurringIncomeId: null,
+  mergedWithExpenseId: null,
 }
 
 export const untitledEuroIncomeEntry: PersonalEntry = {
@@ -95,6 +103,7 @@ export const untitledEuroIncomeEntry: PersonalEntry = {
   createdAt: '2026-10-19T09:00:00Z',
   updatedAt: null,
   recurringIncomeId: null,
+  mergedWithExpenseId: null,
 }
 
 export const generatedSalaryEntry: PersonalEntry = {
@@ -136,6 +145,7 @@ export function monthAnswerBody(month: PersonalEntryMonth): Record<string, unkno
     groupShares: month.groupShares,
     convertedTotals: month.convertedTotals,
     limits: month.limits,
+    possibleDuplicates: month.possibleDuplicates,
   }
 }
 
@@ -152,6 +162,7 @@ export const groceriesEntry: PersonalEntry = {
   createdAt: '2026-10-12T17:00:00Z',
   updatedAt: null,
   recurringIncomeId: null,
+  mergedWithExpenseId: null,
 }
 
 export const secondCoffeeEntry: PersonalEntry = {
@@ -167,6 +178,7 @@ export const secondCoffeeEntry: PersonalEntry = {
   createdAt: '2026-10-18T09:00:00Z',
   updatedAt: null,
   recurringIncomeId: null,
+  mergedWithExpenseId: null,
 }
 
 export const mkdOnlyMonth: PersonalEntryMonth = {
@@ -199,6 +211,7 @@ export const euroDinnerEntry: PersonalEntry = {
   createdAt: '2026-08-14T19:00:00Z',
   updatedAt: null,
   recurringIncomeId: null,
+  mergedWithExpenseId: null,
 }
 
 export const euroOnlyAugust: PersonalEntryMonth = {

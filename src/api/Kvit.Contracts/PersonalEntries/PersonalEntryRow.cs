@@ -16,6 +16,7 @@ namespace Kvit.Contracts.PersonalEntries
         decimal MkdPerEur,
         DateOnly RateDate,
         Guid? RecurringIncomeId,
+        Guid? MergedWithExpenseId,
         DateTimeOffset CreatedAt,
         DateTimeOffset? UpdatedAt);
 }

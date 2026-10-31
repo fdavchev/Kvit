@@ -36,12 +36,13 @@ namespace Kvit.Application.Queries.PersonalEntries
 
             DateOnly firstDayOfNextMonth = firstDay.Value.AddMonths(1);
             List<PersonalEntryDto> entries = await _context.EntriesOf(me.Value.Id, firstDay.Value, firstDayOfNextMonth)
-                .PersonalEntryDtos()
+                .PersonalEntryDtos(_context, me.Value.Id)
                 .ToListAsync(cancellationToken);
             List<PersonalCategoryRow> categories = await _context.PersonalCategoryRowsOfAsync(entries, cancellationToken);
             Dictionary<Guid, PersonalCategoryRow> categoriesById = categories.ToDictionary(category => category.Id);
             List<GroupShareDto> groupShares = await _context.GroupSharesOf(me.Value.Id, firstDay.Value, firstDayOfNextMonth).ToListAsync(cancellationToken);
             LimitsResponse limits = await _context.LimitsResponseOfAsync(me.Value.Id, firstDay.Value, entries, groupShares, cancellationToken);
+            List<PossibleDuplicateRow> possibleDuplicates = await _context.PossibleDuplicatesOfAsync(me.Value.Id, firstDay.Value, firstDayOfNextMonth, entries, cancellationToken);
 
             return Result.Ok(new PersonalEntryMonthResponse(
                 firstDay.Value.ToString(MonthFormat, CultureInfo.InvariantCulture),
@@ -50,7 +51,8 @@ namespace Kvit.Application.Queries.PersonalEntries
                 IncomeTotalsOf(entries),
                 [.. groupShares.Select(share => share.Row)],
                 ConvertedTotalsOf(me.Value.BudgetTotalCurrency, entries, groupShares),
-                limits));
+                limits,
+                possibleDuplicates));
         }
 
         public static Result<DateOnly> FirstDayOf(string? month)
@@ -70,8 +72,7 @@ namespace Kvit.Application.Queries.PersonalEntries
 
         private static List<PersonalCurrencyTotalRow> SpendingTotalsOf(IReadOnlyList<PersonalEntryDto> entries, IReadOnlyList<PersonalCategoryRow> categoriesInOrder)
         {
-            return [.. entries
-                .Where(entry => entry.Kind == PersonalEntryKind.Spending)
+            return [.. BudgetItems.CountedSpendingOf(entries)
                 .GroupBy(entry => entry.Currency)
                 .OrderBy(currencyEntries => currencyEntries.Key)
                 .Select(currencyEntries => new PersonalCurrencyTotalRow(

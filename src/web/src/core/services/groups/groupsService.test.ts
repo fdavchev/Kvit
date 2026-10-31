@@ -183,12 +183,33 @@ describe('getGroup', () => {
     ['isOwner', false],
     ['countsInBudget', false],
     ['countsInBudget', true],
+    ['planCurrency', null],
   ])('accepts %s with the value %j', async (field, value) => {
     stubFetch(Response.json({ ...testGroup, [field]: value }))
 
     const group = await getGroup(testGroupId)
 
     expect(group).toMatchObject({ [field]: value })
+  })
+
+  it.each([
+    ['a plan in denars', 150000, 'MKD'],
+    ['a plan in euros', 2500, 'EUR'],
+    ['the smallest plan in euros', 1, 'EUR'],
+  ])('accepts %s and returns both plan fields', async (_name, planAmountMinor, planCurrency) => {
+    stubFetch(Response.json({ ...testGroup, planAmountMinor, planCurrency }))
+
+    const group = await getGroup(testGroupId)
+
+    expect(group).toMatchObject({ planAmountMinor, planCurrency })
+  })
+
+  it('returns both plan fields as null for a group without a plan', async () => {
+    stubFetch(Response.json({ ...testGroup, planAmountMinor: null, planCurrency: null }))
+
+    const group = await getGroup(testGroupId)
+
+    expect(group).toMatchObject({ planAmountMinor: null, planCurrency: null })
   })
 
   it('rethrows the ApiError unchanged when the group is not found', async () => {
@@ -225,8 +246,43 @@ describe('getGroup', () => {
     ['countsInBudget', 'yes'],
     ['countsInBudget', 1],
     ['countsInBudget', null],
+    ['planAmountMinor', '150000'],
+    ['planAmountMinor', 'none'],
+    ['planAmountMinor', true],
+    ['planCurrency', 5],
+    ['planCurrency', true],
   ])('throws an error naming "%s" when its value is %j', async (field, value) => {
     stubFetch(Response.json({ ...testGroup, [field]: value }))
+
+    await expect(getGroup(testGroupId)).rejects.toThrow(field)
+  })
+
+  it.each([
+    ['planAmountMinor', 0, 'MKD'],
+    ['planAmountMinor', -5000, 'MKD'],
+    ['planAmountMinor', 1.5, 'EUR'],
+    ['planAmountMinor', 150000.5, 'MKD'],
+    ['planCurrency', 150000, 'USD'],
+    ['planCurrency', 150000, 'mkd'],
+    ['planCurrency', 150000, 'Eur'],
+    ['planCurrency', 150000, ''],
+  ])('throws an error naming "%s" when the plan is %j in %j', async (field, planAmountMinor, planCurrency) => {
+    stubFetch(Response.json({ ...testGroup, planAmountMinor, planCurrency }))
+
+    await expect(getGroup(testGroupId)).rejects.toThrow(field)
+  })
+
+  it.each([
+    ['an amount without a currency', 150000, null],
+    ['a currency without an amount', null, 'MKD'],
+  ])('throws an error naming a plan field when the plan has %s', async (_name, planAmountMinor, planCurrency) => {
+    stubFetch(Response.json({ ...testGroup, planAmountMinor, planCurrency }))
+
+    await expect(getGroup(testGroupId)).rejects.toThrow(/planAmountMinor|planCurrency/)
+  })
+
+  it.each(['planAmountMinor', 'planCurrency'])('rejects a saved copy of the group that lacks %s, because the reader is strict', async (field) => {
+    stubFetch(Response.json(withoutField(testGroup, field)))
 
     await expect(getGroup(testGroupId)).rejects.toThrow(field)
   })
@@ -267,6 +323,12 @@ describe('createGroup', () => {
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({ httpStatus: 400, errorCode: 'GROUP_NAME_INVALID' })
+  })
+
+  it.each(['planAmountMinor', 'planCurrency'])('throws an error naming "%s" when the answer for the new group lacks it', async (field) => {
+    stubFetch(Response.json(withoutField(testGroup, field)))
+
+    await expect(createGroup(groupInput)).rejects.toThrow(field)
   })
 
   it('throws an error naming "id" when the answer lacks the id of the new group', async () => {

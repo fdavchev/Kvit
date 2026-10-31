@@ -1,5 +1,14 @@
 ﻿# Decisions
 
+## 2026-10-31: Phase 16 (possible duplicates, group totals, group spending plan): done, the rules that stay
+The whole Phase 16 decision log (Filip's mockup picks, the Step 1 to 8 notes, the browser-pass and code-review choices, rejected alternatives) moved word for word to the end of `reports/2026-10-31-phase-16-group-insights.md`, section "Decisions and rejected alternatives". What stays true:
+- **Possible duplicates:** a card "Is this the same?" at the top of the Budget tab, one pair at a time, in the entry's own month. A pair needs the same non-null category, the same currency, dates within 3 days, and an entry amount within 10 % of your share, or of the whole expense when you paid it. "Same, merge": the entry stays in the list, greyed with "Merged with ...", and leaves the totals, limits and summary; the group share keeps counting; one merge per entry and per expense (`DUPLICATE_ALREADY_MERGED`). A merged entry counts again by itself when its group expense (or group) is deleted. Editing its amount, currency, category or date removes the merge; a note-only edit keeps it. "Not the same" (and "No, it's new") saves the answer `New`, and Kvit never asks again about that pair. Guests have no Budget, so no prompt. Answers are private, written to no activity or usage event.
+- **Group totals:** the 4th group tab "Totals" (Expenses, Balances, Activity, Totals): every counted (not deleted) expense at its whole amount, per currency, MKD then EUR, never added or converted, categories in the built-in order and "No category" last; visible to every member, guests included, also in Closing and Finished groups.
+- **Group plan:** set by the owner (Open group, or Closing for the owner; nobody in a Finished group), amount in MKD (whole denars) or EUR, shown to everyone as "{spent} of {amount}", "{amount} each · {N} people" (N = current members), and a bar: green under 80 %, amber from 80 % to the plan with "Near the plan · N left", red above with "N over". Expenses in the other currency are converted with each expense's saved rate ("includes N converted"). Setting or removing a plan writes a line in the group's Activity; the plan never touches balances or closing.
+- **Group tab bar:** four equal-width cells, labels 11 px under 360 px, 12 px up to 480 px, 16 px from 480 px.
+- **Limits:** a near row says "Near the limit"; an invalid amount in the limit or plan sheet shows a message under the field.
+- **Not in Phase 16 (later):** future and planned payments, recurring expenses, the outbox (Release 3), admin statistics (Release 3); bars under the Totals rows and the other items in `BACKLOG.md` "Phase 16 leftovers".
+
 ## 2026-10-24: Phase 15 (budget share, budget currency, limits, monthly summary), in progress
 
 ### Answered by Filip (2026-10-24)

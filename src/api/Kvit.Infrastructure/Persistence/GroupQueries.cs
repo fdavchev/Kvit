@@ -17,12 +17,16 @@ namespace Kvit.Infrastructure.Persistence
             return context.Groups.Where(group => currentMembers.Any(member => member.GroupId == group.Id && member.UserId == userId));
         }
 
-        public static IQueryable<Guid?> OwnerOfGroupForMember(this AppDbContext context, Guid groupId, Guid userId)
+        public static IQueryable<Group> GroupForMember(this AppDbContext context, Guid groupId, Guid userId)
         {
             return context.GroupsWithCurrentMember(userId)
                 .AsNoTracking()
-                .Where(group => group.Id == groupId && group.DeletedAt == null)
-                .Select(group => (Guid?)group.OwnerUserId);
+                .Where(group => group.Id == groupId && group.DeletedAt == null);
+        }
+
+        public static IQueryable<Guid?> OwnerOfGroupForMember(this AppDbContext context, Guid groupId, Guid userId)
+        {
+            return context.GroupForMember(groupId, userId).Select(group => (Guid?)group.OwnerUserId);
         }
 
         public static IQueryable<NamedMember> NamedGroupMembers(this AppDbContext context, Guid groupId)
