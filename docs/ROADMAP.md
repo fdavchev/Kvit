@@ -244,5 +244,17 @@ One big phase (Filip, 2026-10-24). Prompt: `guides/phase-15-budget-prompt.md`; f
 - [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the 2 migrations on Neon)
 
 # Release 3: "polish"
-- Phase 17: the outbox (queue while the server wakes, "All up to date ✓", failed items with Retry / Discard)
+
+## Phase 17: The outbox · `feat/17-outbox`
+Queue while the server wakes, "All up to date ✓", failed items with Retry / Discard. Prompt: `guides/phase-17-outbox-prompt.md`; first-push texts: `guides/phase-17-pr-text.md`.
+- [x] Step 0: mockup and Filip's picks 1 to 5 (2026-10-31, `DECISIONS.md`); when to queue (3 seconds), the queued One bill and the BACKLOG items agreed in the second round
+- [x] **Done 2026-11-01 (VERIFIED by automated test: frontend 11879 of 11879, 204 of them new; lint 0 warnings, build 0 type errors; the module is not used by the app yet).** Step 1: the outbox module (storage, queue, sender, back-off) with tests
+- [ ] Step 2: wire the queueable saves
+- [ ] Step 3: the screens (waiting rows, bar, failed items)
+- [ ] Step 4: backend tests for late and repeated sends (no code change expected)
+- [ ] Step 5: desktop layout and the 360 px browser pass
+- [ ] Step 6: code review, report, guide
+- [ ] **Filip:** commit, push, PR, CI green, merge
+
+## Release 3, later
 - Phase 18: admin statistics page
