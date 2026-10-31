@@ -74,6 +74,7 @@ namespace Kvit.Application.Queries.GroupSpending
                 currency,
                 spentMinor,
                 PerPersonShare.Of(plan, currentMemberCount),
+                currentMemberCount,
                 overMinor,
                 includedOtherCurrencyMinor);
         }

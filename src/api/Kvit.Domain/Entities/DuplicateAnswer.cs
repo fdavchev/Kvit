@@ -39,6 +39,13 @@ namespace Kvit.Domain.Entities
                 ResultCodes.EXPENSE_NOT_FOUND);
         }
 
+        public static Result AlreadyMerged(Guid personalEntryId, Guid expenseId)
+        {
+            return Result.Failure(
+                $"Personal entry {personalEntryId} or expense {expenseId} is already merged with another one, so they cannot be merged with each other.",
+                ResultCodes.DUPLICATE_ALREADY_MERGED);
+        }
+
         public static DuplicateAnswer Create(Guid userId, Guid personalEntryId, Guid expenseId, DuplicateAnswerChoice answer, DateTimeOffset createdAt)
         {
             return new DuplicateAnswer

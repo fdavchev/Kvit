@@ -3,6 +3,7 @@ using System.Text.Json;
 using Kvit.Api.Tests.BudgetShares;
 using Kvit.Api.Tests.Expenses;
 using Kvit.Api.Tests.Groups;
+using Kvit.Api.Tests.Persistence;
 using Kvit.Api.Tests.PersonalEntries;
 using Xunit;
 
@@ -79,6 +80,17 @@ namespace Kvit.Api.Tests.PossibleDuplicates
             HttpResponseMessage response = await DuplicateAnswerRequests.PutAsync(user.Client, entryId, expenseId, answer);
 
             Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        }
+
+        public static async Task<(Guid GroupId, Guid ExpenseId)> AddSharedExpenseInAnotherGroupAsync(ExpensesApp app, ExpenseGroup group, string expenseDate = ExpenseInputs.DefaultDate)
+        {
+            Guid otherGroupId = await app.CreateGroupAsync(group.Owner);
+            Guid ownerRowId = await GroupRows.CurrentMemberIdAsync(app, otherGroupId, group.Owner.UserId);
+            Guid memberRowId = await GroupRows.InsertMemberAsync(app, otherGroupId, group.Member.UserId, "Bojan", group.Owner.UserId);
+            Guid food = await app.BuiltInCategoryIdAsync("food");
+            ExpenseInput input = ExpenseInputs.Equal(WholeMinor, ExpenseInputs.Mkd, ownerRowId, ownerRowId, memberRowId) with { CategoryId = food, ExpenseDate = expenseDate };
+
+            return (otherGroupId, await app.AddExpenseAsync(group.Owner, otherGroupId, input));
         }
 
         public static async Task<Guid?> MergedWithAsync(HttpClient client, Guid entryId, string month = Month)

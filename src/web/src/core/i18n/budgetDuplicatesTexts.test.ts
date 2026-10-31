@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { ApiError } from '@/core/api/apiClient'
 import { errorMessageKey } from '@/core/api/errors'
 import { collectTexts } from '@/test/localeTexts'
@@ -31,7 +31,13 @@ const duplicatesTexts: DuplicatesText[] = [
   { key: 'budget.duplicates.countedAgain', en: 'Counted again in your budget', mk: 'Повторно се брои во вашиот буџет' },
 ]
 
-const answerErrorCodes = ['DUPLICATE_ANSWER_INVALID', 'PERSONAL_ENTRY_NOT_FOUND', 'EXPENSE_NOT_FOUND', 'GUEST_NOT_ALLOWED']
+const answerErrorCodes = [
+  'DUPLICATE_ANSWER_INVALID',
+  'DUPLICATE_ALREADY_MERGED',
+  'PERSONAL_ENTRY_NOT_FOUND',
+  'EXPENSE_NOT_FOUND',
+  'GUEST_NOT_ALLOWED',
+]
 
 function keysUnder(texts: object, prefix: string): string[] {
   return collectTexts(texts)
@@ -118,5 +124,32 @@ describe('the error codes of the duplicate answers', () => {
     })
 
     expect(errorMessageKey(error)).toBe(`errors.${code}`)
+  })
+
+  it('writes the English text of DUPLICATE_ALREADY_MERGED as "This entry or expense is already merged with another one."', () => {
+    expect(translated('en', 'errors.DUPLICATE_ALREADY_MERGED')).toBe('This entry or expense is already merged with another one.')
+  })
+
+  it('writes the draft Macedonian text of DUPLICATE_ALREADY_MERGED as «Овој внес или трошок веќе е споен со друг.»', () => {
+    expect(translated('mk', 'errors.DUPLICATE_ALREADY_MERGED')).toBe('Овој внес или трошок веќе е споен со друг.')
+  })
+
+  it('writes the Macedonian text of DUPLICATE_ALREADY_MERGED with no Latin letters and without the word «курс»', () => {
+    const macedonian = translated('mk', 'errors.DUPLICATE_ALREADY_MERGED')
+
+    expect(macedonian).not.toMatch(latinLetters)
+    expect(macedonian.toLowerCase()).not.toContain('курс')
+  })
+
+  it('maps DUPLICATE_ALREADY_MERGED to its own key without logging a missing translation', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const error = new ApiError('PUT /api/personal/duplicate-answers failed with status 400', {
+      httpStatus: 400,
+      errorCode: 'DUPLICATE_ALREADY_MERGED',
+    })
+
+    expect(errorMessageKey(error)).toBe('errors.DUPLICATE_ALREADY_MERGED')
+    expect(consoleError).not.toHaveBeenCalled()
+    consoleError.mockRestore()
   })
 })

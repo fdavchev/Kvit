@@ -20,7 +20,7 @@ import { refreshPersonalEntries } from '../../entries/personalEntryCache'
 import { useAnswerDuplicate } from '../hooks/useAnswerDuplicate'
 import { groupExpenseName, spendingCategoryOf } from '../possibleDuplicates'
 
-const pairGoneCodes = ['EXPENSE_NOT_FOUND', 'PERSONAL_ENTRY_NOT_FOUND']
+const stalePairCodes = ['EXPENSE_NOT_FOUND', 'PERSONAL_ENTRY_NOT_FOUND', 'DUPLICATE_ALREADY_MERGED']
 
 const answerButtonLook = 'min-h-11 flex-1 basis-36 text-base data-disabled:opacity-50'
 
@@ -44,7 +44,7 @@ export function PossibleDuplicateCard({ pair, entry, today, sameButtonRef, onPai
   function send(choice: DuplicateAnswer): void {
     answer.run({ pair, answer: choice }, onPairDone, (error) => {
       toast.error(t(errorMessageKey(error)))
-      if (pairGoneCodes.some((code) => hasErrorCode(error, code))) {
+      if (stalePairCodes.some((code) => hasErrorCode(error, code))) {
         void refreshPersonalEntries(queryClient)
         onPairDone()
       }

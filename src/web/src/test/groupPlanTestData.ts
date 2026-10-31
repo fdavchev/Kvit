@@ -17,6 +17,7 @@ export interface PlanJson {
   perPersonMinor: number
   overMinor: number
   includedOtherCurrencyMinor: number
+  memberCount: number
 }
 
 export function planOf(changes: Partial<PlanJson> = {}): PlanJson {
@@ -27,6 +28,7 @@ export function planOf(changes: Partial<PlanJson> = {}): PlanJson {
     perPersonMinor: tenThousandDenarsMinor,
     overMinor: 0,
     includedOtherCurrencyMinor: 0,
+    memberCount: 2,
     ...changes,
   }
 }

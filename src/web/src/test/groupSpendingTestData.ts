@@ -20,6 +20,7 @@ export const planFields = [
   'perPersonMinor',
   'overMinor',
   'includedOtherCurrencyMinor',
+  'memberCount',
 ] as const
 
 export const noSpendingYet = { currencies: [], plan: null }
@@ -67,6 +68,7 @@ export const spendingWithPlan = {
     perPersonMinor: 200000,
     overMinor: 0,
     includedOtherCurrencyMinor: 0,
+    memberCount: 2,
   },
 }
 

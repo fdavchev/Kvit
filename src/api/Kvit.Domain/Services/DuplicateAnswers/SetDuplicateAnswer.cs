@@ -34,6 +34,11 @@ namespace Kvit.Domain.Services.DuplicateAnswers
                 return choice;
             }
 
+            if (choice.Value == DuplicateAnswerChoice.Same && await _answers.IsEitherMergedWithAnotherAsync(userId, entryId, expenseId, cancellationToken))
+            {
+                return DuplicateAnswer.AlreadyMerged(entryId, expenseId);
+            }
+
             await _answers.SaveAsync(DuplicateAnswer.Create(userId, entryId, expenseId, choice.Value, _timeProvider.GetUtcNow()), cancellationToken);
 
             return Result.Ok();

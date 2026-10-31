@@ -7,6 +7,7 @@ namespace Kvit.Contracts.GroupSpending
         Currency Currency,
         long SpentMinor,
         long PerPersonMinor,
+        int MemberCount,
         long OverMinor,
         long IncludedOtherCurrencyMinor);
 }

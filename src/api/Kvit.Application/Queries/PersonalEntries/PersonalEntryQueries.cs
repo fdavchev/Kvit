@@ -73,17 +73,6 @@ namespace Kvit.Application.Queries.PersonalEntries
                     context.GroupMembers.Any(member => member.Id == row.Expense.PaidByMemberId && member.UserId == userId)));
         }
 
-        private static IQueryable<DuplicateAnswer> MergesOf(this AppDbContext context, Guid userId)
-        {
-            IQueryable<CountedShare> countedShares = context.CountedSharesOf(userId);
-
-            return context.DuplicateAnswers
-                .AsNoTracking()
-                .Where(answer => answer.UserId == userId
-                    && answer.Answer == DuplicateAnswerChoice.Same
-                    && countedShares.Any(row => row.Expense.Id == answer.ExpenseId));
-        }
-
         public static Task<List<PersonalCategoryRow>> PersonalCategoryRowsOfAsync(this AppDbContext context, IReadOnlyCollection<PersonalEntryDto> entries, CancellationToken cancellationToken)
         {
             return context.PersonalCategoryRowsOfAsync(entries.Select(entry => entry.CategoryId), cancellationToken);

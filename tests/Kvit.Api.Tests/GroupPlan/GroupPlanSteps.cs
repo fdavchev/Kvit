@@ -20,7 +20,7 @@ namespace Kvit.Api.Tests.GroupPlan
         public const string RemovedEventType = "GroupPlanRemoved";
 
         public static readonly string[] PlanFieldNames = ExpenseJson.Sorted(
-            "amountMinor", "currency", "spentMinor", "perPersonMinor", "overMinor", "includedOtherCurrencyMinor");
+            "amountMinor", "currency", "spentMinor", "perPersonMinor", "overMinor", "includedOtherCurrencyMinor", "memberCount");
 
         public static async Task SetAsync(SignedInUser owner, Guid groupId, long amountMinor, string currency)
         {

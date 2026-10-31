@@ -59,12 +59,7 @@ export function GroupPlan({ group, plan }: GroupPlanProps) {
   function renderPlanPart(): ReactNode {
     if (plan !== null) {
       return (
-        <PlanCard
-          plan={plan}
-          memberCount={group.memberCount}
-          controlRef={controlRef}
-          onOpen={canSetPlan ? openSheet : null}
-        />
+        <PlanCard plan={plan} controlRef={controlRef} onOpen={canSetPlan ? openSheet : null} />
       )
     }
     return canSetPlan && <SetPlanRow controlRef={controlRef} onOpen={openSheet} />
@@ -106,12 +101,11 @@ function SetPlanRow({ controlRef, onOpen }: SetPlanRowProps) {
 
 interface PlanCardProps {
   plan: GroupSpendingPlan
-  memberCount: number
   controlRef: Ref<HTMLButtonElement>
   onOpen: (() => void) | null
 }
 
-function PlanCard({ plan, memberCount, controlRef, onOpen }: PlanCardProps) {
+function PlanCard({ plan, controlRef, onOpen }: PlanCardProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const headingId = useId()
@@ -128,7 +122,7 @@ function PlanCard({ plan, memberCount, controlRef, onOpen }: PlanCardProps) {
         <span className="text-[0.8125rem] text-muted-foreground">
           {t('groupPlan.each', {
             amount: formatMoney(plan.perPersonMinor, plan.currency, language),
-            count: memberCount,
+            count: plan.memberCount,
           })}
         </span>
       </span>

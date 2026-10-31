@@ -140,6 +140,7 @@
     "RECURRING_INCOME_RESTART_EXPIRED": "Овој редовен приход е запрен пред повеќе од 5 дена и не може повторно да се вклучи.",
     "BUDGET_LIMIT_AMOUNT_INVALID": "Внеси лимит во цели денари, поголем од 0.",
     "DUPLICATE_ANSWER_INVALID": "Избери дали ова е истиот трошок или нов.",
+    "DUPLICATE_ALREADY_MERGED": "Овој внес или трошок веќе е споен со друг.",
     "SETTLEMENT_NOT_FOUND": "Ова плаќање не постои или е избришано.",
     "SETTLEMENT_NOT_ALLOWED": "Не можеш да го направиш ова со ова плаќање.",
     "SETTLEMENT_NOT_PENDING": "Ова плаќање веќе не чека одговор.",

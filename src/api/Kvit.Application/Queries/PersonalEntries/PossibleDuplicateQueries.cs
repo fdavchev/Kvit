@@ -19,15 +19,26 @@ namespace Kvit.Application.Queries.PersonalEntries
             IReadOnlyList<PersonalEntryDto> entries,
             CancellationToken cancellationToken)
         {
-            List<PersonalEntryDto> spending = [.. entries.Where(entry => entry.Kind == PersonalEntryKind.Spending)];
+            List<PersonalEntryDto> spending = [.. BudgetItems.CountedSpendingOf(entries)];
             if (spending.Count == 0)
             {
                 return [];
             }
 
-            List<GroupShareDto> shares = await context
+            List<GroupShareDto> candidateShares = await context
                 .GroupSharesOf(userId, firstDay.AddDays(-MaxDaysApart), firstDayAfter.AddDays(MaxDaysApart))
                 .ToListAsync(cancellationToken);
+            if (candidateShares.Count == 0)
+            {
+                return [];
+            }
+
+            List<Guid> candidateExpenseIds = [.. candidateShares.Select(share => share.Row.ExpenseId)];
+            List<Guid> mergedExpenseIds = await context.MergesOf(userId)
+                .Where(merge => candidateExpenseIds.Contains(merge.ExpenseId))
+                .Select(merge => merge.ExpenseId)
+                .ToListAsync(cancellationToken);
+            List<GroupShareDto> shares = [.. candidateShares.Where(share => !mergedExpenseIds.Contains(share.Row.ExpenseId))];
             if (shares.Count == 0)
             {
                 return [];

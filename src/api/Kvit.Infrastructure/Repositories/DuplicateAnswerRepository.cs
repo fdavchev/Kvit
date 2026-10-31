@@ -25,5 +25,20 @@ namespace Kvit.Infrastructure.Repositories
                 .Where(answer => answer.UserId == userId && answer.PersonalEntryId == personalEntryId && answer.ExpenseId == expenseId)
                 .ExecuteDeleteAsync(cancellationToken);
         }
+
+        public async Task RemoveSameAnswersOfEntryAsync(Guid userId, Guid personalEntryId, CancellationToken cancellationToken)
+        {
+            await _context.DuplicateAnswers
+                .Where(answer => answer.UserId == userId && answer.PersonalEntryId == personalEntryId && answer.Answer == DuplicateAnswerChoice.Same)
+                .ExecuteDeleteAsync(cancellationToken);
+        }
+
+        public Task<bool> IsEitherMergedWithAnotherAsync(Guid userId, Guid personalEntryId, Guid expenseId, CancellationToken cancellationToken)
+        {
+            return _context.MergesOf(userId).AnyAsync(
+                merge => (merge.PersonalEntryId == personalEntryId && merge.ExpenseId != expenseId)
+                    || (merge.ExpenseId == expenseId && merge.PersonalEntryId != personalEntryId),
+                cancellationToken);
+        }
     }
 }

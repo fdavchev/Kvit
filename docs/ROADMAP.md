@@ -240,7 +240,7 @@ One big phase (Filip, 2026-10-24). Prompt: `guides/phase-15-budget-prompt.md`; f
 - [x] **Done 2026-10-27 (VERIFIED by automated test: frontend 11211 of 11211, backend 5884 unchanged; not seen in a browser).** Step 5: frontend, group totals
 - [x] **Done 2026-10-30 (VERIFIED by automated test: frontend 11562 of 11562, backend 5884 unchanged; not seen in a browser).** Step 6: frontend, group plan, plus two Phase 15 leftovers (limit amount message, "near" in words)
 - [x] **Done 2026-10-31 (VERIFIED by live run, headless Chromium, local stack; `reports/2026-10-30-phase-16-browser-pass.md`: 4 bugs + 1 found in the re-check, fixed; frontend 11649 of 11649 by automated test; the last size tweak re-measured, see the report).** Step 7: desktop layout and the 360 px browser pass
-- [ ] Step 8: code review, report, guide
+- [x] **Done 2026-10-31 (VERIFIED by automated test: backend 5942 of 5942, frontend 11675 of 11675; fixes re-checked by live run).** Step 8: code review (7 findings: 4 fixed, 2 in BACKLOG, 1 `.gitignore`), report `reports/2026-10-31-phase-16-group-insights.md`, guide `guides/phase-16-group-insights.md`
 - [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the 2 migrations on Neon)
 
 # Release 3: "polish"

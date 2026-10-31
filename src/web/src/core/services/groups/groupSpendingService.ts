@@ -29,6 +29,7 @@ export interface GroupSpendingPlan {
   perPersonMinor: number
   overMinor: number
   includedOtherCurrencyMinor: number
+  memberCount: number
 }
 
 export interface GroupSpending {
@@ -73,5 +74,6 @@ function parsePlan(value: unknown, what: string): GroupSpendingPlan {
     perPersonMinor: readCount(fields, 'perPersonMinor', what),
     overMinor: readCount(fields, 'overMinor', what),
     includedOtherCurrencyMinor: readCount(fields, 'includedOtherCurrencyMinor', what),
+    memberCount: readCountAboveZero(fields, 'memberCount', what),
   }
 }

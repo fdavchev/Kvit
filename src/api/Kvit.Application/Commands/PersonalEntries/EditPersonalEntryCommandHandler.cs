@@ -14,6 +14,7 @@ namespace Kvit.Application.Commands.PersonalEntries
     public sealed class EditPersonalEntryCommandHandler(
         IDispatcher _dispatcher,
         EditPersonalEntry _editPersonalEntry,
+        EditSpendingEntry _editSpendingEntry,
         IUnitOfWork _unitOfWork) : ICommandHandler<EditPersonalEntryCommand, PersonalEntryRow>
     {
         public async Task<Result<PersonalEntryRow>> Handle(EditPersonalEntryCommand command, CancellationToken cancellationToken)
@@ -39,7 +40,7 @@ namespace Kvit.Application.Commands.PersonalEntries
         {
             return command.Kind switch
             {
-                PersonalEntryKind.Spending => _editPersonalEntry.Execute(userId, command.EntryId, command.Input, cancellationToken),
+                PersonalEntryKind.Spending => _editSpendingEntry.Execute(userId, command.EntryId, command.Input, cancellationToken),
                 PersonalEntryKind.Income => EditIncomeAsync(userId, command, cancellationToken),
                 _ => throw new InvalidOperationException($"Editing a personal entry of kind {command.Kind} is not supported."),
             };

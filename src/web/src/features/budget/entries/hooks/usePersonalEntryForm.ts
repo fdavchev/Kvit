@@ -17,7 +17,7 @@ import { todayInTimeZone } from '@/shared/utils/formatDate'
 import type { Currency } from '@/shared/utils/formatMoney'
 import { moneyInputText, parseMoneyInput } from '@/shared/utils/parseMoneyInput'
 import { useSaveOnce } from '../../categories/hooks/useSaveOnce'
-import { useRemoveDuplicateAnswer } from '../../duplicates/hooks/useRemoveDuplicateAnswer'
+import { useAnswerDuplicate } from '../../duplicates/hooks/useAnswerDuplicate'
 import { readLastEntryCurrency, saveLastEntryCurrency } from '../lastEntryCurrency'
 import { refreshPersonalEntries } from '../personalEntryCache'
 import { useAddPersonalEntry } from './useAddPersonalEntry'
@@ -98,7 +98,7 @@ export function usePersonalEntryForm(
   const edit = useEditPersonalEntry(oneAtATime)
   const remove = useDeletePersonalEntry(oneAtATime)
   const restore = useRestorePersonalEntry()
-  const unmerge = useRemoveDuplicateAnswer(oneAtATime)
+  const unmerge = useAnswerDuplicate(oneAtATime)
   const initialNote = start?.note ?? ''
   const [clientRequestId] = useState<string>(() => crypto.randomUUID())
   const [today] = useState<string>(() => todayInTimeZone(me.timeZone, new Date()))
@@ -190,7 +190,7 @@ export function usePersonalEntryForm(
       throw new Error(`"Not the same" was pressed for the entry ${merged.id}, which is not merged with a group expense`)
     }
     unmerge.run(
-      { entryId: merged.id, expenseId },
+      { pair: { entryId: merged.id, expenseId }, answer: 'New' },
       () => {
         toast.success(t('budget.duplicates.countedAgain'))
         sheet.close()

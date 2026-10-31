@@ -16,7 +16,6 @@ import type { AnswerFactory } from './requestTestHelpers'
 import { translated } from './translated'
 
 export const duplicateAnswersPut = `PUT ${duplicateAnswersUrl}`
-export const duplicateAnswersDelete = `DELETE ${duplicateAnswersUrl}`
 
 export function duplicateCardName(language: Language = 'en'): string {
   return translated(language, 'budget.duplicates.title')

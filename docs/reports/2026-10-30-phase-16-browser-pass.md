@@ -260,3 +260,39 @@ Bug 1a and Bug 5 are fixed as far as this run shows. No new bug. Small observati
 - A real phone, other browsers, a screen reader; widths other than the ten listed.
 - Letter-level look at 320 px (numbers only); long names at 390 px with huge amounts.
 - Members, group settings, Groups list, Budget; Bug 2; the automated suites.
+
+## Re-check 3 (review fixes, 2026-10-31)
+
+Same method: headless Chromium (Playwright), throwaway users of the first pass, time zone `Europe/Skopje`. Only this section of the repository was changed. `__EFMigrationsHistory` ends with `20261027124121_GroupPlan` and `20261027092926_DuplicateAnswers` (confirmed before the run; no new migration). Stack started with `start-local.ps1 -NoBrowser`, closed with `-Stop` ("Ports 5018 and 5173 are free"). The automated suites (`dotnet build`, `dotnet test`, `npm test`, lint) were **not run**. Scripts and screenshots: `...\scratchpad\p16\r4_*.py`, `r4_*.json`, `shots4\` (not in the repository). Runs: 360 px EN light, EN dark, MK light, MK dark, and 320 px EN light (5 combinations) for checks 1 to 4.
+
+### Result per check
+| # | Check | Result | Label |
+|---|---|---|---|
+| 1 | "Not the same" on a merged entry (B, "Hotel booking" 77.00 EUR merged with "Hotel lake view"): row tap, then "Not the same" | PASS in 5 of 5 combinations: the only write is one `PUT /api/personal/duplicate-answers {"answer":"New"}` (no DELETE); the entry's own EUR total goes 41.00 (merged) to 118.00 (counted again); toast "Counted again in your budget" / «Повторно се брои во вашиот буџет»; the pair is not offered again (possible duplicates list loses it, also after a reload; the card shows only the next pair "Dinner / Dinner Ohrid"); database row `answer = New`; no sideways scroll, console empty | VERIFIED by live run |
+| 2a | One entry, two expenses (B: "Dinner" 29.00 EUR, "Dinner Ohrid" and a new "Brunch Ohrid", 29.00 share each): tap "Same, merge" on the first pair | PASS in 5 of 5: the second pair is gone from the list and the card; a direct `PUT ... Same` for the second expense answers **400 `DUPLICATE_ALREADY_MERGED`** | VERIFIED by live run |
+| 2b | Two entries, one expense (A: "Skopje dinner" 3,100 MKD, new "Dinner 2" 3,050 MKD, one share "Dinner Skopje"): same steps | PASS in 5 of 5: same result, **400 `DUPLICATE_ALREADY_MERGED`** | VERIFIED by live run |
+| 2c | Extra: stale card (second tab merged the other pair, then tap on the old card), EN light and MK dark | PASS: translated toast "This entry or expense is already merged with another one." / «Овој внес или трошок веќе е споен со друг.», the card goes away; the only console line is the browser's own 400 for that refusal | VERIFIED by live run |
+| 3a | Edit merged entry, note only (A, "Skopje dinner" to "Skopje dinner late") | PASS in 5 of 5: one PUT, still merged, row greyed (opacity 0.8, "Merged with" label), own MKD total unchanged (18,350 before and after), not offered | VERIFIED by live run |
+| 3b | Edit merged entry, amount 3,100 to 3,050 | PASS in 5 of 5: no longer merged, row not greyed (opacity 1), MKD total 18,350 to 21,400 (counts again), the card offers the pair again ("Skopje dinner late" 3,050 MKD with "Dinner Skopje" 3,000 MKD, still matches) | VERIFIED by live run |
+| 3c | Edit merged entry, category Food to Groceries (360 EN light, 360 MK dark) | PASS in 2 of 2: no longer merged, not greyed, counts again (21,450 MKD), not offered (category differs) | VERIFIED by live run |
+| 4 | Plan card "each · N people" ("Ohrid trip", plan 600 EUR; A in tab 1, plain name "Temp Tester" added and later removed through the API from tab 2, then reload of Totals) | PASS in 5 of 5: 4 people 150.00 each, after add **5 people 120.00 each** (EN "€120.00 each · 5 people", MK «€120,00 по човек · 5 лица»), after remove back to 4 and 150.00; the API's `plan.memberCount` equals the group's member count and `perPersonMinor` = 60000 / N each time | VERIFIED by live run |
+| 5 | Sanity: Budget (A and B) and group Totals, 360 px EN/MK light/dark and 320 px EN | PASS: 30 views, document width equals window width in all of them, console and failed-request lists empty; the four group tabs (Expenses, Balances, Activity, Totals) in all 4 views per setting: 4 links, every label fits its cell, the pill lies over the active link within 1 px, all inside the bar. (On Budget 18 to 19 elements lie outside the window only inside the month strip, a scroller made for that.) | VERIFIED by live run |
+
+### BUGS
+None found in these five checks.
+
+### Observations (not bugs)
+1. "Not the same" is two taps in total (tap the row, then "Not the same"), as before; the "Not the same" button itself is one tap and sends one request.
+2. After "Not the same" the answer `New` stays, so the pair cannot be offered again unless the entry is edited. Editing a "New"-answered entry (amount, category, date) does not clear `New` (DECISIONS: "`New` answers stay"); I did not test it.
+3. Plan card: tested only add and remove of a plain name; a member who leaves, a guest joining and a claimed name were not exercised.
+
+### Not verified
+- A real phone, other browsers, a screen reader; widths other than 320 and 360; 768 and above.
+- Check 3 for a changed date or currency; edit of a merged entry from the group's side (expense edited or deleted).
+- Check 4 without reloading (the other tab's change appearing on its own); members who leave or are claimed.
+- The "Not the same" flow for the 320 px MK and 320 px dark combinations; the automated suites.
+- The Cloudflare Pages Function path (only the Vite dev proxy was used).
+
+### Throwaway data left behind
+- A: new expense "Brunch Ohrid" (116.00 EUR, Ohrid trip, Oct 28) which raised the "Ohrid trip" spent to 659.78 EUR (59.78 over a 600 EUR plan); new entry "Dinner 2" 3,050 MKD (Oct 29); "Skopje dinner" is now in Groceries with no merge (the last category run); answers set to `New` for "Apartment deposit" / "Apartment" and "Dinner 2" / "Dinner Skopje"; "Temp Tester" was added and removed (a removed member row stays in the database).
+- B: answers `New` for "Hotel booking" / "Hotel lake view", none for the two "Dinner" pairs.

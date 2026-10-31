@@ -10,6 +10,7 @@ namespace Kvit.Api.Tests.PossibleDuplicates
         public const string SameAnswer = "Same";
         public const string NewAnswer = "New";
         public const string InvalidAnswerCode = "DUPLICATE_ANSWER_INVALID";
+        public const string AlreadyMergedCode = "DUPLICATE_ALREADY_MERGED";
 
         public static TheoryData<string> AllEndpoints => ["put", "delete"];
 

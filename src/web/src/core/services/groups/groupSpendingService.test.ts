@@ -99,6 +99,22 @@ describe('getGroupSpending', () => {
     expect(spending.plan).toMatchObject(zeros)
   })
 
+  it('accepts a plan of a group with one member', async () => {
+    stubFetch(Response.json(withPlan({ memberCount: 1 })))
+
+    const spending = await getGroupSpending(testGroupId)
+
+    expect(spending.plan).toMatchObject({ memberCount: 1 })
+  })
+
+  it('returns the member count of the plan as the answer wrote it', async () => {
+    stubFetch(Response.json(withPlan({ memberCount: 7 })))
+
+    const spending = await getGroupSpending(testGroupId)
+
+    expect(spending.plan).toMatchObject({ memberCount: 7 })
+  })
+
   it('accepts a plan that is over, in euros and with converted expenses', async () => {
     const overPlan = {
       amountMinor: 10000,
@@ -107,6 +123,7 @@ describe('getGroupSpending', () => {
       perPersonMinor: 2500,
       overMinor: 2500,
       includedOtherCurrencyMinor: 6156100,
+      memberCount: 4,
     }
     stubFetch(Response.json(withPlan(overPlan)))
 
@@ -238,6 +255,12 @@ describe('getGroupSpending', () => {
     ['includedOtherCurrencyMinor', 1.5],
     ['includedOtherCurrencyMinor', '0'],
     ['includedOtherCurrencyMinor', null],
+    ['memberCount', 0],
+    ['memberCount', -1],
+    ['memberCount', 1.5],
+    ['memberCount', '3'],
+    ['memberCount', true],
+    ['memberCount', null],
   ])('throws an error naming "%s" when its value in the plan is %j', async (field, value) => {
     stubFetch(Response.json(withPlan({ [field]: value })))
 

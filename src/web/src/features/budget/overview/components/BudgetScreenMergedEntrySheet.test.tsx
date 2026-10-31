@@ -12,7 +12,7 @@ import {
 } from '@/test/budgetDuplicateTestData'
 import {
   countedAgainText,
-  duplicateAnswersDelete,
+  duplicateAnswersPut,
   entryRowButton,
   entryRowContaining,
   errorToastTexts,
@@ -65,7 +65,7 @@ async function openMergedDinnerSheet(options: MergedSheetOptions = {}) {
     seedCache: options.seedCache,
     answers: {
       [personalEntriesGet('2026-10')]: month.monthAnswer,
-      [duplicateAnswersDelete]: options.answer === undefined ? month.acceptAnswer : options.answer(month),
+      [duplicateAnswersPut]: options.answer === undefined ? month.acceptAnswer : options.answer(month),
       [`PUT ${dinnerUrl}`]: jsonAnswer(entryAnswerRow(mergedDinnerOutEntry)),
     },
   })
@@ -138,19 +138,20 @@ describe('The edit sheet of a merged entry', () => {
   })
 
   describe('tapping "Not the same"', () => {
-    it('sends exactly one DELETE /api/personal/duplicate-answers with the entry and the expense it is merged with', async () => {
+    it('sends exactly one PUT /api/personal/duplicate-answers with the entry, the expense it is merged with and the answer New', async () => {
       const { fetchMock, sheet } = await openMergedDinnerSheet()
 
       fireEvent.click(notTheSameButton(sheet))
 
       await waitFor(() => {
-        expect(requestsOf(fetchMock, 'DELETE', duplicateAnswersUrl)).toHaveLength(1)
+        expect(requestsOf(fetchMock, 'PUT', duplicateAnswersUrl)).toHaveLength(1)
       })
-      expect(sentBody(fetchMock, 'DELETE', duplicateAnswersUrl)).toEqual({
+      expect(sentBody(fetchMock, 'PUT', duplicateAnswersUrl)).toEqual({
         entryId: mergedDinnerOutEntry.id,
         expenseId: dinnerShare.expenseId,
+        answer: 'New',
       })
-      expect(requestCount(fetchMock, 'PUT', duplicateAnswersUrl)).toBe(0)
+      expect(requestCount(fetchMock, 'DELETE', duplicateAnswersUrl)).toBe(0)
     })
 
     it('closes the sheet and shows the toast "Counted again in your budget" without an Undo', async () => {
@@ -209,7 +210,7 @@ describe('The edit sheet of a merged entry', () => {
       fireEvent.click(notTheSameButton(sheet))
 
       await settle()
-      expect(requestsOf(fetchMock, 'DELETE', duplicateAnswersUrl)).toHaveLength(1)
+      expect(requestsOf(fetchMock, 'PUT', duplicateAnswersUrl)).toHaveLength(1)
     })
 
     it('disables Save and "Not the same" while the request is on its way', async () => {
@@ -257,7 +258,7 @@ describe('The edit sheet of a merged entry', () => {
       fireEvent.click(notTheSameButton(sheet))
 
       await waitFor(() => {
-        expect(requestsOf(fetchMock, 'DELETE', duplicateAnswersUrl)).toHaveLength(2)
+        expect(requestsOf(fetchMock, 'PUT', duplicateAnswersUrl)).toHaveLength(2)
       })
     })
   })

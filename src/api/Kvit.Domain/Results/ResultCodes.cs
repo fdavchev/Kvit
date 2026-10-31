@@ -58,6 +58,7 @@ namespace Kvit.Domain.Results
         public const string RECURRING_INCOME_RESTART_EXPIRED = "RECURRING_INCOME_RESTART_EXPIRED";
         public const string BUDGET_LIMIT_AMOUNT_INVALID = "BUDGET_LIMIT_AMOUNT_INVALID";
         public const string DUPLICATE_ANSWER_INVALID = "DUPLICATE_ANSWER_INVALID";
+        public const string DUPLICATE_ALREADY_MERGED = "DUPLICATE_ALREADY_MERGED";
         public const string SETTLEMENT_NOT_FOUND = "SETTLEMENT_NOT_FOUND";
         public const string SETTLEMENT_NOT_ALLOWED = "SETTLEMENT_NOT_ALLOWED";
         public const string SETTLEMENT_NOT_PENDING = "SETTLEMENT_NOT_PENDING";

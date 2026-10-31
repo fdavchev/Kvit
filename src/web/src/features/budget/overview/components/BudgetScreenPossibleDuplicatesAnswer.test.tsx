@@ -428,6 +428,66 @@ describe('BudgetScreen, answering the "Is this the same?" card', () => {
       expect(requestCount(fetchMock, 'PUT', duplicateAnswersUrl)).toBe(1)
     })
 
+    it.each(languages)(
+      'shows the translated message for DUPLICATE_ALREADY_MERGED, reads the month again and shows the next pair (%s)',
+      async (language) => {
+        const { fetchMock, card } = await renderTwoPairs({
+          language,
+          after: octoberWithTwoPairsAfterDinnerIsNew,
+          answer: (month) => month.refuseAnswer(() => problemResponse(400, 'DUPLICATE_ALREADY_MERGED')),
+        })
+
+        fireEvent.click(sameButton(card, language))
+
+        await waitFor(() => {
+          expect(errorToastTexts()).toEqual([translated(language, 'errors.DUPLICATE_ALREADY_MERGED')])
+        })
+        await waitForCardToSay(taxiSentence(language))
+        expect(requestCount(fetchMock, 'GET', monthUrl)).toBe(2)
+        expect(requestCount(fetchMock, 'PUT', duplicateAnswersUrl)).toBe(1)
+      },
+    )
+
+    it('marks every cached month of entries and every cached summary out of date when DUPLICATE_ALREADY_MERGED is the answer', async () => {
+      const { queryClient, card } = await renderTwoPairs({
+        after: octoberWithTwoPairsAfterDinnerIsNew,
+        answer: (month) => month.refuseAnswer(() => problemResponse(400, 'DUPLICATE_ALREADY_MERGED')),
+        seedCache: (client) => {
+          client.setQueryData(personalEntriesQueryKey('2026-09'), 'a month of entries')
+          client.setQueryData(personalSummaryQueryKey('2026-09'), 'a summary')
+        },
+      })
+
+      fireEvent.click(sameButton(card))
+      await waitFor(() => {
+        expect(errorToastTexts()).toHaveLength(1)
+      })
+
+      expect(queryClient.getQueryState(personalEntriesQueryKey('2026-09'))?.isInvalidated).toBe(true)
+      expect(queryClient.getQueryState(personalSummaryQueryKey('2026-09'))?.isInvalidated).toBe(true)
+    })
+
+    it('removes the card when DUPLICATE_ALREADY_MERGED was the only pair', async () => {
+      const month = monthThatChangesWhenAnswered(octoberWithOnlyTheDinnerPair, octoberWithOnlyTheDinnerAnsweredNew)
+      await renderBudget({
+        months: [octoberWithOnlyTheDinnerPair],
+        answers: {
+          [personalEntriesGet('2026-10')]: month.monthAnswer,
+          [duplicateAnswersPut]: month.refuseAnswer(() => problemResponse(400, 'DUPLICATE_ALREADY_MERGED')),
+        },
+      })
+      const card = await findDuplicateCard()
+
+      fireEvent.click(sameButton(card))
+
+      await waitFor(() => {
+        expect(queryDuplicateCard()).toBeNull()
+      })
+      await waitFor(() => {
+        expect(errorToastTexts()).toEqual([translated('en', 'errors.DUPLICATE_ALREADY_MERGED')])
+      })
+    })
+
     it.each(['EXPENSE_NOT_FOUND', 'PERSONAL_ENTRY_NOT_FOUND'])('removes the card when %s was the only pair', async (code) => {
       const month = monthThatChangesWhenAnswered(octoberWithOnlyTheDinnerPair, octoberWithOnlyTheDinnerAnsweredNew)
       await renderBudget({

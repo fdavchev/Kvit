@@ -142,19 +142,19 @@ describe('GroupScreen Totals tab, the spending plan card', () => {
   })
 
   describe('the line "N each · M people"', () => {
-    it('says "1 person" for a group of one and uses the amount of the answer', async () => {
+    it('says "1 person" for a plan of one member and uses the amount of the answer', async () => {
       const card = await planCardOf({
-        group: groupOf({ ...mkdPlanFields, memberCount: 1 }),
-        spending: spendingWithPlanOf({ ...mkdPlanOfTwoThousand, perPersonMinor: 200000 }),
+        group: groupOf({ ...mkdPlanFields, memberCount: 9 }),
+        spending: spendingWithPlanOf({ ...mkdPlanOfTwoThousand, perPersonMinor: 200000, memberCount: 1 }),
       })
 
       expect(requireLine(card, '2,000 MKD each · 1 person')).toBeTruthy()
     })
 
-    it('says "4 people" for a group of four, with the share the server worked out and no sum of its own', async () => {
+    it('says "3 people" for a plan of three, with the share the server worked out and no sum of its own', async () => {
       const card = await planCardOf({
-        group: groupOf({ planAmountMinor: tenThousandDenarsMinor, planCurrency: 'MKD', memberCount: 3 }),
-        spending: spendingWithPlanOf({ perPersonMinor: 333300 }),
+        group: groupOf({ planAmountMinor: tenThousandDenarsMinor, planCurrency: 'MKD', memberCount: 8 }),
+        spending: spendingWithPlanOf({ perPersonMinor: 333300, memberCount: 3 }),
       })
 
       expect(requireLine(card, '3,333 MKD each · 3 people')).toBeTruthy()
@@ -162,11 +162,30 @@ describe('GroupScreen Totals tab, the spending plan card', () => {
 
     it('says it in euros for a plan in euros', async () => {
       const card = await planCardOf({
-        group: groupOf({ planAmountMinor: 60000, planCurrency: 'EUR', memberCount: 4 }),
-        spending: spendingWithPlanOf({ ...eurPlanOfSixHundred, perPersonMinor: 15000 }),
+        group: groupOf({ planAmountMinor: 60000, planCurrency: 'EUR', memberCount: 2 }),
+        spending: spendingWithPlanOf({ ...eurPlanOfSixHundred, perPersonMinor: 15000, memberCount: 4 }),
       })
 
       expect(requireLine(card, '€150.00 each · 4 people')).toBeTruthy()
+    })
+
+    it('counts the people of the plan in the answer, not the member count of the group', async () => {
+      const card = await planCardOf({
+        group: groupOf({ ...mkdPlanFields, memberCount: 7 }),
+        spending: spendingWithPlanOf({ ...mkdPlanOfTwoThousand, memberCount: 3 }),
+      })
+
+      expect(requireLine(card, '2,000 MKD each · 3 people')).toBeTruthy()
+      expect(card.textContent).not.toContain('7 people')
+    })
+
+    it('shows the people of the plan in the answer although the group has no plan fields yet', async () => {
+      const card = await planCardOf({
+        group: groupOf({ memberCount: 6 }),
+        spending: spendingWithPlanOf({ ...mkdPlanOfTwoThousand, memberCount: 2 }),
+      })
+
+      expect(requireLine(card, '2,000 MKD each · 2 people')).toBeTruthy()
     })
 
     it.each([
@@ -176,7 +195,10 @@ describe('GroupScreen Totals tab, the spending plan card', () => {
       [11, '11 people'],
       [21, '21 people'],
     ])('writes the English plural for %i people', async (count, words) => {
-      const card = await planCardOf({ group: groupOf({ ...mkdPlanFields, memberCount: count }) })
+      const card = await planCardOf({
+        group: groupOf({ ...mkdPlanFields, memberCount: count + 1 }),
+        spending: spendingWithPlanOf({ ...mkdPlanOfTwoThousand, memberCount: count }),
+      })
 
       expect(requireLine(card, `2,000 MKD each · ${words}`)).toBeTruthy()
     })
@@ -189,7 +211,11 @@ describe('GroupScreen Totals tab, the spending plan card', () => {
       [21, 'лице'],
       [101, 'лице'],
     ])('writes the Macedonian plural for %i people like the group size line', async (count, word) => {
-      const card = await planCardOf({ language: 'mk', group: groupOf({ ...mkdPlanFields, memberCount: count }) })
+      const card = await planCardOf({
+        language: 'mk',
+        group: groupOf({ ...mkdPlanFields, memberCount: count + 1 }),
+        spending: spendingWithPlanOf({ ...mkdPlanOfTwoThousand, memberCount: count }),
+      })
 
       expect(requireLine(card, `${money(200000, 'MKD', 'mk')} по човек · ${count} ${word}`)).toBeTruthy()
     })
