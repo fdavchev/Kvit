@@ -4,6 +4,7 @@ import type { PersistQueryClientOptions, Persister } from '@tanstack/react-query
 import { del, get, set } from 'idb-keyval'
 import { meQueryKey } from '@/core/auth/useMe'
 import type { Me } from '@/core/services/me/meService'
+import { readWithinTimeLimit } from './readWithinTimeLimit'
 
 export const savedQueryCacheVersion = '5'
 export const savedQueryCacheMaxAge = 24 * 60 * 60 * 1000
@@ -22,7 +23,7 @@ export function createSavedQueryCachePersister(): SavedQueryCachePersister {
   const persister = createAsyncStoragePersister({
     storage: {
       getItem: (key) =>
-        readWithinTimeLimit(get<string>(key), () => {
+        readWithinTimeLimit(get<string>(key), 'the saved data', savedCopyReadTimeLimitMs, () => {
           hasReadTimedOut = true
         }),
       setItem: (key, value) => set(key, value),
@@ -67,26 +68,6 @@ export function reportRestoreFailure(persister: SavedQueryCachePersister): void 
   console.error(
     'Could not restore the saved data from this browser (IndexedDB); Kvit starts with an empty cache',
   )
-}
-
-function readWithinTimeLimit(
-  read: Promise<string | undefined>,
-  onTimeout: () => void,
-): Promise<string | undefined> {
-  let timer: ReturnType<typeof setTimeout> | undefined
-  const timeLimit = new Promise<never>((_resolve, reject) => {
-    timer = setTimeout(() => {
-      onTimeout()
-      reject(
-        new Error(
-          `Reading the saved data from this browser (IndexedDB) took longer than ${savedCopyReadTimeLimitMs} ms`,
-        ),
-      )
-    }, savedCopyReadTimeLimitMs)
-  })
-  return Promise.race([read, timeLimit]).finally(() => {
-    clearTimeout(timer)
-  })
 }
 
 function startDeletingWithoutWaiting(key: string): void {
