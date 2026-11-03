@@ -253,7 +253,7 @@ Queue while the server wakes, "All up to date ✓", failed items with Retry / Di
 - [x] **Done 2026-11-03 (VERIFIED by automated test: frontend 12544 of 12544; lint 0 warnings, build 0 type errors; not seen in a browser).** Step 3: the screens (waiting rows, bar, failed items, "not counted yet" lines, log-out warning)
 - [x] **Done 2026-11-03 (VERIFIED by automated test: backend 5975 of 5975, 33 new, build 0 warnings; no production change, no migration).** Step 4: backend tests for late and repeated sends
 - [x] **Done 2026-11-03 (VERIFIED by live run, headless Chromium, local stack: 11 bugs found, `reports/2026-11-03-phase-17-browser-pass.md`; bugs 1 to 4, 6, 7, 10 and 11 fixed, VERIFIED by automated test: frontend 12613 of 12613, lint 0 warnings, build 0 type errors; the fixes are re-checked in a browser in the next entry; bugs 5, 8 and 9 and the product questions are left for Filip).** Step 5: desktop layout and the 360 px browser pass
-- [ ] Step 6: code review, report, guide
+- [x] **Done 2026-11-03.** Step 6: code review (10 findings, none fixed yet, waiting for Filip), report `reports/2026-11-03-phase-17-outbox.md`, guide `guides/phase-17-outbox.md`; browser re-check of the fixes VERIFIED by live run (`reports/2026-11-03-phase-17-browser-pass.md`)
 - [ ] **Filip:** commit, push, PR, CI green, merge
 
 ## Release 3, later

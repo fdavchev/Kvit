@@ -32,10 +32,11 @@ None. The four save endpoints already return the first result for a repeated req
 - [x] Step 3: the screens (waiting rows, bar, failed items, log-out warning)
 - [x] Step 4: backend tests for late and repeated sends
 - [x] Step 5: desktop layout and the browser pass, including a real "server asleep" test
-- [ ] Step 6: code review, report, guide
+- [x] Step 6: code review, report, guide
 
 ## Later one-line commit subjects
 - Step 1 (tests, then the module): Add the outbox module with its storage, sender, back-off and tests.
+- Step 6: Add the Phase 17 report, guide and backlog notes, and the browser re-check of the fixes.
 - Step 5: Fix the Phase 17 browser-pass findings: offline saves, the 3-second timer, back-off after many saves, the bar flicker, the euro line on payments and the dashed edge contrast.
 - Step 4: Add the backend tests for repeated and late sends of queued saves.
 - Step 3: Show waiting changes as greyed rows, the outbox bar, the failed-changes sheet and the log-out warning.

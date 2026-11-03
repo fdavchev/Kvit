@@ -208,3 +208,151 @@ All new texts below were only checked for presence, plural form and fit, not for
 | I Layout and look | PASS except **Bug 7**, **Bug 8**, **Bug 9**, **Bug 10**, **Bug 11** (low) |
 | J 3 seconds | keep 3 s; fix Bug 4 first |
 | Bugs | 1 (high), 2, 3, 4 (medium), 5, 6, 7, 8, 9, 10, 11 (low) |
+
+## Re-check after the fixes (2026-11-03)
+
+Run by the tester on branch `feat/17-outbox` at HEAD `bbede2f` ("Fix the Phase 17 browser-pass findings ..."). Real headless Chromium (Playwright for Python), 360 px wide unless said otherwise, time zone `Europe/Skopje`, local API, Vite dev server and Docker database. No production code, no tests and no docs other than this report were changed; nothing was committed or staged. The automated suites were **not run**, so nothing here is VERIFIED by automated test. Labels: **VERIFIED by live run** or **NOT VERIFIED**.
+
+### What was run and how
+- `.\scripts\start-local.ps1 -NoBrowser` started the database, API and website with no migration warning. VERIFIED by live run.
+- At the end `.\scripts\start-local.ps1 -Stop` printed "Closed the 'Kvit API' window", "Closed the 'Kvit website' window", "Stopped the database container kvit-postgres (its data is kept)" and "Ports 5018 and 5173 are free". `netstat` shows no listener on 5018 or 5173 (only old `TIME_WAIT` lines, which are not listeners), `docker ps -a` shows `kvit-postgres Exited (0)`. `git status --short` showed nothing before this section was written. VERIFIED by live run.
+- Fresh throwaway users made for this re-check (password `Passw0rdA`): `p17bana1793733033@example.com` (Ana Alfa, owner), `p17bbojan1793733033@example.com` (Bojan Beta), `p17bcvetan1793733033@example.com`, and the guest "Gosho Guest" joined by invite link. Groups "Outbox MKD" and "Outbox EUR" (Ana, Bojan, plain name Marko Plain, 2 seed expenses each). Every save under test was made through the real screens.
+- "Offline" is `context.set_offline(True)`. "API stopped" is the real `Kvit.Api` process killed on port 5018 and started again (Vite and the database stayed up). Every time is measured in the page (click event to the Save button leaving the page, or the click to the first DOM change of the bar) or from the browser's request log; where a time includes a sheet closing animation I say so.
+- Mistake of mine, put right: my first seed run wrote its throwaway-user session files and `seed.json` into the old `p17` scratch folder instead of `p17b` (the path in my copy was still the old one). I copied them to `p17b`, wrote the old `seed.json` back from the text I had printed earlier, and made new session files for the three old users by logging them in again (same users, new cookies). The old scripts, results and screenshots in `p17` were not touched. Nothing in the repository or outside the throwaway data was affected.
+
+### Result per bug
+| Bug | Verdict | Label |
+|---|---|---|
+| 1 ("I paid" offline: no error, paid later after Cancel) | **Fixed** | VERIFIED by live run |
+| 2 (offline save took about 3.4 s) | **Fixed** (see the note on sheets) | VERIFIED by live run |
+| 3 (double POSTs and wrong order after going online) | **Fixed** | VERIFIED by live run |
+| 4 (3 s counted the refresh) | **Fixed**; the slow-POST case still queues at 3 s | VERIFIED by live run |
+| 6 (back-off counted saves, long wait after the server is back) | **Half fixed**: the counting is fixed, the wait after the server is back is shorter but is still a timer | VERIFIED by live run |
+| 7 (bar flickers when the queue empties) | **Fixed** | VERIFIED by live run |
+| 10 (euro line on a waiting payment) | **Fixed** | VERIFIED by live run |
+| 11 (dashed edge contrast) | **Fixed** (3.295:1 light, 3.013:1 dark against the page; the dark dash is 2.67:1 against the row's own card, see below) | VERIFIED by live run |
+
+### Bugs 1 and 2: browser offline
+Six saves with `set_offline(True)`, then a second identical run. "Tap to waiting row" is the time from the Save tap to the first change of the bar text (the "N changes waiting" count and the greyed row appear in the same render). "Tap to closed" is the time until the Save button left the page; for the three sheets (payment, spending, income) it includes the sheet's own closing animation (awake saves measured 285 to 356 ms in the first pass and 298 to 337 ms in this pass's 20 awake saves).
+
+| Save | Tap to waiting row, run 1 / run 2 | Tap to closed, run 1 / run 2 | First pass (before the fix) |
+|---|---|---|---|
+| EUR expense | 23 / 21 ms | 60 / 45 ms | 3,424 ms |
+| MKD expense | 19 / 18 ms | 42 / 41 ms | 3,421 ms |
+| "Marko paid me" (sheet) | 25 / 29 ms | 231 / 269 ms | 3,640 ms |
+| One bill | 15 / 17 ms | 40 / 36 ms | 3,546 ms |
+| Spending (sheet) | 32 / 59 ms | 289 / 404 ms | 3,391 ms |
+| Income (sheet) | 36 / 55 ms | 289 / 394 ms | 3,496 ms |
+
+- Every item is queued within 59 ms of the tap. The tap to closed is 36 to 60 ms for the screens that move on (expense, One bill) and 231 to 404 ms for the three sheets. Run 2 had two sheet times above 300 ms (404 and 394 ms) while the row and bar were already there after 59 and 55 ms, so that extra time is the sheet animation and the machine, not the outbox. Bar counts 1 to 6 in order, no toast, the expense went to its group, the One bill to `/groups`. Screenshot `shots\r1-eur-expense-offline.png` looked at. VERIFIED by live run.
+- While offline each save shows two POST attempts in the browser log (the save itself and the outbox's first attempt), both failed at once with `net::ERR_INTERNET_DISCONNECTED`; nothing reached the server. VERIFIED by live run.
+- **"I paid" Bojan (has an account), 10, offline:** the network error is in the sheet **25 ms (EN) and 18 ms (MK)** after the tap. EN: "The server may be waking up. Check your connection and try again in a moment." MK: «Серверот можеби се буди. Провери ја врската и обиди се повторно за малку.» The sheet stays open, the bar is absent, no waiting row, IndexedDB empty, one failed POST attempt, nothing queued. After Cancel and going online, 6 s later: no POST at all, the group's payment list 1 before and 1 after (EN and MK), bar still absent, IndexedDB empty. Screenshots `shots\r1b-ipaid-offline-en.png` and `shots\r1b-ipaid-offline-mk.png` looked at. VERIFIED by live run.
+
+### Bug 3: six items, then back online
+Run 1 and run 2 (EUR expense, MKD expense, "Marko paid me", One bill, spending, income queued offline; then `set_offline(False)`).
+
+| Check | Run 1 | Run 2 |
+|---|---|---|
+| POSTs sent after going online | 6 (one per item) | 6 (one per item) |
+| Duplicate `clientRequestId` | none | none |
+| Order | EUR expense, MKD expense, settlement, One bill, entry, entry | same; amounts 550, 77700, 12300, One bill 45000, 9900, 432100 = creation order |
+| One at a time | yes, each started 7 to 42 ms after the previous one ended | yes, 3 to 40 ms |
+| Bar | 5, 4, 3, 2, 1 changes waiting, then "All up to date ✓" 0.56 s after going online, gone 3.0 s later | same, 2.39 s after going online (the first POST was answered after 2.1 s, the other five in 20 to 25 ms each; I did not find out why the first was slow, the first pass saw the same once) |
+| Database | expenses +1 +1, entries +2, payments +1, One bill group +1 | same |
+
+First pass: 10 POSTs for 7 saves, eight within 2 ms. VERIFIED by live run.
+
+### Bug 4: the 3 seconds and the refresh
+- **`GET /api/groups/<id>` delayed 4 s inside the page** (two runs): the POST left after 36 and 45 ms and was answered in 31 and 36 ms. The bar never appeared (`barEver` false), 0 waiting rows, exactly one POST, one expense in the database each time. The "Expense saved" toast appeared 4.10 s and 4.11 s after the tap and the screen was already the group page (the form left after 4.44 s). First pass: moved on at 3.4 s with a greyed row, the bar and a second POST.
+- **POST held for 10 s (still queued at about 3 s):** reply held after the server saved (3.05 s: bar "1 change waiting", row at 3.07 s, second POST answered in 40 ms, "All up to date ✓" at 3.13 s) and request held before the server (same times). The screen left the form after 3,458 and 3,429 ms (3 s plus the screen change). One row each in the database. This is unchanged and is what the first pass called Bug 5 (the sender POSTs again at 3.05 s while the first request is still open); that bug was not part of this fix and is still there.
+- Note for Filip: after the fix, on a slow refresh the form stays on screen with the Save spinner until the refresh is done (4 s in this test) although the save itself took 31 ms. That is what the task asked for ("toast and navigation after the refresh"), but the first pass proposed letting the refresh run after the screen moves on. See question 1.
+
+VERIFIED by live run.
+
+### Bug 6: API stopped, six saves, API started
+Six different saves made while the API process was stopped (One bill, spending, income, EUR expense, MKD expense, "Marko paid me"), each queued at once (tap to closed 28 to 52 ms for the screens, 253 to 327 ms for the sheets). The browser got 502 for every POST. All six items were saved exactly once in both runs (expenses +1 +1, entries +2, payments +1, One bill +1, no duplicate id).
+
+Retry timeline, attempts of the first waiting item (the One bill), seconds on the script clock:
+
+| Run | Attempts | Gaps |
+|---|---|---|
+| A (API started 10 s after the last save) | 29.24, 31.28, (34.10, 35.22, 35.99, 36.46, 37.28 are the attempts started by the five new saves), 42.30, 57.31 (200) | +2.04 after the first attempt, then +5.02 after the last save's attempt, then +15.01 |
+| B (API started 32 s after the last save) | 28.04, 30.08, (new-save attempts 32.91 to 36.35), 41.37, 56.38, 86.38 (200) | +2.04, then +5.02, +15.01, +30.00 |
+| C, one item only (clean) | 5.83, 7.88, 12.91, 27.92 (200) | +2.05, +5.03, +15.01 (2, 5, 15 as designed) |
+
+- Counting is fixed: six saves no longer push the wait to 60 s (first pass: all retries at 60 s). New saves no longer raise the step. The first wait after the last save is 5 s and not 2 s in runs A and B because my script needed 8 s for the saves, so one real 2 s retry had already happened and the step was already at 5 s; with one item (run C) the steps are 2, 5, 15.
+- Wait after the server is back: run A: `/health` answered at 52.52 s, the queue was sent from 57.31 s = **4.8 s** later, the last item was saved at 60.62 s and "All up to date ✓" showed at 60.68 s (**8.2 s** after `/health`; the last POST, the payment, took 2.15 s on the freshly started API). Run B: `/health` at 73.74 s, first send at 86.38 s = **12.6 s** later, last item at 87.67 s, "All up to date ✓" at 89.76 s (**16.0 s** after `/health`; the screen refresh after the last item took 2.1 s). Run C: `/health` at 23.38 s, sent at 27.92 s = **4.5 s** later, "All up to date ✓" 5.2 s after `/health`. First pass: 44 s and 59 s.
+- What still blocks it: nothing asks the server whether it is back. The queue is sent when the current back-off timer ends (steps 2, 5, 15, 30, 60 s after real retries), or at once when the browser fires `online` or the tab comes back. The wait after the server is back is therefore the rest of the current step: 4.5 to 12.6 s in these runs, up to 30 s at step 30 and up to 60 s at the cap (the 60 s step needs about five real retries in a row; I did not wait for it). So this part is **not fixed by design**; the wrong counting is. See question 2.
+
+VERIFIED by live run.
+
+### Bug 7: bar flicker (5 runs)
+Runs 1 to 5 (three on Budget with a spending and an income, two on the group Expenses tab with two expenses); every painted frame sampled with `requestAnimationFrame`, plus a mutation log of the bar text.
+
+| Run | Bar text log | Frames without the bar between "N changes waiting" and the end of "All up to date ✓" | "All up to date ✓" visible |
+|---|---|---|---|
+| 1 Budget | "1 change waiting" 5.053, "All up to date ✓" 5.123, gone 8.124 | none | 3.001 s |
+| 2 Expenses | 11.254, 11.343, gone 14.341 | none | 2.998 s |
+| 3 Budget | 19.596, 19.686, gone 22.691 | none | 3.005 s |
+| 4 Expenses | 25.908, 25.970, gone 28.965 | none | 2.995 s |
+| 5 Budget | 34.344, 34.412, gone 37.413 | none | 3.001 s |
+
+The bar element was never absent (no `null` entry in the log) between the waiting text and "All up to date ✓" in any of the 5 runs, and it left only after its 3 s. The same held in the two six-item runs of Bug 3 (the frame log shows the bar present until 3.0 s after "All up to date ✓"). First pass: one frame without the bar in two of five runs. VERIFIED by live run.
+
+### Bug 10: euro line on waiting rows
+| Waiting row (EN) | Text | "Euro price set when sent"? |
+|---|---|---|
+| "Someone paid me", Marko Plain, EUR 5.00 | "Marko Plain paid Ana Alfa / Not synced yet / €5.00" | **no** (fixed) |
+| "Someone paid me", Marko Plain, 9 MKD (comparison) | "Marko Plain paid Ana Alfa / Not synced yet / 9 MKD" | no |
+| EUR expense in the EUR group | "R10 eur expense / Paid by Ana Alfa · Not synced yet / Euro price set when sent / €7.25" | yes (still) |
+| EUR Budget spending (currency button set to EUR) | "Fun / Not synced yet / Euro price set when sent / €3.30" | yes (still) |
+
+In Macedonian the EUR payment row reads «Marko Plain плати на Ana Alfa / Сѐ уште не е синхронизирано / €5,00» with no euro-price line (the MK expense and Budget rows were not checked, see "Not verified"). Screenshot `shots\r10-en-balances.png` looked at. VERIFIED by live run.
+
+### Bug 11: contrast of the waiting row (real pixels, 360 px, EN)
+Method: screenshot pixels for the page and the card, the pixel with the most contrast along the top edge of the dashed border, the browser's computed colours for the text, the span's 0.8 opacity blended over the card.
+
+| Item | Light | Dark | Target |
+|---|---|---|---|
+| Dashed edge pixel against the page (the outside of the row) | **3.295:1** (rgb 156,111,71 on 255,217,168) | **3.013:1** (rgb 114,98,92 on 31,24,22) | 3:1 |
+| Dashed edge against the row's own card (the gaps between the dashes) | 3.949:1 | 2.666:1 | for information |
+| Title, second line and amount text against the card | 6.94:1 | 9.41:1 | 4.5:1 |
+| Card against the page | 1.20:1 | 1.13:1 | for information |
+
+The edge pixel equals the computed `border-color`, so the numbers are exact (the coder's 3.29 and 3.01 are confirmed). The dark dash is only just 3.01:1 against the page and 2.67:1 against the card behind the gaps; I used the page, as in the first pass, because the page is what the border separates the row from. Text stays well above 4.5:1 (the first pass gave 7.10 and 9.45 with a different blending; I now blend over the card, which is where the text is drawn). Screenshot `shots\r11-en-dark-row.png` looked at. Macedonian was not repeated (the colours do not depend on the language). VERIFIED by live run.
+
+### Regression glance
+| Check | Result | Label |
+|---|---|---|
+| 20 awake saves (as scenario A: 5 expenses, 3 One bills, 5 spendings, 4 incomes, 3 payments) | 20 of 20 sent one POST, answered 200; the bar never appeared (`barEver` false), 0 waiting rows, nothing queued; toasts as before. **Slowest tap to closed: 374 ms** (the first expense, 326 ms server time because the API had just been restarted); then 337 ms (a "Mark paid" sheet) and 336 ms (a spending sheet). Slowest server answer apart from the first: 78 ms. Database: expenses +3 (MKD) and +2 (EUR), personal entries +9 | VERIFIED by live run |
+| Discard sheet | two waiting expenses, tap one: "Discard this change? / It has not been saved yet. If you discard it, it is gone." with Discard and Cancel; Discard removed the row (bar 2 to 1), the discarded item was never sent, the other was saved; for an item being sent the button reads "Sending…" and is disabled | VERIFIED by live run |
+| Log-out warning | 1 item: "1 change hasn't been sent yet. If you log out now it is lost." (Log out anyway 52 px, Stay 48 px), Stay changed nothing; 2 items: "2 changes haven't been sent yet. If you log out now they are lost."; Log out anyway with the log-out request failing: toast, still signed in, queue kept (2 items); with the request allowed: `/welcome`, the queue gone; signing in again: no bar, the "G expense" never reached the group. The guest's sheet shows its own text plus the extra line | VERIFIED by live run |
+| Failed sheet | Bojan queued 4 items, the owner removed him from one group and deleted another; "2 changes couldn't be saved Review" 0.89 s after going online; the sheet lists both with "This group doesn't exist or you're no longer in it."; Retry sent the request, 404 again, the item stayed; Macedonian text «Промени што не можеа да се зачуваат … Отфрли / Обиди се повторно» (seen in the second run); Discard one: bar «1 промена не можеше да се зачува Прегледај»; Discard the last: bar gone, IndexedDB empty | VERIFIED by live run |
+| No sideways scroll | 96 views: 320 and 360 px, EN and MK, light and dark; Home, group Expenses, Groups, Budget, Balances and Settings; page top and page bottom, with 6 waiting items: document scroll width equals window width in all, the bar is inside the window, the bar text is not cut (scroll width equals width), every waiting row is inside the window. Screenshot `shots\r8-320-mk-g-expenses.png` looked at | VERIFIED by live run |
+
+### New problems and observations (none blocks the fixes)
+**New bug A (low; not caused by the outbox as far as I can tell, but I did not check whether it is older than Phase 17): with the API stopped (not offline), the Groups list can show only the error "The server may be waking up ... Try again" and no "New group" link or group rows.**
+- Steps: warm up every screen online, stop the API process, open a group, then tap Back to the Groups list.
+- Expected: the list that was already loaded stays on screen (as it did with the browser offline in the first pass), so more saves can be made.
+- Actual: the whole page is the error text and a "Try again" button (screenshot `shots\r6-debug-no-newgroup.png`; the bar "3 changes waiting · Sending…" is still correct below it). The Budget tab and group pages opened by client navigation still worked. It only cost me a changed route in my script. Not investigated. This is where a person will end up on a real phone when Render is waking up.
+
+**Observation 1 (unchanged, not part of this fix list): the first pass's Bug 5, Bug 8 and Bug 9 are still there.** Bug 5: second POST at 3.05 s for a save slower than 3 s (see Bug 4 above). Bug 8: in the Expenses-tab run 2 there was one frame (16 ms) with the real row added and the waiting row still present (frames `[11.331, 1 waiting, 5 rows]` then `[11.347, 0, 5]`). Bug 9: in Macedonian at 320 px the word «синхронизирано» (100 px) is still wider than its text column (93 px on the Expenses and Groups lists, 71 to 95 px on Budget); the tallest waiting row is still 169 px. No sideways scroll and nothing cut off.
+**Observation 2:** the Settings language buttons use the server (`PUT /api/me/language`). With the network failing (abort route) pressing them changed nothing for at least 1.5 s (`lang` stayed `en`); I did not look for an error toast. With the server up the change takes about 65 ms. In one of the two runs of the failed-sheet script the Macedonian text appeared only after the sheet was opened (more than 0.8 s); the second run showed it at once. Not reproduced, so not claimed as a bug.
+**Observation 3:** the first POST after a quiet period is sometimes slow on the local API (2.1 s in Bug 3 run 2, 0.1 s in run 1; 326 ms for the first save of the 20-save run). Not investigated; it looks like the API warming up, which is also why a cold Render may need the 3 s limit.
+
+### Not verified
+- A real phone (airplane mode, mobile network, touch, background and foreground), iOS Safari, Android Chrome, Firefox, a screen reader. The Cloudflare Pages Function and a real Render or Neon wake-up (only the Vite proxy, which answers 502 when the API is down, was used).
+- Bug 4 on a really slow connection (the delay was made inside the page with a patched `fetch`, not with a throttled network).
+- Bug 6 at the 60 s cap (the longest step I reached was 30 s) and with the browser `online` event instead of the API process being stopped.
+- The Macedonian text of the "Euro price set when sent" line on expense and Budget rows (the screen labels I used for those two flows are English), the contrast numbers in Macedonian, and the bar contrast over every background (not part of this fix).
+- The group's status bar in the Closing state, a Retry that succeeds, a 500 answer, 401 pausing the queue, two tabs of the same person, a guest who makes an account while items wait (all as in the first pass).
+- The automated suites (`dotnet build`, `dotnet test`, `npm test`, `npm run lint`, `npm run build`).
+
+### Questions for Filip (product only)
+1. A slow connection: you tap Save on an expense, the server answers in a blink, but loading the updated group list takes 4 seconds. Today the form stays open with the spinner for those 4 seconds and then "Expense saved" and the group appear together. Should it instead go back to the group at once (the new expense shows when the list arrives)?
+2. The server wakes up at 20 s. The app tries again at 22 s, 27 s, 42 s, 72 s and so on, so someone waits a few seconds after the server is back and, in a long outage, up to 30 or 60 s. Is that fine, or should a tap on the bar ("N changes waiting") also try again at once?
+3. With the server unreachable the Groups list shows only "The server may be waking up. Try again" (New bug A) and nothing else. Do you want the groups you already saw on that phone to stay on screen, so you can keep adding?
+
+### Where the files are
+Scripts, results and screenshots of this re-check: `C:\Users\Davchev\AppData\Local\Temp\claude\c--Users-Davchev-Projects-Kvit\11c66925-bd89-4c3f-9def-e4fb33a230e3\scratchpad\p17b\` (screenshots in `shots\`). Copies and adaptations of the first pass's helpers (`lib.py`, `lib2.py` with a new in-page click, bar and error-time log, `warm.py`, `i_helpers.py`, `apictl.ps1`, `a.py`, `c2.py`, `d.py`, `f.py`, `g.py`) plus `seed.py` (3 users, 2 groups), `r1.py` (offline saves and going online, Bugs 2 and 3), `r1b.py` ("I paid" offline, EN and MK, Bug 1), `r4.py` and `c2.py` (Bug 4), `r5.py` (Bug 7), `r6.py` and `r6c.py` (Bug 6), `r10.py` (Bug 10), `r11.py` (Bug 11), `wrap2.py` (no sideways scroll), `restore_old_states.py`. Results as JSON next to them (`r1_run1_res.json`, `r1_run2_res.json`, `r1b_en_res.json`, `r1b_mk_res.json`, `r4_res.json`, `c2_res.json`, `r5_res.json`, `r6_A_res.json`, `r6_B_res.json`, `r10_res.json`, `r11_res.json`, `r8_res.json`, `a_res.json`, `d_res.json`, `f_res.json`, `g_res.json`). Not in the repository.
+Throwaway data left in the local database: the three `p17b...@example.com` users and the guest, their groups "Outbox MKD" and "Outbox EUR" with many "A ...", "B ...", "R ...", "R4 ...", "Z5 ...", "C2 ...", "D ...", "F ...", "H ..." expenses, about 14 One bill groups, a few payments, and about 30 personal entries.

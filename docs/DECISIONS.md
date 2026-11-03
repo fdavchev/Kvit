@@ -1,51 +1,13 @@
 ﻿# Decisions
 
-## 2026-10-31: Phase 17 (the outbox), in progress
-Mockup: `design/2026-10-31-phase-17/index.html`. The first version of the outbox is in "Hiding the server wake-up (first version)" below; this entry settles what it looks like.
-
-### Answered by Filip (2026-10-31)
-- **1 · Marking a waiting item: C.** A greyed, dashed row with "Not synced yet" in its second line, the same on the group Expenses list, the Budget lists and the Payments list. Rejected: a grey tag (A), a clock icon (B).
-- **2 · Waiting count and "All up to date ✓": A.** A bar at the bottom of the screen: "N changes waiting · Sending…", then "All up to date ✓" for a few seconds, or "1 change couldn't be saved" with Review. Rejected: pop-up only (B), a Settings line with a dot (C). Correction found in the code search: today's "Updating…" note sits at the top of the screen, not above the tabs (the mockup text was wrong). The group screens, where expenses and payments are added, have no bottom tab bar, so the bar is built into the signed-in layout (`DesktopRailLayout`): above the tab bar where there is one, at the bottom edge where there is not.
-- **3 · Waiting money: A.** Lists show a waiting item at once. Balances, totals, limits, the group plan and the summary change only after the server saved it, with the line "N changes waiting, not counted yet". Rejected: counting it right away as "estimated" (B).
-- **4 · Euro price of a waiting EUR item: A.** The server sets it when it saves (today's behaviour); the waiting row says "Euro price set when sent". Rejected: the phone looking it up (B), which would be a guess.
-- **5 · A failed item: A.** The rest of the queue keeps going; the failed item stays with its translated reason and Retry (same id) / Discard (asks nothing).
-
-### Answered by Filip (2026-10-31, second round)
-- **When an item goes into the queue:** Save works as today; if the server gives no answer within 3 seconds, or the network is down, the item moves to the queue and the sheet closes. A mistake such as a bad amount still shows in the form at once. The 3 seconds is one named setting and a guess: Filip asked if it is enough, answer: a warm save takes under a second, a slow awake server queued by mistake is harmless (the id prevents a second save), and Step 5 checks it live; raise it to 5 if awake saves get queued too often. Alternative: queue every save (mistakes would only show later as failed items).
-- **What can be queued:** new expenses, One bill, new personal spending and income, and a payment that counts right away ("Marko paid me", or the owner recording for a plain name). "I paid" waits for the server. Edits, deletes and Undo are not queued.
-- **A queued One bill** shows in the Groups list as a waiting row; opening it shows a "waiting to send" screen, not a group.
-- **BACKLOG:** none of "Phase 16 leftovers", "Offline editing and deleting through the outbox" and "API error handler" is built here. (Filip said OK to 2 and 3 only; item 1 was his question, so the 3 seconds counts as agreed unless he says otherwise.)
-
-### Answered by Filip (2026-10-31, planning round)
-- **Log out with changes waiting: warn first.** A sheet says "N changes haven't been sent yet. If you log out now they are lost." with Log out anyway / Stay. Logging out deletes that person's queue (same one-person rule as the saved copy). Guests get the same line in their existing log-out sheet. Rejected: deleting without asking; keeping the queue for the next sign-in on the same browser.
-- **A waiting (not failed) row can be discarded:** tapping it opens a small sheet with Discard. While that item is being sent, Discard is disabled and says "Sending…". Rejected: waiting rows that cannot be tapped.
-
-### Technical choices made in the plan
-- **Storage:** its own IndexedDB database (`kvit-outbox`, via `idb-keyval` `createStore`), one key per signed-in person, so the saved-copy wipe in `keepCacheToOnePerson.ts` never touches it.
-- **Waiting rows are drawn by each list from the outbox, never written into the query cache,** so a refetch or the saved copy cannot lose or duplicate them.
-- **The original request keeps running when the 3 seconds pass;** the sender waits for it, so a save that was only slow is never sent twice (and the id protects it anyway).
-- **Back-off:** after a network error, 502/503/504, 408, 425 or 429 the sender waits 2, 5, 15, 30, then 60 seconds. 401 pauses the whole queue. Any other 4xx marks that item failed and the rest goes on.
-- **Built in Step 1:**
-  - **A 500 answer marks the item failed** (Retry is offered), instead of retrying a possible server bug forever. Only no answer, 502, 503, 504, 408, 425 and 429 are retried by itself.
-  - **"Sending" is kept in memory only;** the browser database keeps "waiting" and "failed", so an item left over from a closed tab loads as "waiting".
-  - **While the tab is hidden or the browser is offline,** a finished back-off wait does not send; the next `online` or visible signal does.
-  - **If the refresh after a successful send fails,** the item is marked failed and logged; Retry re-sends the same id and the server returns the first result.
-  - **If the first load from the browser database fails,** the sender fails with a clear error and never shows an empty queue.
-  - **`enqueue` does not start sending;** the caller calls `run()`.
-- **Built in Step 2:** the queue is used only when the original save fails with no answer or after 3 seconds; the original request keeps running and a late success removes the queued item. If the answer comes after the screen is already gone, Add expense and One bill still go to the group or the groups list (a small change from before; to be looked at in the code review).
-- **Built in Step 3:**
-  - **Waiting rows sit at the top of their list, newest first,** not placed by date (simpler, and a waiting item is always the newest action). Failed items show only in the bar and the failed sheet, never as rows.
-  - **Waiting rows use 80 % opacity, a dashed border and the normal text colour** for the second line, not the mockup's 60 % and grey: that would drop below the 4.5:1 contrast rule on the peach page.
-  - **The bar is 64 px of space** (`--outbox-bar-space`) added to the toast offsets, the floating buttons and the screens' bottom padding, only while the bar is on the page.
-  - **The log-out warning counts items in every state;** the queue is deleted only after the log-out request succeeded, and a failed log-out keeps it. The count comes from the sender, which loads the saved items at sign-in (a tap in the first milliseconds after sign-in would get no warning; accepted).
-  - **Macedonian outbox texts are drafts** that Filip has not read.
-- **Browser-pass fixes (Step 5):**
-  - **All saves run at once when the browser is offline** (`networkMode: 'always'` for mutations), so offline saves are queued at once, "I paid" offline shows the network error, and nothing is held and fired later.
-  - **The 3-second clock covers only the server's answer to the save,** not the refresh after it; a save answered in time is never queued because the refresh is slow.
-  - **A failed attempt caused by a new save does not push the back-off up** (it waits 2 s at least, never more because of it); attempts by the timer, the triggers or Retry still go 2, 5, 15, 30, 60 s.
-  - **`justFinished` is published with the last removal,** so the bar never vanishes for a frame; a waiting payment shows no euro-price line; the dashed edge of a waiting row has full strength (3.29:1 light, 3.01:1 dark).
-  - **Left on purpose for Filip:** a save that is only slow is sent twice at the same moment (bug 5; the server returns the first result, one row results; the plan's sentence "the sender waits for the original" is not built); the real and waiting row share one frame (bug 8); the Macedonian "not synced" word breaks at 320 px (bug 9); the desktop bar position, "Sending…" wording, the wait after the server is back.
-- **Backend: no change, no migration.** The four endpoints already return the first result for a repeated `ClientRequestId`, also when the group is Closing or Finished, and none is rate-limited. Known edge, left as it is: a repeat of an item that did save, sent after the group was deleted, the person left, or the item was deleted, is refused (404 or 400). In the outbox that shows as a failed item with its reason, never as a duplicate. New API tests pin this behaviour in Step 4.
+## 2026-11-03: Phase 17 (the outbox): done, the rules that stay
+The whole Phase 17 decision log (Filip's mockup picks, the planning answers, the Step 1 to 5 notes, the browser-pass choices, rejected alternatives) moved word for word to the end of `reports/2026-11-03-phase-17-outbox.md`, section "Decisions and rejected alternatives". What stays true:
+- **The queue:** new expenses, One bill, new personal spending and income, and a payment that counts right away are queued when the server gives no answer within 3 seconds (the clock covers only the server's answer to the save, not the refresh after it) or the browser cannot reach it (no connection, 502, 503, 504). Not queued: edits, deletes, Undo, repeating income, "I paid" to a person with an account. All saves run at once when the browser is offline, so nothing is held and fired later. Each item keeps its own request id; the server returns the first result for a repeat.
+- **Sending:** one item at a time, oldest first; after a failed try 2, 5, 15, 30, then 60 seconds (an attempt caused by a new save does not raise the wait); also on app open, when the browser is back online and when the tab becomes visible. 401 pauses the queue; any other refusal marks that item failed and the rest keeps going; a 500 is a refusal, not a retry.
+- **Storage:** its own IndexedDB database, one list per signed-in person, never cleared by the saved-copy wipe. Logging out with changes waiting asks first; "Log out anyway" deletes that person's queue after the log-out worked.
+- **On screen:** a waiting item is a greyed, dashed row with "Not synced yet" at the top of its list (group Expenses, Budget month, group Payments, Groups list for a One bill); tap it to Discard. Balances, totals, limits and plans change only after the server saved the item, with the line "N changes waiting, not counted yet". A bar at the bottom shows the waiting count, "All up to date ✓" for 3 seconds, or "N changes couldn't be saved" with Review; a failed item shows its translated reason, Retry (same id) and Discard. EUR expenses and Budget entries say "Euro price set when sent"; payments do not.
+- **Backend:** no change; the four save endpoints already return the first result for a repeated request id, also for a Closing or Finished group, and are not rate-limited. A repeat after the group was deleted, the person left, or the item was deleted is refused (404 or 400) and shows as a failed item.
+- **Not in Phase 17 (later):** queuing edits, deletes or Undo (BACKLOG), the admin statistics page (Phase 18), notifications, a service worker or installable app.
 
 ## 2026-10-31: Phase 16 (possible duplicates, group totals, group spending plan): done, the rules that stay
 The whole Phase 16 decision log (Filip's mockup picks, the Step 1 to 8 notes, the browser-pass and code-review choices, rejected alternatives) moved word for word to the end of `reports/2026-10-31-phase-16-group-insights.md`, section "Decisions and rejected alternatives". What stays true:
