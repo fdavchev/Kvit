@@ -11,6 +11,7 @@ import {
 } from '@/test/queuedSaveTestHelpers'
 import { renderHookWithProviders } from '@/test/renderWithProviders'
 import { seedMe, testMe } from '@/test/testMe'
+import * as queuedSaveModule from './useQueuedSave'
 import { useQueuedSave } from './useQueuedSave'
 
 const item = testOutboxItem('request-1')
@@ -526,5 +527,11 @@ describe('useQueuedSave when the item could not be stored', () => {
 
     await failure
     expect(result.current.error).toBe(storageFailure)
+  })
+})
+
+describe('useQueuedSave module', () => {
+  it('has no empty rejection handler to pass to a save', () => {
+    expect(queuedSaveModule).not.toHaveProperty('leaveErrorToQueuedSave')
   })
 })

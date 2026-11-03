@@ -1680,7 +1680,7 @@ describe('OneBillScreen', () => {
       })
       expect(router.state.historyAction).toBe('REPLACE')
       expect(shownToastTexts()).toContain(translated(language, 'expenses.saved'))
-      expect(screen.getByText('group page')).toBeTruthy()
+      expect(await screen.findByText('group page')).toBeTruthy()
     })
 
     it('goes to the group of the answer, whatever its id is', async () => {
@@ -1885,6 +1885,9 @@ describe('OneBillScreen', () => {
       typeAmount('1800')
       fireEvent.click(saveBillButton())
       await screen.findByRole('alert')
+      await waitFor(() => {
+        expect(isDisabled(saveBillButton())).toBe(false)
+      })
 
       fireEvent.click(saveBillButton())
 

@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next'
-import type { OutboxFailure, OutboxItem } from '@/core/outbox/outboxItem'
+import type { OutboxItem, OutboxItemDisplay, OutboxItemKind } from '@/core/outbox/outboxItem'
 import { groupCurrencies } from '@/core/services/groups/groupsService'
 import { noValueText } from '@/features/expenses/shared/expenseTitle'
 import { monthOfDate } from '@/shared/utils/calendarMonth'
@@ -10,37 +10,63 @@ export interface WaitingAmount {
   currency: Currency
 }
 
-type RequiredDisplayText = 'date' | 'paidByName' | 'payerName' | 'receiverName'
-
-export function amountOfItem(item: OutboxItem): WaitingAmount {
-  const { amountMinor, currency } = item.display
-  if (amountMinor === undefined) {
-    throw new Error(`The waiting ${item.kind} ${item.id} has no amount to show`)
-  }
-  const knownCurrency = groupCurrencies.find((candidate) => candidate === currency)
-  if (knownCurrency === undefined) {
-    throw new Error(`The waiting ${item.kind} ${item.id} has the currency ${String(currency)}, which is neither MKD nor EUR`)
-  }
-  return { amountMinor, currency: knownCurrency }
+const requiredDisplayFields: Record<OutboxItemKind, readonly (keyof OutboxItemDisplay)[]> = {
+  expense: ['amountMinor', 'currency', 'paidByName'],
+  oneBill: ['amountMinor', 'currency'],
+  personalEntry: ['amountMinor', 'currency', 'date'],
+  settlement: ['amountMinor', 'currency', 'payerName', 'receiverName'],
 }
 
-export function displayTextOf(item: OutboxItem, field: RequiredDisplayText): string {
-  const value = item.display[field]
-  if (value === undefined) {
-    throw new Error(`The waiting ${item.kind} ${item.id} has no ${field} to show`)
+export function amountOfItem(item: OutboxItem): WaitingAmount | null {
+  const { amountMinor } = item.display
+  const currency = currencyOf(item)
+  if (amountMinor === undefined || currency === null) {
+    return null
   }
-  return value
+  return { amountMinor, currency }
 }
 
-export function failureOf(item: OutboxItem): OutboxFailure {
-  if (item.failure === null) {
-    throw new Error(`The failed ${item.kind} ${item.id} has no failure reason`)
+export function displayProblemOf(item: OutboxItem, unknownCategoryId: string | null = null): string | null {
+  const problems: string[] = []
+  const missingFields = requiredDisplayFields[item.kind].filter((field) => item.display[field] === undefined)
+  if (missingFields.length > 0) {
+    problems.push(`it has no ${missingFields.join(', ')}`)
   }
-  return item.failure
+  if (item.display.currency !== undefined && currencyOf(item) === null) {
+    problems.push(`its currency ${item.display.currency} is neither MKD nor EUR`)
+  }
+  if (unknownCategoryId !== null) {
+    problems.push(`its category ${unknownCategoryId} is not one of the categories`)
+  }
+  if (problems.length === 0) {
+    return null
+  }
+  return `The waiting ${item.kind} ${item.id} is shown with a dash in place of what it is missing: ${problems.join('; ')}`
+}
+
+export interface WaitingItemCategory<Category> {
+  category: Category | null
+  unknownCategoryId: string | null
+}
+
+export function categoryOfWaitingItem<Category extends { id: string }>(
+  item: OutboxItem,
+  categories: readonly Category[],
+): WaitingItemCategory<Category> {
+  const categoryId = item.display.categoryId ?? null
+  if (categoryId === null) {
+    return { category: null, unknownCategoryId: null }
+  }
+  const category = categories.find((candidate) => candidate.id === categoryId) ?? null
+  return { category, unknownCategoryId: category === null ? categoryId : null }
 }
 
 export function paymentTitleOf(item: OutboxItem, t: TFunction): string {
-  return t('settlements.fromPaidTo', { from: displayTextOf(item, 'payerName'), to: displayTextOf(item, 'receiverName') })
+  const { payerName, receiverName } = item.display
+  if (payerName === undefined || receiverName === undefined) {
+    return noValueText
+  }
+  return t('settlements.fromPaidTo', { from: payerName, to: receiverName })
 }
 
 export function oneBillNameOf(item: OutboxItem): string {
@@ -63,5 +89,10 @@ export function titleWithoutCategoryOf(item: OutboxItem, t: TFunction): string {
 }
 
 export function isInMonth(item: OutboxItem, month: string): boolean {
-  return monthOfDate(displayTextOf(item, 'date')) === month
+  const { date } = item.display
+  return date === undefined || monthOfDate(date) === month
+}
+
+function currencyOf(item: OutboxItem): Currency | null {
+  return groupCurrencies.find((candidate) => candidate === item.display.currency) ?? null
 }

@@ -6,8 +6,8 @@ import { useIsGuest } from '@/core/auth/useIsGuest'
 import { useMe } from '@/core/auth/useMe'
 import type { Language } from '@/core/i18n/language'
 import { useLanguage } from '@/core/i18n/useLanguage'
-import { clearOutbox } from '@/core/outbox/outboxStorage'
-import { useOutboxSummary } from '@/core/outbox/useOutbox'
+import { removeOutboxItem } from '@/core/outbox/outboxStorage'
+import { useOutboxItems } from '@/core/outbox/useOutbox'
 import { routes } from '@/core/router/routes'
 import { useTheme } from '@/core/theme/useTheme'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
@@ -34,7 +34,8 @@ export function SettingsScreen() {
   const isGuest = useIsGuest()
   const changeLanguage = useChangeLanguage()
   const logOut = useLogOut()
-  const unsentCount = useOutboxSummary().total
+  const unsentItems = useOutboxItems()
+  const unsentCount = unsentItems.length
   const [openLogOutSheet, setOpenLogOutSheet] = useState<LogOutSheet | null>(null)
 
   function showFailure(error: Error): void {
@@ -47,14 +48,15 @@ export function SettingsScreen() {
   }
 
   function logOutNow(): void {
-    const personWithUnsentChanges = unsentCount > 0 ? me?.id : undefined
-    logOut
-      .mutateAsync()
-      .then(() => {
-        if (personWithUnsentChanges !== undefined) {
-          clearOutbox(personWithUnsentChanges).catch(showFailure)
-        }
-      }, showFailure)
+    const personId = me?.id
+    const countedIds = unsentItems.map((item) => item.id)
+    logOut.mutateAsync().then(() => {
+      if (personId !== undefined && countedIds.length > 0) {
+        removeCountedChanges(personId, countedIds).catch((error: unknown) => {
+          console.error(`Logged out, but the unsent changes of person ${personId} could not be removed from this browser`, error)
+        })
+      }
+    }, showFailure)
   }
 
   function pressLogOut(): void {
@@ -132,4 +134,10 @@ export function SettingsScreen() {
       )}
     </KvitScreen>
   )
+}
+
+async function removeCountedChanges(personId: string, ids: readonly string[]): Promise<void> {
+  for (const id of ids) {
+    await removeOutboxItem(personId, id)
+  }
 }

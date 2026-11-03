@@ -2,8 +2,8 @@ import { ApiError } from '@/core/api/apiClient'
 import { errorMessageKey } from '@/core/api/errors'
 import type { OutboxFailure } from '@/core/outbox/outboxItem'
 
-export function failureMessageKey(failure: OutboxFailure): string {
-  if (failure.errorCode === null && failure.httpStatus === null) {
+export function failureMessageKey(failure: OutboxFailure | null): string {
+  if (failure === null || (failure.errorCode === null && failure.httpStatus === null)) {
     return 'errors.generic'
   }
   return errorMessageKey(

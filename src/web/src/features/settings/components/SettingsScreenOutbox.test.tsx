@@ -178,7 +178,7 @@ describe('SettingsScreen log out for a person with an account and changes not se
       await waitFor(() => {
         expect(readSavedOutbox(testMe.id)).toEqual([])
       })
-      expect(fakeIdbKeyval.del).toHaveBeenCalledWith(testMe.id, expect.anything())
+      expect(fakeIdbKeyval.del).not.toHaveBeenCalled()
     })
 
     it('does not delete the saved changes of another person', async () => {
@@ -320,7 +320,7 @@ describe('SettingsScreen log out for a guest', () => {
     await waitFor(() => {
       expect(readSavedOutbox(testGuestMe.id)).toEqual([])
     })
-    expect(fakeIdbKeyval.del).toHaveBeenCalledWith(testGuestMe.id, expect.anything())
+    expect(fakeIdbKeyval.del).not.toHaveBeenCalled()
   })
 
   it('keeps the saved changes of the guest when the log out fails', async () => {

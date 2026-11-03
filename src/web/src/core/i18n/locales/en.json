@@ -785,7 +785,7 @@
     "notCounted_one": "{{count}} change waiting, not counted yet",
     "notCounted_other": "{{count}} changes waiting, not counted yet",
     "discardTitle": "Discard this change?",
-    "discardBody": "It has not been saved yet. If you discard it, it is gone.",
+    "discardBody": "It has not been confirmed yet. If you discard it, it may still arrive.",
     "failedSheetTitle": "Changes that couldn't be saved",
     "logOutTitle": "Changes not sent yet",
     "logOutBody_one": "{{count}} change hasn't been sent yet. If you log out now it is lost.",

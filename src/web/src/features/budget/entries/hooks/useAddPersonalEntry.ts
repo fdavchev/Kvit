@@ -7,6 +7,7 @@ import {
 } from '@/core/services/personalEntries/personalEntriesService'
 import { asSaveError, useQueuedSave } from '@/features/outbox/hooks/useQueuedSave'
 import { buildPersonalEntryOutboxItem } from '@/features/outbox/queuedItems'
+import { withAnswered } from '@/features/outbox/withAnswered'
 import type { SaveOnce } from '../../categories/hooks/useSaveOnce'
 import { refreshPersonalEntries } from '../personalEntryCache'
 
@@ -26,15 +27,15 @@ export interface PersonalEntryAdd {
   error: Error | null
 }
 
+interface PersonalEntrySave extends AnsweredSignal {
+  entry: NewPersonalEntry
+}
+
 export function useAddPersonalEntry(oneAtATime: SaveOnce): PersonalEntryAdd {
   const queryClient = useQueryClient()
   const queuedSave = useQueuedSave()
-  const mutation = useMutation<PersonalEntry, Error, NewPersonalEntry & AnsweredSignal>({
-    mutationFn: async ({ onAnswered, ...input }) => {
-      const added = await addPersonalEntry(input)
-      onAnswered?.()
-      return added
-    },
+  const mutation = useMutation<PersonalEntry, Error, PersonalEntrySave>({
+    mutationFn: withAnswered<PersonalEntrySave, PersonalEntry>(({ entry }) => addPersonalEntry(entry)),
     onSuccess: () => refreshPersonalEntries(queryClient),
   })
 
@@ -44,9 +45,12 @@ export function useAddPersonalEntry(oneAtATime: SaveOnce): PersonalEntryAdd {
         return
       }
       void queuedSave
-        .saveOrQueueItem(buildPersonalEntryOutboxItem({ input }), (onAnswered) => mutation.mutateAsync({ ...input, onAnswered }))
+        .saveOrQueueItem(buildPersonalEntryOutboxItem({ input }), (onAnswered) => mutation.mutateAsync({ entry: input, onAnswered }))
         .finally(oneAtATime.finish)
         .then(onDone, (error: unknown) => onRefused(asSaveError(error)))
+        .catch((failure: unknown) => {
+          console.error('Finishing the screen after a personal entry was saved, queued or refused failed', failure)
+        })
     },
     isPending: queuedSave.isPending,
     error: queuedSave.error,

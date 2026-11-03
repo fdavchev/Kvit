@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import desktopRailLayout from '@/core/router/DesktopRailLayout.tsx?raw'
 import indexCss from '@/index.css?raw'
 import { blockAfter } from '@/test/indexCssColors'
 
@@ -29,5 +30,18 @@ describe('index.css on desktop', () => {
   it('keeps space for the bottom bar only while the bar is on the page', () => {
     expect(indexCss).toMatch(/:root:has\(\[data-bottom-bar\]\) \{\s*--bottom-bar-height:/)
     expect(blockAfter(indexCss, ':root {')).toMatch(/--bottom-bar-height: 0px;/)
+  })
+
+  it('has no rail width by default, so the phone layout has no side menu to make room for', () => {
+    expect(blockAfter(indexCss, ':root {')).toMatch(/--rail-width:\s*0px;/)
+  })
+
+  it('sets the rail width from the lg breakpoint to the width of the side menu', () => {
+    expect(lgBlockInside(':root {')).toContain('--rail-width: clamp(11rem, 17vw, 16rem);')
+  })
+
+  it('lets the desktop layout take the width of its side menu column from --rail-width, so the width is written once', () => {
+    expect(desktopRailLayout).toContain('var(--rail-width)')
+    expect(desktopRailLayout).not.toContain('clamp(11rem,17vw,16rem)')
   })
 })

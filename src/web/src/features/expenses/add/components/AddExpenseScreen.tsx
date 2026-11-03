@@ -12,7 +12,7 @@ import { useMembers } from '@/features/groups/members/hooks/useMembers'
 import { GroupLoadError } from '@/features/groups/shared/components/GroupLoadError'
 import { canChangeGroup } from '@/features/groups/shared/groupAccess'
 import { useGroupIdParam } from '@/features/groups/shared/useGroupIdParam'
-import { leaveErrorToQueuedSave, useQueuedSave } from '@/features/outbox/hooks/useQueuedSave'
+import { useQueuedSave } from '@/features/outbox/hooks/useQueuedSave'
 import { buildExpenseOutboxItem } from '@/features/outbox/queuedItems'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitLoading } from '@/shared/components/KvitLoading'
@@ -44,12 +44,12 @@ export function AddExpenseScreen() {
       input,
       paidByName: personOf(expensePeople(members), changes.paidByMemberId).name,
     })
-    void queuedSave.saveOrQueueItem(item, (onAnswered) => createExpense.mutateAsync({ ...input, onAnswered })).then((outcome) => {
+    queuedSave.saveOrQueueThen(item, (onAnswered) => createExpense.mutateAsync({ ...input, onAnswered }), (outcome) => {
       if (!outcome.queued) {
         toast.success(t('expenses.saved'))
       }
       navigate(routes.group(groupId), { replace: true })
-    }, leaveErrorToQueuedSave)
+    })
   }
 
   function renderContent() {

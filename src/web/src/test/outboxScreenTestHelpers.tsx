@@ -1,5 +1,5 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { expect } from 'vitest'
+import { expect, type MockInstance } from 'vitest'
 import type { Language } from '@/core/i18n/language'
 import type { OutboxItem } from '@/core/outbox/outboxItem'
 import type { OutboxSender } from '@/core/outbox/outboxSender'
@@ -119,4 +119,26 @@ export async function renderGroupTab(path: string, options: GroupAppOptions = {}
     },
   )
   return { fetchMock, ...rendered }
+}
+
+export function consoleErrorCallsAbout(consoleError: MockInstance<typeof console.error>, itemId: string): unknown[][] {
+  return consoleError.mock.calls.filter((call) =>
+    call.some((argument) => (argument instanceof Error ? argument.message : String(argument)).includes(itemId)),
+  )
+}
+
+export function expectMalformedRowShown(row: HTMLElement | undefined, language: Language = 'en'): HTMLElement {
+  if (row === undefined) {
+    throw new Error(`No waiting row with the dash as its title is on the screen; the waiting rows are: ${JSON.stringify(waitingRowTexts())}`)
+  }
+  const text = waitingRowText(row)
+  expect(text).toContain('—')
+  expect(text).toContain(outboxText(language, 'outbox.notSynced'))
+  expect(text).not.toContain('undefined')
+  expect(text).not.toContain('NaN')
+  return row
+}
+
+export function rowWithoutText(text: string): HTMLElement | undefined {
+  return waitingRows().find((row) => !waitingRowText(row).includes(text))
 }

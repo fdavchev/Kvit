@@ -2,21 +2,33 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import { formatMoney, type Currency } from '@/shared/utils/formatMoney'
+import { useLogDisplayProblem } from '../hooks/useLogDisplayProblem'
 
 interface WaitingRowProps {
   title: string
-  amountMinor: number
-  currency: Currency
+  amountMinor?: number
+  currency?: Currency
   detail?: string
   leading?: ReactNode
   showsRateNote?: boolean
+  displayProblem?: string | null
   onOpen: () => void
 }
 
-export function WaitingRow({ title, amountMinor, currency, detail, leading, showsRateNote = true, onOpen }: WaitingRowProps) {
+export function WaitingRow({
+  title,
+  amountMinor,
+  currency,
+  detail,
+  leading,
+  showsRateNote = true,
+  displayProblem = null,
+  onOpen,
+}: WaitingRowProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const notSynced = t('outbox.notSynced')
+  useLogDisplayProblem(displayProblem)
 
   return (
     <button
@@ -27,12 +39,14 @@ export function WaitingRow({ title, amountMinor, currency, detail, leading, show
     >
       <span className="flex min-w-0 flex-1 items-center gap-3 opacity-80">
         {leading}
-        <span className="flex min-w-0 flex-1 flex-col">
+        <span className="flex min-w-30 flex-1 flex-col">
           <span className="line-clamp-2 font-semibold break-words italic">{title}</span>
-          <span className="text-[0.8125rem] break-words">{detail === undefined ? notSynced : `${detail} · ${notSynced}`}</span>
+          <span className="min-w-0 text-[0.8125rem] break-words">{detail === undefined ? notSynced : `${detail} · ${notSynced}`}</span>
           {showsRateNote && currency === 'EUR' && <span className="text-[0.8125rem] break-words">{t('outbox.rateWhenSent')}</span>}
         </span>
-        <span className="text-right font-bold whitespace-nowrap">{formatMoney(amountMinor, currency, language)}</span>
+        {amountMinor !== undefined && currency !== undefined && (
+          <span className="text-right font-bold">{formatMoney(amountMinor, currency, language)}</span>
+        )}
       </span>
     </button>
   )

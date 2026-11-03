@@ -23,8 +23,8 @@ function failedItems(count: number): OutboxItem[] {
   )
 }
 
-async function renderBar(items: readonly OutboxItem[] = [], language: Language = 'en') {
-  const outbox = createFakeOutbox(items)
+async function renderBar(items: readonly OutboxItem[] = [], language: Language = 'en', isSending: boolean = false) {
+  const outbox = createFakeOutbox(items, false, isSending)
   await renderElementWithProviders(
     <OutboxProvider sender={outbox.sender}>
       <OutboxBar />
@@ -63,22 +63,50 @@ describe('OutboxBar when nothing is queued', () => {
 })
 
 describe('OutboxBar when changes are waiting', () => {
-  it.each(languages)('says how many changes wait and that they are being sent (%s)', async (language) => {
+  it.each(languages)('says only how many changes wait while no request is running (%s)', async (language) => {
     await renderBar(waitingItems(2), language)
+
+    expect(barText()).toBe(outboxText(language, 'outbox.waiting', 2))
+  })
+
+  it.each(languages)('adds that they are being sent while a request is running (%s)', async (language) => {
+    await renderBar(waitingItems(2), language, true)
 
     expect(barText()).toBe(`${outboxText(language, 'outbox.waiting', 2)} · ${outboxText(language, 'outbox.sending')}`)
   })
 
-  it('says "1 change waiting · Sending…" for one change', async () => {
+  it('says "1 change waiting" for one change while no request is running', async () => {
     await renderBar(waitingItems(1))
+
+    expect(barText()).toBe('1 change waiting')
+  })
+
+  it('says "1 change waiting · Sending…" for one change while a request is running', async () => {
+    await renderBar(waitingItems(1), 'en', true)
 
     expect(barText()).toBe('1 change waiting · Sending…')
   })
 
   it('counts an item that is being sent as waiting', async () => {
-    await renderBar([queuedExpense('a', { state: 'sending' }), queuedExpense('b')])
+    await renderBar([queuedExpense('a', { state: 'sending' }), queuedExpense('b')], 'en', true)
 
     expect(barText()).toBe('2 changes waiting · Sending…')
+  })
+
+  it('does not say Sending… only because an item has the state sending, when the snapshot says no request is running', async () => {
+    await renderBar([queuedExpense('a', { state: 'sending' }), queuedExpense('b')])
+
+    expect(barText()).toBe('2 changes waiting')
+  })
+
+  it('follows the sender when a request starts and when it ends', async () => {
+    const outbox = await renderBar(waitingItems(2))
+
+    outbox.show(waitingItems(2), { isSending: true })
+    expect(barText()).toBe('2 changes waiting · Sending…')
+    outbox.show(waitingItems(2), { isSending: false })
+
+    expect(barText()).toBe('2 changes waiting')
   })
 
   it('is a status region so a screen reader announces it', async () => {
@@ -98,7 +126,7 @@ describe('OutboxBar when changes are waiting', () => {
 
     outbox.show(waitingItems(3))
 
-    expect(barText()).toBe('3 changes waiting · Sending…')
+    expect(barText()).toBe('3 changes waiting')
   })
 
   it('goes away when the last waiting change is gone without anything having been sent', async () => {
@@ -216,7 +244,7 @@ describe('OutboxBar after everything was sent', () => {
 
     outbox.show(waitingItems(1), { justFinished: true })
 
-    expect(barText()).toBe('1 change waiting · Sending…')
+    expect(barText()).toBe('1 change waiting')
   })
 
   it('shows the failure and not the up-to-date text when a change failed', async () => {
@@ -272,6 +300,25 @@ describe('OutboxBar position and motion', () => {
     const bottomOffset = Array.from(bar()?.classList ?? []).find((token) => token.startsWith('bottom-'))
 
     expect(bottomOffset).toContain('--bottom-bar-height')
+  })
+
+  it('keeps its phone layout: full width up to the size of a phone column, centred, with the side padding', async () => {
+    await renderBar(waitingItems(1))
+
+    const classes = Array.from(bar()?.classList ?? [])
+
+    expect(classes).toEqual(expect.arrayContaining(['inset-x-0', 'mx-auto', 'w-full', 'max-w-md', 'px-4']))
+  })
+
+  it('starts at the right edge of the side menu from the lg breakpoint, by the rail width, so it is centred over the content column', async () => {
+    await renderBar(waitingItems(1))
+
+    const desktopOffsets = Array.from(bar()?.classList ?? []).filter(
+      (token) => token.startsWith('lg:') && token.includes('--rail-width'),
+    )
+
+    expect(desktopOffsets).toHaveLength(1)
+    expect(desktopOffsets[0]).toMatch(/^lg:(left|start|inset-s)-/)
   })
 
   it('animates nothing unless the person accepts motion, and never with transition-all', async () => {

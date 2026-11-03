@@ -235,4 +235,30 @@ describe('WaitingRow', () => {
     expect(rateLine).not.toBe(secondLine)
     expect(secondLine.contains(rateLine)).toBe(false)
   })
+
+  describe('on a narrow phone, where the words must wrap by word (class contract, because jsdom has no layout)', () => {
+    it('lets the second line shrink and wrap with min-w-0', async () => {
+      await renderRow({ detail: 'Paid by Ana' })
+
+      const secondLine = screen.getByText(`Paid by Ana · ${outboxText('en', 'outbox.notSynced')}`)
+
+      expect(Array.from(secondLine.classList)).toContain('min-w-0')
+    })
+
+    it('keeps the text column at least 120 px wide with min-w-30, so the amount cannot squeeze it any further', async () => {
+      await renderRow({ detail: 'Paid by Ana' })
+
+      const textColumn = screen.getByText(`Paid by Ana · ${outboxText('en', 'outbox.notSynced')}`).parentElement
+
+      expect(Array.from(textColumn?.classList ?? [])).toContain('min-w-30')
+    })
+
+    it('does not forbid the amount to wrap with whitespace-nowrap', async () => {
+      await renderRow({ amountMinor: 150000, currency: 'MKD' })
+
+      const amount = screen.getByText(money(150000, 'MKD', 'en'))
+
+      expect(Array.from(amount.classList)).not.toContain('whitespace-nowrap')
+    })
+  })
 })

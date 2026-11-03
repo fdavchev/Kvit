@@ -8,7 +8,7 @@ export interface OutboxText {
 }
 
 export const outboxTexts: readonly OutboxText[] = [
-  { key: 'outbox.notSynced', en: 'Not synced yet', mk: 'Сѐ уште не е синхронизирано' },
+  { key: 'outbox.notSynced', en: 'Not synced yet', mk: 'Чека праќање' },
   { key: 'outbox.rateWhenSent', en: 'Euro price set when sent', mk: 'Цената на еврото се одредува при праќање' },
   { key: 'outbox.sending', en: 'Sending…', mk: 'Се праќа…' },
   { key: 'outbox.upToDate', en: 'All up to date ✓', mk: 'Сѐ е ажурирано ✓' },
@@ -40,8 +40,8 @@ export const outboxTexts: readonly OutboxText[] = [
   { key: 'outbox.discardTitle', en: 'Discard this change?', mk: 'Да ја отфрлиш оваа промена?' },
   {
     key: 'outbox.discardBody',
-    en: 'It has not been saved yet. If you discard it, it is gone.',
-    mk: 'Сѐ уште не е зачувана. Ако ја отфрлиш, се губи.',
+    en: 'It has not been confirmed yet. If you discard it, it may still arrive.',
+    mk: 'Сѐ уште не е потврдена. Ако ја отфрлиш, можеби сепак ќе пристигне.',
   },
   {
     key: 'outbox.failedSheetTitle',

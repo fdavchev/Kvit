@@ -193,6 +193,7 @@
   --avatar-9: var(--category-gray);
   --bottom-bar-height: 0px;
   --outbox-bar-space: 0px;
+  --rail-width: 0px;
   --toast-offset-bottom: calc(16px + env(safe-area-inset-bottom) + var(--outbox-bar-space));
   --radius: 0.625rem;
 
@@ -247,6 +248,10 @@
     --tab-active: #d9b48a;
     --tab-active-foreground: var(--color-night);
     --glass-edge: color-mix(in srgb, var(--color-brand-50) 40%, transparent);
+  }
+
+  @variant lg {
+    --rail-width: clamp(11rem, 17vw, 16rem);
   }
 }
 

@@ -128,3 +128,7 @@ export function queuedOneBill(id: string, options: QueuedItemOptions = {}): Outb
     ...stateAndFailure(options),
   })
 }
+
+export function withoutDisplayFields(item: OutboxItem): OutboxItem {
+  return { ...item, display: {} }
+}

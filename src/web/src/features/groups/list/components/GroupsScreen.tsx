@@ -7,7 +7,7 @@ import { DiscardWaitingSheet } from '@/features/outbox/components/DiscardWaiting
 import { WaitingRow } from '@/features/outbox/components/WaitingRow'
 import { useOpenedWaitingItem } from '@/features/outbox/hooks/useOpenedWaitingItem'
 import { useWaitingItems } from '@/features/outbox/hooks/useWaitingItems'
-import { amountOfItem, oneBillNameOf } from '@/features/outbox/waitingItemDisplay'
+import { amountOfItem, displayProblemOf, oneBillNameOf } from '@/features/outbox/waitingItemDisplay'
 import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitError } from '@/shared/components/KvitError'
@@ -57,14 +57,15 @@ export function GroupsScreen() {
         {waitingOneBills.length > 0 && (
           <div className={cn('flex flex-col gap-2.5', groups.length > 0 && 'pb-2.5')}>
             {waitingOneBills.map((item) => {
-              const { amountMinor, currency } = amountOfItem(item)
+              const amount = amountOfItem(item)
               return (
                 <WaitingRow
                   key={item.id}
                   title={oneBillNameOf(item)}
-                  amountMinor={amountMinor}
-                  currency={currency}
+                  amountMinor={amount?.amountMinor}
+                  currency={amount?.currency}
                   leading={<KvitEmojiTile emoji={receiptEmoji} />}
+                  displayProblem={displayProblemOf(item)}
                   onOpen={() => waitingSheet.open(item)}
                 />
               )

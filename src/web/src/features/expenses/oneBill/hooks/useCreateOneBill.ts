@@ -6,16 +6,13 @@ import {
   type OneBillInput,
 } from '@/core/services/expenses/expensesService'
 import { refreshGroupList } from '@/features/groups/shared/groupCache'
+import { withAnswered } from '@/features/outbox/withAnswered'
 
 export function useCreateOneBill(): UseMutationResult<CreatedOneBill, Error, OneBillInput & AnsweredSignal> {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ onAnswered, ...input }: OneBillInput & AnsweredSignal) => {
-      const created = await createOneBill(input)
-      onAnswered?.()
-      return created
-    },
+    mutationFn: withAnswered<OneBillInput & AnsweredSignal, CreatedOneBill>(createOneBill),
     onSuccess: () => refreshGroupList(queryClient),
   })
 }

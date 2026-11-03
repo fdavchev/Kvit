@@ -31,6 +31,7 @@ export interface OutboxItem {
   createdAt: string
   state: OutboxItemState
   failure: OutboxFailure | null
+  isSaved?: boolean
 }
 
 export type OutboxItemChange = Partial<Pick<OutboxItem, 'state' | 'failure'>>

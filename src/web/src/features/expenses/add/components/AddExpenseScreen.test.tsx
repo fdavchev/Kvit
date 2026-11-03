@@ -2335,7 +2335,7 @@ describe('AddExpenseScreen', () => {
         expect(router.state.location.pathname).toBe(routes.group(testGroupId))
       })
       expect(shownToastTexts()).toContain(translated('en', 'expenses.saved'))
-      expect(screen.getByText('group page')).toBeTruthy()
+      expect(await screen.findByText('group page')).toBeTruthy()
     })
 
     it.each(languages)('shows the Expense saved toast in the language of the person (%s)', async (language) => {

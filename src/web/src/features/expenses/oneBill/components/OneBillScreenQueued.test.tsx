@@ -103,7 +103,7 @@ describe('OneBillScreen saving through the outbox', () => {
         expect(router.state.location.pathname).toBe(routes.groups)
       })
       expect(router.state.historyAction).toBe('REPLACE')
-      expect(screen.getByText('groups page')).toBeTruthy()
+      expect(await screen.findByText('groups page')).toBeTruthy()
     })
 
     it('stores the One bill with no group, the request id and the payload of the request that failed', async () => {

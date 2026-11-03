@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { GroupMember } from '@/core/services/groups/membersService'
 import type { SettlementInput } from '@/core/services/settlements/settlementsService'
-import { leaveErrorToQueuedSave, useQueuedSave } from '@/features/outbox/hooks/useQueuedSave'
+import { useQueuedSave } from '@/features/outbox/hooks/useQueuedSave'
 import { buildSettlementOutboxItem } from '@/features/outbox/queuedItems'
 import { countsRightAway } from '../paymentToRecord'
 import { useRecordSettlement } from './useRecordSettlement'
@@ -30,9 +30,7 @@ export function useSavePayment(groupId: string, members: readonly GroupMember[])
       return
     }
     const item = buildSettlementOutboxItem({ groupId, input, ...names })
-    void queuedSave
-      .saveOrQueueItem(item, (onAnswered) => recordSettlement.mutateAsync({ ...input, onAnswered }))
-      .then(onSaved, leaveErrorToQueuedSave)
+    queuedSave.saveOrQueueThen(item, (onAnswered) => recordSettlement.mutateAsync({ ...input, onAnswered }), onSaved)
   }
 
   return {

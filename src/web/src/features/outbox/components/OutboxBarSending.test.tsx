@@ -81,7 +81,7 @@ describe('OutboxBar while the real sender sends the last waiting change', () => 
     const sender = await renderBarWithRealSender(() => sending.promise)
     await sender.enqueue(queuedExpense('only-one'))
     await waitFor(() => {
-      expect(barText()).toBe(`${outboxText('en', 'outbox.waiting', 1)} · ${outboxText('en', 'outbox.sending')}`)
+      expect(barText()).toBe(outboxText('en', 'outbox.waiting', 1))
     })
     const watch = watchTheBar()
     const running = sender.run()
@@ -107,8 +107,12 @@ describe('OutboxBar while the real sender sends the last waiting change', () => 
 
     watch.stop()
 
-    const waiting = `${outboxText('en', 'outbox.waiting', 1)} · ${outboxText('en', 'outbox.sending')}`
-    const allowedTexts = new Set([waiting, outboxText('en', 'outbox.upToDate')])
+    const waiting = outboxText('en', 'outbox.waiting', 1)
+    const allowedTexts = new Set([
+      waiting,
+      `${waiting} · ${outboxText('en', 'outbox.sending')}`,
+      outboxText('en', 'outbox.upToDate'),
+    ])
     expect(watch.textsAfterEveryChange.filter((text) => !allowedTexts.has(text))).toEqual([])
     expect(screen.getByText(outboxText('en', 'outbox.upToDate'))).toBeTruthy()
   })

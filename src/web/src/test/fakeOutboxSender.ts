@@ -7,11 +7,16 @@ export interface FakeOutbox {
   sender: OutboxSender
   retry: Mock<(id: string) => Promise<void>>
   discard: Mock<(id: string) => Promise<boolean>>
-  show: (items: readonly OutboxItem[], options?: { justFinished?: boolean }) => void
+  run: Mock<OutboxSender['run']>
+  show: (items: readonly OutboxItem[], options?: { justFinished?: boolean; isSending?: boolean }) => void
 }
 
-export function createFakeOutbox(items: readonly OutboxItem[] = [], justFinished: boolean = false): FakeOutbox {
-  let snapshot: OutboxSnapshot = { items, isSending: false, justFinished }
+export function createFakeOutbox(
+  items: readonly OutboxItem[] = [],
+  justFinished: boolean = false,
+  isSending: boolean = false,
+): FakeOutbox {
+  let snapshot: OutboxSnapshot = { items, isSending, justFinished }
   const listeners = new Set<() => void>()
 
   function publish(change: Partial<OutboxSnapshot>): void {
@@ -25,6 +30,8 @@ export function createFakeOutbox(items: readonly OutboxItem[] = [], justFinished
     return true
   })
 
+  const run = vi.fn<OutboxSender['run']>(async () => {})
+
   const sender: OutboxSender = {
     getSnapshot: () => snapshot,
     subscribe: (listener) => {
@@ -34,19 +41,24 @@ export function createFakeOutbox(items: readonly OutboxItem[] = [], justFinished
       }
     },
     enqueue: vi.fn(async (_item: OutboxItem): Promise<void> => {}),
-    run: vi.fn(async (): Promise<void> => {}),
+    run,
     retry,
     discard,
+    holdWhileSaving: vi.fn(),
     pause: vi.fn(),
     resume: vi.fn(),
     isPaused: () => false,
   }
 
-  function show(shownItems: readonly OutboxItem[], options: { justFinished?: boolean } = {}): void {
+  function show(shownItems: readonly OutboxItem[], options: { justFinished?: boolean; isSending?: boolean } = {}): void {
     act(() => {
-      publish({ items: shownItems, justFinished: options.justFinished ?? false })
+      publish({
+        items: shownItems,
+        justFinished: options.justFinished ?? false,
+        isSending: options.isSending ?? false,
+      })
     })
   }
 
-  return { sender, retry, discard, show }
+  return { sender, retry, discard, run, show }
 }

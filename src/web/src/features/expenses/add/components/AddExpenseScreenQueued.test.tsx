@@ -116,7 +116,7 @@ describe('AddExpenseScreen saving through the outbox', () => {
         expect(router.state.location.pathname).toBe(routes.group(testGroupId))
       })
       expect(router.state.historyAction).toBe('REPLACE')
-      expect(screen.getByText('group page')).toBeTruthy()
+      expect(await screen.findByText('group page')).toBeTruthy()
     })
 
     it('stores the expense in the outbox with the request id and the payload of the request that failed', async () => {
@@ -367,6 +367,40 @@ describe('AddExpenseScreen saving through the outbox', () => {
         expect(isDisabled(saveButton())).toBe(true)
       })
       expect(readSavedOutbox()).toEqual([])
+    })
+  })
+
+  describe('when something goes wrong after the save worked', () => {
+    it('does not hide an error thrown while the saved expense is being finished: it reaches console.error', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const thrown = new Error('the toast could not be shown')
+      vi.mocked(toast.success).mockImplementationOnce(() => {
+        throw thrown
+      })
+      await renderReadyAdd()
+      typeAmount('1200')
+
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(consoleError.mock.calls.some((call) => call.includes(thrown))).toBe(true)
+      })
+    })
+
+    it('does not show the form error for an error thrown after the save worked', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      vi.mocked(toast.success).mockImplementationOnce(() => {
+        throw new Error('the toast could not be shown')
+      })
+      await renderReadyAdd()
+      typeAmount('1200')
+
+      fireEvent.click(saveButton())
+      await waitFor(() => {
+        expect(vi.mocked(console.error)).toHaveBeenCalled()
+      })
+
+      expect(screen.queryByRole('alert')).toBeNull()
     })
   })
 })

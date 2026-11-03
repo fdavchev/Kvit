@@ -11,14 +11,13 @@ import { DiscardWaitingSheet } from '@/features/outbox/components/DiscardWaiting
 import { WaitingRow } from '@/features/outbox/components/WaitingRow'
 import { useOpenedWaitingItem } from '@/features/outbox/hooks/useOpenedWaitingItem'
 import { useWaitingItems } from '@/features/outbox/hooks/useWaitingItems'
-import { amountOfItem, displayTextOf } from '@/features/outbox/waitingItemDisplay'
+import { amountOfItem, categoryOfWaitingItem, displayProblemOf } from '@/features/outbox/waitingItemDisplay'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
 import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { addDays, formatExpenseDay, todayInTimeZone } from '@/shared/utils/formatDate'
 import { CategoryTile } from '../../shared/components/CategoryTile'
-import { categoryOf } from '../../shared/expenseCategories'
 import { expenseTitle } from '../../shared/expenseTitle'
 import { useCategories } from '../../shared/hooks/useCategories'
 import { useExpenses } from '../hooks/useExpenses'
@@ -45,24 +44,27 @@ export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps)
   const daysRef = useListAnimation<HTMLDivElement>()
   const waitingExpenses = useWaitingItems((item) => item.kind === 'expense' && item.groupId === groupId)
   const waitingSheet = useOpenedWaitingItem(waitingExpenses)
+  const shownWaitingExpenses = waitingExpenses.filter((item) => item.isSaved !== true || expensesQuery.isFetching)
 
   function renderWaitingRows(categories: readonly Category[]) {
-    if (waitingExpenses.length === 0) {
+    if (shownWaitingExpenses.length === 0) {
       return null
     }
     return (
       <div className="mt-3.5 flex flex-col gap-2">
-        {waitingExpenses.map((item) => {
-          const category = categoryOf(categories, item.display.categoryId ?? null)
-          const { amountMinor, currency } = amountOfItem(item)
+        {shownWaitingExpenses.map((item) => {
+          const { category, unknownCategoryId } = categoryOfWaitingItem(item, categories)
+          const amount = amountOfItem(item)
+          const { paidByName } = item.display
           return (
             <WaitingRow
               key={item.id}
               title={expenseTitle(item.display.title ?? null, category, t)}
-              amountMinor={amountMinor}
-              currency={currency}
-              detail={`${t('expense.paidBy')} ${displayTextOf(item, 'paidByName')}`}
+              amountMinor={amount?.amountMinor}
+              currency={amount?.currency}
+              detail={paidByName === undefined ? undefined : `${t('expense.paidBy')} ${paidByName}`}
               leading={<CategoryTile category={category} />}
+              displayProblem={displayProblemOf(item, unknownCategoryId)}
               onOpen={() => waitingSheet.open(item)}
             />
           )

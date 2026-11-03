@@ -5,17 +5,14 @@ import {
   type ExpenseDetail,
   type ExpenseInput,
 } from '@/core/services/expenses/expensesService'
+import { withAnswered } from '@/features/outbox/withAnswered'
 import { refreshAfterExpenseChange } from '../../shared/expenseCache'
 
 export function useCreateExpense(groupId: string): UseMutationResult<ExpenseDetail, Error, ExpenseInput & AnsweredSignal> {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ onAnswered, ...input }: ExpenseInput & AnsweredSignal) => {
-      const created = await createExpense(groupId, input)
-      onAnswered?.()
-      return created
-    },
+    mutationFn: withAnswered<ExpenseInput & AnsweredSignal, ExpenseDetail>((input) => createExpense(groupId, input)),
     onSuccess: () => refreshAfterExpenseChange(queryClient, groupId),
   })
 }

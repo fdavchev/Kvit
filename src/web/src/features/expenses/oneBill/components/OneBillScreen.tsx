@@ -10,7 +10,7 @@ import type { Category } from '@/core/services/categories/categoriesService'
 import type { Me } from '@/core/services/me/meService'
 import { GroupLoadError } from '@/features/groups/shared/components/GroupLoadError'
 import { groupNameMaxLength } from '@/features/groups/shared/groupName'
-import { leaveErrorToQueuedSave, useQueuedSave } from '@/features/outbox/hooks/useQueuedSave'
+import { useQueuedSave } from '@/features/outbox/hooks/useQueuedSave'
 import { buildOneBillOutboxItem } from '@/features/outbox/queuedItems'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitForm } from '@/shared/components/KvitForm'
@@ -165,16 +165,18 @@ function OneBillForm({ me, categories }: OneBillFormProps) {
       expenseDate,
       categoryId,
     })
-    void queuedSave
-      .saveOrQueueItem(buildOneBillOutboxItem({ input }), (onAnswered) => createOneBill.mutateAsync({ ...input, onAnswered }))
-      .then((outcome) => {
+    queuedSave.saveOrQueueThen(
+      buildOneBillOutboxItem({ input }),
+      (onAnswered) => createOneBill.mutateAsync({ ...input, onAnswered }),
+      (outcome) => {
         if (outcome.queued) {
           navigate(routes.groups, { replace: true })
           return
         }
         toast.success(t('expenses.saved'))
         navigate(routes.group(outcome.result.groupId), { replace: true })
-      }, leaveErrorToQueuedSave)
+      },
+    )
   }
 
   function errorMessage(): string | null {

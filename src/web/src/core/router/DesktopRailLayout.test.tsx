@@ -167,7 +167,7 @@ describe('DesktopRailLayout on a desktop-sized window', () => {
     const column = page.parentElement
     const frame = column?.parentElement
     expect(frame?.className).toContain('lg:grid')
-    expect(frame?.className).toContain('lg:grid-cols-[clamp(11rem,17vw,16rem)_minmax(0,1fr)]')
+    expect(frame?.className).toContain('lg:grid-cols-[var(--rail-width)_minmax(0,1fr)]')
     expect(column?.className).toContain('lg:relative')
     expect(frame?.contains(rail())).toBe(true)
   })

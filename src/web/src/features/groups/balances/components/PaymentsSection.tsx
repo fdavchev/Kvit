@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next'
 import type { Language } from '@/core/i18n/language'
 import type { OutboxItem } from '@/core/outbox/outboxItem'
 import { WaitingRow } from '@/features/outbox/components/WaitingRow'
-import { amountOfItem, displayTextOf, paymentTitleOf } from '@/features/outbox/waitingItemDisplay'
+import { amountOfItem, displayProblemOf, paymentTitleOf } from '@/features/outbox/waitingItemDisplay'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
+import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
 import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { formatExpenseDay, todayInTimeZone } from '@/shared/utils/formatDate'
 import { formatMoney } from '@/shared/utils/formatMoney'
@@ -51,15 +52,23 @@ export function PaymentsSection({
       </h2>
       <ul ref={listRef} className="mb-3.5 flex flex-col gap-2">
         {waitingPayments.map((item) => {
-          const { amountMinor, currency } = amountOfItem(item)
+          const amount = amountOfItem(item)
+          const { payerName } = item.display
           return (
             <li key={item.id}>
               <WaitingRow
                 title={paymentTitleOf(item, t)}
-                amountMinor={amountMinor}
-                currency={currency}
+                amountMinor={amount?.amountMinor}
+                currency={amount?.currency}
                 showsRateNote={false}
-                leading={<KvitAvatar name={displayTextOf(item, 'payerName')} pictureUrl={null} colorIndex="brand" />}
+                leading={
+                  payerName === undefined ? (
+                    <KvitEmojiTile emoji="" variant="dashed" />
+                  ) : (
+                    <KvitAvatar name={payerName} pictureUrl={null} colorIndex="brand" />
+                  )
+                }
+                displayProblem={displayProblemOf(item)}
                 onOpen={() => onOpenWaiting(item)}
               />
             </li>

@@ -24,9 +24,9 @@ export const fakeIdbKeyval = {
 
 export function resetFakeOutboxStorage(): void {
   storedOutbox.clear()
-  fakeIdbKeyval.get.mockClear()
-  fakeIdbKeyval.update.mockClear()
-  fakeIdbKeyval.del.mockClear()
+  fakeIdbKeyval.get.mockReset()
+  fakeIdbKeyval.update.mockReset()
+  fakeIdbKeyval.del.mockReset()
 }
 
 export function seedOutbox(personId: string, items: OutboxItem[]): void {

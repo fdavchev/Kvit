@@ -545,7 +545,7 @@ describe('publishing that everything was sent', () => {
 })
 
 describe('trying again after the server could not be reached', () => {
-  const retryStatuses: (number | null)[] = [null, 502, 503, 504, 408, 425, 429]
+  const retryStatuses: (number | null)[] = [null, 502, 503, 504, 520, 521, 522, 523, 524, 408, 425, 429]
 
   it.each(retryStatuses)(
     'puts the item back to waiting and tries it again after 2 seconds on status %s',
@@ -896,6 +896,7 @@ describe('items the server refused', () => {
     [404, 'GROUP_NOT_FOUND'],
     [403, 'SETTLEMENT_NOT_ALLOWED'],
     [400, null],
+    [500, null],
   ]
 
   it.each(refusals)(
