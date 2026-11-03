@@ -32,6 +32,13 @@ Mockup: `design/2026-10-31-phase-17/index.html`. The first version of the outbox
   - **If the refresh after a successful send fails,** the item is marked failed and logged; Retry re-sends the same id and the server returns the first result.
   - **If the first load from the browser database fails,** the sender fails with a clear error and never shows an empty queue.
   - **`enqueue` does not start sending;** the caller calls `run()`.
+- **Built in Step 2:** the queue is used only when the original save fails with no answer or after 3 seconds; the original request keeps running and a late success removes the queued item. If the answer comes after the screen is already gone, Add expense and One bill still go to the group or the groups list (a small change from before; to be looked at in the code review).
+- **Built in Step 3:**
+  - **Waiting rows sit at the top of their list, newest first,** not placed by date (simpler, and a waiting item is always the newest action). Failed items show only in the bar and the failed sheet, never as rows.
+  - **Waiting rows use 80 % opacity, a dashed border and the normal text colour** for the second line, not the mockup's 60 % and grey: that would drop below the 4.5:1 contrast rule on the peach page.
+  - **The bar is 64 px of space** (`--outbox-bar-space`) added to the toast offsets, the floating buttons and the screens' bottom padding, only while the bar is on the page.
+  - **The log-out warning counts items in every state;** the queue is deleted only after the log-out request succeeded, and a failed log-out keeps it. The count comes from the sender, which loads the saved items at sign-in (a tap in the first milliseconds after sign-in would get no warning; accepted).
+  - **Macedonian outbox texts are drafts** that Filip has not read.
 - **Backend: no change, no migration.** The four endpoints already return the first result for a repeated `ClientRequestId`, also when the group is Closing or Finished, and none is rate-limited. Known edge, left as it is: a repeat of an item that did save, sent after the group was deleted, the person left, or the item was deleted, is refused (404 or 400). In the outbox that shows as a failed item with its reason, never as a duplicate. New API tests pin this behaviour in Step 4.
 
 ## 2026-10-31: Phase 16 (possible duplicates, group totals, group spending plan): done, the rules that stay

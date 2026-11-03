@@ -29,11 +29,12 @@ None. The four save endpoints already return the first result for a repeated req
 - [x] Step 0: mockup, picks and plan logged in DECISIONS, ARCHITECTURE fixed
 - [x] Step 1: the outbox module (storage, queue, sender, back-off) with tests
 - [x] Step 2: wire the queueable saves
-- [ ] Step 3: the screens (waiting rows, bar, failed items, log-out warning)
+- [x] Step 3: the screens (waiting rows, bar, failed items, log-out warning)
 - [ ] Step 4: backend tests for late and repeated sends
 - [ ] Step 5: desktop layout and the browser pass, including a real "server asleep" test
 - [ ] Step 6: code review, report, guide
 
 ## Later one-line commit subjects
 - Step 1 (tests, then the module): Add the outbox module with its storage, sender, back-off and tests.
+- Step 3: Show waiting changes as greyed rows, the outbox bar, the failed-changes sheet and the log-out warning.
 - Step 2: Queue new expenses, One bills, personal entries and payments that count right away when the server does not answer in 3 seconds.

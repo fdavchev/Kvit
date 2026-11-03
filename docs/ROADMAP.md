@@ -250,7 +250,7 @@ Queue while the server wakes, "All up to date ✓", failed items with Retry / Di
 - [x] Step 0: mockup and Filip's picks 1 to 5 (2026-10-31, `DECISIONS.md`); when to queue (3 seconds), the queued One bill and the BACKLOG items agreed in the second round
 - [x] **Done 2026-11-01 (VERIFIED by automated test: frontend 11879 of 11879, 204 of them new; lint 0 warnings, build 0 type errors; the module is not used by the app yet).** Step 1: the outbox module (storage, queue, sender, back-off) with tests
 - [x] **Done 2026-11-03 (VERIFIED by automated test: frontend 12128 of 12128; lint 0 warnings, build 0 type errors; not seen in a browser).** Step 2: wire the queueable saves
-- [ ] Step 3: the screens (waiting rows, bar, failed items)
+- [x] **Done 2026-11-03 (VERIFIED by automated test: frontend 12544 of 12544; lint 0 warnings, build 0 type errors; not seen in a browser).** Step 3: the screens (waiting rows, bar, failed items, "not counted yet" lines, log-out warning)
 - [ ] Step 4: backend tests for late and repeated sends (no code change expected)
 - [ ] Step 5: desktop layout and the 360 px browser pass
 - [ ] Step 6: code review, report, guide

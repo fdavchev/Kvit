@@ -8,6 +8,7 @@ import type { OutboxItem } from '@/core/outbox/outboxItem'
 import { createOutboxSender, type OutboxSender } from '@/core/outbox/outboxSender'
 import { startOutboxTriggers } from '@/core/outbox/outboxTriggers'
 import { refreshAfterQueuedItem, sendQueuedItem } from '../outboxDispatch'
+import { OutboxBar } from './OutboxBar'
 
 interface SignedInOutboxProps {
   children: ReactNode
@@ -27,7 +28,12 @@ export function SignedInOutbox({ children }: SignedInOutboxProps) {
     }
   }, [sender])
 
-  return <OutboxProvider sender={sender}>{children}</OutboxProvider>
+  return (
+    <OutboxProvider sender={sender}>
+      {children}
+      <OutboxBar />
+    </OutboxProvider>
+  )
 }
 
 function createSignedInSender(queryClient: QueryClient, personId: string): OutboxSender {

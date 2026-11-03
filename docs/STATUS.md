@@ -8,8 +8,8 @@ _Last updated: 2026-10-31 (Phase 16 built, browser-checked and code-reviewed; wa
 - Uncommitted: the prompt, the mockup, the Phase 17 sections in DECISIONS, ROADMAP and STATUS, and the PR text file.
 
 ## Next step
-1. Steps 0 to 2 are done (VERIFIED by automated test, frontend 12128 of 12128). The five saves go through the outbox; there is no screen for waiting items yet.
-2. Filip authorised (2026-11-03) building Steps 3 to 6, committing each step (one-line subject, no push), then the code review for him to read. Step 3 next.
+1. Steps 0 to 3 are done (VERIFIED by automated test, frontend 12544 of 12544). Waiting rows, the bar, the failed sheet, the "not counted yet" lines and the log-out warning exist; none of it has been seen in a browser.
+2. Filip authorised (2026-11-03) building the rest, committing each step (one-line subject, no push), then the code review for him to read. Step 4 next (backend tests; needs Docker Desktop open), then Step 5 (browser pass), Step 6 (close-out).
 
 ## Then
 - Filip, once on the real site: one real EUR expense (first real NBRM call), a real phone check of the Phase 16 screens, the Macedonian drafts of Phases 9 to 16, the Google button and "Make an account", the invite link on his phone.

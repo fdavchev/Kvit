@@ -7,10 +7,12 @@ import { I18nextProvider } from 'react-i18next'
 import { createMemoryRouter, type DataRouter, type RouteObject } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { createQueryClient } from '@/core/api/queryClient'
+import { meQueryKey } from '@/core/auth/useMe'
 import { createI18n } from '@/core/i18n/i18n'
 import type { Language } from '@/core/i18n/language'
 import { OutboxProvider } from '@/core/outbox/OutboxProvider'
 import { createOutboxSender, type OutboxSender } from '@/core/outbox/outboxSender'
+import type { Me } from '@/core/services/me/meService'
 import { refreshAfterQueuedItem, sendQueuedItem } from '@/features/outbox/outboxDispatch'
 import { testMe } from './testMe'
 import { createTestPersister } from './testPersister'
@@ -55,7 +57,7 @@ async function createProviders(options: RenderOptions): Promise<Providers> {
   const i18n = await createI18n(options.language ?? 'en')
   options.prepareI18n?.(i18n)
   const outboxSender = createOutboxSender({
-    personId: testMe.id,
+    personId: queryClient.getQueryData<Me | null>(meQueryKey)?.id ?? testMe.id,
     sendItem: sendQueuedItem,
     afterSent: (item) => refreshAfterQueuedItem(queryClient, item),
   })

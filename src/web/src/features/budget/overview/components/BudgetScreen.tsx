@@ -12,6 +12,11 @@ import type {
 } from '@/core/services/personalEntries/personalEntriesService'
 import type { RecurringIncome } from '@/core/services/recurringIncomes/recurringIncomesService'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
+import { ChangesWaitingNote } from '@/features/outbox/components/ChangesWaitingNote'
+import { DiscardWaitingSheet } from '@/features/outbox/components/DiscardWaitingSheet'
+import { useOpenedWaitingItem } from '@/features/outbox/hooks/useOpenedWaitingItem'
+import { useWaitingItems } from '@/features/outbox/hooks/useWaitingItems'
+import { isInMonth } from '@/features/outbox/waitingItemDisplay'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitError } from '@/shared/components/KvitError'
 import { KvitLoading } from '@/shared/components/KvitLoading'
@@ -50,6 +55,7 @@ import { CategoryTotals } from './CategoryTotals'
 import { GroupSharesBlock } from './GroupSharesBlock'
 import { MonthStrip } from './MonthStrip'
 import { PersonalEntryListItem } from './PersonalEntryListItem'
+import { WaitingEntryRow } from './WaitingEntryRow'
 
 const receiptEmoji = '\u{1F9FE}'
 
@@ -92,6 +98,8 @@ export function BudgetScreen() {
   const categoriesQuery = usePersonalCategories()
   const recurringQuery = useRecurringIncomes()
   const entriesRef = useListAnimation<HTMLUListElement>()
+  const waitingEntries = useWaitingItems((item) => item.kind === 'personalEntry' && isInMonth(item, selectedMonth))
+  const waitingSheet = useOpenedWaitingItem(waitingEntries)
   useCatchUpOnOpen()
   const today = todayInTimeZone(me.timeZone, new Date())
   const shownPair = entriesQuery.data?.possibleDuplicates[0]
@@ -180,14 +188,37 @@ export function BudgetScreen() {
     }
     const { entries, totals, incomeTotals, groupShares, convertedTotals, limits, possibleDuplicates } =
       entriesQuery.data
-    const sharesNeedCategories = groupShares.some((share) => share.categoryId !== null)
-    if (sharesNeedCategories && categoriesQuery.isPending) {
+    const needsCategories =
+      groupShares.some((share) => share.categoryId !== null) ||
+      waitingEntries.some((item) => (item.display.categoryId ?? null) !== null)
+    if (needsCategories && categoriesQuery.isPending) {
       return <BudgetMonthSkeleton />
     }
-    if (sharesNeedCategories && categoriesQuery.isError) {
+    if (needsCategories && categoriesQuery.isError) {
       return renderLoadError(categoriesQuery.error, () => void categoriesQuery.refetch())
     }
     const categories = categoriesQuery.data ?? []
+    const waitingNote = <ChangesWaitingNote scope={{ kind: 'personal' }} />
+    const entryList = (entries.length > 0 || waitingEntries.length > 0) && (
+      <ul
+        ref={entriesRef}
+        aria-label={t('budget.screen.entries')}
+        className="mt-5 flex flex-col gap-0.5 rounded-[20px] bg-card p-1.5 text-card-foreground"
+      >
+        {waitingEntries.map((item) => (
+          <WaitingEntryRow key={item.id} item={item} categories={categories} onOpen={waitingSheet.open} />
+        ))}
+        {entries.map((entry) => (
+          <PersonalEntryListItem
+            key={entry.id}
+            entry={entry}
+            today={today}
+            mergedLabel={mergedEntryLabel(entry, groupShares, categories, t)}
+            onOpen={setOpenedEntry}
+          />
+        ))}
+      </ul>
+    )
     const isClosedSheetMonthShown =
       closedLimitSheet !== null && entriesQuery.dataUpdatedAt >= closedLimitSheet.monthUpdatedAt
     const limitsPart = (
@@ -215,12 +246,16 @@ export function BudgetScreen() {
       return (
         <>
           {duplicateCard}
+          {waitingNote}
           {repeatingRow}
           {summaryRow}
           {limitsPart}
-          <div className="pt-6">
-            <KvitEmpty emoji={receiptEmoji} title={t('budget.screen.emptyTitle')} message={t('expenses.emptyHint')} />
-          </div>
+          {entryList}
+          {waitingEntries.length === 0 && (
+            <div className="pt-6">
+              <KvitEmpty emoji={receiptEmoji} title={t('budget.screen.emptyTitle')} message={t('expenses.emptyHint')} />
+            </div>
+          )}
         </>
       )
     }
@@ -235,6 +270,7 @@ export function BudgetScreen() {
             <p className={cn(balancesCardLook, 'mt-5 py-4 text-center font-semibold text-muted-foreground')}>
               {t('budget.screen.emptyTitle')}
             </p>
+            {waitingNote}
             {repeatingRow}
             {summaryRow}
             {limitsPart}
@@ -252,29 +288,14 @@ export function BudgetScreen() {
                 }
               />
             )}
+            {waitingNote}
             {repeatingRow}
             {summaryRow}
             {limitsPart}
             {tileTotals.length > 0 && <CategoryTotals totals={tileTotals} />}
           </>
         )}
-        {entries.length > 0 && (
-          <ul
-            ref={entriesRef}
-            aria-label={t('budget.screen.entries')}
-            className="mt-5 flex flex-col gap-0.5 rounded-[20px] bg-card p-1.5 text-card-foreground"
-          >
-            {entries.map((entry) => (
-              <PersonalEntryListItem
-                key={entry.id}
-                entry={entry}
-                today={today}
-                mergedLabel={mergedEntryLabel(entry, groupShares, categories, t)}
-                onOpen={setOpenedEntry}
-              />
-            ))}
-          </ul>
-        )}
+        {entryList}
         {groupShares.length > 0 && (
           <GroupSharesBlock groupShares={groupShares} categories={categories} today={today} />
         )}
@@ -325,6 +346,9 @@ export function BudgetScreen() {
         ) : (
           <PersonalSpendingSheet key={openedEntry.id} entry={openedEntry} onClose={() => setOpenedEntry(null)} />
         ))}
+      {waitingSheet.openedItem !== null && (
+        <DiscardWaitingSheet item={waitingSheet.openedItem} onClose={waitingSheet.close} />
+      )}
     </KvitScreen>
   )
 }
