@@ -37,6 +37,7 @@ import {
   requestsOf,
   type AnswerFactory,
 } from '@/test/requestTestHelpers'
+import { holdOutboxSender, readSavedOutbox } from '@/test/queuedSaveTestHelpers'
 import { testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
 
@@ -578,6 +579,19 @@ describe('PersonalIncomeSheet, saving a repeating income', () => {
       fireEvent.click(saveButton())
 
       expect((await screen.findByRole('alert')).textContent).toBe(translated('en', 'errors.network'))
+    })
+
+    it('does not queue a repeating income when the server cannot be reached', async () => {
+      const { onClose, outboxSender } = await openRepeatingSheet(1, { ...createdAnswers, [recurringIncomesPost]: networkFailureAnswer() })
+      const run = holdOutboxSender(outboxSender)
+      typeAmount('65000')
+
+      fireEvent.click(saveButton())
+
+      await screen.findByRole('alert')
+      expect(onClose).not.toHaveBeenCalled()
+      expect(readSavedOutbox()).toEqual([])
+      expect(run).not.toHaveBeenCalled()
     })
 
     it('lets Save be tapped again after a refusal and sends a second create', async () => {

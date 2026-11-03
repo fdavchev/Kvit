@@ -38,7 +38,8 @@ import {
   shownCurrency,
   waitForEveryDialogToClose,
 } from '@/test/personalEntryTestHelpers'
-import { jsonAnswer, networkFailureAnswer, requestsOf } from '@/test/requestTestHelpers'
+import { holdOutboxSender, readSavedOutbox } from '@/test/queuedSaveTestHelpers'
+import { jsonAnswer, networkFailureAnswer, problemAnswer, requestsOf } from '@/test/requestTestHelpers'
 import {
   expectSaveOutsideScrollingFields,
   expectTitleOutsideScrollingBody,
@@ -231,20 +232,17 @@ describe('PersonalSpendingSheet, adding', () => {
       expect(sentPosts(fetchMock)).toHaveLength(1)
     })
 
-    it('sends the same request id again when Save is tapped after a network failure, so a retry cannot save twice', async () => {
-      let answer = networkFailureAnswer()
-      const { fetchMock } = await renderSpendingSheet({ answers: { [personalEntriesPost]: () => answer() } })
+    it('queues the entry under the request id of the request that failed with a network failure, so a retry cannot save twice', async () => {
+      const { fetchMock, outboxSender } = await renderSpendingSheet({ answers: { [personalEntriesPost]: networkFailureAnswer() } })
+      holdOutboxSender(outboxSender)
       await pickCategory(coffeeCategory)
       typeAmount('120')
-      fireEvent.click(saveButton())
-      await screen.findByRole('alert')
 
-      answer = jsonAnswer(entryAnswerRow(coffeeEntry))
       fireEvent.click(saveButton())
 
       await waitForEveryDialogToClose()
-      const [first, second] = sentPosts(fetchMock).map((request) => (request.body as { clientRequestId: string }).clientRequestId)
-      expect(second).toBe(first)
+      const [sentId] = sentPosts(fetchMock).map((request) => (request.body as { clientRequestId: string }).clientRequestId)
+      expect(readSavedOutbox().map((item) => item.id)).toEqual([sentId])
     })
 
     it('makes a new request id for every time the sheet opens', async () => {
@@ -395,7 +393,7 @@ describe('PersonalSpendingSheet, adding', () => {
     })
 
     it('is not changed by a save that the server refused', async () => {
-      await renderSpendingSheet({ answers: { [personalEntriesPost]: networkFailureAnswer() } })
+      await renderSpendingSheet({ answers: { [personalEntriesPost]: problemAnswer(400, 'PERSONAL_ENTRY_AMOUNT_TOO_LARGE') } })
       const sheet = await pickCategory(coffeeCategory)
       fireEvent.click(shownCurrency(sheet, 'MKD'))
       typeAmount('12')

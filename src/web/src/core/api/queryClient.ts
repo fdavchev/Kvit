@@ -32,8 +32,7 @@ export function createQueryClient(persister: Persister): QueryClient {
     }),
     mutationCache: new MutationCache({
       onError: (error) => {
-        updateMeAfterFailure(queryClient, error)
-        refreshGroupsAfterStateRefusal(queryClient, error)
+        reactToFailedRequest(queryClient, error)
       },
     }),
     defaultOptions: {
@@ -60,7 +59,12 @@ function isClientErrorStatus(httpStatus: number | null): httpStatus is number {
   return httpStatus !== null && httpStatus >= firstClientErrorStatus && httpStatus < firstServerErrorStatus
 }
 
-function updateMeAfterFailure(queryClient: QueryClient, error: Error): void {
+export function reactToFailedRequest(queryClient: QueryClient, error: unknown): void {
+  updateMeAfterFailure(queryClient, error)
+  refreshGroupsAfterStateRefusal(queryClient, error)
+}
+
+function updateMeAfterFailure(queryClient: QueryClient, error: unknown): void {
   if (!(error instanceof ApiError)) {
     return
   }
@@ -83,7 +87,7 @@ export function isGroupStateChangedError(error: unknown): boolean {
   return error instanceof ApiError && error.errorCode !== null && groupStateChangedCodes.includes(error.errorCode)
 }
 
-function refreshGroupsAfterStateRefusal(queryClient: QueryClient, error: Error): void {
+function refreshGroupsAfterStateRefusal(queryClient: QueryClient, error: unknown): void {
   if (isGroupStateChangedError(error)) {
     void refreshEveryGroup(queryClient)
   }

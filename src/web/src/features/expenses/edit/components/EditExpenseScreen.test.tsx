@@ -72,6 +72,7 @@ import {
   ownerViewMembers,
   petarMember,
 } from '@/test/memberTestData'
+import { holdOutboxSender, readSavedOutbox } from '@/test/queuedSaveTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import {
   jsonAnswer,
@@ -778,6 +779,17 @@ describe('EditExpenseScreen', () => {
       fireEvent.click(saveButton())
 
       expect((await screen.findByRole('alert')).textContent).toContain(translated('en', 'errors.network'))
+    })
+
+    it('does not queue the edit when the server cannot be reached', async () => {
+      const { outboxSender } = await renderReadyEdit({ answers: { [`PUT ${detailPath}`]: networkFailureAnswer() } })
+      const run = holdOutboxSender(outboxSender)
+
+      fireEvent.click(saveButton())
+
+      await screen.findByRole('alert')
+      expect(readSavedOutbox()).toEqual([])
+      expect(run).not.toHaveBeenCalled()
     })
   })
 

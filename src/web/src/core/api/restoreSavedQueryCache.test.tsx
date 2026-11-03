@@ -41,7 +41,7 @@ vi.mock('@/core/router/router', () => ({
   },
 }))
 
-vi.mock('idb-keyval', () => ({ get: vi.fn(), set: vi.fn(), del: vi.fn() }))
+vi.mock('idb-keyval', () => ({ get: vi.fn(), set: vi.fn(), del: vi.fn(), createStore: vi.fn() }))
 
 const groupsKey = ['groups']
 const savedGroups = ['Greece trip']

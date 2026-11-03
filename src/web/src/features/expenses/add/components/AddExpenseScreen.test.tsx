@@ -83,6 +83,7 @@ import {
   petarMember,
 } from '@/test/memberTestData'
 import { colorTokenOfClasses, contrastBetween, type ThemeName } from '@/test/indexCssColors'
+import { holdOutboxSender, readSavedOutbox } from '@/test/queuedSaveTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import {
   jsonAnswer,
@@ -2459,28 +2460,19 @@ describe('AddExpenseScreen', () => {
       expect(second).toEqual(first)
     })
 
-    it('keeps the same clientRequestId after a network failure', async () => {
-      let tries = 0
-      const { fetchMock } = await renderReadyAdd({
-        answers: {
-          [`POST ${expensesPath}`]: () => {
-            tries += 1
-            return tries === 1 ? new TypeError('Failed to fetch') : Response.json(hotelDetail)
-          },
-        },
+    it('queues the expense under the clientRequestId of the request that failed with a network failure, so the outbox sends it with the same id', async () => {
+      const { fetchMock, router, outboxSender } = await renderReadyAdd({
+        answers: { [`POST ${expensesPath}`]: networkFailureAnswer() },
       })
+      holdOutboxSender(outboxSender)
       typeAmount('1200')
 
       fireEvent.click(saveButton())
-      await screen.findByRole('alert')
-      fireEvent.click(saveButton())
 
       await waitFor(() => {
-        expect(requestCount(fetchMock, 'POST', expensesPath)).toBe(2)
+        expect(router.state.location.pathname).toBe(routes.group(testGroupId))
       })
-      expect(sentBody(fetchMock, 'POST', expensesPath, 1).clientRequestId).toBe(
-        sentBody(fetchMock, 'POST', expensesPath, 0).clientRequestId,
-      )
+      expect(readSavedOutbox().map((item) => item.id)).toEqual([sentBody(fetchMock, 'POST', expensesPath).clientRequestId])
     })
 
     it.each([
@@ -2519,13 +2511,20 @@ describe('AddExpenseScreen', () => {
       )
     })
 
-    it('shows the network message when the server cannot be reached', async () => {
-      await renderReadyAdd({ answers: { [`POST ${expensesPath}`]: networkFailureAnswer() } })
+    it('queues the expense and shows no network message when the server cannot be reached', async () => {
+      const { router, outboxSender } = await renderReadyAdd({
+        answers: { [`POST ${expensesPath}`]: networkFailureAnswer() },
+      })
+      holdOutboxSender(outboxSender)
       typeAmount('1200')
 
       fireEvent.click(saveButton())
 
-      expect((await screen.findByRole('alert')).textContent).toContain(translated('en', 'errors.network'))
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.group(testGroupId))
+      })
+      expect(screen.queryByRole('alert')).toBeNull()
+      expect(readSavedOutbox()).toHaveLength(1)
     })
 
     it('keeps everything the person typed and chose after a failed save', async () => {

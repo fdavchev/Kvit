@@ -12,6 +12,7 @@ import {
   renderSpendingSheet,
   shownCurrency,
 } from '@/test/personalEntryTestHelpers'
+import { holdOutboxSender, readSavedOutbox } from '@/test/queuedSaveTestHelpers'
 import { networkFailureAnswer, problemAnswer, requestsOf } from '@/test/requestTestHelpers'
 import { translated } from '@/test/translated'
 
@@ -123,14 +124,19 @@ describe('PersonalSpendingSheet, refused saves', () => {
     expect(note.getAttribute('aria-invalid')).not.toBe('true')
   })
 
-  it.each(languages)('shows the network message when the server cannot be reached (%s)', async (language) => {
-    await renderSpendingSheet({ language, answers: { [personalEntriesPost]: networkFailureAnswer() } })
+  it.each(languages)('queues the entry and shows no network message when the server cannot be reached (%s)', async (language) => {
+    const { onClose, outboxSender } = await renderSpendingSheet({ language, answers: { [personalEntriesPost]: networkFailureAnswer() } })
+    holdOutboxSender(outboxSender)
     await pickCategory(coffeeCategory, language)
     typeAmount('120', language)
 
     fireEvent.click(saveButton(language))
 
-    expect((await screen.findByRole('alert')).textContent).toBe(translated(language, 'errors.network'))
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalledOnce()
+    })
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(readSavedOutbox()).toHaveLength(1)
   })
 
   it('lets Save be tapped again after a refusal and sends a second request', async () => {

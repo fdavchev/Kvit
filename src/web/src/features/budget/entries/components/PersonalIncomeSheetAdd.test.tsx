@@ -28,7 +28,8 @@ import {
   waitForEveryDialogToClose,
 } from '@/test/personalEntryTestHelpers'
 import { findIncomeSheet, renderIncomeSheet } from '@/test/personalIncomeTestHelpers'
-import { jsonAnswer, networkFailureAnswer, requestCount, requestsOf } from '@/test/requestTestHelpers'
+import { holdOutboxSender, readSavedOutbox } from '@/test/queuedSaveTestHelpers'
+import { jsonAnswer, networkFailureAnswer, problemAnswer, requestCount, requestsOf } from '@/test/requestTestHelpers'
 import { expectSaveOutsideScrollingFields, expectTitleOutsideScrollingBody } from '@/test/sheetScrollTestHelpers'
 import { testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
@@ -205,20 +206,17 @@ describe('PersonalIncomeSheet, adding', () => {
       expect(sentPosts(fetchMock)).toHaveLength(1)
     })
 
-    it('sends the same request id again when Save is tapped after a network failure, so a retry cannot save twice', async () => {
-      let answer = networkFailureAnswer()
-      const { fetchMock } = await renderIncomeSheet({ answers: { [personalEntriesPost]: () => answer() } })
+    it('queues the entry under the request id of the request that failed with a network failure, so a retry cannot save twice', async () => {
+      const { fetchMock, outboxSender } = await renderIncomeSheet({ answers: { [personalEntriesPost]: networkFailureAnswer() } })
+      holdOutboxSender(outboxSender)
       await findIncomeSheet()
       typeAmount('65000')
-      fireEvent.click(saveButton())
-      await screen.findByRole('alert')
 
-      answer = jsonAnswer(entryAnswerRow(salaryIncomeEntry))
       fireEvent.click(saveButton())
 
       await waitForEveryDialogToClose()
-      const [first, second] = sentPosts(fetchMock).map((request) => (request.body as { clientRequestId: string }).clientRequestId)
-      expect(second).toBe(first)
+      const [sentId] = sentPosts(fetchMock).map((request) => (request.body as { clientRequestId: string }).clientRequestId)
+      expect(readSavedOutbox().map((item) => item.id)).toEqual([sentId])
     })
 
     it('makes a new request id for every time the sheet opens', async () => {
@@ -359,7 +357,7 @@ describe('PersonalIncomeSheet, adding', () => {
     })
 
     it('is not changed by a save that the server refused', async () => {
-      await renderIncomeSheet({ answers: { [personalEntriesPost]: networkFailureAnswer() } })
+      await renderIncomeSheet({ answers: { [personalEntriesPost]: problemAnswer(400, 'PERSONAL_ENTRY_AMOUNT_TOO_LARGE') } })
       const sheet = await findIncomeSheet()
       fireEvent.click(shownCurrency(sheet, 'MKD'))
       typeAmount('12')

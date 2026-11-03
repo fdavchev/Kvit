@@ -11,7 +11,7 @@ export interface OutboxSummary {
 
 export const OutboxContext = createContext<OutboxSender | null>(null)
 
-function useOutboxSender(): OutboxSender {
+export function useOutboxSender(): OutboxSender {
   const sender = useContext(OutboxContext)
   if (sender === null) {
     throw new Error('The outbox hooks were used outside an OutboxProvider; wrap the signed-in screens in OutboxProvider')

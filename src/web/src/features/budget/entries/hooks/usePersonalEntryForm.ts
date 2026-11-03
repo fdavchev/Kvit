@@ -138,17 +138,28 @@ export function usePersonalEntryForm(
     sheet.close()
   }
 
+  function closeAfterAdd(isQueued: boolean, savedCurrency: Currency): void {
+    saveLastEntryCurrency(me.id, savedCurrency)
+    if (!isQueued) {
+      toast.success(t('groupSettings.saved'))
+    }
+    sheet.closeIfShown()
+  }
+
   function save(kindFields: PersonalEntryKindFields): void {
     if (amountMinor === null) {
       throw new Error(`Save was pressed without a valid amount ("${amountText}")`)
     }
     setChangedSinceSave(nothingChanged)
     const fields: PersonalEntryFields = { ...kindFields, amountMinor, currency, entryDate, note: textOrNull(note) }
-    const onDone = (): void => closeAfterSave(fields.currency)
     if (entry === undefined) {
-      add.run({ clientRequestId, ...fields }, onDone, handleSaveRefusal)
+      add.run(
+        { clientRequestId, ...fields },
+        (outcome) => closeAfterAdd(outcome.queued, fields.currency),
+        handleSaveRefusal,
+      )
     } else {
-      edit.run({ entryId: entry.id, fields }, onDone, handleSaveRefusal)
+      edit.run({ entryId: entry.id, fields }, () => closeAfterSave(fields.currency), handleSaveRefusal)
     }
   }
 

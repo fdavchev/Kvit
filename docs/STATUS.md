@@ -8,8 +8,8 @@ _Last updated: 2026-10-31 (Phase 16 built, browser-checked and code-reviewed; wa
 - Uncommitted: the prompt, the mockup, the Phase 17 sections in DECISIONS, ROADMAP and STATUS, and the PR text file.
 
 ## Next step
-1. Steps 0 and 1 are done (VERIFIED by automated test, frontend 11879 of 11879). The outbox module is in `src/web/src/core/outbox/` and nothing in the app uses it yet.
-2. Step 2 next: wire the five saves. Tester first (red tests), nothing goes to the coder before Filip's go.
+1. Steps 0 to 2 are done (VERIFIED by automated test, frontend 12128 of 12128). The five saves go through the outbox; there is no screen for waiting items yet.
+2. Filip authorised (2026-11-03) building Steps 3 to 6, committing each step (one-line subject, no push), then the code review for him to read. Step 3 next.
 
 ## Then
 - Filip, once on the real site: one real EUR expense (first real NBRM call), a real phone check of the Phase 16 screens, the Macedonian drafts of Phases 9 to 16, the Google button and "Make an account", the invite link on his phone.

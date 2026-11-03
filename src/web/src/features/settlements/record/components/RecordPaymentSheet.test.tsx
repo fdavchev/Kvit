@@ -11,6 +11,7 @@ import { expectPlaceholderLegibleOn } from '@/test/placeholderTestHelpers'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { jsonAnswer, requestCount, stubFetchByRequest } from '@/test/requestTestHelpers'
 import { pendingPaymentOf } from '@/test/settlementActionsTestData'
+import { seedMe, testMe } from '@/test/testMe'
 import { isPressed, sheetButton } from '@/test/settlementActionsTestHelpers'
 import { translated } from '@/test/translated'
 import { RecordPaymentSheet } from './RecordPaymentSheet'
@@ -32,6 +33,7 @@ async function renderOpenSheet(members: readonly GroupMember[]) {
       onClose={() => {}}
     />,
     '/sheet',
+    { seedCache: seedMe(testMe) },
   )
   const sheet = await screen.findByRole('dialog', { name: recordAnotherPayment })
   return { sheet, fetchMock }
@@ -179,7 +181,7 @@ describe('the currency chips of the Record another payment sheet', () => {
     await renderElementWithProviders(
       <RecordPaymentSheet groupId={testGroupId} me={filipMember} members={[filipMember, anaMember]} defaultCurrency="MKD" onClose={() => {}} />,
       '/sheet',
-      { language },
+      { language, seedCache: seedMe(testMe) },
     )
 
     const sheet = await screen.findByRole('dialog', { name: translated(language, 'balances.recordAnother') })

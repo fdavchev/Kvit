@@ -5,6 +5,7 @@ import { stubFetch } from '@/test/apiTestHelpers'
 import { coffeeCategory } from '@/test/personalCategoryTestData'
 import { coffeeEntry, entryAnswerRow } from '@/test/personalEntryTestData'
 import { renderHookWithProviders } from '@/test/renderWithProviders'
+import { seedMe, testMe } from '@/test/testMe'
 import type { SaveOnce } from '../../categories/hooks/useSaveOnce'
 import { personalSummaryQueryKey } from '../../summary/personalSummaryCache'
 import { personalEntriesQueryKey } from '../personalEntryCache'
@@ -42,7 +43,10 @@ describe('useAddPersonalEntry', () => {
   it('marks the cached entries and every cached summary as out of date once the server accepted the entry', async () => {
     stubFetch(Response.json(entryAnswerRow(coffeeEntry)))
     const { result, queryClient } = await renderHookWithProviders(() => useAddPersonalEntry(freeToSave()), {
-      seedCache: seedEntriesAndSummaries,
+      seedCache: (queryClient) => {
+        seedMe(testMe)(queryClient)
+        seedEntriesAndSummaries(queryClient)
+      },
     })
     const onDone = vi.fn<() => void>()
 

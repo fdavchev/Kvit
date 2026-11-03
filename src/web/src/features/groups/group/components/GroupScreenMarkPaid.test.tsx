@@ -35,6 +35,7 @@ import {
   typeAmount,
   waitForSheetToClose,
 } from '@/test/expenseFormTestHelpers'
+import { testNow } from '@/test/expenseTestData'
 import { freezeTime, unfreezeTime, uuidFormat } from '@/test/expenseTestHelpers'
 import { macedonianOf } from '@/test/englishTextKeys'
 import { expectDisabledWhilePending } from '@/test/formTestHelpers'
@@ -54,7 +55,9 @@ import {
   requestCount,
   requestsOf,
 } from '@/test/requestTestHelpers'
+import { letTimeGoBy, readSavedOutbox, installFakeTimers } from '@/test/queuedSaveTestHelpers'
 import {
+  anaMe,
   anaSignedIn,
   confirmedPaymentOf,
   liveAnswers,
@@ -740,15 +743,12 @@ describe('Mark paid on the Balances tab', () => {
       expect(recordedBody(fetchMock, 1).clientRequestId).not.toBe(recordedBody(fetchMock, 0).clientRequestId)
     })
 
-    it.each([
-      ['an error of the server', problemAnswer(400, 'SETTLEMENT_AMOUNT_TOO_LARGE')],
-      ['a network failure', networkFailureAnswer()],
-    ])('keeps the same clientRequestId and the same request when Save is pressed again after %s', async (_name, failure) => {
+    it('keeps the same clientRequestId and the same request when Save is pressed again after an error of the server', async () => {
       let tries = 0
       const { fetchMock } = await renderScenario(owedByMarko, {
         [`POST ${settlementsPath}`]: () => {
           tries += 1
-          return tries === 1 ? failure() : Response.json(createdFor(owedByMarko))
+          return tries === 1 ? problemAnswer(400, 'SETTLEMENT_AMOUNT_TOO_LARGE')() : Response.json(createdFor(owedByMarko))
         },
       })
       const sheet = await openSheetOf(owedByMarko)
@@ -763,6 +763,17 @@ describe('Mark paid on the Balances tab', () => {
       expect(recordedBody(fetchMock, 1).clientRequestId).toBe(recordedBody(fetchMock, 0).clientRequestId)
       expect(recordedBody(fetchMock, 1)).toEqual(recordedBody(fetchMock, 0))
       await waitForSheetToClose()
+    })
+
+    it('queues the payment under the clientRequestId of the request that failed with a network failure, so the outbox sends it with the same id', async () => {
+      const { fetchMock } = await renderScenario(owedByMarko, { [`POST ${settlementsPath}`]: networkFailureAnswer() })
+      await openSheetOf(owedByMarko)
+      installFakeTimers(testNow)
+
+      fireEvent.click(saveButton())
+      await letTimeGoBy(1000)
+
+      expect(readSavedOutbox().map((item) => item.id)).toEqual([recordedBody(fetchMock, 0).clientRequestId])
     })
   })
 
@@ -786,13 +797,27 @@ describe('Mark paid on the Balances tab', () => {
       expect(screen.getByRole('dialog', { name: owedByMarko.title })).toBe(sheet)
     })
 
-    it('shows the network message inside the sheet when the server cannot be reached', async () => {
+    it('queues the payment, closes the sheet and shows no network message when the server cannot be reached and the payment counts right away', async () => {
       await renderScenario(owedByMarko, { [`POST ${settlementsPath}`]: networkFailureAnswer() })
-      const sheet = await openSheetOf(owedByMarko)
+      await openSheetOf(owedByMarko)
+      installFakeTimers(testNow)
+
+      fireEvent.click(saveButton())
+      await letTimeGoBy(1000)
+
+      expect(screen.queryByRole('dialog')).toBeNull()
+      expect(screen.queryByRole('alert')).toBeNull()
+      expect(readSavedOutbox()).toHaveLength(1)
+    })
+
+    it('shows the network message inside the sheet and queues nothing when the server cannot be reached and the payment waits for the other person', async () => {
+      await renderScenario(owesFilip, { [`POST ${settlementsPath}`]: networkFailureAnswer() })
+      const sheet = await openSheetOf(owesFilip)
 
       fireEvent.click(saveButton())
 
       expect((await within(sheet).findByRole('alert')).textContent).toContain(translated('en', 'errors.network'))
+      expect(readSavedOutbox(anaMe.id)).toEqual([])
     })
 
     it('writes the error in Macedonian for a person who uses Macedonian', async () => {

@@ -11,7 +11,7 @@ import { captureError } from '@/test/apiTestHelpers'
 import { createTestPersister } from '@/test/testPersister'
 import { testMe } from '@/test/testMe'
 import { ApiError } from './apiClient'
-import { createQueryClient } from './queryClient'
+import { createQueryClient, groupStateChangedCodes, reactToFailedRequest } from './queryClient'
 
 type FailingCall = 'query' | 'mutation'
 
@@ -180,5 +180,89 @@ describe('createQueryClient', () => {
     expect(queryFn).toHaveBeenCalledTimes(1)
     unsubscribe()
     queryClient.unmount()
+  })
+})
+
+describe('reactToFailedRequest', () => {
+  const groupKey = ['groups', 'group-1'] as const
+  const groupListKey = ['groups'] as const
+
+  function createClientWithGroupsCached(): QueryClient {
+    const queryClient = createClientWithSignedInPerson()
+    queryClient.setQueryData(groupListKey, [])
+    queryClient.setQueryData(groupKey, {})
+    return queryClient
+  }
+
+  it.each([
+    ['a 401 with an error code', apiError(401, 'AUTH_NOT_SIGNED_IN')],
+    ['a 401 without an error code', apiError(401, null)],
+  ])('signs the person out of the me cache on %s', (_name, error) => {
+    const queryClient = createClientWithSignedInPerson()
+
+    reactToFailedRequest(queryClient, error)
+
+    expect(queryClient.getQueryData(meQueryKey)).toBeNull()
+  })
+
+  it('refreshes the me cache on a 403 AUTH_MUST_CHANGE_PASSWORD', () => {
+    const queryClient = createClientWithSignedInPerson()
+
+    reactToFailedRequest(queryClient, apiError(403, 'AUTH_MUST_CHANGE_PASSWORD'))
+
+    expect(queryClient.getQueryState(meQueryKey)?.isInvalidated).toBe(true)
+  })
+
+  it.each([
+    ['a wrong password at log-in (401 AUTH_INVALID_CREDENTIALS)', apiError(401, 'AUTH_INVALID_CREDENTIALS')],
+    ['another 403', apiError(403, 'SOMETHING_ELSE')],
+    ['a 400 refusal', apiError(400, 'EXPENSE_AMOUNT_NOT_POSITIVE')],
+    ['a 404 refusal', apiError(404, 'GROUP_NOT_FOUND')],
+    ['a 500', apiError(500, null)],
+    ['a network failure', apiError(null, null)],
+    ['an error that is not an ApiError', new Error('boom')],
+  ])('leaves the me cache and the groups alone on %s', (_name, error) => {
+    const queryClient = createClientWithGroupsCached()
+
+    reactToFailedRequest(queryClient, error)
+
+    expect(queryClient.getQueryData(meQueryKey)).toEqual(testMe)
+    expect(queryClient.getQueryState(meQueryKey)?.isInvalidated).toBe(false)
+    expect(queryClient.getQueryState(groupListKey)?.isInvalidated).toBe(false)
+    expect(queryClient.getQueryState(groupKey)?.isInvalidated).toBe(false)
+  })
+
+  it.each(groupStateChangedCodes)('refreshes the list of groups and every group on %s', (errorCode) => {
+    const queryClient = createClientWithGroupsCached()
+
+    reactToFailedRequest(queryClient, apiError(400, errorCode))
+
+    expect(queryClient.getQueryState(groupListKey)?.isInvalidated).toBe(true)
+    expect(queryClient.getQueryState(groupKey)?.isInvalidated).toBe(true)
+  })
+
+  it('does not sign the person out on a group state refusal', () => {
+    const queryClient = createClientWithGroupsCached()
+
+    reactToFailedRequest(queryClient, apiError(400, 'GROUP_FINISHED'))
+
+    expect(queryClient.getQueryData(meQueryKey)).toEqual(testMe)
+  })
+
+  it('returns nothing, so the caller does not wait for the refresh of the groups', () => {
+    const queryClient = createClientWithGroupsCached()
+
+    const result: unknown = reactToFailedRequest(queryClient, apiError(400, 'GROUP_CLOSING'))
+
+    expect(result).toBeUndefined()
+  })
+
+  it('does the same for a failed mutation of the query client as for a direct call', async () => {
+    const queryClient = createClientWithGroupsCached()
+
+    await failWith(queryClient, 'mutation', apiError(400, 'GROUP_FINISHED'))
+
+    expect(queryClient.getQueryState(groupListKey)?.isInvalidated).toBe(true)
+    expect(queryClient.getQueryState(groupKey)?.isInvalidated).toBe(true)
   })
 })

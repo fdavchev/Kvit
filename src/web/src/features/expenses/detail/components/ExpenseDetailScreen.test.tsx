@@ -45,6 +45,7 @@ import {
   ownerViewMembers,
   petarMember,
 } from '@/test/memberTestData'
+import { holdOutboxSender, readSavedOutbox } from '@/test/queuedSaveTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import {
   jsonAnswer,
@@ -979,6 +980,19 @@ describe('ExpenseDetailScreen', () => {
       fireEvent.click(deleteButton())
 
       await findErrorText(translated('en', 'errors.network'))
+    })
+
+    it('does not queue the delete when it cannot reach the server', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { outboxSender } = await renderDetail({ answers: { [`DELETE ${detailPath}`]: networkFailureAnswer() } })
+      const run = holdOutboxSender(outboxSender)
+      await showsDetail()
+
+      fireEvent.click(deleteButton())
+
+      await findErrorText(translated('en', 'errors.network'))
+      expect(readSavedOutbox()).toEqual([])
+      expect(run).not.toHaveBeenCalled()
     })
   })
 

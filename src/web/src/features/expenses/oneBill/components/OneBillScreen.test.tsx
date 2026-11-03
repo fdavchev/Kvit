@@ -54,6 +54,7 @@ import {
 import { expectDisabledWhilePending, typeInto } from '@/test/formTestHelpers'
 import { testGroupId } from '@/test/groupTestData'
 import { filipPictureUrl } from '@/test/memberTestData'
+import { holdOutboxSender, readSavedOutbox } from '@/test/queuedSaveTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import {
   jsonAnswer,
@@ -1768,28 +1769,19 @@ describe('OneBillScreen', () => {
       expect(second).toEqual(first)
     })
 
-    it('keeps the same clientRequestId after a network failure', async () => {
-      let tries = 0
-      const { fetchMock } = await renderReadyBill({
-        answers: {
-          [`POST ${oneBillPath}`]: () => {
-            tries += 1
-            return tries === 1 ? new TypeError('Failed to fetch') : Response.json(createdBill)
-          },
-        },
+    it('queues the One bill under the clientRequestId of the request that failed with a network failure, so the outbox sends it with the same id', async () => {
+      const { fetchMock, router, outboxSender } = await renderReadyBill({
+        answers: { [`POST ${oneBillPath}`]: networkFailureAnswer() },
       })
+      holdOutboxSender(outboxSender)
       typeAmount('1800')
 
       fireEvent.click(saveBillButton())
-      await screen.findByRole('alert')
-      fireEvent.click(saveBillButton())
 
       await waitFor(() => {
-        expect(requestCount(fetchMock, 'POST', oneBillPath)).toBe(2)
+        expect(router.state.location.pathname).toBe(routes.groups)
       })
-      expect(sentBody(fetchMock, 'POST', oneBillPath, 1).clientRequestId).toBe(
-        sentBody(fetchMock, 'POST', oneBillPath, 0).clientRequestId,
-      )
+      expect(readSavedOutbox().map((item) => item.id)).toEqual([sentBody(fetchMock, 'POST', oneBillPath).clientRequestId])
     })
 
     it.each([
@@ -1827,13 +1819,20 @@ describe('OneBillScreen', () => {
       )
     })
 
-    it('shows the network message when the server cannot be reached', async () => {
-      await renderReadyBill({ answers: { [`POST ${oneBillPath}`]: networkFailureAnswer() } })
+    it('queues the One bill and shows no network message when the server cannot be reached', async () => {
+      const { router, outboxSender } = await renderReadyBill({
+        answers: { [`POST ${oneBillPath}`]: networkFailureAnswer() },
+      })
+      holdOutboxSender(outboxSender)
       typeAmount('1800')
 
       fireEvent.click(saveBillButton())
 
-      expect((await screen.findByRole('alert')).textContent).toContain(translated('en', 'errors.network'))
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(routes.groups)
+      })
+      expect(screen.queryByRole('alert')).toBeNull()
+      expect(readSavedOutbox()).toHaveLength(1)
     })
 
     it('shows the too-many-tries text and asks the server only once for a 429, never retrying', async () => {
