@@ -166,7 +166,7 @@ function OneBillForm({ me, categories }: OneBillFormProps) {
       categoryId,
     })
     void queuedSave
-      .saveOrQueueItem(buildOneBillOutboxItem({ input }), () => createOneBill.mutateAsync(input))
+      .saveOrQueueItem(buildOneBillOutboxItem({ input }), (onAnswered) => createOneBill.mutateAsync({ ...input, onAnswered }))
       .then((outcome) => {
         if (outcome.queued) {
           navigate(routes.groups, { replace: true })

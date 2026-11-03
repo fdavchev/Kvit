@@ -5,10 +5,16 @@ export const outboxQueueAfterMilliseconds = 3000
 
 export type SaveOrQueueOutcome<Result> = { queued: false; result: Result } | { queued: true }
 
+export type SaveTellingWhenAnswered<Result> = (onAnswered: () => void) => Promise<Result>
+
+export interface AnsweredSignal {
+  onAnswered?: () => void
+}
+
 export interface SaveOrQueueOptions<Result> {
   personId: string
   item: OutboxItem
-  save: () => Promise<Result>
+  save: SaveTellingWhenAnswered<Result>
   enqueue: (item: OutboxItem) => Promise<void>
   onLateSuccess: () => Promise<void>
   queueAfterMilliseconds?: number
@@ -23,10 +29,10 @@ export function saveOrQueue<Result>({
   queueAfterMilliseconds = outboxQueueAfterMilliseconds,
 }: SaveOrQueueOptions<Result>): Promise<SaveOrQueueOutcome<Result>> {
   return new Promise((resolve, reject) => {
-    const saving = save()
     let hasTimedOut = false
+    let hasAnswered = false
 
-    const followLateSave = (): void => {
+    const followLateSave = (saving: Promise<Result>): void => {
       saving.then(
         () =>
           onLateSuccess().catch((error: unknown) => {
@@ -44,13 +50,25 @@ export function saveOrQueue<Result>({
       )
     }
 
-    const timer = setTimeout(() => {
-      hasTimedOut = true
-      enqueue(item).then(() => {
-        resolve({ queued: true })
-        followLateSave()
-      }, reject)
-    }, queueAfterMilliseconds)
+    let timer: ReturnType<typeof setTimeout> | undefined
+
+    const saving = save(() => {
+      if (hasTimedOut) {
+        return
+      }
+      hasAnswered = true
+      clearTimeout(timer)
+    })
+
+    if (!hasAnswered) {
+      timer = setTimeout(() => {
+        hasTimedOut = true
+        enqueue(item).then(() => {
+          resolve({ queued: true })
+          followLateSave(saving)
+        }, reject)
+      }, queueAfterMilliseconds)
+    }
 
     saving.then(
       (result) => {
@@ -65,7 +83,7 @@ export function saveOrQueue<Result>({
           return
         }
         clearTimeout(timer)
-        if (!isServerNotReachedError(error)) {
+        if (hasAnswered || !isServerNotReachedError(error)) {
           reject(error)
           return
         }

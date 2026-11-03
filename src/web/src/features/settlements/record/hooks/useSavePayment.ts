@@ -31,7 +31,7 @@ export function useSavePayment(groupId: string, members: readonly GroupMember[])
     }
     const item = buildSettlementOutboxItem({ groupId, input, ...names })
     void queuedSave
-      .saveOrQueueItem(item, () => recordSettlement.mutateAsync(input))
+      .saveOrQueueItem(item, (onAnswered) => recordSettlement.mutateAsync({ ...input, onAnswered }))
       .then(onSaved, leaveErrorToQueuedSave)
   }
 

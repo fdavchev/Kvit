@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { SaveOrQueueOutcome } from '@/core/outbox/saveOrQueue'
+import type { AnsweredSignal, SaveOrQueueOutcome } from '@/core/outbox/saveOrQueue'
 import {
   addPersonalEntry,
   type NewPersonalEntry,
@@ -29,8 +29,12 @@ export interface PersonalEntryAdd {
 export function useAddPersonalEntry(oneAtATime: SaveOnce): PersonalEntryAdd {
   const queryClient = useQueryClient()
   const queuedSave = useQueuedSave()
-  const mutation = useMutation<PersonalEntry, Error, NewPersonalEntry>({
-    mutationFn: addPersonalEntry,
+  const mutation = useMutation<PersonalEntry, Error, NewPersonalEntry & AnsweredSignal>({
+    mutationFn: async ({ onAnswered, ...input }) => {
+      const added = await addPersonalEntry(input)
+      onAnswered?.()
+      return added
+    },
     onSuccess: () => refreshPersonalEntries(queryClient),
   })
 
@@ -40,7 +44,7 @@ export function useAddPersonalEntry(oneAtATime: SaveOnce): PersonalEntryAdd {
         return
       }
       void queuedSave
-        .saveOrQueueItem(buildPersonalEntryOutboxItem({ input }), () => mutation.mutateAsync(input))
+        .saveOrQueueItem(buildPersonalEntryOutboxItem({ input }), (onAnswered) => mutation.mutateAsync({ ...input, onAnswered }))
         .finally(oneAtATime.finish)
         .then(onDone, (error: unknown) => onRefused(asSaveError(error)))
     },

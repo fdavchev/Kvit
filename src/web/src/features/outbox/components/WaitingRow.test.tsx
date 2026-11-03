@@ -16,6 +16,7 @@ interface RenderOptions {
   amountMinor?: number
   currency?: Currency
   detail?: string
+  showsRateNote?: boolean
   onOpen?: () => void
 }
 
@@ -27,6 +28,7 @@ async function renderRow(options: RenderOptions = {}) {
       amountMinor={options.amountMinor ?? 150000}
       currency={options.currency ?? 'MKD'}
       detail={options.detail ?? 'Paid by Ana'}
+      {...(options.showsRateNote === undefined ? {} : { showsRateNote: options.showsRateNote })}
       onOpen={options.onOpen ?? (() => {})}
     />,
     '/waiting',
@@ -34,6 +36,40 @@ async function renderRow(options: RenderOptions = {}) {
   )
   const [row] = waitingRows()
   return row
+}
+
+function dashedElementsOf(row: HTMLElement): HTMLElement[] {
+  return [row, ...Array.from(row.querySelectorAll<HTMLElement>('*'))].filter((element) =>
+    element.classList.contains('border-dashed'),
+  )
+}
+
+function opacityClassesOf(element: Element): string[] {
+  return Array.from(element.classList).filter((token) => /^opacity-\d+$/.test(token))
+}
+
+function opacityClassesAround(element: HTMLElement): string[] {
+  const around: string[] = []
+  for (let ancestor = element.parentElement; ancestor !== null; ancestor = ancestor.parentElement) {
+    around.push(...opacityClassesOf(ancestor))
+  }
+  return around
+}
+
+function opacityClassesInside(row: HTMLElement): string[] {
+  return Array.from(row.querySelectorAll<HTMLElement>('*')).flatMap(opacityClassesOf)
+}
+
+function opacityClassesFromRowTo(row: HTMLElement, element: HTMLElement): string[] {
+  const found: string[] = []
+  for (let current: HTMLElement | null = element; current !== null && current !== row; current = current.parentElement) {
+    found.push(...opacityClassesOf(current))
+  }
+  return found
+}
+
+function opacityStepOf(token: string): number {
+  return Number(token.slice('opacity-'.length))
 }
 
 describe('WaitingRow', () => {
@@ -101,18 +137,87 @@ describe('WaitingRow', () => {
     expect(onOpen).toHaveBeenCalledTimes(1)
   })
 
-  it('is greyed and has a dashed border', async () => {
+  it('has a dashed border', async () => {
     const row = await renderRow()
-    const looks = [row, tapTargetOf(row)].flatMap((element) => Array.from(element.classList))
 
-    expect(looks).toContain('border-dashed')
-    expect(looks.some((token) => /^opacity-\d+$/.test(token))).toBe(true)
+    expect(dashedElementsOf(row)).not.toEqual([])
+  })
+
+  it('draws the dashed edge at full strength: no opacity class on the element that has it or on any element around it', async () => {
+    const row = await renderRow()
+
+    const dashedElements = dashedElementsOf(row)
+
+    expect(dashedElements).not.toEqual([])
+    for (const dashedElement of dashedElements) {
+      expect(opacityClassesOf(dashedElement)).toEqual([])
+      expect(opacityClassesAround(dashedElement)).toEqual([])
+    }
+  })
+
+  it('draws the dashed edge with the border colour or the stronger field border colour', async () => {
+    const row = await renderRow()
+
+    for (const dashedElement of dashedElementsOf(row)) {
+      const looks = Array.from(dashedElement.classList)
+      expect(looks.includes('border-border') || looks.includes('border-field-border')).toBe(true)
+    }
+  })
+
+  it('greys the content inside the row by lowering its opacity a little, to 80 percent or more', async () => {
+    const row = await renderRow()
+
+    const opacitySteps = opacityClassesInside(row).map(opacityStepOf)
+
+    expect(opacitySteps.length).toBeGreaterThan(0)
+    expect(opacitySteps.every((step) => step >= 80 && step < 100)).toBe(true)
+  })
+
+  it('never lowers the opacity of the text below 80 percent, so it keeps a contrast of 4.5 to 1', async () => {
+    const row = await renderRow({ currency: 'EUR', amountMinor: 4550 })
+
+    const opacitySteps = [...opacityClassesOf(row), ...opacityClassesInside(row)].map(opacityStepOf)
+
+    expect(opacitySteps.every((step) => step >= 80)).toBe(true)
+  })
+
+  it('puts the title, the second line and the amount under the greyed content', async () => {
+    const row = await renderRow({ title: 'Museum tickets', detail: 'Paid by Ana' })
+
+    const texts = [
+      screen.getByText('Museum tickets'),
+      screen.getByText(`Paid by Ana · ${outboxText('en', 'outbox.notSynced')}`),
+      screen.getByText(money(150000, 'MKD', 'en')),
+    ]
+
+    for (const text of texts) {
+      expect(opacityClassesFromRowTo(row, text).length).toBeGreaterThan(0)
+    }
   })
 
   it.each(languages)('tells that the euro price is set when sent on a euro row (%s)', async (language) => {
     const row = await renderRow({ language, currency: 'EUR', amountMinor: 4550 })
 
     expect(waitingRowText(row)).toContain(outboxText(language, 'outbox.rateWhenSent'))
+  })
+
+  it.each(languages)('tells that the euro price is set when sent on a euro row when showsRateNote is true (%s)', async (language) => {
+    const row = await renderRow({ language, currency: 'EUR', amountMinor: 4550, showsRateNote: true })
+
+    expect(waitingRowText(row)).toContain(outboxText(language, 'outbox.rateWhenSent'))
+  })
+
+  it.each(languages)('leaves out the euro price line on a euro row when showsRateNote is false (%s)', async (language) => {
+    const row = await renderRow({ language, currency: 'EUR', amountMinor: 4550, showsRateNote: false })
+
+    expect(waitingRowText(row)).not.toContain(outboxText(language, 'outbox.rateWhenSent'))
+  })
+
+  it('still shows the amount in euros and the second line when showsRateNote is false', async () => {
+    const row = await renderRow({ currency: 'EUR', amountMinor: 4550, detail: 'Paid by Ana', showsRateNote: false })
+
+    expect(waitingRowText(row)).toContain(money(4550, 'EUR', 'en'))
+    expect(waitingRowText(row)).toContain(`Paid by Ana · ${outboxText('en', 'outbox.notSynced')}`)
   })
 
   it('does not talk about the euro price on a denar row', async () => {

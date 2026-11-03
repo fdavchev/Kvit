@@ -44,7 +44,7 @@ export function AddExpenseScreen() {
       input,
       paidByName: personOf(expensePeople(members), changes.paidByMemberId).name,
     })
-    void queuedSave.saveOrQueueItem(item, () => createExpense.mutateAsync(input)).then((outcome) => {
+    void queuedSave.saveOrQueueItem(item, (onAnswered) => createExpense.mutateAsync({ ...input, onAnswered })).then((outcome) => {
       if (!outcome.queued) {
         toast.success(t('expenses.saved'))
       }

@@ -41,7 +41,7 @@ export function createQueryClient(persister: Persister): QueryClient {
         retry: shouldRetryQuery,
         gcTime: savedQueryCacheMaxAge,
       },
-      mutations: { retry: false },
+      mutations: { retry: false, networkMode: 'always' },
     },
   })
   keepCacheToOnePerson(queryClient, persister)

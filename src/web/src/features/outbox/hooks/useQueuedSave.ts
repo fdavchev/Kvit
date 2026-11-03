@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
 import type { OutboxItem } from '@/core/outbox/outboxItem'
 import { runWithoutWaiting } from '@/core/outbox/outboxSender'
-import { saveOrQueue, type SaveOrQueueOutcome } from '@/core/outbox/saveOrQueue'
+import { saveOrQueue, type SaveOrQueueOutcome, type SaveTellingWhenAnswered } from '@/core/outbox/saveOrQueue'
 import { useOutboxSender } from '@/core/outbox/useOutbox'
 
 export interface QueuedSave {
-  saveOrQueueItem: <Result>(item: OutboxItem, save: () => Promise<Result>) => Promise<SaveOrQueueOutcome<Result>>
+  saveOrQueueItem: <Result>(item: OutboxItem, save: SaveTellingWhenAnswered<Result>) => Promise<SaveOrQueueOutcome<Result>>
   isPending: boolean
   error: Error | null
 }
@@ -19,7 +19,7 @@ export function useQueuedSave(): QueuedSave {
 
   async function saveOrQueueItem<Result>(
     item: OutboxItem,
-    save: () => Promise<Result>,
+    save: SaveTellingWhenAnswered<Result>,
   ): Promise<SaveOrQueueOutcome<Result>> {
     setIsPending(true)
     setError(null)
@@ -34,7 +34,7 @@ export function useQueuedSave(): QueuedSave {
         },
       })
       if (outcome.queued) {
-        runWithoutWaiting(sender)
+        runWithoutWaiting(sender, { countsAsRetry: false })
       }
       return outcome
     } catch (failure) {

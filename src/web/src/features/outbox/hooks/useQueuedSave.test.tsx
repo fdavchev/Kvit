@@ -116,6 +116,19 @@ describe('useQueuedSave when the server cannot be reached', () => {
     expect(run).toHaveBeenCalledTimes(1)
   })
 
+  it('starts the sender with an attempt that does not count as a retry, because a new save caused it', async () => {
+    const { result, outboxSender } = await renderQueuedSave()
+    const run = holdOutboxSender(outboxSender)
+
+    await act(async () => {
+      await result.current.saveOrQueueItem(item, async () => {
+        throw testApiError(null)
+      })
+    })
+
+    expect(run).toHaveBeenCalledWith({ countsAsRetry: false })
+  })
+
   it('has stored the item before it starts the sender', async () => {
     const { result, outboxSender } = await renderQueuedSave()
     const itemsWhenTheSenderStarts: string[][] = []
@@ -206,6 +219,79 @@ describe('useQueuedSave when the server does not answer for 3 seconds', () => {
     expect(run).toHaveBeenCalledTimes(1)
     expect(result.current.isPending).toBe(false)
     expect(result.current.error).toBeNull()
+  })
+})
+
+describe('useQueuedSave when the server answered the save but finishing it takes long', () => {
+  function savingInTwoSteps() {
+    const finished = createDeferred<string>()
+    let tellThatTheServerAnswered: (() => void) | undefined
+    const save = (onAnswered?: () => void): Promise<string> => {
+      tellThatTheServerAnswered = onAnswered
+      return finished.promise
+    }
+    function answer(): void {
+      if (tellThatTheServerAnswered === undefined) {
+        throw new Error('saveOrQueueItem did not give the save an onAnswered function to call')
+      }
+      tellThatTheServerAnswered()
+    }
+    return { save, answer, finished }
+  }
+
+  it('does not queue the item and starts no sender although finishing takes much longer than 3 seconds', async () => {
+    const { result, outboxSender } = await renderQueuedSave()
+    const run = holdOutboxSender(outboxSender)
+    const saving = savingInTwoSteps()
+    installFakeTimers()
+    act(() => {
+      void result.current.saveOrQueueItem(item, saving.save)
+    })
+
+    saving.answer()
+    await letTimeGoBy(outboxQueueAfterMilliseconds * 3)
+
+    expect(readSavedOutbox()).toEqual([])
+    expect(run).not.toHaveBeenCalled()
+    expect(result.current.isPending).toBe(true)
+  })
+
+  it('gives back the result and ends the pending state when the save has finished', async () => {
+    const { result } = await renderQueuedSave()
+    const saving = savingInTwoSteps()
+    installFakeTimers()
+    let outcome: Promise<unknown> = Promise.resolve()
+    act(() => {
+      outcome = result.current.saveOrQueueItem(item, saving.save)
+    })
+    saving.answer()
+    await letTimeGoBy(outboxQueueAfterMilliseconds * 3)
+
+    await act(async () => {
+      saving.finished.resolve('saved and refreshed')
+      await vi.advanceTimersByTimeAsync(0)
+    })
+
+    await expect(outcome).resolves.toEqual({ queued: false, result: 'saved and refreshed' })
+    expect(result.current.isPending).toBe(false)
+    expect(result.current.error).toBeNull()
+  })
+
+  it('still queues the item when the server has not answered within 3 seconds', async () => {
+    const { result, outboxSender } = await renderQueuedSave()
+    const run = holdOutboxSender(outboxSender)
+    const saving = savingInTwoSteps()
+    installFakeTimers()
+    let outcome: Promise<unknown> = Promise.resolve()
+    act(() => {
+      outcome = result.current.saveOrQueueItem(item, saving.save)
+    })
+
+    await letTimeGoBy(outboxQueueAfterMilliseconds)
+
+    await expect(outcome).resolves.toEqual({ queued: true })
+    expect(readSavedOutbox()).toEqual([item])
+    expect(run).toHaveBeenCalledTimes(1)
   })
 })
 

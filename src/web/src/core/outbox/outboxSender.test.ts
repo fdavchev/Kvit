@@ -8,7 +8,7 @@ import {
 } from '@/test/outboxTestHelpers'
 import { testApiError, testOutboxItem } from '@/test/outboxTestData'
 import type { OutboxItem } from './outboxItem'
-import { createOutboxSender } from './outboxSender'
+import { createOutboxSender, type OutboxSnapshot } from './outboxSender'
 
 vi.mock('idb-keyval', async () => (await import('@/test/outboxTestHelpers')).fakeIdbKeyval)
 
@@ -445,6 +445,105 @@ describe('telling the screen that everything is sent', () => {
   })
 })
 
+describe('publishing that everything was sent', () => {
+  function recordSnapshots(sender: ReturnType<typeof createOutboxSender>): OutboxSnapshot[] {
+    const seen: OutboxSnapshot[] = []
+    sender.subscribe(() => {
+      seen.push(sender.getSnapshot())
+    })
+    return seen
+  }
+
+  function emptyButNotFinished(seen: readonly OutboxSnapshot[]): OutboxSnapshot[] {
+    return seen.filter((snapshot) => snapshot.items.length === 0 && !snapshot.justFinished)
+  }
+
+  it('publishes justFinished in the very snapshot that removes the last item', async () => {
+    seedWaiting('a', 'b')
+    const { sender } = newSender()
+    await settle()
+    const seen = recordSnapshots(sender)
+
+    await sender.run()
+
+    expect(seen.some((snapshot) => snapshot.items.length === 0)).toBe(true)
+    expect(emptyButNotFinished(seen)).toEqual([])
+  })
+
+  it('does the same when there is only one item', async () => {
+    seedWaiting('a')
+    const { sender } = newSender()
+    await settle()
+    const seen = recordSnapshots(sender)
+
+    await sender.run()
+
+    expect(seen.some((snapshot) => snapshot.items.length === 0)).toBe(true)
+    expect(emptyButNotFinished(seen)).toEqual([])
+  })
+
+  it('does the same for an item that was queued by a save and sent by the next run', async () => {
+    const { sender } = newSender()
+    await settle()
+    await sender.enqueue(testOutboxItem('a'))
+    const seen = recordSnapshots(sender)
+
+    await sender.run()
+
+    expect(seen.some((snapshot) => snapshot.items.length === 0)).toBe(true)
+    expect(emptyButNotFinished(seen)).toEqual([])
+  })
+
+  it('never says justFinished while an item is still in the queue', async () => {
+    seedWaiting('a', 'b')
+    const { sender } = newSender()
+    await settle()
+    const seen = recordSnapshots(sender)
+
+    await sender.run()
+
+    expect(seen.filter((snapshot) => snapshot.justFinished && snapshot.items.length > 0)).toEqual([])
+  })
+
+  it('never says justFinished when an item the server refused is left in the queue', async () => {
+    seedWaiting('a', 'b')
+    const sendItem = vi
+      .fn<SendItem>()
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(testApiError(400, 'GROUP_FINISHED'))
+    const { sender } = newSender({ sendItem })
+    await settle()
+    const seen = recordSnapshots(sender)
+
+    await sender.run()
+
+    expect(seen.filter((snapshot) => snapshot.justFinished)).toEqual([])
+  })
+
+  it('ends with an empty queue, not sending and just finished', async () => {
+    seedWaiting('a', 'b')
+    const { sender } = newSender()
+    await settle()
+    const seen = recordSnapshots(sender)
+
+    await sender.run()
+
+    expect(seen.at(-1)).toEqual({ items: [], isSending: false, justFinished: true })
+  })
+
+  it('does not say justFinished when the last waiting item was discarded and nothing was sent', async () => {
+    seedWaiting('a')
+    const { sender } = newSender()
+    await settle()
+    const seen = recordSnapshots(sender)
+
+    await sender.discard('a')
+
+    expect(seen.some((snapshot) => snapshot.items.length === 0)).toBe(true)
+    expect(seen.filter((snapshot) => snapshot.justFinished)).toEqual([])
+  })
+})
+
 describe('trying again after the server could not be reached', () => {
   const retryStatuses: (number | null)[] = [null, 502, 503, 504, 408, 425, 429]
 
@@ -578,6 +677,123 @@ describe('trying again after the server could not be reached', () => {
 
     expect(sentIds(sendItem)).toEqual(['a', 'a'])
     expect(snapshotIds(sender)).toEqual([])
+  })
+})
+
+describe('the wait after attempts that a new save started', () => {
+  const failingServer = (): Mock<SendItem> => vi.fn<SendItem>().mockRejectedValue(testApiError(null))
+
+  async function saveAndTry(sender: ReturnType<typeof createOutboxSender>, id: string): Promise<void> {
+    await sender.enqueue(testOutboxItem(id))
+    await sender.run({ countsAsRetry: false })
+  }
+
+  it('still waits 2 seconds before the next try after six different saves each started a failing attempt', async () => {
+    const sendItem = failingServer()
+    const { sender } = newSender({ sendItem })
+
+    for (let save = 1; save <= 6; save += 1) {
+      await saveAndTry(sender, `save-${save}`)
+    }
+
+    const callsAfterTheSaves = sendItem.mock.calls.length
+    await vi.advanceTimersByTimeAsync(1999)
+    expect(sendItem).toHaveBeenCalledTimes(callsAfterTheSaves)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(sendItem).toHaveBeenCalledTimes(callsAfterTheSaves + 1)
+  })
+
+  it('waits 2 seconds after the first failing attempt that a save started on an empty queue', async () => {
+    const sendItem = failingServer()
+    const { sender } = newSender({ sendItem })
+
+    await saveAndTry(sender, 'save-1')
+
+    await vi.advanceTimersByTimeAsync(1999)
+    expect(sendItem).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(sendItem).toHaveBeenCalledTimes(2)
+  })
+
+  it('keeps waiting 2, 5, 15, 30 and then 60 seconds after failing attempts of the retry timer, also when a save started the first attempt', async () => {
+    const sendItem = vi.fn<SendItem>()
+    for (let failure = 0; failure < 6; failure += 1) {
+      sendItem.mockRejectedValueOnce(testApiError(null))
+    }
+    sendItem.mockResolvedValue(undefined)
+    const { sender } = newSender({ sendItem })
+    await saveAndTry(sender, 'save-1')
+
+    const waits = [2000, 5000, 15000, 30000, 60000, 60000]
+    for (const [index, wait] of waits.entries()) {
+      await vi.advanceTimersByTimeAsync(wait - 1)
+      expect(sendItem).toHaveBeenCalledTimes(index + 1)
+      await vi.advanceTimersByTimeAsync(1)
+      expect(sendItem).toHaveBeenCalledTimes(index + 2)
+    }
+    expect(snapshotIds(sender)).toEqual([])
+  })
+
+  it('does not raise the wait that failing attempts of the retry timer had reached when a new save fails too', async () => {
+    const sendItem = failingServer()
+    const { sender } = newSender({ sendItem })
+    await saveAndTry(sender, 'save-1')
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(sendItem).toHaveBeenCalledTimes(2)
+
+    await saveAndTry(sender, 'save-2')
+
+    expect(sendItem).toHaveBeenCalledTimes(3)
+    await vi.advanceTimersByTimeAsync(4999)
+    expect(sendItem).toHaveBeenCalledTimes(3)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(sendItem).toHaveBeenCalledTimes(4)
+  })
+
+  it('counts an attempt without an argument like before: six of them put the wait at 60 seconds', async () => {
+    const sendItem = failingServer()
+    const { sender } = newSender({ sendItem })
+
+    for (let save = 1; save <= 6; save += 1) {
+      await sender.enqueue(testOutboxItem(`save-${save}`))
+      await sender.run()
+    }
+
+    const callsAfterTheSaves = sendItem.mock.calls.length
+    await vi.advanceTimersByTimeAsync(59999)
+    expect(sendItem).toHaveBeenCalledTimes(callsAfterTheSaves)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(sendItem).toHaveBeenCalledTimes(callsAfterTheSaves + 1)
+  })
+
+  it('still sends the item and empties the queue when the attempt that a save started succeeds', async () => {
+    const sendItem = vi.fn<SendItem>(async () => undefined)
+    const { sender } = newSender({ sendItem })
+
+    await saveAndTry(sender, 'save-1')
+
+    expect(sentIds(sendItem)).toEqual(['save-1'])
+    expect(snapshotIds(sender)).toEqual([])
+    expect(storedIds(personId)).toEqual([])
+  })
+
+  it('starts the wait over at 2 seconds after an item was sent', async () => {
+    const sendItem = vi
+      .fn<SendItem>()
+      .mockRejectedValueOnce(testApiError(null))
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValue(testApiError(null))
+    const { sender } = newSender({ sendItem })
+    await saveAndTry(sender, 'save-1')
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(snapshotIds(sender)).toEqual([])
+
+    await saveAndTry(sender, 'save-2')
+
+    await vi.advanceTimersByTimeAsync(1999)
+    expect(sendItem).toHaveBeenCalledTimes(3)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(sendItem).toHaveBeenCalledTimes(4)
   })
 })
 

@@ -8,8 +8,8 @@ _Last updated: 2026-10-31 (Phase 16 built, browser-checked and code-reviewed; wa
 - Uncommitted: the prompt, the mockup, the Phase 17 sections in DECISIONS, ROADMAP and STATUS, and the PR text file.
 
 ## Next step
-1. Steps 0 to 4 are done (VERIFIED by automated test: frontend 12544 of 12544, backend 5975 of 5975). Waiting rows, the bar, the failed sheet, the "not counted yet" lines and the log-out warning exist; none of it has been seen in a browser.
-2. Filip authorised (2026-11-03) building the rest, committing each step (one-line subject, no push), then the code review for him to read. Step 5 next (browser pass on the local stack; needs Docker Desktop open), then Step 6 (close-out).
+1. Steps 0 to 5 are done (VERIFIED by automated test: frontend 12613 of 12613, backend 5975 of 5975). The browser pass (`docs/reports/2026-11-03-phase-17-browser-pass.md`) found 11 bugs; 8 are fixed and VERIFIED by automated test; a second browser check of the fixes comes next.
+2. Filip authorised (2026-11-03) finishing the phase, committing each step (one-line subject, no push), then the code review for him to read. Next: the browser re-check of the fixes, then Step 6 (code review, report, guide).
 
 ## Then
 - Filip, once on the real site: one real EUR expense (first real NBRM call), a real phone check of the Phase 16 screens, the Macedonian drafts of Phases 9 to 16, the Google button and "Make an account", the invite link on his phone.

@@ -127,6 +127,19 @@ describe('the Payments list with changes waiting in the outbox', () => {
 
       expect(sectionNamed('Payments').contains(row)).toBe(true)
     })
+
+    it.each(languages)('shows a payment in euros with its amount but without "Euro price set when sent", because a payment has no euro price (%s)', async (language) => {
+      await renderPayments({
+        language,
+        waiting: [anaPaysFilip('in-euros', { display: { amountMinor: 500, currency: 'EUR' } })],
+      })
+
+      const row = await findWaitingRowWith(fromPaidTo('Ana', 'Filip', language))
+
+      expect(waitingRowText(row)).toContain(money(500, 'EUR', language))
+      expect(waitingRowText(row)).toContain(outboxText(language, 'outbox.notSynced'))
+      expect(waitingRowText(row)).not.toContain(outboxText(language, 'outbox.rateWhenSent'))
+    })
   })
 
   describe('what is not shown', () => {

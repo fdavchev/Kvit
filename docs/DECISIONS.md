@@ -39,6 +39,12 @@ Mockup: `design/2026-10-31-phase-17/index.html`. The first version of the outbox
   - **The bar is 64 px of space** (`--outbox-bar-space`) added to the toast offsets, the floating buttons and the screens' bottom padding, only while the bar is on the page.
   - **The log-out warning counts items in every state;** the queue is deleted only after the log-out request succeeded, and a failed log-out keeps it. The count comes from the sender, which loads the saved items at sign-in (a tap in the first milliseconds after sign-in would get no warning; accepted).
   - **Macedonian outbox texts are drafts** that Filip has not read.
+- **Browser-pass fixes (Step 5):**
+  - **All saves run at once when the browser is offline** (`networkMode: 'always'` for mutations), so offline saves are queued at once, "I paid" offline shows the network error, and nothing is held and fired later.
+  - **The 3-second clock covers only the server's answer to the save,** not the refresh after it; a save answered in time is never queued because the refresh is slow.
+  - **A failed attempt caused by a new save does not push the back-off up** (it waits 2 s at least, never more because of it); attempts by the timer, the triggers or Retry still go 2, 5, 15, 30, 60 s.
+  - **`justFinished` is published with the last removal,** so the bar never vanishes for a frame; a waiting payment shows no euro-price line; the dashed edge of a waiting row has full strength (3.29:1 light, 3.01:1 dark).
+  - **Left on purpose for Filip:** a save that is only slow is sent twice at the same moment (bug 5; the server returns the first result, one row results; the plan's sentence "the sender waits for the original" is not built); the real and waiting row share one frame (bug 8); the Macedonian "not synced" word breaks at 320 px (bug 9); the desktop bar position, "Sending…" wording, the wait after the server is back.
 - **Backend: no change, no migration.** The four endpoints already return the first result for a repeated `ClientRequestId`, also when the group is Closing or Finished, and none is rate-limited. Known edge, left as it is: a repeat of an item that did save, sent after the group was deleted, the person left, or the item was deleted, is refused (404 or 400). In the outbox that shows as a failed item with its reason, never as a duplicate. New API tests pin this behaviour in Step 4.
 
 ## 2026-10-31: Phase 16 (possible duplicates, group totals, group spending plan): done, the rules that stay

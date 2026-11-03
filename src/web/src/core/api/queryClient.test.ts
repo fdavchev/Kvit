@@ -1,6 +1,7 @@
 import {
   focusManager,
   MutationObserver,
+  onlineManager,
   QueryObserver,
   type QueryClient,
 } from '@tanstack/react-query'
@@ -14,6 +15,10 @@ import { ApiError } from './apiClient'
 import { createQueryClient, groupStateChangedCodes, reactToFailedRequest } from './queryClient'
 
 type FailingCall = 'query' | 'mutation'
+
+function letRealTimeGoBy(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds))
+}
 
 function apiError(httpStatus: number | null, errorCode: string | null): ApiError {
   return new ApiError('request failed', { httpStatus, errorCode })
@@ -161,6 +166,63 @@ describe('createQueryClient', () => {
     await captureError(new MutationObserver(queryClient, { mutationFn }).mutate())
 
     expect(mutationFn).toHaveBeenCalledTimes(1)
+  })
+
+  describe('when the browser is offline', () => {
+    afterEach(() => {
+      onlineManager.setOnline(true)
+    })
+
+    it('has the network mode always as the default of every mutation', () => {
+      const mutationDefaults = createQueryClient(createTestPersister()).getDefaultOptions().mutations
+
+      expect(mutationDefaults?.networkMode).toBe('always')
+      expect(mutationDefaults?.retry).toBe(false)
+    })
+
+    it('leaves the network mode of the queries alone, so a query still waits for the network', () => {
+      const queryDefaults = createQueryClient(createTestPersister()).getDefaultOptions().queries
+
+      expect(queryDefaults?.networkMode).toBeUndefined()
+    })
+
+    it('runs a mutation at once instead of holding it', async () => {
+      const queryClient = createQueryClient(createTestPersister())
+      onlineManager.setOnline(false)
+      const mutationFn = vi.fn(async () => 'saved')
+
+      const settled = new MutationObserver(queryClient, { mutationFn }).mutate().then(() => 'saved', () => 'failed')
+      await letRealTimeGoBy(20)
+
+      expect(mutationFn).toHaveBeenCalledTimes(1)
+      expect(await settled).toBe('saved')
+    })
+
+    it('fails a mutation whose request cannot reach the server at once, and does not run it again when the browser is online again', async () => {
+      const queryClient = createQueryClient(createTestPersister())
+      onlineManager.setOnline(false)
+      const failure = apiError(null, null)
+      const mutationFn = vi.fn((): Promise<never> => Promise.reject(failure))
+
+      const settled = new MutationObserver(queryClient, { mutationFn }).mutate().then(() => undefined, (error: unknown) => error)
+      await letRealTimeGoBy(20)
+      expect(mutationFn).toHaveBeenCalledTimes(1)
+      onlineManager.setOnline(true)
+      await letRealTimeGoBy(20)
+
+      expect(await settled).toBe(failure)
+      expect(mutationFn).toHaveBeenCalledTimes(1)
+    })
+
+    it('keeps no mutation paused', async () => {
+      const queryClient = createQueryClient(createTestPersister())
+      onlineManager.setOnline(false)
+
+      void new MutationObserver(queryClient, { mutationFn: async () => 'saved' }).mutate().catch(() => undefined)
+      await letRealTimeGoBy(20)
+
+      expect(queryClient.getMutationCache().getAll().filter((mutation) => mutation.state.isPaused)).toEqual([])
+    })
   })
 
   it('does not refetch a query when the window regains focus', async () => {

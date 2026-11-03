@@ -58,6 +58,7 @@ export function PaymentsSection({
                 title={paymentTitleOf(item, t)}
                 amountMinor={amountMinor}
                 currency={currency}
+                showsRateNote={false}
                 leading={<KvitAvatar name={displayTextOf(item, 'payerName')} pictureUrl={null} colorIndex="brand" />}
                 onOpen={() => onOpenWaiting(item)}
               />

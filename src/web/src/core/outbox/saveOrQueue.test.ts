@@ -334,3 +334,124 @@ describe('saveOrQueue when the save finishes after the item was queued', () => {
     await new Promise<void>((resolve) => setTimeout(resolve, 0))
   })
 })
+
+describe('saveOrQueue when the server answered the save but finishing it takes long', () => {
+  function savingInTwoSteps() {
+    const finished = createDeferred<string>()
+    let tellThatTheServerAnswered: (() => void) | undefined
+    const save = (onAnswered?: () => void): Promise<string> => {
+      tellThatTheServerAnswered = onAnswered
+      return finished.promise
+    }
+    function answer(): void {
+      if (tellThatTheServerAnswered === undefined) {
+        throw new Error('saveOrQueue did not give the save an onAnswered function to call')
+      }
+      tellThatTheServerAnswered()
+    }
+    return { save, answer, finished }
+  }
+
+  function newCallWithTwoSteps() {
+    const saving = savingInTwoSteps()
+    const call = newCall(saving.save)
+    const onSettled = vi.fn()
+    void call.outcome.then(onSettled, onSettled)
+    return { ...saving, ...call, onSettled }
+  }
+
+  it('hands the save a function to call when the server has answered', async () => {
+    const save = vi.fn((_onAnswered?: () => void) => new Promise<string>(() => {}))
+    saveOrQueue({
+      personId,
+      item,
+      save,
+      enqueue: async () => undefined,
+      onLateSuccess: async () => undefined,
+    })
+
+    expect(save).toHaveBeenCalledTimes(1)
+    expect(save.mock.calls[0]).toHaveLength(1)
+    expect(typeof save.mock.calls[0][0]).toBe('function')
+  })
+
+  it('does not queue the item although finishing takes much longer than 3 seconds', async () => {
+    const { answer, enqueue, onLateSuccess } = newCallWithTwoSteps()
+
+    await vi.advanceTimersByTimeAsync(1000)
+    answer()
+    await vi.advanceTimersByTimeAsync(60000)
+
+    expect(enqueue).not.toHaveBeenCalled()
+    expect(onLateSuccess).not.toHaveBeenCalled()
+  })
+
+  it('stops its timer when the server has answered', async () => {
+    const { answer } = newCallWithTwoSteps()
+
+    answer()
+    await settle()
+
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('does not give back an outcome before the save has finished', async () => {
+    const { answer, onSettled } = newCallWithTwoSteps()
+
+    answer()
+    await vi.advanceTimersByTimeAsync(10000)
+
+    expect(onSettled).not.toHaveBeenCalled()
+  })
+
+  it('gives back the result when the save finishes after the server answered', async () => {
+    const { answer, finished, outcome, enqueue } = newCallWithTwoSteps()
+    await vi.advanceTimersByTimeAsync(50)
+    answer()
+    await vi.advanceTimersByTimeAsync(outboxQueueAfterMilliseconds + 2000)
+
+    finished.resolve('saved and refreshed')
+
+    await expect(outcome).resolves.toEqual({ queued: false, result: 'saved and refreshed' })
+    expect(enqueue).not.toHaveBeenCalled()
+  })
+
+  it('throws the error of the save when it fails after the server answered, even a network failure, and queues nothing', async () => {
+    const { answer, finished, outcome, enqueue } = newCallWithTwoSteps()
+    const failure = testApiError(null)
+    const rejected = expect(outcome).rejects.toBe(failure)
+    answer()
+    await settle()
+
+    finished.reject(failure)
+
+    await rejected
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(enqueue).not.toHaveBeenCalled()
+  })
+
+  it('still queues the item when the server has not answered within 3 seconds', async () => {
+    const { enqueue, outcome } = newCallWithTwoSteps()
+
+    await vi.advanceTimersByTimeAsync(outboxQueueAfterMilliseconds - 1)
+    expect(enqueue).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(1)
+
+    await expect(outcome).resolves.toEqual({ queued: true })
+    expect(enqueue).toHaveBeenCalledTimes(1)
+    expect(enqueue).toHaveBeenCalledWith(item)
+  })
+
+  it('takes the queued item out again when the server answers late and the save finishes', async () => {
+    const { answer, finished, outcome, onLateSuccess } = newCallWithTwoSteps()
+    await vi.advanceTimersByTimeAsync(outboxQueueAfterMilliseconds)
+    await outcome
+
+    answer()
+    finished.resolve('saved late')
+    await settle()
+
+    expect(onLateSuccess).toHaveBeenCalledTimes(1)
+  })
+})
+

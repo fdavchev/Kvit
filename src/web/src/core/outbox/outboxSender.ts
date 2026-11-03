@@ -16,11 +16,15 @@ export interface OutboxSenderOptions {
   afterSent: (item: OutboxItem) => Promise<void>
 }
 
+export interface OutboxRunOptions {
+  countsAsRetry?: boolean
+}
+
 export interface OutboxSender {
   getSnapshot: () => OutboxSnapshot
   subscribe: (listener: () => void) => () => void
   enqueue: (item: OutboxItem) => Promise<void>
-  run: () => Promise<void>
+  run: (options?: OutboxRunOptions) => Promise<void>
   retry: (id: string) => Promise<void>
   discard: (id: string) => Promise<boolean>
   pause: () => void
@@ -37,8 +41,8 @@ const tooManyRequestsStatus = 429
 const tryAgainLaterStatuses: readonly number[] = [requestTimeoutStatus, tooEarlyStatus, tooManyRequestsStatus]
 const noReason: OutboxFailure = { errorCode: null, httpStatus: null }
 
-export function runWithoutWaiting(sender: Pick<OutboxSender, 'run'>): void {
-  sender.run().catch((error: unknown) => {
+export function runWithoutWaiting(sender: Pick<OutboxSender, 'run'>, options?: OutboxRunOptions): void {
+  sender.run(options).catch((error: unknown) => {
     console.error('The outbox could not send the waiting changes', error)
   })
 }
@@ -109,37 +113,33 @@ export function createOutboxSender({ personId, sendItem, afterSent }: OutboxSend
     publish({ items: [...snapshot.items, item], justFinished: false })
   }
 
-  function run(): Promise<void> {
-    running ??= sendWaitingItems().finally(() => {
+  function run({ countsAsRetry = true }: OutboxRunOptions = {}): Promise<void> {
+    running ??= sendWaitingItems(countsAsRetry).finally(() => {
       running = undefined
     })
     return running
   }
 
-  async function sendWaitingItems(): Promise<void> {
+  async function sendWaitingItems(countsAsRetry: boolean): Promise<void> {
     await waitUntilLoaded()
     if (paused || nextWaitingItem() === undefined) {
       return
     }
     stopRetryTimer()
-    let sentCount = 0
     try {
       for (let item = nextWaitingItem(); item !== undefined && !isPaused(); item = nextWaitingItem()) {
-        const outcome = await sendOne(item)
-        if (outcome === 'sent') {
-          sentCount += 1
-        }
+        const outcome = await sendOne(item, countsAsRetry)
         if (outcome === 'retryLater') {
           scheduleRetry()
           return
         }
       }
     } finally {
-      publish({ isSending: false, justFinished: sentCount > 0 && snapshot.items.length === 0 })
+      publish({ isSending: false })
     }
   }
 
-  async function sendOne(item: OutboxItem): Promise<SendOutcome> {
+  async function sendOne(item: OutboxItem, countsAsRetry: boolean): Promise<SendOutcome> {
     const sendingItem: OutboxItem = { ...item, state: 'sending' }
     publish({
       items: snapshot.items.map((queued) => (queued.id === item.id ? sendingItem : queued)),
@@ -149,7 +149,7 @@ export function createOutboxSender({ personId, sendItem, afterSent }: OutboxSend
     try {
       await sendItem(sendingItem)
     } catch (error) {
-      return handleSendFailure(item, error)
+      return handleSendFailure(item, error, countsAsRetry)
     }
     try {
       await afterSent(sendingItem)
@@ -161,13 +161,14 @@ export function createOutboxSender({ personId, sendItem, afterSent }: OutboxSend
       await markFailed(item.id, noReason)
       return 'failed'
     }
-    forgetItem(item.id)
+    const itemsLeft = snapshot.items.filter((queued) => queued.id !== item.id)
+    publish({ items: itemsLeft, justFinished: itemsLeft.length === 0 })
     await removeOutboxItem(personId, item.id)
     failedAttempts = 0
     return 'sent'
   }
 
-  async function handleSendFailure(item: OutboxItem, error: unknown): Promise<SendOutcome> {
+  async function handleSendFailure(item: OutboxItem, error: unknown, countsAsRetry: boolean): Promise<SendOutcome> {
     if (!(error instanceof ApiError)) {
       console.error(
         `Could not send the waiting ${item.kind} ${item.id} because of an error that is not an API error; the outbox marks it as failed`,
@@ -177,7 +178,7 @@ export function createOutboxSender({ personId, sendItem, afterSent }: OutboxSend
       return 'failed'
     }
     if (shouldRetryLater(error)) {
-      failedAttempts += 1
+      failedAttempts = countsAsRetry ? failedAttempts + 1 : Math.max(failedAttempts, 1)
       changeItem(item.id, { state: 'waiting', failure: null })
       return 'retryLater'
     }
