@@ -5,7 +5,7 @@ _Last updated: 2026-11-03 (Phase 17 built, browser-checked, code-reviewed and th
 ## Where we stopped
 - Release 1 accepted 2026-10-16. Phases 12 to 16 are merged (Release 2 done). Branch `feat/17-outbox`: Phase 17 (the outbox, first phase of Release 3) is finished, Steps 0 to 6 and the follow-up fixes. No migration.
 - Report: `docs/reports/2026-11-03-phase-17-outbox.md`; browser pass and re-check: `docs/reports/2026-11-03-phase-17-browser-pass.md`; guide: `docs/guides/phase-17-outbox.md`; first-push texts: `docs/guides/phase-17-pr-text.md`; mockup: `docs/design/2026-10-31-phase-17/`.
-- Everything is committed except the last round of fixes (review findings, bugs 5, 8, 9 and the bar changes), which is committed next.
+- Everything is committed. The last round of fixes and the 320 px layout fix are re-checked by live run.
 
 ## Next step
 1. Phase 17 is built, browser-checked, code-reviewed and the review findings are fixed (VERIFIED by automated test: frontend 12765 of 12765, backend 5975 of 5975; the first round of fixes re-checked by live run; the last round of fixes is re-checked next). Everything is committed on `feat/17-outbox`, nothing is pushed by Claude.

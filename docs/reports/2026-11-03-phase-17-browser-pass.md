@@ -356,3 +356,206 @@ The edge pixel equals the computed `border-color`, so the numbers are exact (the
 ### Where the files are
 Scripts, results and screenshots of this re-check: `C:\Users\Davchev\AppData\Local\Temp\claude\c--Users-Davchev-Projects-Kvit\11c66925-bd89-4c3f-9def-e4fb33a230e3\scratchpad\p17b\` (screenshots in `shots\`). Copies and adaptations of the first pass's helpers (`lib.py`, `lib2.py` with a new in-page click, bar and error-time log, `warm.py`, `i_helpers.py`, `apictl.ps1`, `a.py`, `c2.py`, `d.py`, `f.py`, `g.py`) plus `seed.py` (3 users, 2 groups), `r1.py` (offline saves and going online, Bugs 2 and 3), `r1b.py` ("I paid" offline, EN and MK, Bug 1), `r4.py` and `c2.py` (Bug 4), `r5.py` (Bug 7), `r6.py` and `r6c.py` (Bug 6), `r10.py` (Bug 10), `r11.py` (Bug 11), `wrap2.py` (no sideways scroll), `restore_old_states.py`. Results as JSON next to them (`r1_run1_res.json`, `r1_run2_res.json`, `r1b_en_res.json`, `r1b_mk_res.json`, `r4_res.json`, `c2_res.json`, `r5_res.json`, `r6_A_res.json`, `r6_B_res.json`, `r10_res.json`, `r11_res.json`, `r8_res.json`, `a_res.json`, `d_res.json`, `f_res.json`, `g_res.json`). Not in the repository.
 Throwaway data left in the local database: the three `p17b...@example.com` users and the guest, their groups "Outbox MKD" and "Outbox EUR" with many "A ...", "B ...", "R ...", "R4 ...", "Z5 ...", "C2 ...", "D ...", "F ...", "H ..." expenses, about 14 One bill groups, a few payments, and about 30 personal entries.
+
+## Final re-check after the review fixes (2026-11-03)
+
+Run by the tester on branch `feat/17-outbox` at HEAD `ef29a1a` ("Fix the Phase 17 code review findings and leftovers ..."). Real headless Chromium (Playwright for Python), 360 px wide unless said otherwise, time zone `Europe/Skopje`, local API, Vite dev server and Docker database. No production code, no tests and no docs other than this report were changed; nothing was committed or staged (`git status --short` was empty at the end, before this section was written). The automated suites were **not run**, so nothing here is VERIFIED by automated test. Labels: **VERIFIED by live run** or **NOT VERIFIED**.
+
+### What was run and how
+- `.\scripts\start-local.ps1 -NoBrowser` started the database, API and website with no migration warning. VERIFIED by live run.
+- At the end I stopped the API process I had restarted myself (the script's `-Stop` found and stopped it), then `.\scripts\start-local.ps1 -Stop` printed "Closed the 'Kvit API' window", "Closed the 'Kvit website' window", "Stopped the database container kvit-postgres (its data is kept)" and "Ports 5018 and 5173 are free". `netstat` shows no listener on 5018, 5173 or 5180 and `docker ps -a` shows `kvit-postgres Exited (0)`. VERIFIED by live run.
+- Fresh throwaway users (password `Passw0rdA`): `p17cana1793738352@example.com` (Ana Alfa, owner), `p17cbojan1793738352@example.com` (Bojan Beta), `p17ccvetan1793738352@example.com` (Cvetan Gama, the "other person" of check 8). Groups "Outbox MKD" and "Outbox EUR" (Ana, Bojan, plain name Marko Plain, 2 seed expenses each). Every real save was made through the real screens; the layout checks (4, 5, 6) used items written by hand into IndexedDB `kvit-outbox` (store `items`, key = Ana's person id, same shape as the app's own items, copied from what the app writes).
+- One extra tool: for the "one error per bad item" count I built the production bundle into the scratchpad with `npx vite build --outDir <scratchpad>\p17c\prod` (nothing written into the repository, `git status` stayed empty) and served it with `npx vite preview --port 5180` (the same `/api` proxy), because the dev server runs every effect twice (React StrictMode) and would double the console errors. The preview process was stopped afterwards.
+- "Offline" is `context.set_offline(True)`. "API stopped" is the real `Kvit.Api` process killed and started again. "Blocked" is a Playwright route that aborts non-GET requests (`connectionrefused`). Times are measured inside the page (mutation log and a `requestAnimationFrame` frame sampler) or from the browser's request log.
+
+### Result per check
+| # | Check | Verdict | Label |
+|---|---|---|---|
+| 1 | Held original (browser-pass bug 5, review 3) | **Fixed** | VERIFIED by live run |
+| 2 | Discard sheet text EN and MK | **Fixed** | VERIFIED by live run |
+| 3 | Tap the bar; "Sending…" only while a request runs | **Fixed** (a note on the server speed) | VERIFIED by live run |
+| 4 | Desktop bar position, phone widths unchanged | **Fixed** | VERIFIED by live run |
+| 5 | Macedonian 320 px waiting rows | **Word no longer breaks, but a NEW overflow bug appeared** (New bug A) | VERIFIED by live run |
+| 6 | Bad stored items | **Fixed** (one error per item in the production build) | VERIFIED by live run |
+| 7 | Hung request | **Fixed** | VERIFIED by live run |
+| 8 | Log-out per ids | **Fixed** | VERIFIED by live run |
+| 9 | Bug 8 flash | **Fixed on the group Expenses list and the Groups list; still there on Budget and Payments** | VERIFIED by live run |
+| 10 | Regression | **PASS except the sideways scroll at 320 px (New bug A)** | VERIFIED by live run |
+
+### 1. Held original
+The reply or the request of the first POST of an expense is held 10 s by a route. "Tap to moved on" is the time until the Save button left the page. Every run: EN, 360 px, group "Outbox MKD", one expense.
+
+| Case | Tap to moved on | Bar and row | POSTs from the browser | Original answered | Result |
+|---|---|---|---|---|---|
+| Reply held (server saved at once, reply held 10 s) | 3,425 ms | bar "1 change waiting" at 3.04 s, row "C1 reply_held / Paid by Ana Alfa · Not synced yet / 333 MKD" | **exactly 1** (route saw 1, request log 1) | 10.10 s (status 200) | bar gone at 10.13 s, row gone, **one** expense with that title via the API |
+| Request held (never reaches the server for 10 s) | 3,428 ms | bar at 3.04 s | **exactly 1** (reached the server at 10.05 s) | 10.08 s (200) | bar gone at 10.10 s, **one** expense |
+| Original fails (aborted at 5 s) | 3,416 ms | bar at 3.03 s | **2**: the failed original (5.05 s) and **one** sender POST at 5.07 s (200 in 0.06 s) | failed | bar "1 change waiting · Sending…" 5.06 s, "All up to date ✓" 5.17 s, gone 8.16 s, **one** expense |
+
+- First pass for comparison: the second POST left at 3.03 s in the first two cases.
+- While the original is held, tapping the waiting row opens the sheet "Discard this change? / It has not been confirmed yet. If you discard it, it may still arrive." with the Discard button **disabled and reading "Sending…"** and Cancel enabled (all three runs; Escape closes the sheet). Screenshot `shots\c1-reply_held-sheet.png` looked at.
+- Console in the failing case: one `console.error` "The save of the queued expense ... failed after it was queued; the outbox sends it again" plus the browser's own "Failed to load resource" line (expected, that is the abort). No other messages in the other two cases.
+- Note: while the original is held, the bar reads "1 change waiting" without "· Sending…" (the sender is not running, the original is). That fits check 3's wording but a person sees no sign of the open request apart from the Discard button.
+
+### 2. Discard sheet text
+- EN: "Discard this change? / It has not been confirmed yet. If you discard it, it may still arrive. / Discard / Cancel" (seen on waiting and on held rows).
+- MK (browser locale `mk-MK`, production build): «Да ја отфрлиш оваа промена? Сѐ уште не е потврдена. Ако ја отфрлиш, можеби сепак ќе пристигне. Отфрли Откажи» on the Budget, Expenses, Payments and Groups rows. Both texts are exactly as asked. VERIFIED by live run.
+
+### 3. Tap the bar, and the "Sending…" text
+Two runs: stop the API process, queue 2 expenses (EN, 360 px; queued 58 / 39 ms and 59 / 53 ms after the tap), wait 25 s, start the API, poll `/health`, tap the bar button the moment `/health` answers.
+
+| | Run 1 | Run 2 |
+|---|---|---|
+| Bar while the API is down | "2 changes waiting" (at queue and at 25 s) | same |
+| `/health` answered to tap | 0 ms | 2 ms |
+| Tap to first POST | **31 ms** | **31 ms** |
+| First POST answered | 1.02 s after the tap (200) | 0.94 s (200) |
+| Second POST left / answered | 1.19 s / 3.31 s (200) | 1.08 s / 3.19 s (200) |
+| "All up to date ✓" after the tap | 3.35 s | 3.24 s |
+| Last failed attempt before the tap | 7.4 s earlier (the back-off was at 30 s: the next timer would have fired about 22 s later) | 7.4 s earlier |
+
+- So the tap works: the send starts within 31 ms and does not wait for the back-off. The whole queue took 3.2 to 3.4 s only because a just-started API answered the first POST in 0.9 to 1.0 s and the second in 2.1 s (the same slow first requests seen in the earlier passes, Observation 3 there). "Within about 1 s of the tap" is true for the start of sending and for the first item, not for the second item on a cold API.
+- **While the API is down** the bar read "2 changes waiting" for the whole 25 s; "· Sending…" appeared only in six short windows of 3 to 33 ms, each around one failed attempt (each POST answered 502 in 0 to 9 ms). VERIFIED by live run.
+- **During a delayed request** (API up, each queued POST held 3 s by a route): "2 changes waiting · Sending…" from 0.04 s to 3.12 s, then "1 change waiting · Sending…" until 6.21 s, then "All up to date ✓". The text had "Sending…" exactly while a request was open (my sampler saw two samples of 1 to 2 ms where the route's sleep had ended and the reply was still on its way). VERIFIED by live run.
+
+### 4. Desktop bar position, phone widths
+112 desktop views: 1280x800 and 1920x1080 x EN / MK x light / dark x 7 screens (Home, Groups, Budget, Settings, group Expenses, Balances, Totals) x page top and bottom, with 6 waiting items (EUR expense, MKD expense, payment, One bill, spending, income; sending blocked by a route that aborts only those ids).
+
+- **Centred over the content column:** bar centre minus the centre of the area right of the rail (rail width read from `--rail-width`) is **0 px in all 112 views**. 1280: rail 217.6 px, bar x 525 to 972, centre 749 = content centre 749. 1920: rail 288 px, bar x 870 to 1338, centre 1104 = content centre 1104. The bar's left edge is right of the rail in all 112 views (first pass: centred on the window, 640 at 1280).
+- **Covers nothing:** with the page scrolled to the bottom the last text ends above the bar top in every view and **no** link, button, list row or toast overlaps the bar (0 hits at the bottom; 0 fixed elements overlapping anywhere). At the top of the page 40 views have list links under the bar; they are normal scrolling content, not fixed, and move away when scrolling.
+- **Toast:** a real Budget save while 6 items waited (1280 EN dark and 1920 MK light): the "Saved" toast sits 14 px and 12 px above the bar, no overlap. Observation: the toast is centred on the window (x 462 to 818 at 1280, centre 640) while the bar is centred on the content column (centre 749), so the two are not aligned. Cosmetic.
+- **Phone:** 320x640 and 360x740, tab-bar screens: bar bottom 554 of 640 and 654 of 740 (the same y as in the earlier pass, where it sat 3.8 px above the tab bar; I did not re-measure the tab bar's own top, but `shots\l4-320-en-light-budget.png` shows the bar right above it; `shots\l4-320-mk-dark-g-expenses.png` looked at too); group screens: bar bottom 632 of 640 and 732 of 740, 8 px from the edge. At 360 EN light and 320 MK dark the "+" button and a Budget toast do not overlap the bar (toast 98 px above). Note: with the tap button inside, the waiting bar is now 54 px high (was 48 px in the earlier pass).
+- Screenshots looked at: `shots\l4-1280-en-light-g-expenses.png`, `shots\l4-1920-mk-dark-budget.png`.
+
+### 5. Macedonian at 320 px
+- The line is now «Чека праќање». In all 112 phone views (EN and MK) **no word is wider than its box** (canvas measurement), so no word breaks in the middle; the text column is **120 px** in the Expenses, Groups, Budget and Balances rows at 320 px (`min-w-30`). The two-line detail «Платено од Ана Алфа · Чека праќање» wraps by word. Tallest waiting row at 320: 110 px (group Expenses, long title), Groups and Budget rows 65 px, Payments 91 px (first pass: 169 px).
+- **But the 120 px column pushes the amount out of the row: New bug A below.**
+
+### 6. Bad stored items
+Six items written by hand under Ana's id: a Budget spending with a category id that does not exist and a valid amount; an income with only `entryKind`; an expense, a One bill and a settlement with `display: {}`; a spending with an unknown category and no amount or currency. API blocked so nothing is sent. Pages opened one after the other with a full load (EN and MK; MK on the production build too).
+
+| Page | Rows seen (EN) | Crash page? | Console errors per bad item, production build | Dev server |
+|---|---|---|---|---|
+| Budget | "— / Not synced yet" (neutral tile), "Income / Not synced yet" (income tile, no amount), "— / Not synced yet / 123 MKD" | no | **1 each** (3 items) | 2 each |
+| Group Expenses | "— / Not synced yet" | no | **1** | 2 |
+| Balances (Payments) | "— / Not synced yet" | no | **1** | 2 |
+| Groups | "🧾 — / Not synced yet" | no | **1** | 2 |
+| Home | no rows | no | 0 | 0 |
+
+- The error text names the item and what is missing, for example "The waiting expense 9377f859-... is shown with a dash in place of what it is missing: it has no amountMinor, currency, paidByName" and "its category 00000000-dead-beef-0000-000000000001 is not one of the categories". The bar still counted all 6.
+- Tapping a bad row opens the Discard sheet (EN and MK text as in check 2); Discard removed the row and the IndexedDB item on Budget, Expenses, Payments and Groups (rows 3 to 2, 1 to 0, 1 to 0, 1 to 0; IndexedDB 6 to 5 to 4 to 3 to 2).
+- The dev server shows each error **twice** because React StrictMode runs effects twice in development; the production build shows **once**, which is the real behaviour.
+- Observation (not a bug for real data, found by accident): two other hand-made shapes are **not** covered by the dash fallback. (a) A MKD amount that is not a whole number of denars (704 minor): the whole screen crashes ("A screen crashed while rendering ... MKD amount must be whole denars (a multiple of 100 deni), got 704" from `formatMoney`) on the group page. (b) `display.title: null` on a Budget row shows the word "null" ("null · Not synced yet"), because only `undefined` is treated as "no title". The app itself never writes either (an amount comes from the form and the title is `undefined` when empty), so this is only about hand-written or damaged stored data.
+- Screenshot `shots\b6-en-budget.png` looked at.
+
+### 7. Hung request
+Two items queued (written as real items, page loaded fresh so the back-off starts at step 1); a route holds the POST of the first item and never answers.
+
+| Case | Result |
+|---|---|
+| First attempt hangs, later attempts pass | POST at 0.60 s, bar "2 changes waiting · Sending…"; at **30.70 s** the bar loses "Sending…" (**30.1 s after the POST**, limit 30 s); next attempt at **32.61 s** (1.9 s after the item went back to waiting = the 2 s back-off); both items answered 200 in creation order (first at 32.61, second at 32.69 s), "All up to date ✓" at 32.79 s, both exist once |
+| Every attempt of the first item hangs | in the 2 s after the item is back to waiting (30.7 s) I opened its row: **Discard is enabled** (buttons "Discard" and "Cancel", not disabled) and Discard worked at 31.47 s; the bar went "1 change waiting"; the **second item was sent 2 s later (32.58 s, 200)**, "All up to date ✓" at 32.76 s; only the second item exists |
+| Hanging item not discarded (100 s run) | attempts at 0.5, 32.5 and 67.5 s, each ended after 30 s (waiting at 30.7, 62.7, 97.6 s: back-off 2 s then 5 s as designed); the second item stayed waiting behind it the whole time (the queue keeps creation order, so one item that never answers holds the rest; it is only freed by the timeout cycle or by Discard) |
+
+Before the fix (first pass reading of the code): no timeout, the item stayed "sending" for good and could not be discarded. VERIFIED by live run.
+
+### 8. Log-out per ids
+- **Part A (2 queued changes):** sheet "Changes not sent yet / 2 changes haven't been sent yet. If you log out now they are lost. / Log out anyway / Stay". Log out anyway: `/welcome` after about 2.5 s, no bar; the person's items are gone from IndexedDB (the person's key stays with an empty list `[]` instead of being deleted, harmless). Signed in as Cvetan on the same browser: no bar, no rows. Signed in as Ana again: no bar, 0 rows, IndexedDB list still empty; the group's expense list has no "H8A ..." expense (nothing was sent). VERIFIED by live run.
+- **Part B (item queued after pressing Log out anyway):** two items queued in tab 1, tab 2 (same browser context) loaded and saw "2 changes waiting"; the log-out request was held 6 s by a route; 1.0 s after pressing "Log out anyway" tab 2 queued a third expense ("H8B later", IndexedDB list: 3 items). When the log-out finished (7.6 s after the press, `/welcome`) the IndexedDB list for Ana held **exactly one item, "H8B later"**: only the two counted ids were removed, the later item was not deleted. VERIFIED by live run.
+- By design "H8B later" stays in that browser's storage for Ana and would be sent when she signs in again (the test browser was closed, so it never was).
+
+### 9. Bug 8: waiting row and real row in the same frame
+Method: a `requestAnimationFrame` sampler records the number of waiting rows (W) and of real rows of that list (R) whenever either changes; with the list at (W0, R0) before the send, every frame must show W + R equal to W0 + R0 ("both" = bigger, "neither" = smaller). 3 queued items per run, sent with the browser `online` event. 5 runs per list.
+
+| List | Runs | Frames with both rows | Frames with neither |
+|---|---|---|---|
+| group Expenses | 5 | **0** (every run: (2 waiting, +1), (1, +2), (0, +3) in successive frames) | **0** |
+| Groups (One bill) | 5 | **0** | **0** |
+| Budget (spending, spending, income) | 5 | **3 of 3 sends in 5 of 5 runs**: the real row is added while the waiting row of the same item is still there; the extra row stays until the next item arrives (for example frames (3 waiting, 8 real) at 93 ms, (2, 9) at 191 ms, (1, 10) at 301 ms, (0, 10) at 306 ms): about **211 to 214 ms** with one row too many in every run | 0 |
+| Payments (3 x "Someone paid me") | 5 | **same: 3 of 3 sends in 5 of 5 runs** (191 to 257 ms; in run 4 the last two waiting rows disappeared in one frame) | 0 |
+
+- So the fix works for the group Expenses list (the one asked for) and the Groups list also shows no flash in these runs. **The Budget and Payments lists still flash, and for longer than one frame:** the duplicate row is visible for the whole send (about 0.2 s for 3 items, about 65 to 100 ms per item), not 18 to 22 ms as in the first pass. This is the known leftover in BACKLOG. VERIFIED by live run.
+
+### 10. Regression
+| Check | Result | Label |
+|---|---|---|
+| 20 awake saves (5 expenses, 3 One bills, 5 spendings, 4 incomes, 3 payments), API running | 20 of 20 sent exactly one POST answered 200; the bar never appeared (`barEver` false), 0 waiting rows; toasts as before; expenses +3 (MKD) +2 (EUR), personal entries +9. **Slowest tap to closed 360 ms** (a Budget spending sheet, includes the sheet's closing animation); by kind: expense 60 to 80 ms, One bill 29 to 34 ms, spending 331 to 360, income 332 to 346, payment 292 to 309 ms; slowest server answer 31 ms | VERIFIED by live run |
+| Offline, the 5 queueable saves (+ "Marko paid me", 6 saves) | each queued **18 to 77 ms** after the tap (tap to bar change 22, 18, 34, 20, 77, 64 ms; tap to closed 44 to 50 ms for expenses and One bill, 326 / 394 / 447 ms for the three sheets with their animation); no toast; IndexedDB 6 items, all waiting; 13 failed POST attempts while offline, all `net::ERR_INTERNET_DISCONNECTED`, nothing reached the server | VERIFIED by live run |
+| Going online | exactly **6 POSTs**, one per item, no duplicate id, **one at a time in creation order** (EUR expense, MKD expense, settlement, One bill, entry, entry; gaps between the end of one and the start of the next 2 to 52 ms); "All up to date ✓" 2.4 s after going online (the first POST took 2.1 s on the cold API); database +1 expense in each group, +2 entries, +1 payment, +1 One bill group | VERIFIED by live run |
+| "I paid" to a person with an account, offline | the network error is in the sheet **19 ms (EN) and 18 ms (MK)** after the tap ("The server may be waking up. Check your connection and try again in a moment." / «Серверот можеби се буди. Провери ја врската и обиди се повторно за малку.»), nothing queued, no bar; after Cancel and going online no POST at all, payments 19 before and 19 after | VERIFIED by live run |
+| Failed sheet (refused items) | Bojan queued 4 items, the owner removed him from one group and deleted another: "2 changes couldn't be saved Review" 0.94 s after going online; sheet lists both with "This group doesn't exist or you're no longer in it."; Retry sent the request, 404 again, item stayed; MK «Промени што не можеа да се зачуваат ... Отфрли / Обиди се повторно» and the bar «2 промени не можеа да се зачуваат Прегледај»; Discard one: «1 промена не можеше да се зачува»; Discard the last: bar gone, queue empty | VERIFIED by live run |
+| No sideways scroll, 96 views (320 and 360 px, EN and MK, light and dark, 6 screens, top and bottom; 112 views with Totals) with the bar and 6 waiting rows | **FAIL at 320 px on the Budget screen: 8 views** (EN: document 330 px wide in a 320 px window; MK: 325 px), see New bug A. All other views (360 px everywhere, 320 px on Home, Groups, Settings, Expenses, Balances, Totals) have scroll width equal to window width; bar inside the window and its text not cut in all 112 | VERIFIED by live run |
+
+### NEW bugs
+**New bug A (medium, regression from the "MK 320 px" fix): at 320 px the waiting rows are wider than their box, the amount sticks out of the dashed edge and the Budget screen scrolls sideways.**
+- Steps: 320 px wide (EN or MK), queue a Budget spending of 640 MKD or an income of 45,000 MKD (or a One bill / an expense of 1,800 to 2,450 MKD), open Budget, Groups or the group Expenses tab. Hand-written items of the exact shape the app stores were used; the same happens with items made through the screens, because it depends only on the amount and the tile.
+- Expected: the row stays inside its dashed edge and the page does not scroll sideways (as at HEAD `bbede2f`: 0 sideways scroll in 96 views).
+- Actual: the row's content is wider than the row by 13 to 42 px on Budget (EN 18 and 42, MK 13 and 37), 20 px (EN) or 15 px (MK) on Groups and group Expenses; the amount is drawn over and outside the right dashed edge (screenshot `shots\l4-320-mk-dark-g-expenses.png`, "2.450 ден." starts inside and ends past the edge; `shots\l5-320-mk-budget.png`, "45.000 ден." leaves the row). On Budget the document is 325 px (MK) or 330 px (EN) wide in a 320 px window, so the page scrolls 5 to 10 px sideways (8 of 112 phone views: Budget, EN and MK, light and dark, top and bottom). At 360 px only one Budget row is 2 px too wide, with no page scroll. No overflow at 768 and above (desktop views 0).
+- Numbers (320 px MK, Budget income row): row 260 px wide (inner box 232 px), contents 44 px tile + 120 px text column + 93 px amount + 2 gaps of 12 px = 281 px.
+- Cause (read, not changed): `src/web/src/features/outbox/components/WaitingRow.tsx`, the text column has `min-w-30` (120 px) together with `flex-1`; with the tile (44 px) and the amount (`font-bold`, not shrinking) the three do not fit in the 232 to 244 px inside the row at 320 px.
+- Proposed fix: let the amount wrap under the text when the line is too narrow (`flex-wrap`), or use a smaller minimum column (about 96 px) so that «Чека праќање» still wraps by word, and re-measure with the 6-item set at 320 px (doc scroll width must be 320).
+
+**New bug B (low, known leftover, now measured): on the Budget and Payments lists the real row and the waiting row are both visible for about 0.2 s while a queue sends.** See check 9: 5 of 5 runs on each list, a duplicate row for the whole send (about 0.2 s for 3 items, 65 to 110 ms per item), not just one frame. The group Expenses list and the Groups list are clean in 5 of 5 runs.
+
+### Observations (not bugs, for Filip to decide or know)
+1. A hung item at the front of the queue still holds every item behind it (the queue keeps creation order); it is freed by the 30 s timeout cycle (each attempt 30 s, then 2 s, 5 s, 15 s waits) or by Discard. That is consistent with "one at a time, oldest first", but a person with one stuck item sees nothing else leave.
+2. A server that has just started answers the first POSTs in 0.9 to 2.1 s (as in the earlier passes), so a tap that sends 2 items on a cold API finishes in about 3.3 s although sending starts within 31 ms.
+3. Hand-written bad data: an MKD amount that is not a whole number of denars crashes the screen, and `display.title: null` shows "null" (details in check 6). Neither can be produced by the app.
+4. After log out the person's IndexedDB key stays with an empty list instead of being removed.
+5. The toast is centred on the window while the bar is centred on the content column on desktop.
+6. The waiting bar is 54 px high (the tap button is 44 px inside 4 px padding), 6 px taller than before; its bottom edge is at the same y as before.
+
+### Not verified
+- A real phone (airplane mode, mobile network, touch, background and foreground), iOS Safari, Android Chrome, Firefox, a screen reader; the Cloudflare Pages Function and a real Render / Neon wake-up (only the Vite proxy, which answers 502 when the API is down, and a locally restarted API were used).
+- The group's status bar in the Closing state, a Retry that succeeds, a 500 answer, 401 pausing the queue, two tabs of the same person sending the same items (tab 2 only queued an item in check 8), a guest who makes an account while items wait, the 60 s back-off step, the toast over the Save button (Observation 8 of the first pass), the rail at 1920x1080 with many groups (Observation 9).
+- Whether the production build behaves like the dev server in checks other than 6 (checks 1 to 5 and 7 to 10 ran on the dev server).
+- The Macedonian wording (drafts) was only checked for presence and fit, not read for meaning; contrast was not re-measured (not part of this fix).
+- Any bad stored item shape besides the six listed in check 6 and the two hand-made shapes of its observation; a bad item in the failed-changes sheet.
+- The automated suites (`dotnet build`, `dotnet test`, `npm test`, `npm run lint`, `npm run build`).
+
+### Questions for Filip (product only)
+1. On a very narrow phone (320 px) a waiting row with a big amount cannot show the title column, the tile and the amount side by side. Do you prefer the amount to drop under the title (taller row) or the title to get shorter (it may be cut after two lines)?
+2. On Budget and Payments you still see the new row twice for about 0.2 s when the queue sends. Is that fine for the first version, or should it be the next small fix?
+
+### Where the files are
+Scripts, results and screenshots of this re-check: `C:\Users\Davchev\AppData\Local\Temp\claude\c--Users-Davchev-Projects-Kvit\11c66925-bd89-4c3f-9def-e4fb33a230e3\scratchpad\p17c\` (screenshots in `shots\`). Copies and adaptations of the earlier helpers (`lib.py` with `KVIT_BASE` to point at the preview, `lib2.py`, `warm.py`, `i_helpers.py`, `apictl.ps1`, `seed.py`, `a.py`, `r1.py`, `r1b.py`, `d.py`) and new scripts: `c1.py` (check 1), `c3.py` and `c3b.py` (check 3), `l4.py`, `l5.py`, `l6.py` and `mkitems.py` (checks 4, 5, 10 layout), `b6.py` (check 6), `c7.py` (check 7), `c8.py` (check 8), `f9.py` (check 9). Results as JSON next to them (`c1_res.json`, `c3_run1_res.json`, `c3_res.json`, `c3b_res.json`, `l4_desk_res.json`, `l4_phone_res.json`, `l6_res.json`, `b6_en_dev_res.json` (the first dev run is `b6_en_res.json`), `b6_en_prod_res.json`, `b6_mk_prod_res.json`, `c7_*_res.json`, `c8_res.json`, `f9_*_res.json`, `a_res.json`, `r1_run1_res.json`, `r1b_en_res.json`, `r1b_mk_res.json`). The production bundle is in `prod\`. Not in the repository.
+Throwaway data left in the local database: the three `p17c...1793738352@example.com` users, groups "Outbox MKD" and "Outbox EUR" with many "C1 ...", "T4/T6/T7 ...", "H7 ...", "H8 ...", "F9 ...", "A exp ...", "R ..." expenses, about 25 One bill groups ("F9 bill ...", "A bill ...", "R offline bill"), a few payments, about 30 personal entries, and Bojan's "D ..." groups.
+## Layout fix re-check (2026-11-03)
+
+Re-measure of New bug A (waiting rows too wide at 320 px) against the uncommitted change in `src/web/src/features/outbox/components/WaitingRow.tsx` (inner span got `flex-wrap items-center gap-x-3 gap-y-1`, the amount span got `ml-auto`). Real headless Chromium (Playwright for Python), time zone `Europe/Skopje`, local API, Vite dev server and Docker database started with `.\scripts\start-local.ps1 -NoBrowser` and stopped with `-Stop` (ports 5018 and 5173 free, `kvit-postgres Exited (0)`). Only this report was changed in the repository; nothing was committed. The automated suites were not run. Labels: VERIFIED by live run or NOT VERIFIED.
+
+### What was measured
+- 72 views: 320, 360 and 390 px wide x EN and MK x light and dark x 6 screens (Budget, Groups, Expenses of the MKD group, Expenses of the EUR group, Payments (Balances) of the MKD group, Payments of the EUR group). 168 waiting rows in total. API writes of the queued items were blocked so the rows stayed waiting.
+- Items: the same six as before (EUR dinner with a long title, MKD taxi 2.450, settlement 350, One bill 1.800, spending 640, income 45.000) plus eight stress items: EUR expense 1.234.567,89 with a long title, MKD expense 9.999.999 den., MKD settlement 12.345.678 den., EUR settlement 987.654,32, One bill 4.567.890 den., Budget spending 7.777.777 den., Budget income 88.888.888 den., and a MKD expense whose title is one 66-letter word ("Supercalifragilistic...").
+- Per row: the row box and the amount box (bounding boxes), `scrollWidth` against `clientWidth`, row height, width of the text column (`min-w-30`), and a canvas check that no word is wider than its box (a word wider than its box would be broken in the middle). Per view: `document.documentElement.scrollWidth` at the top and at the bottom of the page.
+
+### Result (VERIFIED by live run)
+**Fixed.** New bug A is gone in every view measured.
+
+| Check | Result |
+|---|---|
+| Page scrolls sideways | **0 of 72 views.** Document scroll width equals the window width (320, 360, 390) at the top and at the bottom, including Budget at 320 px (before: 325 px MK, 330 px EN). |
+| Amount sticks out past the dashed edge | **0 of 168 rows.** The right edge of the amount is always 14 px inside the row's right edge (12 px padding + 2 px border), at every width. Row `scrollWidth` never exceeds `clientWidth` (largest difference 0). No row is outside the window. |
+| Amount overlaps the text column | 0 of 168 rows. |
+| Text column | Never below 120 px: smallest column in any view 122 px (the column is at least 120 px because of `min-w-30`; at 320 px it is 123 to 196 px). |
+| Word broken in the middle | Only the stress title made of one 66-letter word (503 px of text in a 188 px column) is cut inside the word; it has no place to break by word, that is expected and the title is clamped to two lines with an ellipsis. No ordinary word (EN or MK, including «Чека праќање», «Платено од», «Цената на евро...») is wider than its box in any of the 168 rows. |
+
+### What changed visually (row height and where the amount goes)
+The amount now drops under the text, right-aligned inside the dashed edge, when tile + 120 px column + amount do not fit in the 232 px inside a row at 320 px. That is the whole fix, and it costs height. Heights of the six original items, before (HEAD `ef29a1a`, 320 px) against now:
+
+| 320 px | Before | Now | Amount on its own line |
+|---|---|---|---|
+| Budget row | 65 px | **95 px** | all 12 rows (even "640 ден.", 44 + 12 + 120 + 12 + 69 = 257 px is more than the 232 px available) |
+| Groups row | 65 px | **95 px** | all |
+| Payments row | 91 px | **120 px** | all |
+| Expenses row, MKD taxi | 110 px | **114 px** | yes |
+| Expenses row, EUR dinner with long title (EUR group, not measured before) | n/a | **169 px** | no (beside the text, it fits because the column is 123 px) |
+
+- Big stress rows at 320: Expenses EUR 179 px (long title, two-line detail, rate note, amount line), Expenses MKD 140 px, Groups 120 px, Payments 120 px, Budget 95 px.
+- At 360 px only the longest amounts drop to their own line (Budget rows 65 or 95 px, Groups 65 px, Expenses 110 to 159 px, Payments 91 to 120 px). At 390 px Budget 65 or 95 px, Groups 65 to 91 px, Expenses 85 to 169 px, Payments 91 px.
+- Screenshots looked at: `shots\s2-320-mk-light-budget.png` and `shots\s2-320-mk-dark-budget.png` (the four Budget rows, amount under «Чека праќање», right-aligned inside the edge, "88.888.888 ден." fits), `shots\s-320-mk-light-expenses.png` (taxi, big wedding gift and the 66-letter title, amounts right-aligned inside the edge) and `shots\s-320-mk-dark-expenses-eur.png`. The title and the detail line wrap by word, nothing is cut at the right.
+- Not part of this fix, seen in the screenshots: the round Add button floats over the last visible waiting row ("2.450 ден." is half hidden under it in `s-320-mk-light-expenses.png`); it moves with the page and does not hide anything once scrolled.
+
+### Verdict and a note for Filip
+Fixed. If the taller rows at 320 px (Budget and Groups 65 to 95 px, Payments 91 to 120 px) matter, the other option from the earlier proposal is a smaller minimum column (about 96 px) so that the amount stays beside the text, but then «Чека праќање» may no longer wrap cleanly by word; that was not tried.
+
+Files: scripts and results in `C:\Users\Davchev\AppData\Local\Temp\claude\c--Users-Davchev-Projects-Kvit\11c66925-bd89-4c3f-9def-e4fb33a230e3\scratchpad\p17d\` (`m.py`, `m_res.json`, `s.py`, `s2.py`, `shots\`). Not in the repository.

@@ -37,7 +37,7 @@ export function WaitingRow({
       onClick={onOpen}
       className="pressable flex min-h-16 w-full items-center rounded-2xl border-2 border-dashed border-field-border bg-card px-3 py-2 text-left text-card-foreground hover:bg-secondary-hover"
     >
-      <span className="flex min-w-0 flex-1 items-center gap-3 opacity-80">
+      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 opacity-80">
         {leading}
         <span className="flex min-w-30 flex-1 flex-col">
           <span className="line-clamp-2 font-semibold break-words italic">{title}</span>
@@ -45,7 +45,7 @@ export function WaitingRow({
           {showsRateNote && currency === 'EUR' && <span className="text-[0.8125rem] break-words">{t('outbox.rateWhenSent')}</span>}
         </span>
         {amountMinor !== undefined && currency !== undefined && (
-          <span className="text-right font-bold">{formatMoney(amountMinor, currency, language)}</span>
+          <span className="ml-auto text-right font-bold">{formatMoney(amountMinor, currency, language)}</span>
         )}
       </span>
     </button>
