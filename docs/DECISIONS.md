@@ -45,6 +45,9 @@ Source: `reports/2026-11-04-phase-19-legal-research.md` (four research runs; not
   - **Backup:** weekly `pg_dump`, encrypted with a passphrase kept in a GitHub secret, saved as an artifact (retention 90 days). Rejected: leaving it switched off. Filip adds the passphrase secret himself (guide).
   - **If blocked:** skip that part, continue the rest, report it as NOT DONE / NOT VERIFIED; a product question gets the safest and cheapest option, logged as "decided by Claude, please confirm".
   - **"Records only" word list and Macedonian legal drafts:** Filip said "ok go" to both (the proposed word list; drafts for him to read).
+- **Built while Filip was away, decided by Claude, please confirm (2026-11-04):**
+  - **Step 4, Download my data:** one JSON file (`GET /api/me/export`): profile, own personal budget (categories, entries, repeating income, limits, duplicate answers), and every not-deleted group the person has a membership in, with members as shown, live expenses with shares, and payments. Not in the file: activity feed, usage events, other people's emails, pictures, ids, personal budgets, invite tokens, password hashes. Rate limit 10 per 10 minutes. For a group the person left or was removed from, the file stops at the moment the membership ended (what happened later was never visible to them); rows from before that moment show their current state (BACKLOG).
+  - **Step 3, terms-changed pill and sheet:** shown on every signed-in screen (placed beside the outbox bar so group and expense screens get it too); a first-time notice appears once for everyone who signed up before Phase 19 (their terms version is empty); a blocking sheet appears only when `TermsVersion.CurrentIsMaterial` is true (false today).
 - **Still open:** does `START-HERE-PROMPT.md` stay in the public repository? (first asked in `STATUS.md`; with "no licence" it is still readable by everyone).
 
 ## 2026-11-04: Phase 18 (admin statistics), in progress

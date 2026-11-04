@@ -19,6 +19,7 @@ export const endpoints = {
   meLanguage: '/api/me/language',
   meBudgetCurrency: '/api/me/budget-currency',
   meTermsAccept: '/api/me/terms/accept',
+  meExport: '/api/me/export',
   meActive: '/api/me/active',
   dashboard: '/api/dashboard',
   adminStats: ({ from, to, by }: AdminStatsRequest) => `/api/admin/stats?${adminStatsQuery(from, to, by)}`,

@@ -42,10 +42,11 @@ namespace Kvit.Api.Tests.Persistence
             Guid ownerUserId,
             string name = DefaultName,
             string currency = DefaultCurrency,
-            string status = "Open")
+            string status = "Open",
+            DateTimeOffset? ownerJoinedAt = null)
         {
             Guid groupId = await InsertGroupAsync(database, ownerUserId, name: name, currency: currency, status: status);
-            await InsertMemberAsync(database, groupId, ownerUserId, OwnerMemberName, ownerUserId);
+            await InsertMemberAsync(database, groupId, ownerUserId, OwnerMemberName, ownerUserId, joinedAt: ownerJoinedAt);
 
             return groupId;
         }

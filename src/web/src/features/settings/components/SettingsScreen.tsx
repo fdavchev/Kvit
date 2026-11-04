@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { errorMessageKey } from '@/core/api/errors'
@@ -11,6 +11,7 @@ import { removeOutboxItem } from '@/core/outbox/outboxStorage'
 import { useOutboxItems } from '@/core/outbox/useOutbox'
 import { routes } from '@/core/router/routes'
 import { useTheme } from '@/core/theme/useTheme'
+import { useSaveOnce } from '@/features/budget/categories/hooks/useSaveOnce'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitLanguageSwitch } from '@/shared/components/KvitLanguageSwitch'
@@ -20,6 +21,7 @@ import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 import { KvitThemeSwitch } from '@/shared/components/KvitThemeSwitch'
 import { cn } from '@/shared/utils/cn'
 import { useChangeLanguage } from '../hooks/useChangeLanguage'
+import { useDownloadMyData } from '../hooks/useDownloadMyData'
 import { useLogOut } from '../hooks/useLogOut'
 import { BudgetTotalSettings } from './BudgetTotalSettings'
 import { GuestLogOutSheet } from './GuestLogOutSheet'
@@ -36,6 +38,9 @@ export function SettingsScreen() {
   const isAdmin = useIsAdmin()
   const changeLanguage = useChangeLanguage()
   const logOut = useLogOut()
+  const downloadMyData = useDownloadMyData()
+  const oneDownloadAtATime = useSaveOnce()
+  const downloadHintId = useId()
   const unsentItems = useOutboxItems()
   const unsentCount = unsentItems.length
   const [openLogOutSheet, setOpenLogOutSheet] = useState<LogOutSheet | null>(null)
@@ -47,6 +52,19 @@ export function SettingsScreen() {
 
   function switchLanguage(newLanguage: Language): void {
     changeLanguage.mutate(newLanguage, { onError: showFailure })
+  }
+
+  function downloadData(): void {
+    if (!oneDownloadAtATime.tryStart()) {
+      return
+    }
+    downloadMyData.mutate(undefined, {
+      onSuccess: () => {
+        toast.success(t('settings.downloadDataDone'))
+      },
+      onError: showFailure,
+      onSettled: oneDownloadAtATime.finish,
+    })
   }
 
   function logOutNow(): void {
@@ -101,6 +119,20 @@ export function SettingsScreen() {
             {t('auth.setPassword.title')}
           </KvitLinkButton>
         )}
+        <div className="flex flex-col gap-1.5">
+          <KvitButton
+            variant="secondary"
+            disabled={downloadMyData.isPending}
+            aria-busy={downloadMyData.isPending}
+            aria-describedby={downloadHintId}
+            onClick={downloadData}
+          >
+            {t('settings.downloadData')}
+          </KvitButton>
+          <p id={downloadHintId} className="text-[0.875rem] text-pretty text-muted-foreground">
+            {t('settings.downloadDataHint')}
+          </p>
+        </div>
         <KvitLinkButton
           to={routes.terms}
           state={{ from: routes.settings }}

@@ -27,7 +27,7 @@ namespace Kvit.Infrastructure.Auth
         private const string UsesGoogleMessage = "This account signs in with Google and has no password.";
         private const string PasswordAlreadySetMessage = "This account already has a password. Use change password instead.";
         private const string GoogleNoAccountMessage = "No account is linked to this Google account yet.";
-        private const string GoogleLoginProvider = "Google";
+        public const string GoogleLoginProvider = "Google";
         private const string GuestUserNamePrefix = "guest-";
 
         private static readonly Result<MeResponse> EmailTaken = Result.Failure<MeResponse>(EmailTakenMessage, ResultCodes.AUTH_EMAIL_TAKEN);

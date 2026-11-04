@@ -1,4 +1,4 @@
-import { ApiError, apiRequest, jsonRequest, unauthorizedStatus } from '@/core/api/apiClient'
+import { ApiError, apiFileRequest, apiRequest, jsonRequest, unauthorizedStatus } from '@/core/api/apiClient'
 import { endpoints } from '@/core/api/endpoints'
 import { isLanguage, type Language } from '@/core/i18n/language'
 import { groupCurrencies } from '@/core/services/groups/groupsService'
@@ -68,6 +68,18 @@ export async function changeLanguage(language: Language): Promise<void> {
 
 export async function acceptTerms(): Promise<void> {
   await apiRequest(endpoints.meTermsAccept, { method: 'POST' })
+}
+
+export interface ExportedData {
+  blob: Blob
+  fileName: string
+}
+
+const exportFileNameWhenHeaderMissing = 'kvit-my-data.json'
+
+export async function exportMyData(): Promise<ExportedData> {
+  const file = await apiFileRequest(endpoints.meExport)
+  return { blob: file.blob, fileName: file.fileName ?? exportFileNameWhenHeaderMissing }
 }
 
 export async function changeBudgetTotalCurrency(budgetTotalCurrency: Currency | null): Promise<void> {

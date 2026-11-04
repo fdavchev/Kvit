@@ -245,6 +245,9 @@
     "themeSystem": "Same as device",
     "themeLight": "Light",
     "themeDark": "Dark",
+    "downloadData": "Download my data",
+    "downloadDataHint": "Your profile, personal budget and groups, as a file. Other people's emails are not in it.",
+    "downloadDataDone": "Your data was saved as a file",
     "guest": {
       "title": "You're a guest",
       "body": "Make an account to use Kvit on any phone and to create your own groups.",
