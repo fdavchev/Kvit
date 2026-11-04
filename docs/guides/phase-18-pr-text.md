@@ -18,19 +18,20 @@ Last phase of Release 3 ("polish"). A Statistics page at `/admin`, for Filip onl
 - `GET /api/admin/stats`, 403 for everyone who is not an admin.
 - The page: range chips, grouping, all-time totals, one card per count with bars and a compare line against the period before.
 - A "Statistics" row in Settings that only the admin sees; `/admin` is the not-found page for everyone else.
-- Days are counted in Skopje time. The admin's own account is left out of every number.
+- Days are counted in Skopje time, from 1 January 2026 up to today. The admin's own account is left out of every number.
+- Also in this branch: the Phase 19 plan and legal research notes (docs only).
 - Phone first (360 px), then desktop. English and Macedonian, light and dark.
 
 ### Database changes
-None planned. If the query needs an index on the usage events, it is added with a migration and noted here.
+None. The role tables already existed, and the counting needs no new index.
 
 ### Checklist
 - [x] Step 0: mockup, picks and plan logged
 - [x] Step 1: backend, the admin role
 - [x] Step 2: backend, the statistics query
 - [x] Step 3: frontend, the page and the Settings row
-- [x] Step 4: desktop layout and the browser pass
-- [x] Step 5: code review, report, guide
+- [x] Step 4: desktop layout and the browser pass (5 findings, 4 fixed)
+- [x] Step 5: code review (8 findings, 1 fixed, 7 in BACKLOG), report, guide
 
 ## Later one-line commit subjects
 - Step 0: Add the Phase 18 prompt, mockup and decisions for the admin statistics page.
