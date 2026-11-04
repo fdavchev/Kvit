@@ -5,7 +5,7 @@ import { errorMessageKey } from '@/core/api/errors'
 import type { GroupMember } from '@/core/services/groups/membersService'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
 import { moneyInputText, parseMoneyInput } from '@/shared/utils/parseMoneyInput'
-import { useRecordSettlement } from '../hooks/useRecordSettlement'
+import { useSavePayment } from '../hooks/useSavePayment'
 import { whenItCountsText, type PaymentToRecord } from '../paymentToRecord'
 import { PaymentSheet } from './PaymentSheet'
 
@@ -19,7 +19,7 @@ interface MarkPaidSheetProps {
 export function MarkPaidSheet({ groupId, members, payment, onClose }: MarkPaidSheetProps) {
   const { t } = useTranslation()
   const sheet = useKvitSheet()
-  const recordSettlement = useRecordSettlement(groupId)
+  const savePayment = useSavePayment(groupId, members)
   const [clientRequestId] = useState<string>(() => crypto.randomUUID())
   const [amountText, setAmountText] = useState<string>(() => moneyInputText(payment.amountMinor, payment.currency))
   const amountMinor = parseMoneyInput(amountText, payment.currency)
@@ -28,7 +28,7 @@ export function MarkPaidSheet({ groupId, members, payment, onClose }: MarkPaidSh
     if (amountMinor === null) {
       throw new Error(`Save was pressed with an amount that is not valid: "${amountText}"`)
     }
-    recordSettlement.mutate(
+    savePayment.save(
       {
         clientRequestId,
         fromMemberId: payment.payer.memberId,
@@ -36,7 +36,8 @@ export function MarkPaidSheet({ groupId, members, payment, onClose }: MarkPaidSh
         amountMinor,
         currency: payment.currency,
       },
-      { onSuccess: sheet.close },
+      { payerName: payment.payer.name, receiverName: payment.receiver.name },
+      sheet.closeIfShown,
     )
   }
 
@@ -48,8 +49,8 @@ export function MarkPaidSheet({ groupId, members, payment, onClose }: MarkPaidSh
       currency={payment.currency}
       note={whenItCountsText(payment.payer.memberId, payment.receiver.memberId, payment.receiver.name, members, t)}
       canSubmit={amountMinor !== null}
-      isPending={recordSettlement.isPending}
-      errorMessage={recordSettlement.isError ? t(errorMessageKey(recordSettlement.error)) : null}
+      isPending={savePayment.isPending}
+      errorMessage={savePayment.error === null ? null : t(errorMessageKey(savePayment.error))}
       onAmountTextChange={setAmountText}
       onSubmit={save}
       onDismiss={sheet.close}

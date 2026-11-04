@@ -4,6 +4,7 @@ import type { KvitSheetActions } from './KvitSheet'
 export interface KvitSheetControl {
   actionsRef: RefObject<KvitSheetActions | null>
   close: () => void
+  closeIfShown: () => void
 }
 
 export function useKvitSheet(): KvitSheetControl {
@@ -17,5 +18,9 @@ export function useKvitSheet(): KvitSheetControl {
     actions.close()
   }
 
-  return { actionsRef, close }
+  function closeIfShown(): void {
+    actionsRef.current?.close()
+  }
+
+  return { actionsRef, close, closeIfShown }
 }

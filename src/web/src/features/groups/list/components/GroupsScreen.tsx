@@ -3,6 +3,12 @@ import { Link } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
 import { useIsGuest } from '@/core/auth/useIsGuest'
 import { routes } from '@/core/router/routes'
+import { DiscardWaitingSheet } from '@/features/outbox/components/DiscardWaitingSheet'
+import { WaitingRow } from '@/features/outbox/components/WaitingRow'
+import { useOpenedWaitingItem } from '@/features/outbox/hooks/useOpenedWaitingItem'
+import { useWaitingItems } from '@/features/outbox/hooks/useWaitingItems'
+import { amountOfItem, displayProblemOf, oneBillNameOf } from '@/features/outbox/waitingItemDisplay'
+import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitError } from '@/shared/components/KvitError'
 import { KvitLinkButton } from '@/shared/components/KvitLinkButton'
@@ -10,15 +16,20 @@ import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
+import { cn } from '@/shared/utils/cn'
 import { GroupSizeLine } from '../../shared/components/GroupSizeLine'
 import { useGroups } from '../hooks/useGroups'
 import { FinishedGroups } from './FinishedGroups'
 import { GroupListItem } from './GroupListItem'
 
+const receiptEmoji = '\u{1F9FE}'
+
 export function GroupsScreen() {
   const { t } = useTranslation()
   const groupsQuery = useGroups()
   const isGuest = useIsGuest()
+  const waitingOneBills = useWaitingItems((item) => item.kind === 'oneBill')
+  const waitingSheet = useOpenedWaitingItem(waitingOneBills)
 
   function renderContent() {
     if (groupsQuery.isPending) {
@@ -43,7 +54,25 @@ export function GroupsScreen() {
     const { groups, finishedGroups } = groupsQuery.data
     return (
       <>
-        {groups.length === 0 && finishedGroups.length === 0 && (
+        {waitingOneBills.length > 0 && (
+          <div className={cn('flex flex-col gap-2.5', groups.length > 0 && 'pb-2.5')}>
+            {waitingOneBills.map((item) => {
+              const amount = amountOfItem(item)
+              return (
+                <WaitingRow
+                  key={item.id}
+                  title={oneBillNameOf(item)}
+                  amountMinor={amount?.amountMinor}
+                  currency={amount?.currency}
+                  leading={<KvitEmojiTile emoji={receiptEmoji} />}
+                  displayProblem={displayProblemOf(item)}
+                  onOpen={() => waitingSheet.open(item)}
+                />
+              )
+            })}
+          </div>
+        )}
+        {groups.length === 0 && finishedGroups.length === 0 && waitingOneBills.length === 0 && (
           <KvitEmpty message={isGuest ? t('groups.emptyGuest') : t('groups.empty')} />
         )}
         {groups.length > 0 && (
@@ -90,6 +119,9 @@ export function GroupsScreen() {
       <div className="min-h-12" />
       <KvitScreenTitle>{t('groups.title')}</KvitScreenTitle>
       {renderContent()}
+      {waitingSheet.openedItem !== null && (
+        <DiscardWaitingSheet item={waitingSheet.openedItem} onClose={waitingSheet.close} />
+      )}
     </KvitScreen>
   )
 }

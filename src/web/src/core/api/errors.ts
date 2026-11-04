@@ -143,14 +143,18 @@ export function isNotFoundError(error: unknown): boolean {
   return error instanceof ApiError && error.httpStatus === notFoundStatus
 }
 
+export function isServerNotReachedError(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    (error.httpStatus === null || serverNotReadyStatuses.includes(error.httpStatus))
+  )
+}
+
 export function errorMessageKey(error: unknown): string {
   if (!(error instanceof ApiError)) {
     return 'errors.generic'
   }
-  if (
-    error.httpStatus === null ||
-    serverNotReadyStatuses.includes(error.httpStatus)
-  ) {
+  if (isServerNotReachedError(error)) {
     return 'errors.network'
   }
   if (error.errorCode === null) {

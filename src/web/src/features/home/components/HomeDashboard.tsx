@@ -3,6 +3,7 @@ import { useIsGuest } from '@/core/auth/useIsGuest'
 import { routes } from '@/core/router/routes'
 import type { Dashboard } from '@/core/services/dashboard/dashboardService'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
+import { ChangesWaitingNote } from '@/features/outbox/components/ChangesWaitingNote'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitLinkButton } from '@/shared/components/KvitLinkButton'
 import { useIsDesktop } from '@/shared/hooks/useIsDesktop'
@@ -51,6 +52,7 @@ export function HomeDashboard({ dashboard }: HomeDashboardProps) {
   return (
     <>
       <HomeTotals totals={dashboard.totals} />
+      <ChangesWaitingNote scope={{ kind: 'home' }} />
       {isDesktop && <HomeActions target={plusTarget} />}
       <HomeNeedsYou items={dashboard.needsYou} />
       <div className="contents lg:grid lg:grid-cols-[repeat(auto-fit,minmax(min(100%,26rem),1fr))] lg:items-start lg:gap-x-[clamp(1.5rem,3vw,3rem)]">

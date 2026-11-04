@@ -3,6 +3,9 @@ import { afterEach, vi } from 'vitest'
 import { makeIntlLikeChromeWithoutMacedonian } from './chromeWithoutMacedonian'
 import { desktopQuery } from '@/shared/hooks/useIsDesktop'
 import { fakeMatchMedia, reducedMotionQuery } from './matchMediaTestHelpers'
+import { resetFakeOutboxStorage } from './outboxTestHelpers'
+
+vi.mock('idb-keyval', async () => (await import('@/test/outboxTestHelpers')).fakeIdbKeyval)
 
 vi.mock('esm-env', async (importOriginal) => ({ ...(await importOriginal<typeof import('esm-env')>()), BROWSER: true }))
 
@@ -21,4 +24,5 @@ window.matchMedia = fakeMatchMedia({ [reducedMotionQuery]: true, [desktopQuery]:
 afterEach(() => {
   cleanup()
   vi.unstubAllEnvs()
+  resetFakeOutboxStorage()
 })

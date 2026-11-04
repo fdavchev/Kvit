@@ -123,7 +123,7 @@ describe('savedQueryCacheOptions', () => {
     onlineManager.setOnline(false)
     const waitingMutation = queryClient
       .getMutationCache()
-      .build(queryClient, { mutationFn: () => Promise.resolve('saved') })
+      .build(queryClient, { mutationFn: () => Promise.resolve('saved'), networkMode: 'online' })
     void waitingMutation.execute(undefined)
 
     expect(dehydrate(queryClient).mutations).toHaveLength(1)

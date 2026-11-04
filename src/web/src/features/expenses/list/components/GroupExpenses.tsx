@@ -4,13 +4,21 @@ import { Link } from 'react-router'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import { routes } from '@/core/router/routes'
+import type { Category } from '@/core/services/categories/categoriesService'
 import type { ExpenseListRow } from '@/core/services/expenses/expensesService'
 import { GroupLoadError } from '@/features/groups/shared/components/GroupLoadError'
+import { DiscardWaitingSheet } from '@/features/outbox/components/DiscardWaitingSheet'
+import { WaitingRow } from '@/features/outbox/components/WaitingRow'
+import { useOpenedWaitingItem } from '@/features/outbox/hooks/useOpenedWaitingItem'
+import { useWaitingItems } from '@/features/outbox/hooks/useWaitingItems'
+import { amountOfItem, categoryOfWaitingItem, displayProblemOf } from '@/features/outbox/waitingItemDisplay'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
 import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { addDays, formatExpenseDay, todayInTimeZone } from '@/shared/utils/formatDate'
+import { CategoryTile } from '../../shared/components/CategoryTile'
+import { expenseTitle } from '../../shared/expenseTitle'
 import { useCategories } from '../../shared/hooks/useCategories'
 import { useExpenses } from '../hooks/useExpenses'
 import { ExpenseDaySection } from './ExpenseDaySection'
@@ -34,6 +42,36 @@ export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps)
   const expensesQuery = useExpenses(groupId)
   const categoriesQuery = useCategories()
   const daysRef = useListAnimation<HTMLDivElement>()
+  const waitingExpenses = useWaitingItems((item) => item.kind === 'expense' && item.groupId === groupId)
+  const waitingSheet = useOpenedWaitingItem(waitingExpenses)
+  const shownWaitingExpenses = waitingExpenses.filter((item) => item.isSaved !== true || expensesQuery.isFetching)
+
+  function renderWaitingRows(categories: readonly Category[]) {
+    if (shownWaitingExpenses.length === 0) {
+      return null
+    }
+    return (
+      <div className="mt-3.5 flex flex-col gap-2">
+        {shownWaitingExpenses.map((item) => {
+          const { category, unknownCategoryId } = categoryOfWaitingItem(item, categories)
+          const amount = amountOfItem(item)
+          const { paidByName } = item.display
+          return (
+            <WaitingRow
+              key={item.id}
+              title={expenseTitle(item.display.title ?? null, category, t)}
+              amountMinor={amount?.amountMinor}
+              currency={amount?.currency}
+              detail={paidByName === undefined ? undefined : `${t('expense.paidBy')} ${paidByName}`}
+              leading={<CategoryTile category={category} />}
+              displayProblem={displayProblemOf(item, unknownCategoryId)}
+              onOpen={() => waitingSheet.open(item)}
+            />
+          )
+        })}
+      </div>
+    )
+  }
 
   function dayLabel(date: string, today: string): string {
     const day = formatExpenseDay(date, today, language)
@@ -67,28 +105,35 @@ export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps)
         </KvitLoading>
       )
     }
+    const waitingRows = renderWaitingRows(categoriesQuery.data)
     if (expensesQuery.data.length === 0) {
       return (
         <>
-          <KvitEmpty emoji={receiptEmoji} title={t('expenses.emptyTitle')} message={t('expenses.emptyHint')} />
+          {waitingRows}
+          {waitingRows === null && (
+            <KvitEmpty emoji={receiptEmoji} title={t('expenses.emptyTitle')} message={t('expenses.emptyHint')} />
+          )}
           {actionsWhenEmpty}
         </>
       )
     }
     const today = todayInTimeZone(me.timeZone, new Date())
     return (
-      <div ref={daysRef} className="flex flex-col">
-        {groupByDay(expensesQuery.data).map((day) => (
-          <ExpenseDaySection
-            key={day.date}
-            groupId={groupId}
-            label={dayLabel(day.date, today)}
-            rows={day.rows}
-            categories={categoriesQuery.data}
-            language={language}
-          />
-        ))}
-      </div>
+      <>
+        {waitingRows}
+        <div ref={daysRef} className="flex flex-col">
+          {groupByDay(expensesQuery.data).map((day) => (
+            <ExpenseDaySection
+              key={day.date}
+              groupId={groupId}
+              label={dayLabel(day.date, today)}
+              rows={day.rows}
+              categories={categoriesQuery.data}
+              language={language}
+            />
+          ))}
+        </div>
+      </>
     )
   }
 
@@ -104,6 +149,9 @@ export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps)
           <span aria-hidden="true">›</span>
         </Link>
       </div>
+      {waitingSheet.openedItem !== null && (
+        <DiscardWaitingSheet item={waitingSheet.openedItem} onClose={waitingSheet.close} />
+      )}
     </div>
   )
 }

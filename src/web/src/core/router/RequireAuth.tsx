@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
 import { useMe } from '@/core/auth/useMe'
 import { useRecordActive } from '@/features/home/hooks/useRecordActive'
+import { SignedInOutbox } from '@/features/outbox/components/SignedInOutbox'
 import { KvitError } from '@/shared/components/KvitError'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { DesktopRailLayout } from './DesktopRailLayout'
@@ -42,5 +43,9 @@ export function RequireAuth() {
 
 function SignedInOutlet() {
   useRecordActive()
-  return <DesktopRailLayout />
+  return (
+    <SignedInOutbox>
+      <DesktopRailLayout />
+    </SignedInOutbox>
+  )
 }

@@ -10,7 +10,7 @@ export function DesktopRailLayout() {
   const isDesktop = useIsDesktop()
 
   return (
-    <div className="contents lg:grid lg:min-h-dvh lg:grid-cols-[clamp(11rem,17vw,16rem)_minmax(0,1fr)]">
+    <div className="contents lg:grid lg:min-h-dvh lg:grid-cols-[var(--rail-width)_minmax(0,1fr)]">
       {isDesktop && <SignedInRail />}
       <div className="contents lg:relative lg:block lg:min-w-0">
         <Outlet />

@@ -770,6 +770,29 @@
     "title": "Waking up the server…",
     "hint": "This takes about a minute the first time."
   },
+  "outbox": {
+    "notSynced": "Not synced yet",
+    "rateWhenSent": "Euro price set when sent",
+    "sending": "Sending…",
+    "upToDate": "All up to date ✓",
+    "waiting_one": "{{count}} change waiting",
+    "waiting_other": "{{count}} changes waiting",
+    "failed_one": "{{count}} change couldn't be saved",
+    "failed_other": "{{count}} changes couldn't be saved",
+    "review": "Review",
+    "retry": "Retry",
+    "discard": "Discard",
+    "notCounted_one": "{{count}} change waiting, not counted yet",
+    "notCounted_other": "{{count}} changes waiting, not counted yet",
+    "discardTitle": "Discard this change?",
+    "discardBody": "It has not been confirmed yet. If you discard it, it may still arrive.",
+    "failedSheetTitle": "Changes that couldn't be saved",
+    "logOutTitle": "Changes not sent yet",
+    "logOutBody_one": "{{count}} change hasn't been sent yet. If you log out now it is lost.",
+    "logOutBody_other": "{{count}} changes haven't been sent yet. If you log out now they are lost.",
+    "logOutAnyway": "Log out anyway",
+    "stay": "Stay"
+  },
   "toasts": {
     "region": "Notifications"
   },

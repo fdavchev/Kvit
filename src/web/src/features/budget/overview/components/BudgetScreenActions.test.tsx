@@ -98,9 +98,12 @@ describe('BudgetScreen adding and editing', () => {
 
       expect(button.textContent).toBe('+')
       expect(button.className.split(/\s+/)).toEqual(expect.arrayContaining(['size-15', 'rounded-[20px]']))
-      expect(button.closest('[data-floating-add]')?.className.split(/\s+/)).toEqual(
-        expect.arrayContaining(['sticky', 'bottom-[calc(var(--bottom-bar-height)+16px)]']),
-      )
+      const floatingClasses = button.closest('[data-floating-add]')?.className.split(/\s+/) ?? []
+      const bottomOffset = floatingClasses.find((token) => token.startsWith('bottom-['))
+      expect(floatingClasses).toContain('sticky')
+      expect(bottomOffset).toContain('var(--bottom-bar-height)')
+      expect(bottomOffset).toContain('var(--outbox-bar-space)')
+      expect(bottomOffset).toContain('16px')
     })
 
     it('opens the "What do you add?" sheet, not the category grid, and no menu', async () => {

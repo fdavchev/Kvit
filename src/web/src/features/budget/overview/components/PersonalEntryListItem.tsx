@@ -16,8 +16,8 @@ interface PersonalEntryListItemProps {
   onOpen: (entry: PersonalEntry) => void
 }
 
-const incomeEmoji = '\u{1F4B0}'
-const incomeTileColor = 'var(--category-green)'
+export const incomeEmoji = '\u{1F4B0}'
+export const incomeTileColor = 'var(--category-green)'
 
 export function PersonalEntryListItem({ entry, today, mergedLabel, onOpen }: PersonalEntryListItemProps) {
   const { t } = useTranslation()

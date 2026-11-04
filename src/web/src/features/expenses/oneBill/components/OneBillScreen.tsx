@@ -10,6 +10,8 @@ import type { Category } from '@/core/services/categories/categoriesService'
 import type { Me } from '@/core/services/me/meService'
 import { GroupLoadError } from '@/features/groups/shared/components/GroupLoadError'
 import { groupNameMaxLength } from '@/features/groups/shared/groupName'
+import { useQueuedSave } from '@/features/outbox/hooks/useQueuedSave'
+import { buildOneBillOutboxItem } from '@/features/outbox/queuedItems'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitForm } from '@/shared/components/KvitForm'
 import { KvitLoading } from '@/shared/components/KvitLoading'
@@ -81,6 +83,7 @@ function OneBillForm({ me, categories }: OneBillFormProps) {
   const navigate = useNavigate()
   const titleId = useId()
   const createOneBill = useCreateOneBill()
+  const queuedSave = useQueuedSave()
   const [clientRequestId] = useState<string>(() => crypto.randomUUID())
   const today = todayInTimeZone(me.timeZone, new Date())
   const [amountText, setAmountText] = useState<string>('')
@@ -146,29 +149,32 @@ function OneBillForm({ me, categories }: OneBillFormProps) {
     }
     if (title.trim().length > groupNameMaxLength) {
       setIsTitleTooLong(true)
-      createOneBill.reset()
       return
     }
     setIsTitleTooLong(false)
-    createOneBill.mutate(
-      buildOneBillRequest({
-        clientRequestId,
-        ownId: me.id,
-        names,
-        paidById,
-        splitDraft,
-        title,
-        groupName: t('oneBill.groupName', { date: formatDayWithoutYear(expenseDate, language) }),
-        amountMinor,
-        currency,
-        expenseDate,
-        categoryId,
-      }),
-      {
-        onSuccess: (created) => {
-          toast.success(t('expenses.saved'))
-          navigate(routes.group(created.groupId), { replace: true })
-        },
+    const input = buildOneBillRequest({
+      clientRequestId,
+      ownId: me.id,
+      names,
+      paidById,
+      splitDraft,
+      title,
+      groupName: t('oneBill.groupName', { date: formatDayWithoutYear(expenseDate, language) }),
+      amountMinor,
+      currency,
+      expenseDate,
+      categoryId,
+    })
+    queuedSave.saveOrQueueThen(
+      buildOneBillOutboxItem({ input }),
+      (onAnswered) => createOneBill.mutateAsync({ ...input, onAnswered }),
+      (outcome) => {
+        if (outcome.queued) {
+          navigate(routes.groups, { replace: true })
+          return
+        }
+        toast.success(t('expenses.saved'))
+        navigate(routes.group(outcome.result.groupId), { replace: true })
       },
     )
   }
@@ -177,14 +183,14 @@ function OneBillForm({ me, categories }: OneBillFormProps) {
     if (isTitleTooLong) {
       return t('oneBill.titleTooLong')
     }
-    return createOneBill.isError ? t(errorMessageKey(createOneBill.error)) : null
+    return queuedSave.error === null ? null : t(errorMessageKey(queuedSave.error))
   }
 
   return (
     <>
       <KvitForm
         submitLabel={t('oneBill.save')}
-        isPending={createOneBill.isPending}
+        isPending={queuedSave.isPending}
         canSubmit={canSubmit}
         errorMessage={errorMessage()}
         onSubmit={submit}

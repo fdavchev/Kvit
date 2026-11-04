@@ -6,6 +6,8 @@ import { useIsGuest } from '@/core/auth/useIsGuest'
 import { useMe } from '@/core/auth/useMe'
 import type { Language } from '@/core/i18n/language'
 import { useLanguage } from '@/core/i18n/useLanguage'
+import { removeOutboxItem } from '@/core/outbox/outboxStorage'
+import { useOutboxItems } from '@/core/outbox/useOutbox'
 import { routes } from '@/core/router/routes'
 import { useTheme } from '@/core/theme/useTheme'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
@@ -20,6 +22,9 @@ import { useChangeLanguage } from '../hooks/useChangeLanguage'
 import { useLogOut } from '../hooks/useLogOut'
 import { BudgetTotalSettings } from './BudgetTotalSettings'
 import { GuestLogOutSheet } from './GuestLogOutSheet'
+import { UnsentChangesLogOutSheet } from './UnsentChangesLogOutSheet'
+
+type LogOutSheet = 'guest' | 'unsentChanges'
 
 export function SettingsScreen() {
   const { t } = useTranslation()
@@ -29,7 +34,9 @@ export function SettingsScreen() {
   const isGuest = useIsGuest()
   const changeLanguage = useChangeLanguage()
   const logOut = useLogOut()
-  const [isGuestLogOutOpen, setIsGuestLogOutOpen] = useState<boolean>(false)
+  const unsentItems = useOutboxItems()
+  const unsentCount = unsentItems.length
+  const [openLogOutSheet, setOpenLogOutSheet] = useState<LogOutSheet | null>(null)
 
   function showFailure(error: Error): void {
     console.error('A settings action failed', error)
@@ -41,12 +48,24 @@ export function SettingsScreen() {
   }
 
   function logOutNow(): void {
-    logOut.mutate(undefined, { onError: showFailure })
+    const personId = me?.id
+    const countedIds = unsentItems.map((item) => item.id)
+    logOut.mutateAsync().then(() => {
+      if (personId !== undefined && countedIds.length > 0) {
+        removeCountedChanges(personId, countedIds).catch((error: unknown) => {
+          console.error(`Logged out, but the unsent changes of person ${personId} could not be removed from this browser`, error)
+        })
+      }
+    }, showFailure)
   }
 
   function pressLogOut(): void {
     if (isGuest) {
-      setIsGuestLogOutOpen(true)
+      setOpenLogOutSheet('guest')
+      return
+    }
+    if (unsentCount > 0) {
+      setOpenLogOutSheet('unsentChanges')
       return
     }
     logOutNow()
@@ -97,13 +116,28 @@ export function SettingsScreen() {
           {t('settings.logOut')}
         </KvitButton>
       </div>
-      {isGuestLogOutOpen && (
+      {openLogOutSheet === 'guest' && (
         <GuestLogOutSheet
+          unsentCount={unsentCount}
           isLoggingOut={logOut.isPending}
           onLogOut={logOutNow}
-          onClose={() => setIsGuestLogOutOpen(false)}
+          onClose={() => setOpenLogOutSheet(null)}
+        />
+      )}
+      {openLogOutSheet === 'unsentChanges' && (
+        <UnsentChangesLogOutSheet
+          unsentCount={unsentCount}
+          isLoggingOut={logOut.isPending}
+          onLogOut={logOutNow}
+          onClose={() => setOpenLogOutSheet(null)}
         />
       )}
     </KvitScreen>
   )
+}
+
+async function removeCountedChanges(personId: string, ids: readonly string[]): Promise<void> {
+  for (const id of ids) {
+    await removeOutboxItem(personId, id)
+  }
 }

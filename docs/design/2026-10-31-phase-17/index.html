@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit outbox mockup</title>
+<style>
+:root{--bg:#ffd9a8;--fg:#3d2610;--card:#fff1dc;--muted:#7a3300;--line:#9c6f47;--pill:#fff;--primary:#b54a00;--pfg:#fff;--ok:#1d6b2e;--okbg:#d9efd6;--bad:#b71f1f;--badbg:#f7d8d3;--warn:#9a5b00;--field:#fff}
+[data-theme=dark]{--bg:#1f1816;--fg:#fff1dc;--card:#2c2220;--muted:#ffd9a8;--line:#72625c;--pill:#d9b48a;--primary:#ffd9a8;--pfg:#1f1816;--ok:#7fd68f;--okbg:#1f4a2a;--bad:#ff9a9a;--badbg:#55222a;--warn:#f2b046;--field:#161110}
+*{box-sizing:border-box}
+body{margin:0;font:16px system-ui,sans-serif;background:var(--bg);color:var(--fg);padding:16px;max-width:980px}
+h1{font-size:21px;margin:0 0 4px}h2{font-size:18px;margin:34px 0 4px}h3{font-size:15px;margin:0 0 6px}
+.n{margin:2px 0 10px;color:var(--muted);font-size:14px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+button.c{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:8px 14px;min-height:44px}
+button.c.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.rec{font-size:12px;background:var(--fg);color:var(--bg);padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle}
+.row3{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.opt{flex:0 0 auto}
+.phone{width:340px;border:1px solid var(--line);border-radius:18px;background:var(--bg);overflow:hidden;position:relative}
+.screen{padding:14px;min-height:300px}
+.title{font-weight:800;font-size:19px;margin:0 0 10px}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:10px;min-height:56px}
+.item .m{flex:1;min-width:0}
+.item .t{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .s{font-size:13px;color:var(--muted)}
+.item .a{font-weight:800;white-space:nowrap}
+.tag{display:inline-block;font-size:11px;font-weight:700;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--muted);background:var(--bg);margin-left:6px;vertical-align:middle}
+.clock{font-size:15px;margin-left:6px}
+.grey{opacity:.6;border-style:dashed}
+.grey .t{font-style:italic}
+.tabbar{display:flex;border-top:1px solid var(--line);background:var(--card)}
+.tabbar span{flex:1;text-align:center;padding:10px 0;font-size:12px;font-weight:700;color:var(--muted);position:relative}
+.tabbar span.act{color:var(--fg)}
+.dot{position:absolute;top:6px;right:26%;width:9px;height:9px;border-radius:50%;background:var(--primary)}
+.status{margin:0 10px 8px;border-radius:12px;padding:9px 12px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.status.wait{background:var(--card);border:1px solid var(--line)}
+.status.done{background:var(--okbg);color:var(--ok)}
+.status.fail{background:var(--badbg);color:var(--bad)}
+.status button{font:inherit;font-weight:800;cursor:pointer;border:0;background:none;color:inherit;text-decoration:underline;min-height:32px;padding:0 4px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--primary);border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+.toast{position:absolute;left:10px;right:10px;bottom:56px;border-radius:12px;padding:10px 12px;font-size:14px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.toast.done{background:var(--okbg);color:var(--ok)}
+.toast.fail{background:var(--badbg);color:var(--bad)}
+.toast .acts{display:flex;gap:14px;margin-top:6px}
+.toast .acts b{text-decoration:underline;cursor:pointer}
+.sheet{background:var(--card);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:14px;margin-top:10px}
+.sheet p{margin:4px 0}
+.btns{display:flex;gap:8px;margin-top:10px}
+.btn{flex:1;text-align:center;border-radius:999px;padding:11px;font-weight:800;min-height:44px;cursor:pointer;border:1px solid var(--line)}
+.btn.p{background:var(--primary);color:var(--pfg);border-color:var(--primary)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.big{font-size:26px;font-weight:800}
+.est{font-size:13px;color:var(--warn);font-weight:700}
+.note{font-size:13px;color:var(--muted);margin-top:4px}
+.timeline{font-size:14px;line-height:1.6}
+.timeline .x{color:var(--bad);font-weight:700}.timeline .y{color:var(--ok);font-weight:700}
+label.n{display:block}
+</style>
+</head>
+<body>
+<h1>Phase 17: the outbox (mockup)</h1>
+<p class="n">Five small choices. Each has A, B, C (or A, B). The ★ is my recommendation. Change the theme and language at the top, tap the state buttons to see each option in each situation. The Macedonian words are drafts, not approved.</p>
+<div class="bar"><button class="c" id="theme">Light / Dark</button><button class="c on" data-l="en">English</button><button class="c" data-l="mk">Македонски</button></div>
+
+<h2>1 · How a "not synced yet" item looks in a list</h2>
+<p class="n">The same three rows in each option: one saved, one still waiting, one saved. Pick the screen to see the option on it.</p>
+<div class="bar" id="ctx"><button class="c on" data-x="exp">Group Expenses</button><button class="c" data-x="bud">Budget</button><button class="c" data-x="pay">Payments</button></div>
+<label class="n"><input type="checkbox" id="ratechk"> Show the line about the euro price on a waiting euro row (question 4)</label>
+<div class="row3" id="marks"></div>
+
+<h2>2 · Where the "waiting" count and "All up to date ✓" live</h2>
+<p class="n">Pick a situation, then look at the three phones.</p>
+<div class="bar" id="state"><button class="c on" data-s="wait">2 changes waiting</button><button class="c" data-s="done">All sent</button><button class="c" data-s="fail">1 failed</button></div>
+<div class="row3" id="places"></div>
+<div class="sheet" style="max-width:340px" id="failsheet"></div>
+<p class="n">The failed-item sheet is the same in A, B and C: it opens when you tap the failed message (or the Settings line in C).</p>
+
+<h2>3 · What waiting money does to balances and totals</h2>
+<p class="n">Example: Marko owes you 500 MKD. You saved a new 300 MKD expense while the server was asleep, and it is still waiting.</p>
+<div class="row3" id="money"></div>
+
+<h2>4 · The euro price of a waiting EUR item</h2>
+<div class="row3">
+<div class="card" style="max-width:300px"><h3>A · The server sets it when it saves <span class="rec">★</span></h3><p class="n">Same as today. The waiting row says "Euro price set when sent" (turn on the checkbox in part 1 to see it). Nothing for you to do.</p></div>
+<div class="card" style="max-width:300px"><h3>B · The phone looks it up now</h3><p class="n">Needs the phone to know today's price while the server sleeps, so it would be a guess that could differ from what the server saves. Not possible without a new feature.</p></div>
+</div>
+
+<h2>5 · A failed item and the queue behind it</h2>
+<div class="row3">
+<div class="card" style="max-width:310px"><h3>A · The rest keeps going <span class="rec">★</span></h3><div class="timeline">1. Coffee 200 MKD <span class="y">saved</span><br>2. Dinner 1,200 MKD in "Ohrid trip" <span class="x">refused: you left that group</span><br>3. Taxi 300 MKD <span class="y">saved</span></div><p class="n">Items don't depend on each other, so one problem doesn't hold up the others. The failed one stays with Retry / Discard.</p></div>
+<div class="card" style="max-width:310px"><h3>B · Everything stops at the failed one</h3><div class="timeline">1. Coffee 200 MKD <span class="y">saved</span><br>2. Dinner 1,200 MKD <span class="x">refused</span><br>3. Taxi 300 MKD waiting…</div><p class="n">Safer if items depended on each other, but they don't, and one old problem would block everything new until you deal with it.</p></div>
+</div>
+
+<script>
+const T={
+en:{tag:'Not synced yet',waiting:n=>n+' changes waiting',sending:'Sending…',done:'All up to date ✓',fail:'1 change couldn\'t be saved',review:'Review',retry:'Retry',discard:'Discard',
+  reason:'Refused: you are no longer in this group.',item:'Dinner · 1,200 MKD · Ohrid trip',set:'Waiting to send',rate:'Euro price set when sent',
+  exp:['Coffee','Lunch','Taxi'],expS:['Paid by you','Paid by you','Paid by Marko'],bud:['Groceries','Bus ticket','Salary'],budS:['Food','Transport','Income'],pay:['Ana paid you','Marko paid you','You paid Ana'],payS:['Confirmed','Waiting for Marko','Confirmed'],
+  owed:'Marko owes you',chg:'2 changes waiting, not counted yet',estd:'estimated',nav:['Home','Groups','Budget','Settings'],a:'MKD',eu:'EUR'},
+mk:{tag:'Сè уште не е синхронизирано',waiting:n=>n+' промени чекаат',sending:'Се праќа…',done:'Сè е ажурирано ✓',fail:'1 промена не можеше да се зачува',review:'Прегледај',retry:'Обиди се пак',discard:'Отфрли',
+  reason:'Одбиено: повеќе не сте во оваа група.',item:'Вечера · 1.200 ден. · Охрид',set:'Чека да се прати',rate:'Цената на еврото се одредува при праќање',
+  exp:['Кафе','Ручек','Такси'],expS:['Платено од вас','Платено од вас','Платено од Марко'],bud:['Намирници','Автобуски билет','Плата'],budS:['Храна','Превоз','Приход'],pay:['Ана ви плати','Марко ви плати','Плативте на Ана'],payS:['Потврдено','Чека на Марко','Потврдено'],
+  owed:'Марко ви должи',chg:'2 промени чекаат, сè уште не се бројат',estd:'проценето',nav:['Почетна','Групи','Буџет','Поставки'],a:'ден.',eu:'EUR'}};
+let lang='en',ctx='exp',state='wait';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const amts={exp:['200','450','300'],bud:['1,350','60','45,000'],pay:['500','300','150']};
+function tagOf(mode,L){return mode==='a'?`<span class="tag">${L.tag}</span>`:mode==='b'?`<span class="clock" title="${L.tag}">🕒</span>`:''}
+function rows(mode,L){
+  const names=L[ctx],subs=L[ctx+'S'],am=amts[ctx];let h='';
+  for(let i=0;i<3;i++){
+    const q=i===1;
+    const eur=$('#ratechk').checked&&q&&ctx==='exp';
+    h+=`<div class="item ${q&&mode==='c'?'grey':''}"><div class="m"><div class="t">${names[i]}${q?tagOf(mode,L):''}</div><div class="s">${subs[i]}${q&&mode==='c'?' · '+L.tag:''}</div>${eur?`<div class="s">${L.rate}</div>`:''}</div><div class="a">${am[i]} ${eur?L.eu:L.a}</div></div>`;
+  }return h;
+}
+function phone(inner,extra){return `<div class="phone">${inner}${extra||''}</div>`}
+function tabs(L,dotOn){return `<div class="tabbar">${L.nav.map((x,i)=>`<span class="${i===2?'act':''}">${x}${dotOn&&i===3?'<i class="dot"></i>':''}</span>`).join('')}</div>`}
+function marks(){
+  const L=T[lang];const opts=[['a','A · A small grey tag',''],['b','B · A clock icon',''],['c','C · A greyed, dashed row ★','★']];
+  $('#marks').innerHTML=opts.map(([m,title])=>`<div class="opt"><h3>${title.replace('★','<span class="rec">★</span>')}</h3>${phone(`<div class="screen"><div class="title">${{exp:'Ohrid trip',bud:'Budget · October',pay:'Payments'}[ctx]}</div><div class="list">${rows(m,L)}</div></div>`)}</div>`).join('');
+}
+function statusBar(L){
+  if(state==='wait')return `<div class="status wait"><span><i class="spin"></i>${L.waiting(2)} · ${L.sending}</span></div>`;
+  if(state==='done')return `<div class="status done"><span>${L.done}</span></div>`;
+  return `<div class="status fail"><span>${L.fail}</span><button>${L.review}</button></div>`;
+}
+function toast(L){
+  if(state==='wait')return '';
+  if(state==='done')return `<div class="toast done">${L.done}</div>`;
+  return `<div class="toast fail">${L.fail}<div class="acts"><b>${L.retry}</b><b>${L.discard}</b></div></div>`;
+}
+function places(){
+  const L=T[lang];
+  const body=`<div class="screen"><div class="title">Home</div><div class="list">${rows('a',L).split('</div></div>').slice(0,2).join('</div></div>')+'</div></div>'}</div></div>`;
+  const a=phone(body+statusBar(L)+tabs(L,false));
+  const b=phone(body+tabs(L,false),toast(L));
+  let cLine='';
+  const c=phone(body+tabs(L,state!=='done'),toast(L).replace('toast fail','toast fail').replace(/<div class="acts">.*?<\/div>/,''))
+  $('#places').innerHTML=
+    `<div class="opt"><h3>A · A bar above the bottom tabs <span class="rec">★</span></h3>${a}<p class="n" style="max-width:340px">Always visible while something waits. Same spot as today's "Updating…" note. Goes away by itself a few seconds after "All up to date ✓".</p></div>`+
+    `<div class="opt"><h3>B · Only a pop-up message</h3>${b}<p class="n" style="max-width:340px">Nothing shows while it waits (only the tag on the row). A pop-up says "All up to date ✓" or the failure. A pop-up can disappear before you read it.</p></div>`+
+    `<div class="opt"><h3>C · A line in Settings + a dot</h3>${c}<p class="n" style="max-width:340px">A dot on Settings while something waits or failed; the count lives in Settings, and a pop-up announces the end. You have to go looking.</p></div>`;
+}
+function failsheet(){
+  const L=T[lang];
+  $('#failsheet').innerHTML=`<h3>${L.fail}</h3><p><b>${L.item}</b></p><p class="n">${L.reason}</p><div class="btns"><div class="btn">${L.discard}</div><div class="btn p">${L.retry}</div></div>`;
+}
+function money(){
+  const L=T[lang];
+  const base=(big,extra)=>`<div class="screen"><div class="title">Ohrid trip</div><div class="card"><div class="s n">${L.owed}</div><div class="big">${big} ${L.a}</div>${extra}</div></div>`;
+  $('#money').innerHTML=
+   `<div class="opt"><h3>A · Lists show it, numbers wait <span class="rec">★</span></h3>${phone(base('500',`<div class="note">${L.chg}</div>`))}<p class="n" style="max-width:340px">The waiting expense is in the list at once. Balances, totals, limits and the plan change only after the server saved it, with one line saying so. No wrong number to trust.</p></div>`+
+   `<div class="opt"><h3>B · Numbers include it, marked estimated</h3>${phone(base('800',`<div class="est">${L.estd}</div>`))}<p class="n" style="max-width:340px">Feels more live, but the server may refuse the item or split it differently, and every screen (balances, limits, plan, summary) would need an "estimated" version.</p></div>`;
+}
+function draw(){marks();places();failsheet();money()}
+$('#theme').onclick=()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'};
+$$('[data-l]').forEach(b=>b.onclick=()=>{lang=b.dataset.l;$$('[data-l]').forEach(x=>x.classList.toggle('on',x===b));draw()});
+$$('#ctx button').forEach(b=>b.onclick=()=>{ctx=b.dataset.x;$$('#ctx button').forEach(x=>x.classList.toggle('on',x===b));marks()});
+$$('#state button').forEach(b=>b.onclick=()=>{state=b.dataset.s;$$('#state button').forEach(x=>x.classList.toggle('on',x===b));places()});
+$('#ratechk').onchange=marks;
+draw();
+</script>
+</body>
+</html>

@@ -168,11 +168,11 @@ Kvit mostly asks **"is this user a member or the owner of *this* group?"**, so t
 
 ## Folder structure (`src/web/src/`): vertical slices
 - **`core/`**: infrastructure shared by all features.
-  - `api/`: `apiClient.ts`, `endpoints.ts` (all paths in one place; functions for paths with parameters), `errors.ts` (maps `ResultCodes` to translation keys; `errorMessageKey` answers `errors.network` for a fetch that never got an answer and for HTTP 502, the proxy's answer when the API is asleep or down; an unmapped error code is logged with `console.error` and answers `errors.generic`). `generated/` (OpenAPI types, never edited by hand) arrives once the backend has real contracts to generate from.
+  - `api/`: `apiClient.ts`, `endpoints.ts` (all paths in one place; functions for paths with parameters), `errors.ts` (maps `ResultCodes` to translation keys; `errorMessageKey` answers `errors.network` for a fetch that never got an answer and for HTTP 502, 503 and 504, the proxy's answers when the API is asleep or down; an unmapped error code is logged with `console.error` and answers `errors.generic`). `generated/` (OpenAPI types, never edited by hand) arrives once the backend has real contracts to generate from.
   - `services/<domain>/`: one module per domain. Phase 2 only has `services/health/healthService.ts` (the sole caller of `apiClient` so far); more arrive with the features that need them.
-  - `router/`: the route table (`routes.ts`, `router.tsx`) and the `RequireAuth` guard (a placeholder until Phase 4: it always redirects to `/welcome`).
+  - `router/`: the route table (`routes.ts`, `router.tsx`) and the `RequireAuth` guard (waits for `/api/me`, shows `WakingUp` while the server answers, redirects to `/welcome` when nobody is signed in, and wraps every signed-in screen in `DesktopRailLayout`).
   - `i18n/`: setup (`i18n.ts`), `locales/en.json` + `locales/mk.json`, and the hand-written `detectLanguage.ts` (saved choice in `localStorage`, else the phone's language list) instead of `i18next-browser-languagedetector`.
-  - `outbox/`: the offline queue (IndexedDB) — Release 3, not built yet.
+  - `outbox/`: the queue for saves made while the server sleeps (Phase 17): its own IndexedDB database (`idb-keyval`, `createStore`), one queue per signed-in person; the sender, back-off and triggers; `saveOrQueue` (queue after 3 seconds with no answer); React hooks over it. Waiting rows are drawn by the lists from the outbox, never written into the query cache.
 - **`features/<feature>/<sub_feature>/`**, each slice containing:
   - `components/`: the screen (`*Screen.tsx`) and its pieces,
   - `hooks/`: `use*.ts` (TanStack Query hooks wrapping the services),

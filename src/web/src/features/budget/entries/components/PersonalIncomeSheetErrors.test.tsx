@@ -4,6 +4,7 @@ import { languages } from '@/core/i18n/language'
 import { amountField, saveButton, typeAmount } from '@/test/expenseFormTestHelpers'
 import { dateChip, noteChip, personalEntriesPost, shownCurrency } from '@/test/personalEntryTestHelpers'
 import { findIncomeSheet, renderIncomeSheet } from '@/test/personalIncomeTestHelpers'
+import { holdOutboxSender, readSavedOutbox } from '@/test/queuedSaveTestHelpers'
 import { networkFailureAnswer, problemAnswer, requestsOf } from '@/test/requestTestHelpers'
 import { translated } from '@/test/translated'
 
@@ -108,14 +109,19 @@ describe('PersonalIncomeSheet, refused saves', () => {
     expect(note.getAttribute('aria-invalid')).not.toBe('true')
   })
 
-  it.each(languages)('shows the network message when the server cannot be reached (%s)', async (language) => {
-    await renderIncomeSheet({ language, answers: { [personalEntriesPost]: networkFailureAnswer() } })
+  it.each(languages)('queues the entry and shows no network message when the server cannot be reached (%s)', async (language) => {
+    const { onClose, outboxSender } = await renderIncomeSheet({ language, answers: { [personalEntriesPost]: networkFailureAnswer() } })
+    holdOutboxSender(outboxSender)
     await findIncomeSheet(language)
     typeAmount('65000', language)
 
     fireEvent.click(saveButton(language))
 
-    expect((await screen.findByRole('alert')).textContent).toBe(translated(language, 'errors.network'))
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalledOnce()
+    })
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(readSavedOutbox()).toHaveLength(1)
   })
 
   it('lets Save be tapped again after a refusal and sends a second request', async () => {

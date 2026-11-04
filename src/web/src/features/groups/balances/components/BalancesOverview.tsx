@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import type { GroupMember } from '@/core/services/groups/membersService'
+import { ChangesWaitingNote } from '@/features/outbox/components/ChangesWaitingNote'
+import { DiscardWaitingSheet } from '@/features/outbox/components/DiscardWaitingSheet'
+import { useOpenedWaitingItem } from '@/features/outbox/hooks/useOpenedWaitingItem'
+import { useWaitingItems } from '@/features/outbox/hooks/useWaitingItems'
 import { MarkPaidSheet } from '@/features/settlements/record/components/MarkPaidSheet'
 import { RecordPaymentSheet } from '@/features/settlements/record/components/RecordPaymentSheet'
 import type { PaymentToRecord } from '@/features/settlements/record/paymentToRecord'
@@ -38,6 +42,8 @@ export function BalancesOverview({
   const { language } = useLanguage()
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null)
   const now = new Date()
+  const waitingPayments = useWaitingItems((item) => item.kind === 'settlement' && item.groupId === groupId)
+  const waitingSheet = useOpenedWaitingItem(waitingPayments)
 
   function markPaid(payment: PaymentToRecord): void {
     setOpenSheet({ kind: 'markPaid', payment })
@@ -49,14 +55,16 @@ export function BalancesOverview({
 
   const paymentsAndRecordButton = (
     <>
-      {view.payments.length > 0 && (
+      {(view.payments.length > 0 || waitingPayments.length > 0) && (
         <PaymentsSection
           groupId={groupId}
           payments={view.payments}
+          waitingPayments={waitingPayments}
           language={language}
           timeZone={timeZone}
           now={now}
           canDelete={canChangePayments}
+          onOpenWaiting={waitingSheet.open}
         />
       )}
       {view.hasOtherMembers && canChangePayments && (
@@ -106,6 +114,7 @@ export function BalancesOverview({
 
   return (
     <div className="flex flex-col pb-6">
+      <ChangesWaitingNote scope={{ kind: 'group', groupId }} />
       {view.needsYou.length > 0 && (
         <NeedsYouSection
           groupId={groupId}
@@ -144,6 +153,9 @@ export function BalancesOverview({
           defaultCurrency={defaultCurrency}
           onClose={() => setOpenSheet(null)}
         />
+      )}
+      {waitingSheet.openedItem !== null && (
+        <DiscardWaitingSheet item={waitingSheet.openedItem} onClose={waitingSheet.close} />
       )}
     </div>
   )

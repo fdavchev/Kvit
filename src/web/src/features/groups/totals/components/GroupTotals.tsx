@@ -8,6 +8,7 @@ import type { Group } from '@/core/services/groups/groupsService'
 import { categoryOf } from '@/features/expenses/shared/expenseCategories'
 import { CategoryTile } from '@/features/expenses/shared/components/CategoryTile'
 import { useCategories } from '@/features/expenses/shared/hooks/useCategories'
+import { ChangesWaitingNote } from '@/features/outbox/components/ChangesWaitingNote'
 import { KvitAmount } from '@/shared/components/KvitAmount'
 import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
 import { KvitEmpty } from '@/shared/components/KvitEmpty'
@@ -53,7 +54,12 @@ export function GroupTotals({ group }: GroupTotalsProps) {
     )
   }
   const { currencies, plan } = spendingQuery.data
-  const planPart = <GroupPlan group={group} plan={plan} />
+  const planPart = (
+    <>
+      <ChangesWaitingNote scope={{ kind: 'group', groupId: group.id }} />
+      <GroupPlan group={group} plan={plan} />
+    </>
+  )
   if (currencies.length === 0) {
     return (
       <>

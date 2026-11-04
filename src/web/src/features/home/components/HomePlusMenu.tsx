@@ -57,7 +57,7 @@ export function HomePlusMenu({ target }: HomePlusMenuProps) {
   }
 
   return (
-    <div ref={floatingAreaRef} className="pointer-events-none sticky bottom-[calc(var(--bottom-bar-height)+16px)] z-10 mt-auto flex justify-end pt-4">
+    <div ref={floatingAreaRef} className="pointer-events-none sticky bottom-[calc(var(--bottom-bar-height)+var(--outbox-bar-space)+16px)] z-10 mt-auto flex justify-end pt-4">
       <div ref={menuAreaRef} className="pointer-events-auto relative">
         {isOpen && (
           <div

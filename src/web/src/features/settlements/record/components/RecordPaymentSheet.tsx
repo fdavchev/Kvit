@@ -8,7 +8,7 @@ import { KvitChoiceChips } from '@/shared/components/KvitChoiceChips'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
 import { currencyLabel, type Currency } from '@/shared/utils/formatMoney'
 import { parseMoneyInput } from '@/shared/utils/parseMoneyInput'
-import { useRecordSettlement } from '../hooks/useRecordSettlement'
+import { useSavePayment } from '../hooks/useSavePayment'
 import { whenItCountsText } from '../paymentToRecord'
 import { PaymentSheet } from './PaymentSheet'
 
@@ -24,6 +24,7 @@ interface RecordPaymentSheetProps {
 
 interface ChosenPayment {
   payerMemberId: string
+  payerName: string
   receiverMemberId: string
   receiverName: string
 }
@@ -32,7 +33,7 @@ export function RecordPaymentSheet({ groupId, me, members, defaultCurrency, onCl
   const { t } = useTranslation()
   const { language } = useLanguage()
   const sheet = useKvitSheet()
-  const recordSettlement = useRecordSettlement(groupId)
+  const savePayment = useSavePayment(groupId, members)
   const [clientRequestId] = useState<string>(() => crypto.randomUUID())
   const [direction, setDirection] = useState<Direction>('iPaid')
   const [personId, setPersonId] = useState<string | null>(null)
@@ -54,7 +55,7 @@ export function RecordPaymentSheet({ groupId, me, members, defaultCurrency, onCl
     if (chosen === null || amountMinor === null) {
       throw new Error(`Save was pressed without a person or with an amount that is not valid: "${amountText}"`)
     }
-    recordSettlement.mutate(
+    savePayment.save(
       {
         clientRequestId,
         fromMemberId: chosen.payerMemberId,
@@ -62,7 +63,8 @@ export function RecordPaymentSheet({ groupId, me, members, defaultCurrency, onCl
         amountMinor,
         currency,
       },
-      { onSuccess: sheet.close },
+      { payerName: chosen.payerName, receiverName: chosen.receiverName },
+      sheet.closeIfShown,
     )
   }
 
@@ -78,8 +80,8 @@ export function RecordPaymentSheet({ groupId, me, members, defaultCurrency, onCl
           : whenItCountsText(chosen.payerMemberId, chosen.receiverMemberId, chosen.receiverName, members, t)
       }
       canSubmit={chosen !== null && amountMinor !== null}
-      isPending={recordSettlement.isPending}
-      errorMessage={recordSettlement.isError ? t(errorMessageKey(recordSettlement.error)) : null}
+      isPending={savePayment.isPending}
+      errorMessage={savePayment.error === null ? null : t(errorMessageKey(savePayment.error))}
       choices={
         <>
           <KvitChoiceChips<Direction>
@@ -118,6 +120,6 @@ export function RecordPaymentSheet({ groupId, me, members, defaultCurrency, onCl
 
 function chosenPaymentOf(direction: Direction, me: GroupMember, person: GroupMember): ChosenPayment {
   return direction === 'iPaid'
-    ? { payerMemberId: me.id, receiverMemberId: person.id, receiverName: person.displayName }
-    : { payerMemberId: person.id, receiverMemberId: me.id, receiverName: me.displayName }
+    ? { payerMemberId: me.id, payerName: me.displayName, receiverMemberId: person.id, receiverName: person.displayName }
+    : { payerMemberId: person.id, payerName: person.displayName, receiverMemberId: me.id, receiverName: me.displayName }
 }

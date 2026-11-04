@@ -5,20 +5,22 @@ import { toast } from 'sonner'
 import { errorMessageKey } from '@/core/api/errors'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
 import { routes } from '@/core/router/routes'
-import type { ExpenseChanges } from '@/core/services/expenses/expensesService'
+import type { ExpenseChanges, ExpenseInput } from '@/core/services/expenses/expensesService'
 import type { GroupMember } from '@/core/services/groups/membersService'
 import { useGroup } from '@/features/groups/group/hooks/useGroup'
 import { useMembers } from '@/features/groups/members/hooks/useMembers'
 import { GroupLoadError } from '@/features/groups/shared/components/GroupLoadError'
 import { canChangeGroup } from '@/features/groups/shared/groupAccess'
 import { useGroupIdParam } from '@/features/groups/shared/useGroupIdParam'
+import { useQueuedSave } from '@/features/outbox/hooks/useQueuedSave'
+import { buildExpenseOutboxItem } from '@/features/outbox/queuedItems'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { todayInTimeZone } from '@/shared/utils/formatDate'
 import { ExpenseForm } from '../../shared/components/ExpenseForm'
 import { ExpenseFormTitle } from '../../shared/components/ExpenseFormTitle'
-import { expensePeople } from '../../shared/expensePeople'
+import { expensePeople, personOf } from '../../shared/expensePeople'
 import { useCategories } from '../../shared/hooks/useCategories'
 import { defaultSplitDraft } from '../../shared/splitDraft'
 import { useCreateExpense } from '../hooks/useCreateExpense'
@@ -32,18 +34,22 @@ export function AddExpenseScreen() {
   const membersQuery = useMembers(groupId)
   const categoriesQuery = useCategories()
   const createExpense = useCreateExpense(groupId)
+  const queuedSave = useQueuedSave()
   const [clientRequestId] = useState<string>(() => crypto.randomUUID())
 
-  function save(changes: ExpenseChanges): void {
-    createExpense.mutate(
-      { clientRequestId, ...changes },
-      {
-        onSuccess: () => {
-          toast.success(t('expenses.saved'))
-          navigate(routes.group(groupId), { replace: true })
-        },
-      },
-    )
+  function save(changes: ExpenseChanges, members: readonly GroupMember[]): void {
+    const input: ExpenseInput = { clientRequestId, ...changes }
+    const item = buildExpenseOutboxItem({
+      groupId,
+      input,
+      paidByName: personOf(expensePeople(members), changes.paidByMemberId).name,
+    })
+    queuedSave.saveOrQueueThen(item, (onAnswered) => createExpense.mutateAsync({ ...input, onAnswered }), (outcome) => {
+      if (!outcome.queued) {
+        toast.success(t('expenses.saved'))
+      }
+      navigate(routes.group(groupId), { replace: true })
+    })
   }
 
   function renderContent() {
@@ -88,9 +94,9 @@ export function AddExpenseScreen() {
           people={expensePeople(members)}
           categories={categoriesQuery.data}
           today={today}
-          isPending={createExpense.isPending}
-          errorMessage={createExpense.isError ? t(errorMessageKey(createExpense.error)) : null}
-          onSubmit={save}
+          isPending={queuedSave.isPending}
+          errorMessage={queuedSave.error === null ? null : t(errorMessageKey(queuedSave.error))}
+          onSubmit={(changes) => save(changes, members)}
         />
       </>
     )
