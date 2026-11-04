@@ -46,7 +46,10 @@ namespace Kvit.Application.Queries.Me
                     user.IsGuest,
                     user.BudgetTotalCurrency,
                     _context.UserRoles.Any(userRole => userRole.UserId == user.Id
-                        && _context.Roles.Any(role => role.Id == userRole.RoleId && role.Name == Roles.Admin))));
+                        && _context.Roles.Any(role => role.Id == userRole.RoleId && role.Name == Roles.Admin)),
+                    user.TermsVersion,
+                    TermsVersion.IsCurrent(user.TermsVersion),
+                    TermsVersion.UpdateIsMaterial(user.TermsVersion, TermsVersion.Current, TermsVersion.CurrentIsMaterial)));
         }
     }
 }

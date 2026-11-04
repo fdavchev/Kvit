@@ -329,6 +329,25 @@ namespace Kvit.Infrastructure.Auth
             return Result.Ok();
         }
 
+        public async Task<Result> AcceptCurrentTermsAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            DateTimeOffset acceptedAt = _timeProvider.GetUtcNow();
+            int updatedUsers = await _context.Users
+                .Where(user => user.Id == userId)
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(user => user.TermsVersion, TermsVersion.Current)
+                        .SetProperty(user => user.TermsAcceptedAt, acceptedAt),
+                    cancellationToken);
+
+            if (updatedUsers == 0)
+            {
+                return Result.Unauthorized(NotSignedInMessage, ResultCodes.AUTH_NOT_SIGNED_IN);
+            }
+
+            return Result.Ok();
+        }
+
         private async Task<PasswordCheck> CheckPasswordAsync(AppUser user, string password)
         {
             if (await _userManager.IsLockedOutAsync(user))
@@ -364,7 +383,7 @@ namespace Kvit.Infrastructure.Auth
 
         private AppUser NewUser(string displayName, string timeZone, string language)
         {
-            return new AppUser
+            AppUser user = new()
             {
                 DisplayName = displayName,
                 Language = language,
@@ -373,6 +392,9 @@ namespace Kvit.Infrastructure.Auth
                 CreatedAt = _timeProvider.GetUtcNow(),
                 LockoutCount = 0,
             };
+            user.AcceptTerms(TermsVersion.Current, user.CreatedAt);
+
+            return user;
         }
 
         private async Task<Result<AppUser>> FindGuestAsync(Guid userId)
@@ -392,11 +414,12 @@ namespace Kvit.Infrastructure.Auth
             return Result.Ok(user);
         }
 
-        private static void BecomeAccount(AppUser guest, string email)
+        private void BecomeAccount(AppUser guest, string email)
         {
             guest.UserName = email;
             guest.Email = email;
             guest.IsGuest = false;
+            guest.AcceptTerms(TermsVersion.Current, _timeProvider.GetUtcNow());
         }
 
         private async Task RecordSignUpAsync(AppUser user, SignUpMethod method, CancellationToken cancellationToken)
@@ -452,7 +475,21 @@ namespace Kvit.Infrastructure.Auth
         {
             bool isAdmin = await _userManager.IsInRoleAsync(user, Roles.Admin);
 
-            return new MeResponse(user.Id, user.DisplayName, user.Email, user.Language, user.TimeZone, user.MustChangePassword, user.PasswordHash is not null, user.GooglePictureUrl, user.IsGuest, user.BudgetTotalCurrency, isAdmin);
+            return new MeResponse(
+                user.Id,
+                user.DisplayName,
+                user.Email,
+                user.Language,
+                user.TimeZone,
+                user.MustChangePassword,
+                user.PasswordHash is not null,
+                user.GooglePictureUrl,
+                user.IsGuest,
+                user.BudgetTotalCurrency,
+                isAdmin,
+                user.TermsVersion,
+                TermsVersion.IsCurrent(user.TermsVersion),
+                TermsVersion.UpdateIsMaterial(user.TermsVersion, TermsVersion.Current, TermsVersion.CurrentIsMaterial));
         }
     }
 }

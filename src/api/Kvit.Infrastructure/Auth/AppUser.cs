@@ -30,9 +30,19 @@ namespace Kvit.Infrastructure.Auth
 
         public Currency? BudgetTotalCurrency { get; private set; }
 
+        public string? TermsVersion { get; private set; }
+
+        public DateTimeOffset? TermsAcceptedAt { get; private set; }
+
         public void SetBudgetTotalCurrency(Currency? budgetTotalCurrency)
         {
             BudgetTotalCurrency = budgetTotalCurrency;
+        }
+
+        public void AcceptTerms(string termsVersion, DateTimeOffset acceptedAt)
+        {
+            TermsVersion = termsVersion;
+            TermsAcceptedAt = acceptedAt;
         }
     }
 }

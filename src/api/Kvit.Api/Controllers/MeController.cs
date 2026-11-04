@@ -41,5 +41,12 @@ namespace Kvit.Api.Controllers
             Result result = await _dispatcher.Send(new RecordActiveCommand(), cancellationToken);
             return Result(result);
         }
+
+        [HttpPost("terms/accept")]
+        public async Task<ActionResult> AcceptTerms(CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new AcceptTermsCommand(), cancellationToken);
+            return Result(result);
+        }
     }
 }

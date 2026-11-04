@@ -22,6 +22,9 @@ namespace Kvit.Infrastructure.Persistence.Configurations
                     "ck_users_guest_has_no_email_or_password",
                     "NOT is_guest OR (email IS NULL AND normalized_email IS NULL AND password_hash IS NULL)");
                 table.HasCheckConstraint("ck_users_budget_total_currency", EnumCheck.OneOf<Currency>("budget_total_currency"));
+                table.HasCheckConstraint(
+                    "ck_users_terms_version_and_time_together",
+                    "(terms_version IS NULL AND terms_accepted_at IS NULL) OR (terms_version IS NOT NULL AND terms_accepted_at IS NOT NULL AND char_length(terms_version) >= 1)");
             });
 
             builder.HasIndex(user => user.NormalizedEmail).HasDatabaseName(NormalizedEmailIndexName).IsUnique();
@@ -33,6 +36,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
             builder.Property(user => user.MustChangePassword).HasDefaultValue(false);
             builder.Property(user => user.IsGuest).HasDefaultValue(false);
             builder.Property(user => user.BudgetTotalCurrency).HasConversion<string>();
+            builder.Property(user => user.TermsVersion).HasMaxLength(20);
         }
     }
 }

@@ -32,5 +32,7 @@ namespace Kvit.Contracts.Auth
         Task<Result> ChangeLanguageAsync(Guid userId, string language, CancellationToken cancellationToken);
 
         Task<Result> SetBudgetTotalCurrencyAsync(Guid userId, Currency? budgetTotalCurrency, CancellationToken cancellationToken);
+
+        Task<Result> AcceptCurrentTermsAsync(Guid userId, CancellationToken cancellationToken);
     }
 }

@@ -1157,6 +1157,15 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("security_stamp");
 
+                    b.Property<DateTimeOffset?>("TermsAcceptedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("terms_accepted_at");
+
+                    b.Property<string>("TermsVersion")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("terms_version");
+
                     b.Property<string>("TimeZone")
                         .IsRequired()
                         .HasColumnType("text")
@@ -1193,6 +1202,8 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_users_guest_has_no_email_or_password", "NOT is_guest OR (email IS NULL AND normalized_email IS NULL AND password_hash IS NULL)");
 
                             t.HasCheckConstraint("ck_users_language", "language IN ('en', 'mk')");
+
+                            t.HasCheckConstraint("ck_users_terms_version_and_time_together", "(terms_version IS NULL AND terms_accepted_at IS NULL) OR (terms_version IS NOT NULL AND terms_accepted_at IS NOT NULL AND char_length(terms_version) >= 1)");
 
                             t.HasCheckConstraint("ck_users_time_zone_not_empty", "char_length(time_zone) >= 1");
                         });

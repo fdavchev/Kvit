@@ -10,7 +10,7 @@ namespace Kvit.Api.Tests.Auth
     public class RegisterTests(AuthApp _app) : IClassFixture<AuthApp>
     {
         [Fact]
-        public async Task Register_ValidData_Answers200WithExactlyTheElevenAccountFields()
+        public async Task Register_ValidData_Answers200WithExactlyTheFourteenAccountFields()
         {
             RegistrationForm form = RegistrationForm.Valid();
             HttpClient client = _app.CreateClient();
@@ -20,8 +20,7 @@ namespace Kvit.Api.Tests.Auth
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             JsonElement body = await AuthRequests.ReadJsonAsync(response);
             string[] propertyNames = [.. body.EnumerateObject().Select(property => property.Name).Order(StringComparer.Ordinal)];
-            string[] expectedNames = ["budgetTotalCurrency", "displayName", "email", "hasPassword", "id", "isAdmin", "isGuest", "language", "mustChangePassword", "pictureUrl", "timeZone"];
-            Assert.Equal(expectedNames, propertyNames);
+            Assert.Equal(MeFields.SortedAccountFieldNames, propertyNames);
         }
 
         [Fact]
