@@ -50,7 +50,7 @@ Last phase of Release 3. Plan: `guides/phase-18-admin-stats-prompt.md`; mockup: 
   - **Step 2 (2026-11-04):** `GET /api/admin/stats` answers 6131 of 6131 backend tests, no migration (family-sized data; the filter is on a calculated Skopje day, so an index would not help). Counting is one parameterised raw SQL query (EF cannot write `AT TIME ZONE`), admin accounts excluded in SQL.
   - Activity rows of deleted accounts (no user id) do not count as active people or person-days; they count in every other number.
   - "All" with an end date before the first event gives a one-day range, not an error.
-  - Allowed-in-all-time "accounts" = Email and Google sign-ups only; guests are a separate number and a guest who later makes an account is not added to accounts.
+  - In the all-time line "accounts" = Email and Google sign-ups only; guests are a separate number and a guest who later makes an account is not added to accounts.
   - A non-admin with bad parameters gets 403, never 400 (the admin check runs first).
 
 ## 2026-11-03: Phase 17 (the outbox): done, the rules that stay
