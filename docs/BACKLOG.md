@@ -133,3 +133,8 @@
 - **Render health checks and the free sleep:** whether Render's `/health` checks keep a free server awake is NOT VERIFIED; the live run (Step 4) shows it.
 - **Render logs show every SQL command** (EF Core Information level, parameters hidden as `?`). Harmless but noisy; set the Render variable `Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command` to `Warning` if the log gets hard to read.
 - **Render rebuilds on every commit to `main`**, even docs-only or website-only ones. Render "Build Filters" (folder list) could limit it to `src/api`; how Render's free build allowance works is NOT VERIFIED.
+
+## Found during Phase 19 (2026-11-04)
+- [ ] **Rates source line on the Budget summary and the group plan:** Phase 19 Step 1 put the NBRM line on the expense detail, the Settings budget card and the Budget total card. The monthly summary (`SummaryCards.tsx`, `ConvertedCard`) and the group spending plan (`groupPlan.included`) also show converted amounts and have no line yet.
+- [ ] **Privacy notice must name GitHub when the weekly backup goes live (Phase 19 Step 8):** the encrypted backup is stored as a GitHub artifact; sections 5 (companies) and 10 (how long) of the notice need a sentence, the pinned test and `docs/legal/vendors.md` follow, and the notice version changes if the notice was already public.
+- [ ] **Macedonian «Префрли» in `common.switchToDarkMode` and `common.switchToLightMode`** contains the stem «префрл», which the records-only word list (Phase 19) treats as a banned word if the scan ever covers `common`. It means "switch" there; keep the scan limited to payment texts.

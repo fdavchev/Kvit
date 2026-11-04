@@ -18,6 +18,7 @@ import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitLinkButton } from '@/shared/components/KvitLinkButton'
 import { KvitLoading } from '@/shared/components/KvitLoading'
+import { KvitRatesSourceNote } from '@/shared/components/KvitRatesSourceNote'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { showUndoToast } from '@/shared/toasts/showUndoToast'
 import { formatDayWithYear, formatExpenseDay, todayInTimeZone } from '@/shared/utils/formatDate'
@@ -128,12 +129,15 @@ export function ExpenseDetailScreen() {
         <h2 className={sectionTitleLook}>{t('expense.split')}</h2>
         <SplitRows expense={expense} members={membersQuery.data.members} language={language} />
         {expense.currency === 'EUR' && (
-          <p className="pt-2.5 text-[0.8125rem] text-muted-foreground">
-            {t('expense.rate', {
-              rate: formatRate(expense.mkdPerEur, language),
-              date: formatDayWithYear(expense.rateDate, language),
-            })}
-          </p>
+          <>
+            <p className="pt-2.5 text-[0.8125rem] text-muted-foreground">
+              {t('expense.rate', {
+                rate: formatRate(expense.mkdPerEur, language),
+                date: formatDayWithYear(expense.rateDate, language),
+              })}
+            </p>
+            <KvitRatesSourceNote className="pt-1" />
+          </>
         )}
         <h2 className={sectionTitleLook}>{t('expense.history')}</h2>
         <ExpenseHistory

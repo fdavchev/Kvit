@@ -65,13 +65,22 @@ export function WelcomeScreen() {
         <KvitLinkButton to={routes.logIn} variant="link">
           {t('welcome.haveAccount')}
         </KvitLinkButton>
-        <KvitLinkButton
-          to={routes.privacy}
-          state={{ from: routes.welcome }}
-          variant="smallLink"
-        >
-          {t('common.privacy')}
-        </KvitLinkButton>
+        <div className="flex">
+          <KvitLinkButton
+            to={routes.terms}
+            state={{ from: routes.welcome }}
+            variant="smallLink"
+          >
+            {t('common.terms')}
+          </KvitLinkButton>
+          <KvitLinkButton
+            to={routes.privacy}
+            state={{ from: routes.welcome }}
+            variant="smallLink"
+          >
+            {t('common.privacy')}
+          </KvitLinkButton>
+        </div>
       </div>
       {takenIdToken !== null && (
         <GoogleEmailTakenDialog

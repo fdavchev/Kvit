@@ -93,6 +93,12 @@ describe('SettingsScreen for a guest', () => {
       expect(screen.getByRole('link', { name: translated('en', 'common.privacy') }).getAttribute('href')).toBe(routes.privacy)
     })
 
+    it('still has the Terms link for a guest', async () => {
+      await renderSettings(testGuestMe)
+
+      expect(screen.getByRole('link', { name: translated('en', 'common.terms') }).getAttribute('href')).toBe(routes.terms)
+    })
+
     it.each([true, false])('shows no guest card to a person with an account when hasPassword is %s', async (hasPassword) => {
       await renderSettings({ ...testMe, hasPassword })
 

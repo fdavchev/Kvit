@@ -3,15 +3,14 @@
 _Last updated: 2026-11-04 (Phase 18 merged; Phase 19 Step 0 started: branch, doc fixes, mockup page)_
 
 ## Where we stopped
-- Release 1 accepted 2026-10-16. Phases 12 to 18 are merged (Release 3 "polish" done; Phase 18, the admin statistics page, merged as PR #22 on 2026-11-04, `main` = `ddf41f2`).
-- Branch `feat/19-legal` (made from that `main`): Phase 19, legal pages and data rights. Step 0 done: ROADMAP fixed (support email, no LICENSE file), mockup page `docs/design/2026-11-04-phase-19/index.html`, Filip's ten picks logged in `DECISIONS.md`.
-- Brief: `docs/guides/phase-19-legal-prompt.md`; research: `docs/reports/2026-11-04-phase-19-legal-research.md` (not legal advice); Filip's decisions: `docs/DECISIONS.md`, "Phase 19"; first-push texts: `docs/guides/phase-19-pr-text.md`.
+- Release 1 accepted 2026-10-16. Phases 12 to 18 are merged (`main` = `ddf41f2`, PR #22). Branch `feat/19-legal`: Phase 19, legal pages and data rights, being built without Filip at the laptop (his go for all steps, 2026-11-04; one commit per step, never pushed).
+- Done: Step 0 (mockups, ten picks in `DECISIONS.md`); Step 1 (Terms of Use, new privacy notice, rates source line, `docs/legal/`; frontend 13655 tests pass). Step 2 (backend terms acceptance) is in progress.
+- Brief: `docs/guides/phase-19-legal-prompt.md`; research: `docs/reports/2026-11-04-phase-19-legal-research.md` (not legal advice); decisions: `docs/DECISIONS.md`, "Phase 19"; first-push texts: `docs/guides/phase-19-pr-text.md`.
 - Nothing is pushed by Claude.
 
 ## Next step
-1. Filip: commit the Step 0 files (suggested subject: "Add the Phase 19 mockups, picks and doc fixes.").
-2. Claude: Step 1, the texts (EN + MK) and `docs/legal/`. Tester first, then coder after Filip's go.
-3. Filip, whenever: make the online account admin (`docs/guides/grant-admin.md`) and look at the Statistics page on the real site and a phone (`docs/guides/phase-18-admin-stats.md`). Phase 19 Step 7b (owner tools) needs it.
+1. Claude: Steps 2 to 11 in order (see ROADMAP). The final report and guide are written at Step 10.
+2. Filip, whenever: make the online account admin (`docs/guides/grant-admin.md`); Phase 19 Step 7b needs it.
 
 ## Then
 - Filip, once on the real site: one real EUR expense (first real NBRM call), a real phone check of the Phase 16 to 18 screens, the Macedonian drafts of Phases 9 to 18, the Google button and "Make an account", the invite link on his phone.

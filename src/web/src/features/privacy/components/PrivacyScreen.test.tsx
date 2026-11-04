@@ -1,16 +1,40 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { languages, type Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import { stubFetch } from '@/test/apiTestHelpers'
+import {
+  countOfEmailsInDocument,
+  elementShowingText,
+  emailCountIn,
+  mailtoLinks,
+  numbersUpTo,
+  sectionBody,
+  sectionHeading,
+  shortItems,
+  shortTitle,
+  supportEmailText,
+  supportMailtoHref,
+} from '@/test/legalScreenTestHelpers'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { translated } from '@/test/translated'
 import { PrivacyScreen } from './PrivacyScreen'
 
-const sectionNumbers = [1, 2, 3, 4, 5, 6, 7]
+const sectionCount = 19
+const sectionNumbers = numbersUpTo(sectionCount)
+const textsWithTheEmail = [
+  'short.items.5',
+  'sections.1.body',
+  'sections.11.body',
+  'sections.14.body',
+]
 
 const sectionsInEachLanguage = languages.flatMap((language) =>
   sectionNumbers.map((number) => [language, number] as const),
+)
+
+const emailTextsInEachLanguage = languages.flatMap((language) =>
+  textsWithTheEmail.map((key) => [language, key] as const),
 )
 
 async function renderPrivacy(options: { language?: Language; routerState?: unknown } = {}) {
@@ -39,16 +63,47 @@ describe('PrivacyScreen', () => {
     expect(screen.getByText(translated(language, 'privacy.updated'))).toBeTruthy()
   })
 
-  it.each(languages)('shows seven section headings in order (%s)', async (language) => {
+  it.each(languages)('shows the In short box with its title as a heading of level 2 (%s)', async (language) => {
+    await renderPrivacy({ language })
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: shortTitle(language, 'privacy') }),
+    ).toBeTruthy()
+  })
+
+  it.each(languages)('shows the five short items as one list in order (%s)', async (language) => {
+    await renderPrivacy({ language })
+
+    const items = within(screen.getByRole('list')).getAllByRole('listitem')
+
+    expect(items.map((item) => item.textContent)).toEqual(shortItems(language, 'privacy'))
+  })
+
+  it.each(languages)('puts the short list after the In short title and before the first section (%s)', async (language) => {
+    await renderPrivacy({ language })
+
+    const title = screen.getByRole('heading', { level: 2, name: shortTitle(language, 'privacy') })
+    const firstSection = screen.getByRole('heading', {
+      level: 2,
+      name: sectionHeading(language, 'privacy', 1),
+    })
+    const list = screen.getByRole('list')
+
+    expect(title.compareDocumentPosition(list)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(list.compareDocumentPosition(firstSection)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  })
+
+  it.each(languages)('shows the In short title and then nineteen section headings in order (%s)', async (language) => {
     await renderPrivacy({ language })
 
     const headings = screen
       .getAllByRole('heading', { level: 2 })
       .map((heading) => heading.textContent)
 
-    expect(headings).toEqual(
-      sectionNumbers.map((number) => translated(language, `privacy.sections.${number}.heading`)),
-    )
+    expect(headings).toEqual([
+      shortTitle(language, 'privacy'),
+      ...sectionNumbers.map((number) => sectionHeading(language, 'privacy', number)),
+    ])
   })
 
   it.each(sectionsInEachLanguage)('shows the paragraph of section %s-%i right after its heading', async (language, number) => {
@@ -56,12 +111,33 @@ describe('PrivacyScreen', () => {
 
     const heading = screen.getByRole('heading', {
       level: 2,
-      name: translated(language, `privacy.sections.${number}.heading`),
+      name: sectionHeading(language, 'privacy', number),
     })
 
-    expect(heading.nextElementSibling?.textContent).toBe(
-      translated(language, `privacy.sections.${number}.body`),
+    expect(heading.nextElementSibling?.textContent).toBe(sectionBody(language, 'privacy', number))
+  })
+
+  it.each(emailTextsInEachLanguage)('turns the email address in the text %s-%s into a mailto link and keeps the text the same', async (language, key) => {
+    await renderPrivacy({ language })
+    const text = translated(language, `privacy.${key}`)
+
+    const element = elementShowingText(text)
+    const links = within(element).getAllByRole('link')
+
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(
+      Array(emailCountIn(text)).fill(supportMailtoHref),
     )
+    expect(links.map((link) => link.textContent)).toEqual(
+      Array(emailCountIn(text)).fill(supportEmailText),
+    )
+    expect(element.textContent).toBe(text)
+  })
+
+  it.each(languages)('has a mailto link for every email address in the texts and for nothing else (%s)', async (language) => {
+    await renderPrivacy({ language })
+
+    expect(mailtoLinks()).toHaveLength(countOfEmailsInDocument(language, 'privacy', sectionCount))
+    expect(mailtoLinks().length).toBeGreaterThan(0)
   })
 
   it('shows the screen without asking the server anything, so it works for a signed-out visitor', async () => {

@@ -9,6 +9,7 @@ export const routes = {
   setPassword: '/settings/set-password',
   makeAccount: '/settings/make-account',
   privacy: '/privacy',
+  terms: '/terms',
   groups: '/groups',
   newGroup: '/groups/new',
   newGroupGroup: '/groups/new/group',

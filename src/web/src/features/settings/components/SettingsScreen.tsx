@@ -102,6 +102,13 @@ export function SettingsScreen() {
           </KvitLinkButton>
         )}
         <KvitLinkButton
+          to={routes.terms}
+          state={{ from: routes.settings }}
+          variant="secondary"
+        >
+          {t('common.terms')}
+        </KvitLinkButton>
+        <KvitLinkButton
           to={routes.privacy}
           state={{ from: routes.settings }}
           variant="secondary"

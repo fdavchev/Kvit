@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { errorMessageKey } from '@/core/api/errors'
 import { useSaveOnce } from '@/features/budget/categories/hooks/useSaveOnce'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
+import { KvitRatesSourceNote } from '@/shared/components/KvitRatesSourceNote'
 import type { Currency } from '@/shared/utils/formatMoney'
 import { cn } from '@/shared/utils/cn'
 import { useChangeBudgetCurrency } from '../hooks/useChangeBudgetCurrency'
@@ -70,6 +71,7 @@ export function BudgetTotalSettings({ budgetTotalCurrency }: BudgetTotalSettings
         ))}
       </div>
       <p className="text-[0.875rem] text-pretty text-muted-foreground">{t('settings.budget.hint')}</p>
+      <KvitRatesSourceNote />
     </section>
   )
 }

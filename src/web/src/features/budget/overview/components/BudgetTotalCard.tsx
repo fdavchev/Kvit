@@ -8,6 +8,7 @@ import type {
 } from '@/core/services/personalEntries/personalEntriesService'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
 import { KvitFitAmount, KvitFitRollingAmount } from '@/shared/components/KvitFitAmount'
+import { KvitRatesSourceNote } from '@/shared/components/KvitRatesSourceNote'
 import { cn } from '@/shared/utils/cn'
 import { moneyParts, type Currency } from '@/shared/utils/formatMoney'
 import { signedMoneyParts } from '@/shared/utils/formatSignedMoney'
@@ -166,7 +167,10 @@ export function BudgetConvertedTotalCard({ converted, hasConvertedItems }: Budge
         </>
       )}
       {hasConvertedItems && (
-        <p className="mt-1 text-[0.8125rem] text-muted-foreground">{t(includesConvertedKeys[currency])}</p>
+        <>
+          <p className="mt-1 text-[0.8125rem] text-muted-foreground">{t(includesConvertedKeys[currency])}</p>
+          <KvitRatesSourceNote />
+        </>
       )}
     </section>
   )

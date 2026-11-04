@@ -1,0 +1,152 @@
+import { describe, expect, it } from 'vitest'
+import { collectTexts } from '@/test/localeTexts'
+import { translated } from '@/test/translated'
+import en from './locales/en.json'
+import mk from './locales/mk.json'
+
+const legalTexts: [string, string, string][] = [
+  ['common.terms', 'Terms', 'Услови'],
+  ['legal.ratesSource', 'Exchange rates: National Bank of the Republic of North Macedonia (NBRM), nbrm.mk. Informational, may be late or wrong.', 'Цени на валутите: Народна банка на Република Северна Македонија (НБРСМ), nbrm.mk. Само информативно, може да доцнат или да грешат.'],
+  ['terms.title', 'Terms of Use', 'Услови за користење'],
+  ['terms.updated', 'Last updated 4 November 2026 · version 2026-11-04', 'Последно ажурирано на 4 ноември 2026 · верзија 2026-11-04'],
+  ['terms.short.title', 'In short', 'Накратко'],
+  ['terms.short.items.1', 'Kvit is a notebook for sharing expenses with friends and family. It does not hold, send or receive money.', 'Kvit е тетратка за делење трошоци со пријатели и семејство. Не држи, не испраќа и не прима пари.'],
+  ['terms.short.items.2', 'You must be 16 or older.', 'Мора да имаш 16 или повеќе години.'],
+  ['terms.short.items.3', 'Amounts and exchange rates can be wrong. Check them before you rely on them.', 'Износите и цените на валутите може да грешат. Провери ги пред да им веруваш.'],
+  ['terms.short.items.4', 'Kvit is free and comes with no promises: it can be slow, change or stop, and data can be lost.', 'Kvit е бесплатен и без ветувања: може да биде бавен, да се промени или да престане, а податоците може да се изгубат.'],
+  ['terms.short.items.5', 'What you write is yours. Be fair to other people, or your account can be suspended.', 'Она што го пишуваш е твое. Биди фер кон другите, инаку профилот може да ти биде суспендиран.'],
+  ['terms.sections.1.heading', 'Who can use Kvit', 'Кој може да користи Kvit'],
+  ['terms.sections.1.body', "Kvit is for people aged 16 and over. If you are younger than 16, please don't make an account or join a group.", 'Kvit е за луѓе на 16 и повеќе години. Ако си помлад од 16 години, те молиме не прави профил и не се придружувај на група.'],
+  ['terms.sections.2.heading', 'Your account', 'Твојот профил'],
+  ['terms.sections.2.body', "You are responsible for everything that happens with your login. Keep your password to yourself. A guest has no email, so if a guest loses the phone or the browser, the account can't be recovered. Tell us if someone else is using your account.", 'Ти одговараш за сѐ што се случува со твојата најава. Чувај ја лозинката за себе. Гостинот нема е-пошта, па ако изгуби телефон или прелистувач, профилот не може да се врати. Кажи ни ако некој друг го користи твојот профил.'],
+  ['terms.sections.3.heading', 'A notebook, not a bank', 'Тетратка, не банка'],
+  ['terms.sections.3.body', 'Kvit only keeps a record of who paid and who owes. It does not hold, send or receive money, and it does not make anyone pay. “Paid” and “confirmed” mean what the people in the group say. Pay each other outside Kvit, the way you always did.', 'Kvit само води евиденција кој платил и кој должи. Не држи, не испраќа и не прима пари и не го принудува никого да плати. „Платено“ и „потврдено“ значи она што го велат луѓето во групата. Парите разменувајте ги надвор од Kvit, како и досега.'],
+  ['terms.sections.4.heading', 'Amounts, rounding and rates', 'Износи, заокружување и цени на валути'],
+  ['terms.sections.4.body', 'Kvit rounds amounts and changes euros and denars with the exchange rates of the National Bank of the Republic of North Macedonia. Rates can be late or wrong, and rounding can leave small differences. Kvit gives no financial, tax or legal advice.', 'Kvit ги заокружува износите и ги претвора еврата и денарите според цените на Народната банка на Република Северна Македонија. Цените може да доцнат или да грешат, а заокружувањето може да остави мали разлики. Kvit не дава финансиски, даночни или правни совети.'],
+  ['terms.sections.5.heading', 'How to use Kvit', 'Како да го користиш Kvit'],
+  ['terms.sections.5.body', "Don't use Kvit to harass, threaten or cheat anyone, to share illegal content, to pretend to be someone else, to send spam, or to try to break or overload it.", 'Не го користи Kvit за малтретирање, закани или измама, за споделување незаконска содржина, за лажно претставување како некој друг, за спам или за обид да се оштети или преоптовари.'],
+  ['terms.sections.6.heading', 'What you write', 'Она што го пишуваш'],
+  ['terms.sections.6.body', 'The names, amounts and notes you enter stay yours. By entering them you let Kvit store them and show them to the other members of your group, so that the app can work.', 'Имињата, износите и белешките што ги внесуваш остануваат твои. Со внесувањето му дозволуваш на Kvit да ги чува и да им ги покажува на другите членови на твојата група, за апликацијата да работи.'],
+  ['terms.sections.7.heading', 'Between members', 'Меѓу членовите'],
+  ['terms.sections.7.body', "Disagreements about money or anything else in a group are between its members. Kvit is not a party to them and can't settle them.", 'Несогласувањата за пари или за нешто друго во групата се меѓу нејзините членови. Kvit не е страна во нив и не може да ги реши.'],
+  ['terms.sections.8.heading', 'No promises', 'Без ветувања'],
+  ['terms.sections.8.body', 'Kvit is free and offered as it is. It can be slow, stop, change or lose data, with or without warning. Keep your own copy of anything important: you can download your data in Settings.', 'Kvit е бесплатен и се нуди каков што е. Може да биде бавен, да престане, да се промени или да изгуби податоци, со или без предупредување. Чувај своја копија од сѐ што е важно: податоците можеш да ги преземеш во Поставки.'],
+  ['terms.sections.9.heading', 'Responsibility', 'Одговорност'],
+  ['terms.sections.9.body', 'As far as the law allows, the person who runs Kvit is not responsible for losses that come from using Kvit or from not being able to use it. This does not limit anything that the law does not allow to be limited.', 'Колку што законот дозволува, тој што го води Kvit не одговара за штети што доаѓаат од користењето на Kvit или од тоа што не може да се користи. Ова не го ограничува она што законот не дозволува да се ограничи.'],
+  ['terms.sections.10.heading', 'Suspending and removing', 'Суспендирање и отстранување'],
+  ['terms.sections.10.body', 'Kvit can suspend an account or close a group that breaks these Terms or that someone reports, and can remove content. You can delete your own account at any time in Settings.', 'Kvit може да суспендира профил или да затвори група што ги крши овие услови или за која некој пријавил, и може да отстрани содржина. Својот профил можеш да го избришеш во секое време во Поставки.'],
+  ['terms.sections.11.heading', 'Changes', 'Промени'],
+  ['terms.sections.11.body', 'If these Terms change, you will see a notice in the app, and the date and version at the top change. For big changes we ask you to agree again. If you keep using Kvit after a change, you accept the new Terms.', 'Ако овие услови се променат, ќе видиш известување во апликацијата, а датумот и верзијата на врвот се менуваат. За поголеми промени ќе те замолиме повторно да се согласиш. Ако продолжиш да го користиш Kvit по промената, ги прифаќаш новите услови.'],
+  ['terms.sections.12.heading', 'Open-source parts', 'Софтвер со отворен код'],
+  ['terms.sections.12.body', "Kvit is built with open-source software, and each part keeps its own licence. The name Kvit and Kvit's own code are not offered for reuse.", 'Kvit е изграден со софтвер со отворен код, а секој дел си ја задржува својата лиценца. Името Kvit и сопствениот код на Kvit не се понудени за повторна употреба.'],
+  ['terms.sections.13.heading', 'Contact', 'Контакт'],
+  ['terms.sections.13.body', 'Questions, reports and requests about these Terms or your data: write to kvit.support@gmail.com.', 'Прашања, пријави и барања за овие услови или за твоите податоци: пиши на kvit.support@gmail.com.'],
+  ['terms.sections.14.heading', 'Law and courts', 'Закон и судови'],
+  ['terms.sections.14.body', 'These Terms follow the law of North Macedonia, and its courts decide disputes about them. This does not take away any right that the law gives you as a consumer where you live.', 'Овие услови се водат според законите на Северна Македонија, а за споровите околу нив одлучуваат нејзините судови. Ова не ти ги одзема правата што ти ги дава законот како потрошувач таму каде што живееш.'],
+  ['terms.sections.15.heading', 'If a part does not apply', 'Ако еден дел не важи'],
+  ['terms.sections.15.body', 'If one part of these Terms is not valid, the rest still applies. Nothing in these Terms removes a right that the law gives you.', 'Ако еден дел од овие услови не важи, остатокот останува на сила. Ништо во овие услови не ти одзема право што ти го дава законот.'],
+  ['privacy.title', 'Privacy', 'Приватност'],
+  ['privacy.updated', 'Last updated 4 November 2026 · version 2026-11-04', 'Последно ажурирано на 4 ноември 2026 · верзија 2026-11-04'],
+  ['privacy.short.title', 'In short', 'Накратко'],
+  ['privacy.short.items.1', 'Kvit keeps your name, your groups, expenses and payments, and your personal budget if you make one. Email accounts also keep an email and a scrambled password.', 'Kvit го чува твоето име, твоите групи, трошоци и плаќања и твојот личен буџет ако правиш. Профилите со е-пошта чуваат и е-пошта и измешана лозинка.'],
+  ['privacy.short.items.2', 'Your data is used only to run Kvit. It is never sold, and there are no ads and no tracking.', 'Твоите податоци се користат само за да работи Kvit. Никогаш не се продаваат, нема реклами и нема следење.'],
+  ['privacy.short.items.3', "People in your group see that group's expenses. Nobody else does, except the person who runs Kvit if a group is reported.", 'Луѓето во твојата група ги гледаат трошоците на таа група. Никој друг не ги гледа, освен тој што го води Kvit ако некоја група е пријавена.'],
+  ['privacy.short.items.4', 'You can download your data and delete your account in Settings.', 'Можеш да ги преземеш твоите податоци и да го избришеш профилот во Поставки.'],
+  ['privacy.short.items.5', 'Questions: kvit.support@gmail.com.', 'Прашања: kvit.support@gmail.com.'],
+  ['privacy.sections.1.heading', 'Who runs Kvit', 'Кој го води Kvit'],
+  ['privacy.sections.1.body', 'Kvit is run by Filip Davchev in North Macedonia, as a free project for family and friends. He decides how your data is used. Contact: kvit.support@gmail.com.', 'Kvit го води Filip Davchev во Северна Македонија, како бесплатен проект за семејство и пријатели. Тој одлучува како се користат твоите податоци. Контакт: kvit.support@gmail.com.'],
+  ['privacy.sections.2.heading', 'What Kvit keeps', 'Што чува Kvit'],
+  ['privacy.sections.2.body', "Your name, language and time zone. For an email account: your email and a scrambled form of your password. For Google sign-in: your email, the link to your Google picture and Google's ID for you. The groups, expenses, payments and notes that you and your friends enter, and your personal budget if you use it. Simple counts of how the app is used, tied to your account but never with amounts or names. A guest keeps only a name and what the guest enters.", 'Твоето име, јазик и временска зона. За профил со е-пошта: твојата е-пошта и измешан облик на лозинката. За најава со Google: твојата е-пошта, линкот до твојата слика од Google и ознаката на Google за тебе. Групите, трошоците, плаќањата и белешките што ги внесуваш ти и твоите пријатели, и твојот личен буџет ако го користиш. Едноставни бројки за користењето, врзани за твојот профил, но никогаш со износи или имиња. Гостинот чува само име и она што го внесува.'],
+  ['privacy.sections.3.heading', 'Why Kvit uses it', 'Зошто Kvit ги користи'],
+  ['privacy.sections.3.body', 'To run your account, your groups and your budget (this is what you ask Kvit to do). To keep Kvit safe, stop abuse and limit too many tries (a legitimate interest: keeping a free service working). To count how many people use Kvit (also a legitimate interest, with counts only).', 'За да работат твојот профил, твоите групи и твојот буџет (тоа е она што го бараш од Kvit). За да го одржува Kvit безбеден, да спречува злоупотреба и да ограничува премногу обиди (легитимен интерес: бесплатната услуга да продолжи да работи). За да брои колку луѓе го користат Kvit (исто така легитимен интерес, само со бројки).'],
+  ['privacy.sections.4.heading', 'Who can see what', 'Кој што може да види'],
+  ['privacy.sections.4.body', "People in a group see that group's expenses, payments and balances. Your personal budget is seen only by you. The person who runs Kvit sees only totals, for example how many accounts exist. If someone reports a group or an account, he can look at what he needs to decide, and he keeps a note of what he did and why.", 'Луѓето во една група ги гледаат трошоците, плаќањата и салдата на таа група. Твојот личен буџет го гледаш само ти. Тој што го води Kvit гледа само вкупни бројки, на пример колку профили има. Ако некој пријави група или профил, тој може да погледне што му треба за да одлучи и води белешка што направил и зошто.'],
+  ['privacy.sections.5.heading', 'Companies that help run Kvit', 'Компании што помагаат да работи Kvit'],
+  ['privacy.sections.5.body', 'Cloudflare delivers the website and passes requests on. Render runs the server. Neon stores the database. Google handles sign-in if you use it. These companies process data only to give their service to Kvit. The National Bank of the Republic of North Macedonia only receives requests for exchange rates, with no personal data.', 'Cloudflare ја доставува веб-страницата и ги проследува барањата. Render го извршува серверот. Neon ја чува базата. Google ја води најавата ако ја користиш. Овие компании обработуваат податоци само за да му ја дадат својата услуга на Kvit. Народната банка на Република Северна Македонија добива само барања за цените на валутите, без лични податоци.'],
+  ['privacy.sections.6.heading', 'Data outside the EU', 'Податоци надвор од ЕУ'],
+  ['privacy.sections.6.body', 'The database is in Frankfurt, Germany. Cloudflare, Render and Google are US companies and may handle data outside the EU. They say they use approved safeguards, such as the EU-US Data Privacy Framework or standard contractual clauses.', 'Базата е во Франкфурт, Германија. Cloudflare, Render и Google се американски компании и може да обработуваат податоци надвор од ЕУ. Тие велат дека користат одобрени заштити, како рамката ЕУ-САД за приватност на податоци или стандардни договорни клаузули.'],
+  ['privacy.sections.7.heading', 'Sign in with Google', 'Најава со Google'],
+  ['privacy.sections.7.body', "The Google button loads a script from Google when the first screen opens, so Google can see your internet address and browser details even if you don't tap it. If you sign in, Kvit receives your name, email and picture link. Kvit cannot read your Gmail, your contacts or anything else in your Google account.", 'Копчето на Google вчитува скрипта од Google кога ќе се отвори првиот екран, па Google може да ја види твојата интернет-адреса и податоци за прелистувачот дури и ако не го допреш. Ако се најавиш, Kvit добива твое име, е-пошта и линк до сликата. Kvit не може да ја чита твојата Gmail-пошта, контактите или нешто друго во твојот Google профил.'],
+  ['privacy.sections.8.heading', 'Passwords', 'Лозинки'],
+  ['privacy.sections.8.body', 'A password is never stored the way you type it, only as a scrambled code that nobody can turn back into the password.', 'Лозинката никогаш не се чува онака како што ја внесуваш, туку само како измешан код што никој не може да го врати во лозинка.'],
+  ['privacy.sections.9.heading', 'In your browser', 'Во твојот прелистувач'],
+  ['privacy.sections.9.body', 'One login cookie keeps you signed in for 90 days, and Kvit needs it to work. Your phone or browser also keeps a saved copy of your screens so they open fast, a queue of changes waiting to be sent, and your language and theme. The saved copy is cleared when you log out. No ads, no tracking cookies.', 'Еден колач за најава те одржува најавен 90 дена, а Kvit го бара за да работи. Твојот телефон или прелистувач чува и зачувана копија од екраните за да се отвораат брзо, ред на промени што чекаат да се испратат, и твојот јазик и тема. Зачуваната копија се брише кога ќе се одјавиш. Без реклами, без колачиња за следење.'],
+  ['privacy.sections.10.heading', 'How long Kvit keeps things', 'Колку долго Kvit чува'],
+  ['privacy.sections.10.body', "Your data stays while your account exists. When you delete your account it is switched off at once and removed within 30 days. A deleted group or expense can be restored for a while, and is removed 30 days after that. Single usage events are merged into monthly totals after 12 months. The companies above keep technical logs for a short time, from days to a few weeks. Kvit's database can be restored up to 6 hours back, and Kvit keeps an encrypted weekly backup for up to 90 days. Accounts that are not used are kept and are not deleted automatically.", 'Твоите податоци остануваат додека постои профилот. Кога ќе го избришеш профилот, тој веднаш се исклучува и се отстранува во рок од 30 дена. Избришана група или трошок може да се врати некое време, а потоа се отстранува по 30 дена. Поединечните настани за користење се собираат во месечни бројки по 12 месеци. Компаниите погоре чуваат технички дневници кратко време, од денови до неколку недели. Базата на Kvit може да се врати до 6 часа наназад, а Kvit чува шифрирана неделна резервна копија до 90 дена. Профилите што не се користат се чуваат и не се бришат автоматски.'],
+  ['privacy.sections.11.heading', 'If someone added your name', 'Ако некој го додал твоето име'],
+  ['privacy.sections.11.body', "Someone in a group may type your name to add you, for example for a shared trip. Kvit keeps that name and the group's expenses in that group only. If you don't want to be there, write to kvit.support@gmail.com with the group link, and we will take your name out or replace it with “Former member”.", 'Некој во група може да го впише твоето име за да те додаде, на пример за заедничко патување. Kvit го чува тоа име и трошоците на групата само во таа група. Ако не сакаш да бидеш таму, пиши на kvit.support@gmail.com со линкот до групата и ќе го отстраниме името или ќе го заменеме со „Поранешен член“.'],
+  ['privacy.sections.12.heading', 'Your rights', 'Твоите права'],
+  ['privacy.sections.12.body', 'You can ask to see your data, correct it, delete it, limit its use, get a copy, or object to its use. You can also complain to the Personal Data Protection Agency of North Macedonia, or to the authority where you live.', 'Можеш да побараш да ги видиш, поправиш или избришеш твоите податоци, да ја ограничиш нивната употреба, да добиеш копија или да се спротивставиш на нивната употреба. Можеш да се жалиш и до Агенцијата за заштита на личните податоци на Северна Македонија или до органот каде што живееш.'],
+  ['privacy.sections.13.heading', 'Download your data', 'Преземи ги твоите податоци'],
+  ['privacy.sections.13.body', "In Settings, tap “Download my data”. You get a file with your profile, your personal budget and your groups with their expenses and payments. It does not contain other people's emails or private budgets.", 'Во Поставки допри „Преземи ги моите податоци“. Добиваш датотека со твојот профил, личниот буџет и твоите групи со нивните трошоци и плаќања. Во неа нема туѓи е-пошти ниту приватни буџети.'],
+  ['privacy.sections.14.heading', 'Delete your account', 'Избриши го профилот'],
+  ['privacy.sections.14.body', 'In Settings, tap “Delete my account”, or write to kvit.support@gmail.com. Your account is switched off at once. If you log in again within 30 days, the deletion is cancelled. After 30 days your email, login, Google link, password, personal budget and sessions are removed. Guests can delete their account too.', 'Во Поставки допри „Избриши го мојот профил“ или пиши на kvit.support@gmail.com. Профилот веднаш се исклучува. Ако се најавиш повторно во рок од 30 дена, бришењето се откажува. По 30 дена се отстрануваат твојата е-пошта, најавата, поврзувањето со Google, лозинката, личниот буџет и сесиите. И гостите можат да го избришат својот профил.'],
+  ['privacy.sections.15.heading', 'What stays after deletion', 'Што останува по бришењето'],
+  ['privacy.sections.15.body', "Expenses and payments in your groups stay, because other people's balances depend on them. Your name stays on them, or shows as “Former member” if you choose that when you delete. The saved copy and the queue in your own browser are removed when you log out. Backups can hold your data for up to 90 days.", 'Трошоците и плаќањата во твоите групи остануваат, бидејќи од нив зависат салдата на другите. Твоето име останува на нив или се покажува како „Поранешен член“ ако го избереш тоа при бришењето. Зачуваната копија и редот во твојот прелистувач се бришат кога ќе се одјавиш. Резервните копии може да ги чуваат твоите податоци до 90 дена.'],
+  ['privacy.sections.16.heading', 'Do you have to give data?', 'Мора ли да даваш податоци?'],
+  ['privacy.sections.16.body', "To make an account you give a name, and for an email account also an email and a password. Without them Kvit can't work for you. A guest gives only a name.", 'За да направиш профил даваш име, а за профил со е-пошта и е-пошта и лозинка. Без нив Kvit не може да работи за тебе. Гостинот дава само име.'],
+  ['privacy.sections.17.heading', 'No automated decisions', 'Без автоматски одлуки'],
+  ['privacy.sections.17.body', 'Kvit makes no decisions about you by computer and does no profiling. Your data is not sold.', 'Kvit не носи одлуки за тебе со компјутер и не прави профилирање. Твоите податоци не се продаваат.'],
+  ['privacy.sections.18.heading', 'Age', 'Возраст'],
+  ['privacy.sections.18.body', 'Kvit is for people aged 16 and over.', 'Kvit е за луѓе на 16 и повеќе години.'],
+  ['privacy.sections.19.heading', 'Changes', 'Промени'],
+  ['privacy.sections.19.body', 'If this notice changes, the date and version at the top change and you see a notice in the app.', 'Ако ова известување се промени, датумот и верзијата на врвот се менуваат и гледаш известување во апликацијата.'],
+]
+
+const legalNamespaces = /^(terms|privacy|legal)\./
+const placeholders = /\{\{\w+\}\}/g
+const claimsOfLegalSafety = /complian|legally safe|GDPR/i
+
+const languageTexts = [
+  ['en', en],
+  ['mk', mk],
+] as const
+
+function keysUnderLegalNamespaces(texts: object): string[] {
+  return collectTexts(texts)
+    .map(([path]) => path)
+    .filter((path) => legalNamespaces.test(path))
+    .sort()
+}
+
+describe('the approved Phase 19 legal texts', () => {
+  it.each(legalTexts)('has the approved English and Macedonian wording for %s', (key, english, macedonian) => {
+    expect(translated('en', key)).toBe(english)
+    expect(translated('mk', key)).toBe(macedonian)
+  })
+
+  it.each(languageTexts)('has no text under terms, privacy or legal in %s that is not listed above, so every line is locked and the old privacy lines are gone', (_language, texts) => {
+    const keysListedAbove = legalTexts
+      .map(([key]) => key)
+      .filter((key) => legalNamespaces.test(key))
+      .sort()
+
+    expect(keysUnderLegalNamespaces(texts)).toEqual(keysListedAbove)
+  })
+
+  it('has the same keys under terms, privacy and legal in English and Macedonian', () => {
+    expect(keysUnderLegalNamespaces(mk)).toEqual(keysUnderLegalNamespaces(en))
+  })
+
+  it.each(legalTexts)('uses the same placeholders in the English and the Macedonian text of %s', (_key, english, macedonian) => {
+    expect((english.match(placeholders) ?? []).sort()).toEqual((macedonian.match(placeholders) ?? []).sort())
+  })
+
+  it.each(languageTexts)('never claims legal safety, compliance or GDPR in any %s text under terms, privacy or legal', (_language, texts) => {
+    const offenders = collectTexts(texts)
+      .filter(([path, text]) => legalNamespaces.test(path) && typeof text === 'string' && claimsOfLegalSafety.test(text))
+      .map(([path]) => path)
+
+    expect(offenders).toEqual([])
+  })
+
+  it.each([
+    ['is compliant', true],
+    ['Kvit is legally safe', true],
+    ['Kvit follows the GDPR', true],
+    ['follows the gdpr', true],
+    ['Kvit keeps a record of who paid', false],
+  ])('recognises "%s" as a claim of legal safety: %s', (text, isClaim) => {
+    expect(claimsOfLegalSafety.test(text)).toBe(isClaim)
+  })
+})

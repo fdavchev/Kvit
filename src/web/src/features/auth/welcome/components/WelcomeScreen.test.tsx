@@ -158,6 +158,52 @@ describe('WelcomeScreen', () => {
     expect(router.state.location.state).toEqual({ from: routes.welcome })
   })
 
+  it.each(languages)('shows a Terms link next to the Privacy link, in the same row (%s)', async (language) => {
+    await renderWelcome({ language })
+
+    const privacy = screen.getByRole('link', { name: translated(language, 'common.privacy') })
+    const terms = screen.getByRole('link', { name: translated(language, 'common.terms') })
+
+    expect(terms.parentElement).toBe(privacy.parentElement)
+  })
+
+  it('shows the Terms link after the "I already have an account" link', async () => {
+    await renderWelcome()
+
+    const haveAccount = screen.getByRole('link', { name: translated('en', 'welcome.haveAccount') })
+    const terms = screen.getByRole('link', { name: translated('en', 'common.terms') })
+
+    expect(haveAccount.compareDocumentPosition(terms)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  })
+
+  it.each(languages)('gives the Terms link a tap area at least 44 px high, with min-h-11 and not min-h-10 (%s)', async (language) => {
+    await renderWelcome({ language })
+
+    const terms = screen.getByRole('link', { name: translated(language, 'common.terms') })
+
+    expect(Array.from(terms.classList)).toContain('min-h-11')
+    expect(Array.from(terms.classList)).not.toContain('min-h-10')
+  })
+
+  it('leads the Terms link to the terms address', async () => {
+    await renderWelcome()
+
+    const terms = screen.getByRole('link', { name: translated('en', 'common.terms') })
+
+    expect(terms.getAttribute('href')).toBe(routes.terms)
+  })
+
+  it('opens the terms screen and tells it to come back here when the Terms link is pressed', async () => {
+    const { router } = await renderWelcome()
+
+    fireEvent.click(screen.getByRole('link', { name: translated('en', 'common.terms') }))
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(routes.terms)
+    })
+    expect(router.state.location.state).toEqual({ from: routes.welcome })
+  })
+
   it('switches the screen language when the other language is pressed, with no error toast', async () => {
     const { i18n } = await renderWelcome()
 
