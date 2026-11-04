@@ -132,6 +132,80 @@ namespace Kvit.Api.Tests.AdminStats
             Assert.Equal(11, StatsJson.Buckets(stats).Count);
         }
 
+        [Fact]
+        public async Task Stats_FromTheDayBefore1January2026_Answers400DateTooOld()
+        {
+            HttpClient client = await AdminClientAsync();
+
+            HttpResponseMessage response = await AdminStatsRequests.GetAsync(client, from: "2025-12-31", to: "2026-11-04", by: "month");
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, "ADMIN_STATS_DATE_TOO_OLD");
+        }
+
+        [Fact]
+        public async Task Stats_FromOn1January2026_Answers200WithThePreviousPeriodRightBefore()
+        {
+            JsonElement stats = await StatsAsync(from: "2026-01-01", to: "2026-11-04", by: "month");
+
+            Assert.Equal("2026-01-01", StatsJson.Text(stats, "from"));
+            Assert.Equal("2025-02-27", StatsJson.Text(stats, "previousFrom"));
+            Assert.Equal("2025-12-31", StatsJson.Text(stats, "previousTo"));
+        }
+
+        [Theory]
+        [InlineData("0001-01-01")]
+        [InlineData("0002-11-04")]
+        [InlineData("0020-11-04")]
+        [InlineData("0202-11-04")]
+        public async Task Stats_FromInAYearTypedOnlyInPartGroupedByWeek_Answers400DateTooOld(string from)
+        {
+            HttpClient client = await AdminClientAsync();
+
+            HttpResponseMessage response = await AdminStatsRequests.GetAsync(client, from: from, to: "2026-11-04", by: "week");
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, "ADMIN_STATS_DATE_TOO_OLD");
+        }
+
+        [Fact]
+        public async Task Stats_UnknownGroupingAndFromTooOld_Answers400GroupingInvalid()
+        {
+            HttpClient client = await AdminClientAsync();
+
+            HttpResponseMessage response = await AdminStatsRequests.GetAsync(client, from: "2025-12-31", to: "2026-11-04", by: "hour");
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, "ADMIN_STATS_GROUPING_INVALID");
+        }
+
+        [Fact]
+        public async Task Stats_ToAfterTodayAndFromTooOld_Answers400FutureDate()
+        {
+            HttpClient client = await AdminClientAsync();
+
+            HttpResponseMessage response = await AdminStatsRequests.GetAsync(client, from: "2025-12-31", to: "2026-11-05", by: "month");
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, "ADMIN_STATS_FUTURE_DATE");
+        }
+
+        [Fact]
+        public async Task Stats_FromAfterToAndBothTooOld_Answers400RangeInvalid()
+        {
+            HttpClient client = await AdminClientAsync();
+
+            HttpResponseMessage response = await AdminStatsRequests.GetAsync(client, from: "2025-12-31", to: "2025-12-30", by: "month");
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, "ADMIN_STATS_RANGE_INVALID");
+        }
+
+        [Fact]
+        public async Task Stats_DayGroupingOfMoreThan92DaysAndFromTooOld_Answers400DateTooOld()
+        {
+            HttpClient client = await AdminClientAsync();
+
+            HttpResponseMessage response = await AdminStatsRequests.GetAsync(client, from: "2025-12-31", to: "2026-11-04", by: "day");
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, "ADMIN_STATS_DATE_TOO_OLD");
+        }
+
         [Theory]
         [InlineData("from", "not-a-date")]
         [InlineData("from", "2026-13-01")]

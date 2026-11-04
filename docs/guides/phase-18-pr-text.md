@@ -30,7 +30,7 @@ None planned. If the query needs an index on the usage events, it is added with 
 - [x] Step 2: backend, the statistics query
 - [x] Step 3: frontend, the page and the Settings row
 - [x] Step 4: desktop layout and the browser pass
-- [ ] Step 5: code review, report, guide
+- [x] Step 5: code review, report, guide
 
 ## Later one-line commit subjects
 - Step 0: Add the Phase 18 prompt, mockup and decisions for the admin statistics page.
@@ -38,3 +38,4 @@ None planned. If the query needs an index on the usage events, it is added with 
 - Step 2: Add GET /api/admin/stats with sign-ups, active people, joins, groups, expenses and payments counted in Skopje time.
 - Step 3: Add the Statistics page, the admin-only route and the Settings row.
 - Step 4: Fix the Phase 18 browser-pass findings: bars that overflowed the card, the Settings row behind the bottom bar, dimmed text contrast and big percentages.
+- Step 5: Add the Phase 18 report, guide and backlog notes, and refuse statistics start dates before 2026.

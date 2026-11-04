@@ -4,6 +4,8 @@ import { addDays, isCalendarDate } from '@/shared/utils/formatDate'
 
 export const statsTimeZone = 'Europe/Skopje'
 
+export const earliestStatsDay = '2026-01-01'
+
 export const statsRangeChoices = ['days7', 'days30', 'thisMonth', 'months12', 'all', 'custom'] as const
 
 export type StatsRangeChoice = (typeof statsRangeChoices)[number]
@@ -23,13 +25,13 @@ export function thisMonthDates(today: string): StatsDates {
 export function presetDates(range: Exclude<StatsRangeChoice, 'custom'>, today: string): StatsDates | null {
   switch (range) {
     case 'days7':
-      return { from: addDays(today, -6), to: today }
+      return clampedPreset(addDays(today, -6), today)
     case 'days30':
-      return { from: addDays(today, -29), to: today }
+      return clampedPreset(addDays(today, -29), today)
     case 'thisMonth':
       return thisMonthDates(today)
     case 'months12':
-      return { from: `${addMonths(monthOfDate(today), -11)}-01`, to: today }
+      return clampedPreset(`${addMonths(monthOfDate(today), -11)}-01`, today)
     case 'all':
       return null
   }
@@ -47,7 +49,17 @@ export function usualGrouping(range: StatsRangeChoice, dates: StatsDates | null)
 }
 
 export function isUsableCustomRange(dates: StatsDates, today: string): boolean {
-  return isCalendarDate(dates.from) && isCalendarDate(dates.to) && dates.from <= dates.to && dates.to <= today
+  return (
+    isCalendarDate(dates.from) &&
+    isCalendarDate(dates.to) &&
+    earliestStatsDay <= dates.from &&
+    dates.from <= dates.to &&
+    dates.to <= today
+  )
+}
+
+function clampedPreset(from: string, today: string): StatsDates {
+  return { from: from < earliestStatsDay ? earliestStatsDay : from, to: today }
 }
 
 function daysInRange({ from, to }: StatsDates): number {

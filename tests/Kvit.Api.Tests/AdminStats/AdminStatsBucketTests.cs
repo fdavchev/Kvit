@@ -102,15 +102,16 @@ namespace Kvit.Api.Tests.AdminStats
         [Fact]
         public async Task Stats_ByYear_BucketStartsOn1JanuaryAndEventsBeforeFromDoNotCount()
         {
+            _app.Clock.SetTo(Moment.At("2027-11-04T12:00:00Z"));
             Guid person = await _app.AddPersonAsync();
             await _app.AddEventsAsync(
-                UsageEvent.JoinedViaInvite(person, Moment.At("2025-10-31T10:00:00Z")),
-                UsageEvent.JoinedViaInvite(person, Moment.At("2025-12-15T10:00:00Z")),
-                UsageEvent.JoinedViaInvite(person, Moment.At("2026-06-01T10:00:00Z")));
+                UsageEvent.JoinedViaInvite(person, Moment.At("2026-10-31T10:00:00Z")),
+                UsageEvent.JoinedViaInvite(person, Moment.At("2026-12-15T10:00:00Z")),
+                UsageEvent.JoinedViaInvite(person, Moment.At("2027-06-01T10:00:00Z")));
 
-            JsonElement stats = await StatsAsync(from: "2025-11-01", to: "2026-11-04", by: "year");
+            JsonElement stats = await StatsAsync(from: "2026-11-01", to: "2027-11-04", by: "year");
 
-            Assert.Equal(["2025-01-01", "2026-01-01"], StatsJson.Buckets(stats));
+            Assert.Equal(["2026-01-01", "2027-01-01"], StatsJson.Buckets(stats));
             Assert.Equal([1, 1], StatsJson.Ints(stats, "joinedViaInvite", "counts"));
             Assert.Equal(2, StatsJson.Int(stats, "joinedViaInvite", "total"));
         }
@@ -118,14 +119,15 @@ namespace Kvit.Api.Tests.AdminStats
         [Fact]
         public async Task Stats_ByYear_NewYearsEveInSkopjeFallsInTheNextYear()
         {
+            _app.Clock.SetTo(Moment.At("2027-02-01T12:00:00Z"));
             Guid person = await _app.AddPersonAsync();
             await _app.AddEventsAsync(
-                UsageEvent.SignedUp(person, SignUpMethod.Email, Moment.At("2025-12-31T22:59:59Z")),
-                UsageEvent.SignedUp(person, SignUpMethod.Email, Moment.At("2025-12-31T23:00:00Z")));
+                UsageEvent.SignedUp(person, SignUpMethod.Email, Moment.At("2026-12-31T22:59:59Z")),
+                UsageEvent.SignedUp(person, SignUpMethod.Email, Moment.At("2026-12-31T23:00:00Z")));
 
-            JsonElement stats = await StatsAsync(from: "2025-12-01", to: "2026-01-31", by: "year");
+            JsonElement stats = await StatsAsync(from: "2026-12-01", to: "2027-01-31", by: "year");
 
-            Assert.Equal(["2025-01-01", "2026-01-01"], StatsJson.Buckets(stats));
+            Assert.Equal(["2026-01-01", "2027-01-01"], StatsJson.Buckets(stats));
             Assert.Equal([1, 1], StatsJson.Ints(stats, "signUps", "counts"));
         }
 

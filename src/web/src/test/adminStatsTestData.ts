@@ -74,11 +74,11 @@ export const weeklyStats: AdminStats = statsWith({
 })
 
 export const monthlyStats: AdminStats = statsWith({
-  from: '2025-12-01',
+  from: '2026-01-01',
   to: '2026-11-04',
   by: 'month',
-  previousFrom: '2024-12-01',
-  previousTo: '2025-11-04',
+  previousFrom: '2025-02-27',
+  previousTo: '2025-12-31',
   buckets: ['2026-10-01', '2026-11-01'],
   signUps: { ...novemberStats.signUps, counts: [5, 4] },
   activePeople: {

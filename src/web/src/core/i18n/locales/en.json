@@ -155,7 +155,8 @@
     "ADMIN_STATS_RANGE_INVALID": "The start date must be on or before the end date.",
     "ADMIN_STATS_FUTURE_DATE": "Pick dates up to today.",
     "ADMIN_STATS_GROUPING_INVALID": "Group by day, week, month or year.",
-    "ADMIN_STATS_DAY_RANGE_TOO_LONG": "Grouping by day works for up to 92 days. Pick a shorter range or group by week or month."
+    "ADMIN_STATS_DAY_RANGE_TOO_LONG": "Grouping by day works for up to 92 days. Pick a shorter range or group by week or month.",
+    "ADMIN_STATS_DATE_TOO_OLD": "Statistics start on 1 January 2026. Pick a later start date."
   },
   "language": {
     "label": "Language",
@@ -779,7 +780,7 @@
     "custom": {
       "from": "From",
       "to": "To",
-      "invalid": "Pick a start on or before the end, and an end no later than today."
+      "invalid": "Pick a start from 1 January 2026, on or before the end, and an end no later than today."
     },
     "by": {
       "label": "Group by",

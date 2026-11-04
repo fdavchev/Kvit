@@ -6,6 +6,8 @@ namespace Kvit.Domain.Statistics
     {
         public const int MaxDaysGroupedByDay = 92;
 
+        public static readonly DateOnly EarliestDay = new(2026, 1, 1);
+
         private StatsPeriod(StatsDateRange range, StatsGrouping grouping, StatsDateRange? previousRange)
         {
             Range = range;
@@ -36,6 +38,11 @@ namespace Kvit.Domain.Statistics
             if (from > lastDay)
             {
                 return Result.Failure<StatsPeriod>($"The range starts on {from}, after its last day {lastDay}.", ResultCodes.ADMIN_STATS_RANGE_INVALID);
+            }
+
+            if (from < EarliestDay)
+            {
+                return Result.Failure<StatsPeriod>($"The range starts on {from}, before statistics start on {EarliestDay}.", ResultCodes.ADMIN_STATS_DATE_TOO_OLD);
             }
 
             StatsDateRange range = new(from ?? FirstDayOfEverything(firstEventDay, lastDay), lastDay);

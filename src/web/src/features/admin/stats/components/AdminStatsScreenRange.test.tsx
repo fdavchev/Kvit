@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { adminStatsNow, defaultStatsUrl } from '@/test/adminStatsTestData'
 import {
@@ -121,7 +121,7 @@ describe('the statistics screen, the range and the grouping', () => {
     it.each([
       ['7 days', '2026-10-29', '2026-11-04', 'day', 'Day'],
       ['30 days', '2026-10-06', '2026-11-04', 'day', 'Day'],
-      ['12 months', '2025-12-01', '2026-11-04', 'month', 'Month'],
+      ['12 months', '2026-01-01', '2026-11-04', 'month', 'Month'],
     ])('asks for %s from %s to %s grouped by %s, with %s pressed', async (name, from, to, by, groupingName) => {
       const { fetchMock } = await openStats()
 
@@ -145,7 +145,7 @@ describe('the statistics screen, the range and the grouping', () => {
     it('goes back to this month, grouped by day, when This month is pressed again', async () => {
       const { fetchMock } = await openStats()
       pressChip('12 months')
-      await expectRequested(fetchMock, statsUrl({ from: '2025-12-01', to: '2026-11-04' }, 'month'))
+      await expectRequested(fetchMock, statsUrl({ from: '2026-01-01', to: '2026-11-04' }, 'month'))
 
       pressChip('This month')
 
@@ -161,11 +161,25 @@ describe('the statistics screen, the range and the grouping', () => {
       ['across the end of February', '2026-03-03T10:00:00Z', '30 days', '2026-02-02', '2026-03-03'],
       ['across the end of a leap February', '2028-03-01T10:00:00Z', '7 days', '2028-02-24', '2028-03-01'],
       ['across the end of a leap February', '2028-03-01T10:00:00Z', '30 days', '2028-02-01', '2028-03-01'],
-      ['across the new year', '2026-01-03T10:00:00Z', '7 days', '2025-12-28', '2026-01-03'],
-      ['in March, 11 months back is April of last year', '2026-03-03T10:00:00Z', '12 months', '2025-04-01', '2026-03-03'],
-      ['in January, 11 months back is February of last year', '2026-01-15T10:00:00Z', '12 months', '2025-02-01', '2026-01-15'],
+      ['across the new year', '2027-01-03T10:00:00Z', '7 days', '2026-12-28', '2027-01-03'],
+      ['in March, 11 months back is April of last year', '2027-03-03T10:00:00Z', '12 months', '2026-04-01', '2027-03-03'],
+      ['in January, 11 months back is February of last year', '2027-01-15T10:00:00Z', '12 months', '2026-02-01', '2027-01-15'],
       ['in December, 11 months back is January of the same year', '2026-12-15T10:00:00Z', '12 months', '2026-01-01', '2026-12-15'],
     ])('counts the days back correctly %s: %s, %s', async (_label, now, name, from, to) => {
+      vi.setSystemTime(new Date(now))
+      const { fetchMock } = await openStats()
+      const by = name === '12 months' ? 'month' : 'day'
+
+      pressChip(name)
+
+      await expectRequested(fetchMock, statsUrl({ from, to }, by))
+    })
+
+    it.each([
+      ['7 days in the first week of 2026', '2026-01-03T10:00:00Z', '7 days', '2026-01-01', '2026-01-03'],
+      ['30 days in January 2026', '2026-01-15T10:00:00Z', '30 days', '2026-01-01', '2026-01-15'],
+      ['12 months in November 2026', '2026-11-04T10:00:00Z', '12 months', '2026-01-01', '2026-11-04'],
+    ])('starts no earlier than 1 January 2026: %s', async (_label, now, name, from, to) => {
       vi.setSystemTime(new Date(now))
       const { fetchMock } = await openStats()
       const by = name === '12 months' ? 'month' : 'day'
@@ -203,11 +217,11 @@ describe('the statistics screen, the range and the grouping', () => {
     it('keeps the range of 12 months when the grouping changes', async () => {
       const { fetchMock } = await openStats()
       pressChip('12 months')
-      await expectRequested(fetchMock, statsUrl({ from: '2025-12-01', to: '2026-11-04' }, 'month'))
+      await expectRequested(fetchMock, statsUrl({ from: '2026-01-01', to: '2026-11-04' }, 'month'))
 
       pressChip('Week')
 
-      await expectRequested(fetchMock, statsUrl({ from: '2025-12-01', to: '2026-11-04' }, 'week'))
+      await expectRequested(fetchMock, statsUrl({ from: '2026-01-01', to: '2026-11-04' }, 'week'))
       expect(pressedNames(rangeNames)).toEqual(['12 months'])
     })
 
@@ -281,7 +295,7 @@ describe('the statistics screen, the range and the grouping', () => {
     it('cannot be selected: pressing it sends no request and keeps the grouping', async () => {
       const { fetchMock } = await openStats()
       pressChip('12 months')
-      await expectRequested(fetchMock, statsUrl({ from: '2025-12-01', to: '2026-11-04' }, 'month'))
+      await expectRequested(fetchMock, statsUrl({ from: '2026-01-01', to: '2026-11-04' }, 'month'))
       const requestsBefore = statsRequests(fetchMock).length
 
       pressChip('Day')
@@ -311,6 +325,18 @@ describe('the statistics screen, the range and the grouping', () => {
       const to = screen.getByLabelText(translated('en', 'adminStats.custom.to'))
       expect(from.getAttribute('type')).toBe('date')
       expect(to.getAttribute('type')).toBe('date')
+    })
+
+    it('lets both date fields go from 1 January 2026 to today', async () => {
+      await openStats()
+
+      pressChip('Custom')
+
+      for (const label of ['adminStats.custom.from', 'adminStats.custom.to']) {
+        const field = screen.getByLabelText(translated('en', label))
+        expect(field.getAttribute('min')).toBe('2026-01-01')
+        expect(field.getAttribute('max')).toBe('2026-11-04')
+      }
     })
 
     it('hides the date fields again when another range is pressed', async () => {
@@ -367,9 +393,9 @@ describe('the statistics screen, the range and the grouping', () => {
       const { fetchMock } = await openStats()
       pressChip('Custom')
 
-      setCustomDates('2025-01-01', '2026-11-04')
+      setCustomDates('2026-01-01', '2026-11-04')
 
-      await expectRequested(fetchMock, statsUrl({ from: '2025-01-01', to: '2026-11-04' }, 'week'))
+      await expectRequested(fetchMock, statsUrl({ from: '2026-01-01', to: '2026-11-04' }, 'week'))
     })
 
     it('lets the grouping be changed after the dates are chosen', async () => {
@@ -387,6 +413,8 @@ describe('the statistics screen, the range and the grouping', () => {
       ['the start is after the end', '2026-11-04', '2026-10-01'],
       ['the end is after today', '2026-10-01', '2026-11-05'],
       ['the whole range is after today', '2026-11-05', '2026-11-06'],
+      ['the start is before 1 January 2026', '2025-12-31', '2026-11-04'],
+      ['the start year is still being typed', '0202-11-04', '2026-11-04'],
     ])('sends no request and shows a short message when %s', async (_why, from, to) => {
       const { fetchMock } = await openStats()
       pressChip('Custom')
@@ -396,6 +424,22 @@ describe('the statistics screen, the range and the grouping', () => {
       expect(await screen.findByText(translated('en', 'adminStats.custom.invalid'))).toBeTruthy()
       expect(statsRequests(fetchMock)).not.toContain(statsUrl({ from, to }, 'day'))
       expect(statsRequests(fetchMock)).not.toContain(statsUrl({ from, to }, 'week'))
+    })
+
+    it('sends no request for the start dates the field gives while its year is typed digit by digit', async () => {
+      const { fetchMock } = await openStats()
+      pressChip('Custom')
+      const fromField = screen.getByLabelText(translated('en', 'adminStats.custom.from'))
+
+      for (const partialYear of ['0002-10-01', '0020-10-01', '0202-10-01']) {
+        fireEvent.change(fromField, { target: { value: partialYear } })
+        expect(await screen.findByText(translated('en', 'adminStats.custom.invalid'))).toBeTruthy()
+      }
+      fireEvent.change(fromField, { target: { value: '2026-10-01' } })
+
+      await expectRequested(fetchMock, statsUrl({ from: '2026-10-01', to: '2026-11-04' }, 'day'))
+      expect(statsRequests(fetchMock).filter((url) => url.includes('from=0'))).toEqual([])
+      expect(screen.queryByText(translated('en', 'adminStats.custom.invalid'))).toBeNull()
     })
 
     it('sends no request and shows the message when the end date is cleared', async () => {

@@ -113,6 +113,84 @@ namespace Kvit.Domain.Tests.Statistics
             Assert.Equal(ResultCodes.ADMIN_STATS_DAY_RANGE_TOO_LONG, result.ErrorCode);
         }
 
+        [Fact]
+        public void EarliestDay_Is1January2026()
+        {
+            Assert.Equal(DateOf("2026-01-01"), StatsPeriod.EarliestDay);
+        }
+
+        [Fact]
+        public void Create_FromTheDayBeforeTheEarliestDay_FailsWithDateTooOld()
+        {
+            Result<StatsPeriod> result = StatsPeriod.Create(DateOf("2025-12-31"), Today, "month", Today, null);
+
+            Assert.Equal(ResultCodes.ADMIN_STATS_DATE_TOO_OLD, result.ErrorCode);
+        }
+
+        [Theory]
+        [InlineData("0001-01-01")]
+        [InlineData("0002-11-04")]
+        [InlineData("0020-11-04")]
+        [InlineData("0202-11-04")]
+        public void Create_FromInAYearTypedOnlyInPart_FailsWithDateTooOld(string from)
+        {
+            Result<StatsPeriod> result = StatsPeriod.Create(DateOf(from), Today, "week", Today, null);
+
+            Assert.Equal(ResultCodes.ADMIN_STATS_DATE_TOO_OLD, result.ErrorCode);
+        }
+
+        [Fact]
+        public void Create_FromOnTheEarliestDay_SucceedsWithThePreviousPeriodRightBefore()
+        {
+            Result<StatsPeriod> result = StatsPeriod.Create(DateOf("2026-01-01"), Today, "month", Today, null);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(RangeOf("2026-01-01", "2026-11-04"), result.Value.Range);
+            Assert.Equal(RangeOf("2025-02-27", "2025-12-31"), result.Value.PreviousRange);
+        }
+
+        [Fact]
+        public void Create_FromOnTheEarliestDayAndAFarLaterToday_HasThePreviousPeriodOfTheSameLength()
+        {
+            Result<StatsPeriod> result = StatsPeriod.Create(DateOf("2026-01-01"), DateOf("2099-12-31"), "year", DateOf("2099-12-31"), null);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(result.Value.Range.DayCount(), result.Value.PreviousRange!.DayCount());
+            Assert.Equal(DateOf("2025-12-31"), result.Value.PreviousRange.To);
+        }
+
+        [Fact]
+        public void Create_UnknownGroupingAndFromTooOld_FailsWithGroupingInvalidFirst()
+        {
+            Result<StatsPeriod> result = StatsPeriod.Create(DateOf("2025-12-31"), Today, "hour", Today, null);
+
+            Assert.Equal(ResultCodes.ADMIN_STATS_GROUPING_INVALID, result.ErrorCode);
+        }
+
+        [Fact]
+        public void Create_ToAfterTodayAndFromTooOld_FailsWithFutureDateFirst()
+        {
+            Result<StatsPeriod> result = StatsPeriod.Create(DateOf("2025-12-31"), DateOf("2026-11-05"), "month", Today, null);
+
+            Assert.Equal(ResultCodes.ADMIN_STATS_FUTURE_DATE, result.ErrorCode);
+        }
+
+        [Fact]
+        public void Create_FromAfterToAndBothTooOld_FailsWithRangeInvalidFirst()
+        {
+            Result<StatsPeriod> result = StatsPeriod.Create(DateOf("2025-12-31"), DateOf("2025-12-30"), "month", Today, null);
+
+            Assert.Equal(ResultCodes.ADMIN_STATS_RANGE_INVALID, result.ErrorCode);
+        }
+
+        [Fact]
+        public void Create_DayGroupingOfMoreThan92DaysAndFromTooOld_FailsWithDateTooOldFirst()
+        {
+            Result<StatsPeriod> result = StatsPeriod.Create(DateOf("2025-12-31"), Today, "day", Today, null);
+
+            Assert.Equal(ResultCodes.ADMIN_STATS_DATE_TOO_OLD, result.ErrorCode);
+        }
+
         private static DateOnly DateOf(string isoDate)
         {
             return DateOnly.ParseExact(isoDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);

@@ -13,6 +13,7 @@ import { todayInTimeZone } from '@/shared/utils/formatDate'
 import { useAdminStats } from '../hooks/useAdminStats'
 import {
   allowsDayGrouping,
+  earliestStatsDay,
   isUsableCustomRange,
   presetDates,
   statsRangeChoices,
@@ -116,12 +117,14 @@ function CustomDates({ draft, today, onChange }: CustomDatesProps) {
         <DateField
           label={t('adminStats.custom.from')}
           value={draft.from}
+          min={earliestStatsDay}
           max={today}
           onChange={(from) => onChange({ ...draft, from })}
         />
         <DateField
           label={t('adminStats.custom.to')}
           value={draft.to}
+          min={earliestStatsDay}
           max={today}
           onChange={(to) => onChange({ ...draft, to })}
         />
@@ -134,11 +137,12 @@ function CustomDates({ draft, today, onChange }: CustomDatesProps) {
 interface DateFieldProps {
   label: string
   value: string
+  min: string
   max: string
   onChange: (value: string) => void
 }
 
-function DateField({ label, value, max, onChange }: DateFieldProps) {
+function DateField({ label, value, min, max, onChange }: DateFieldProps) {
   const fieldId = useId()
 
   return (
@@ -150,6 +154,7 @@ function DateField({ label, value, max, onChange }: DateFieldProps) {
         id={fieldId}
         type="date"
         value={value}
+        min={min}
         max={max}
         onChange={(event) => onChange(event.target.value)}
         className="min-h-12 w-full min-w-0 rounded-[14px] border-2 border-field-border-raised bg-field px-3 text-[1.0625rem] font-semibold text-field-foreground focus:border-field-border-focus focus-visible:outline-offset-0"

@@ -263,8 +263,8 @@ Last phase of Release 3. Prompt: `guides/phase-18-admin-stats-prompt.md`; first-
 - [x] **Done 2026-11-04 (VERIFIED by automated test: backend 6131 of 6131, 156 new in total with Step 1; frontend 12781 of 12781; no migration).** Step 2: backend, the statistics query (`GET /api/admin/stats`)
 - [x] **Done 2026-11-04 (VERIFIED by automated test: frontend 13275 of 13275, lint 0 warnings, build 0 type errors; not seen in a browser).** Step 3: frontend, the page and the Settings row
 - [x] **Done 2026-11-04 (VERIFIED by live run, headless Chromium, local stack: 38 checks, 5 findings; findings 1, 2, 3 and 5 fixed and re-measured in a browser, VERIFIED by automated test: frontend 13288 of 13288, lint 0 warnings, build 0 type errors; findings 4 and the 7.5 s error delay in BACKLOG; `reports/2026-11-04-phase-18-browser-pass.md`).** Step 4: desktop layout and the 360 px browser pass
-- [ ] Step 5: code review, report, guide
-- [ ] **Filip:** commit, push, PR, CI green, merge
+- [x] **Done 2026-11-04 (VERIFIED by automated test: backend 6153 of 6153, frontend 13309 of 13309, lint 0 warnings, build 0 type errors).** Step 5: code review (8 findings: 1 fixed, 7 in BACKLOG), report `reports/2026-11-04-phase-18-admin-stats.md`, guide `guides/phase-18-admin-stats.md`
+- [ ] **Filip:** commit, push, PR, CI green, merge (no migration)
 
 ## Phase 19: Legal pages and data rights · `feat/19-legal`
 Terms of Use, a complete privacy notice, and the features the law and the platforms expect, so a small free app stays on the safe side. Added 2026-11-04 after four research runs; everything researched is in `reports/2026-11-04-phase-19-legal-research.md` (not legal advice, several points need a lawyer, listed at its end). Proposed choices and open questions: `DECISIONS.md`, "Phase 19".
