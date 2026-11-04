@@ -13,6 +13,7 @@ interface KvitChoiceChipsProps<Value extends string> {
   options: readonly KvitChoiceChipsOption<Value>[]
   value: string
   onChange: (value: Value) => void
+  disabledValues?: readonly Value[]
   chipClassName?: string
   labelClassName?: string
   optionsClassName?: string
@@ -23,6 +24,7 @@ export function KvitChoiceChips<Value extends string>({
   options,
   value,
   onChange,
+  disabledValues = [],
   chipClassName,
   labelClassName,
   optionsClassName,
@@ -42,8 +44,9 @@ export function KvitChoiceChips<Value extends string>({
             key={option.value}
             type="button"
             aria-pressed={option.value === value}
+            disabled={disabledValues.includes(option.value)}
             onClick={() => onChange(option.value)}
-            className={cn(kvitChipLook, chipClassName)}
+            className={cn(kvitChipLook, 'disabled:pointer-events-none disabled:opacity-50', chipClassName)}
           >
             {option.label}
           </button>

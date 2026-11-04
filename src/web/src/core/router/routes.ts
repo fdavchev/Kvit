@@ -19,6 +19,7 @@ export const routes = {
   budgetRepeating: '/budget/repeating',
   budgetSummary: '/budget/summary',
   budgetSummaryOf: (month: string) => `/budget/summary?month=${month}`,
+  admin: '/admin',
   group: (groupId: string) => `/groups/${groupId}`,
   groupActivity: (groupId: string) => `/groups/${groupId}/activity`,
   groupBalances: (groupId: string) => `/groups/${groupId}/balances`,

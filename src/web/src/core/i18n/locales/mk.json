@@ -765,6 +765,67 @@
       "logInNote": "Откако ќе се најавиш, се враќаш тука и се придружуваш."
     }
   },
+  "adminStats": {
+    "title": "Статистика",
+    "range": {
+      "label": "Период",
+      "days7": "7 дена",
+      "days30": "30 дена",
+      "thisMonth": "Овој месец",
+      "months12": "12 месеци",
+      "all": "Сѐ",
+      "custom": "По избор"
+    },
+    "custom": {
+      "from": "Од",
+      "to": "До",
+      "invalid": "Почетокот мора да е пред крајот или ист ден, а крајот најдоцна денес."
+    },
+    "by": {
+      "label": "Групирај по",
+      "day": "Ден",
+      "week": "Недела",
+      "month": "Месец",
+      "year": "Година"
+    },
+    "allTime": {
+      "line": "Од почетокот: {{accounts}} · {{guests}} · {{groups}} · {{expenses}} · {{payments}}"
+    },
+    "count": {
+      "account_one": "{{count}} профил",
+      "account_other": "{{count}} профили",
+      "guest_one": "{{count}} гостин",
+      "guest_other": "{{count}} гости",
+      "group_one": "{{count}} група",
+      "group_other": "{{count}} групи",
+      "expense_one": "{{count}} трошок",
+      "expense_other": "{{count}} трошоци",
+      "payment_one": "{{count}} плаќање",
+      "payment_other": "{{count}} плаќања"
+    },
+    "card": {
+      "signUps": "Нови регистрации",
+      "activePeople": "Активни луѓе",
+      "joinedViaInvite": "Влегоа преку покана",
+      "groupsCreated": "Направени групи",
+      "expensesAdded": "Додадени трошоци",
+      "paymentsConfirmed": "Потврдени плаќања"
+    },
+    "signUps": {
+      "breakdown": "Е-пошта {{email}} · Google {{google}} · Гостин {{guest}}",
+      "upgraded": "Гости што направија профил: {{count}}"
+    },
+    "active": {
+      "guests": "од нив гости {{count}}",
+      "personDays": "{{count}} човеко-дена"
+    },
+    "compare": {
+      "up": "+{{percent}}% во однос на претходниот период",
+      "down": "-{{percent}}% во однос на претходниот период",
+      "same": "исто како претходниот период",
+      "new": "ново, претходно ништо"
+    }
+  },
   "notFound": {
     "title": "Страницата не е пронајдена",
     "message": "Оваа страница не постои или е преместена.",

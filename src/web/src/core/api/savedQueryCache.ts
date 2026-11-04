@@ -6,11 +6,13 @@ import { meQueryKey } from '@/core/auth/useMe'
 import type { Me } from '@/core/services/me/meService'
 import { readWithinTimeLimit } from './readWithinTimeLimit'
 
-export const savedQueryCacheVersion = '5'
+export const savedQueryCacheVersion = '6'
 export const savedQueryCacheMaxAge = 24 * 60 * 60 * 1000
 export const savedCopyReadTimeLimitMs = 3000
 
 const savedQueryCacheKey = 'kvit-query-cache'
+
+export const keptOutOfSavedCopy = { isKeptOutOfSavedCopy: true } as const
 
 export type SavedQueryCacheOptions = Omit<PersistQueryClientOptions, 'queryClient'>
 
@@ -48,7 +50,9 @@ export function savedQueryCacheOptions(
     buster: savedQueryCacheVersion,
     dehydrateOptions: {
       shouldDehydrateQuery: (query) =>
-        defaultShouldDehydrateQuery(query) && hasConfirmedSignedInPerson(queryClient),
+        defaultShouldDehydrateQuery(query) &&
+        query.meta?.isKeptOutOfSavedCopy !== true &&
+        hasConfirmedSignedInPerson(queryClient),
       shouldDehydrateMutation: () => false,
     },
   }

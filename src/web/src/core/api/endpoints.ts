@@ -1,3 +1,9 @@
+export interface AdminStatsRequest {
+  from?: string
+  to?: string
+  by: string
+}
+
 export const endpoints = {
   health: '/api/health',
   register: '/api/auth/register',
@@ -14,6 +20,7 @@ export const endpoints = {
   meBudgetCurrency: '/api/me/budget-currency',
   meActive: '/api/me/active',
   dashboard: '/api/dashboard',
+  adminStats: ({ from, to, by }: AdminStatsRequest) => `/api/admin/stats?${adminStatsQuery(from, to, by)}`,
   groups: '/api/groups',
   invitePreview: '/api/invites/preview',
   inviteJoin: '/api/invites/join',
@@ -82,3 +89,15 @@ export const endpoints = {
   groupSettlementRestore: (groupId: string, settlementId: string) =>
     `/api/groups/${groupId}/settlements/${settlementId}/restore`,
 } as const
+
+function adminStatsQuery(from: string | undefined, to: string | undefined, by: string): string {
+  const query = new URLSearchParams()
+  if (from !== undefined) {
+    query.append('from', from)
+  }
+  if (to !== undefined) {
+    query.append('to', to)
+  }
+  query.append('by', by)
+  return query.toString()
+}

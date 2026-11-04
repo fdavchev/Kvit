@@ -261,7 +261,7 @@ Last phase of Release 3. Prompt: `guides/phase-18-admin-stats-prompt.md`; first-
 - [x] Step 0: mockup and Filip's picks (2026-11-04, `DECISIONS.md`)
 - [x] **Done 2026-11-04 (VERIFIED by automated test: backend 6011 of 6011, 36 new; no migration).** Step 1: backend, the admin role (`Admin` role, `ADMIN_STATS_VIEW`, `isAdmin` on me, `scripts/GrantAdmin.cs`)
 - [x] **Done 2026-11-04 (VERIFIED by automated test: backend 6131 of 6131, 156 new in total with Step 1; frontend 12781 of 12781; no migration).** Step 2: backend, the statistics query (`GET /api/admin/stats`)
-- [ ] Step 3: frontend, the page and the Settings row
+- [x] **Done 2026-11-04 (VERIFIED by automated test: frontend 13275 of 13275, lint 0 warnings, build 0 type errors; not seen in a browser).** Step 3: frontend, the page and the Settings row
 - [ ] Step 4: desktop layout and the 360 px browser pass
 - [ ] Step 5: code review, report, guide
 - [ ] **Filip:** commit, push, PR, CI green, merge

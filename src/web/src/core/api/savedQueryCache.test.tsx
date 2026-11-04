@@ -144,8 +144,8 @@ describe('savedQueryCacheOptions', () => {
     expect(savedQueryCacheVersion).not.toBe('')
   })
 
-  it('is at version 5 because the saved Budget month answers gained possibleDuplicates and mergedWithExpenseId', () => {
-    expect(savedQueryCacheVersion).toBe('5')
+  it('is at version 6 because the saved me answers gained isAdmin', () => {
+    expect(savedQueryCacheVersion).toBe('6')
   })
 
   it('uses the persister it is given', () => {
