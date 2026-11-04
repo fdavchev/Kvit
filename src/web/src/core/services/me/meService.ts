@@ -15,6 +15,7 @@ export interface Me {
   hasPassword: boolean
   pictureUrl: string | null
   isGuest: boolean
+  isAdmin: boolean
   budgetTotalCurrency: Currency | null
 }
 
@@ -37,6 +38,7 @@ export function parseMe(body: unknown): Me {
     hasPassword: readYesNo(fields, 'hasPassword'),
     pictureUrl: readTextOrNull(fields, 'pictureUrl', 'the signed-in person'),
     isGuest: readYesNo(fields, 'isGuest'),
+    isAdmin: readYesNo(fields, 'isAdmin'),
     budgetTotalCurrency: readBudgetTotalCurrency(fields),
   }
 }

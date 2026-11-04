@@ -55,7 +55,7 @@ namespace Kvit.Infrastructure.Auth
 
             await RecordSignUpAsync(user, SignUpMethod.Email, cancellationToken);
 
-            return Result.Ok(MeResponseOf(user));
+            return Result.Ok(await MeResponseOfAsync(user));
         }
 
         public async Task<Result<MeResponse>> CreateGoogleAccountAsync(NewGoogleAccount account, string googleSubject, string? googlePictureUrl, CancellationToken cancellationToken)
@@ -63,7 +63,7 @@ namespace Kvit.Infrastructure.Auth
             AppUser? linkedUser = await _userManager.FindByLoginAsync(GoogleLoginProvider, googleSubject);
             if (linkedUser is not null)
             {
-                return Result.Ok(MeResponseOf(linkedUser));
+                return Result.Ok(await MeResponseOfAsync(linkedUser));
             }
 
             AppUser user = NewAccountUser(account.DisplayName, account.Email, account.TimeZone, account.Language);
@@ -88,7 +88,7 @@ namespace Kvit.Infrastructure.Auth
             IdentityResultChecks.ThrowIfFailed(await _userManager.AddLoginAsync(user, googleLogin), $"link the Google account to user {user.Id}");
             await RecordSignUpAsync(user, SignUpMethod.Google, cancellationToken);
 
-            return Result.Ok(MeResponseOf(user));
+            return Result.Ok(await MeResponseOfAsync(user));
         }
 
         public async Task<Result<MeResponse>> CreateGuestAsync(string displayName, string language, string timeZone, CancellationToken cancellationToken)
@@ -106,7 +106,7 @@ namespace Kvit.Infrastructure.Auth
             IdentityResultChecks.ThrowIfFailed(await _userManager.CreateAsync(user), $"create the guest {user.Id}");
             await RecordSignUpAsync(user, SignUpMethod.Guest, cancellationToken);
 
-            return Result.Ok(MeResponseOf(user));
+            return Result.Ok(await MeResponseOfAsync(user));
         }
 
         public async Task<Result<MeResponse>> UpgradeGuestAsync(Guid userId, string email, string password, CancellationToken cancellationToken)
@@ -137,7 +137,7 @@ namespace Kvit.Infrastructure.Auth
 
             await RecordGuestUpgradeAsync(user, SignUpMethod.Email, cancellationToken);
 
-            return Result.Ok(MeResponseOf(user));
+            return Result.Ok(await MeResponseOfAsync(user));
         }
 
         public async Task<Result<MeResponse>> UpgradeGuestWithGoogleAsync(Guid userId, string email, string googleSubject, string? googlePictureUrl, CancellationToken cancellationToken)
@@ -176,7 +176,7 @@ namespace Kvit.Infrastructure.Auth
             IdentityResultChecks.ThrowIfFailed(await _userManager.AddLoginAsync(user, googleLogin), $"link the Google account to the upgraded guest {user.Id}");
             await RecordGuestUpgradeAsync(user, SignUpMethod.Google, cancellationToken);
 
-            return Result.Ok(MeResponseOf(user));
+            return Result.Ok(await MeResponseOfAsync(user));
         }
 
         public async Task<Result<MeResponse>> CheckLogInAsync(string email, string password, string timeZone, CancellationToken cancellationToken)
@@ -211,7 +211,7 @@ namespace Kvit.Infrastructure.Auth
 
             await UpdateAsync(user);
 
-            return Result.Ok(MeResponseOf(user));
+            return Result.Ok(await MeResponseOfAsync(user));
         }
 
         public async Task<Result<MeResponse>> CheckGoogleLogInAsync(GoogleIdentity identity, string timeZone, CancellationToken cancellationToken)
@@ -236,7 +236,7 @@ namespace Kvit.Infrastructure.Auth
             user.GooglePictureUrl = identity.PictureUrl;
             await UpdateAsync(user);
 
-            return Result.Ok(MeResponseOf(user));
+            return Result.Ok(await MeResponseOfAsync(user));
         }
 
         public async Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken)
@@ -448,9 +448,11 @@ namespace Kvit.Infrastructure.Auth
             };
         }
 
-        private static MeResponse MeResponseOf(AppUser user)
+        private async Task<MeResponse> MeResponseOfAsync(AppUser user)
         {
-            return new MeResponse(user.Id, user.DisplayName, user.Email, user.Language, user.TimeZone, user.MustChangePassword, user.PasswordHash is not null, user.GooglePictureUrl, user.IsGuest, user.BudgetTotalCurrency);
+            bool isAdmin = await _userManager.IsInRoleAsync(user, Roles.Admin);
+
+            return new MeResponse(user.Id, user.DisplayName, user.Email, user.Language, user.TimeZone, user.MustChangePassword, user.PasswordHash is not null, user.GooglePictureUrl, user.IsGuest, user.BudgetTotalCurrency, isAdmin);
         }
     }
 }

@@ -1,5 +1,64 @@
 ﻿# Decisions
 
+## 2026-11-04: Phase 19 (legal pages and data rights), planned, first five answers in, seven questions still open
+Source: `reports/2026-11-04-phase-19-legal-research.md` (four research runs; not legal advice). Filip's request: have Terms of Use, privacy and the rest, so that he cannot be sued over something stupid. Honest limit told to Filip: documents lower the risk, they cannot remove it; a short lawyer consultation is the only real way to close the points marked LAWYER in the report.
+- **Proposed by Claude, waiting for Filip (marked so nobody builds them as decided):**
+  - **Agree line, no tick box:** small grey text "By continuing you agree to the Terms and Privacy Policy" directly under the sign-up, Google and guest-join buttons. Store `terms_version` + `accepted_at`, no IP. Small changes: thin banner, one OK tap. Material changes: blocking sheet.
+  - **Delete my account:** off at once, 30 days counted from the tap, log in again to cancel, then purge. Choice "Keep my name" (default) or "Show as Former member". Changes the BACKLOG plan (30 days from the request, not "switched off" without the immediate lock-out) and adds the name choice.
+  - **Download my data:** JSON, one tap in Settings, no email.
+  - **Records only:** wording rule in every text: "record" and "confirm", never "send", "transfer", "collect". No kitty, wallet, pay button, payment link, bank link, interest or fees, ever, without a new decision and a lawyer.
+  - **Proposed to bring forward:** the weekly encrypted backup from BACKLOG, because Neon free restores only 6 hours.
+- **Where this conflicts with something already decided (Filip decides):**
+  - **Phase 6 Google button** is Google's own script loaded when Welcome opens, so Google sees the visitor's address before any tap. Loading it only on tap is the cleaner privacy choice but may slow the first tap, against "speed is the product". Alternative: keep it and say so in the privacy notice. Claude's lean: keep the button, disclose it, and ask the lawyer.
+  - **Phase 4: 90-day login cookie.** An opt-in "stay signed in" or a shorter life is the safer reading of cookie rules (UNCLEAR). Claude's lean: keep 90 days, because it is strictly necessary for the app Filip asked for, and mention it in the notice. More taps for every user if changed.
+  - **Phase 6: "Privacy page names no email".** The research says a contact email is required. This reverses that decision (BACKLOG item already planned it).
+  - **Free forever:** a company, a custom domain (to show "Kvit" on Google's window) and a lawyer all cost money. None is decided; each needs Filip's explicit word.
+- **Filip's answers (2026-11-04):**
+  - Lives in North Macedonia; his name may appear on the site if needed.
+  - Contact email: `davchevfilip31@gmail.com` (his own address, not a new Kvit mailbox; Claude advised a separate one, Filip's call). No home address on the site "for now"; only if a lawyer says it is required.
+  - Minimum age line: **16**.
+  - Google button: **keep as is** (loaded when Welcome opens), disclosed in the privacy notice.
+  - **No lawyer.** Kvit is for friends and family; legal work is for the case that it actually grows. Consequence written down: the seven LAWYER questions in the research report stay open as **accepted risks**, and the site shows only name + email. Triggers to reconsider: strangers joining in numbers, any money feature, ads or fees, a complaint or a request from an authority.
+- **Filip's second round of answers (2026-11-04):**
+  - **Contact email changes:** a new, separate Gmail for Kvit, made by Filip: **`kvit.support@gmail.com`** (public: legal pages, `security.txt`, Google's console). `davchevfilip31@gmail.com` is no longer used on the site.
+  - Prompt for the building session: `guides/phase-19-legal-prompt.md`; first-push texts: `guides/phase-19-pr-text.md`.
+  - **Terms:** Macedonian law and courts, plus the line that consumer rights stay.
+  - **Login:** the 90-day cookie stays; the privacy notice mentions it.
+  - **Repository licence:** none (all rights reserved; people may view and fork on GitHub but not reuse the code).
+  - **Delete my account:** the person chooses "Keep my name" or "Former member"; the default selected is **Keep my name**.
+  - **Inactive accounts:** kept forever for now (closed circle); revisit if Kvit grows. The privacy notice must therefore not promise automatic deletion of inactive accounts.
+  - **Reporting:** the "Report" email item **and** owner tools now: suspend a user, close a group, and a log of what Filip did and why. These build on Phase 18's `Admin` role and `scripts/GrantAdmin.cs`, so Phase 19 starts only after Phase 18 Step 1 is merged. What a suspended person sees, and what "close a group" does to its members, need a mockup in Step 0.
+- **Still open:** does `START-HERE-PROMPT.md` stay in the public repository? (first asked in `STATUS.md`; with "no licence" it is still readable by everyone).
+
+## 2026-11-04: Phase 18 (admin statistics), in progress
+Last phase of Release 3. Plan: `guides/phase-18-admin-stats-prompt.md`; mockup: `design/2026-11-04-phase-18/`; first-push texts: `guides/phase-18-pr-text.md`.
+- **Filip's picks (2026-11-04):**
+  - **Layout A:** one card per count with a big total and small bars per day, week or month (no chart library).
+  - **Active people:** two lines, people (different people) and person-days; in Day view only one.
+  - **Entry:** a "Statistics" row in Settings that only Filip sees; for anyone else `/admin` is the normal not-found page.
+  - **Opens on:** This month, by day. Range chips: 7 days, 30 days, This month, 12 months, All, Custom. Grouping: Day, Week (Monday first), Month, Year.
+  - **Extras:** guests apart (sign-ups Email / Google / Guest, plus guests who made an account), an all-time totals line on top, a compare line against the period just before. No tap-a-bar.
+  - **Day clock:** Europe/Skopje.
+  - **Filip's own account is left out** of every number (every account with the admin role).
+  - **All-time totals** count everything that ever happened (deleted things included).
+  - **Guests count as active**, with the line "of them guests N".
+- **How Claude works this phase (Filip's words, 2026-11-04):** plan once, build and commit each step without stopping, collect open questions and ask them all at the end. Filip still pushes, opens the PR and merges. Branch started from `main` after the Phase 17 merge (PR #21).
+- **Decided while building, Filip may change (Claude's calls):**
+  - Admin is the Identity role `Admin`, permission `ADMIN_STATS_VIEW`, given only by the script `scripts/GrantAdmin.cs` (by email). `GET /api/me` carries `isAdmin`.
+  - `GET /api/admin/stats?from&to&by`; non-admin gets 403. Day grouping is limited to 92 days. Counted in SQL in Skopje time.
+  - Known edge: `Active` rows are kept once per UTC day, so a late-night Skopje visit can miss one person-day.
+  - **Step 2 (2026-11-04):** `GET /api/admin/stats` answers 6131 of 6131 backend tests, no migration (family-sized data; the filter is on a calculated Skopje day, so an index would not help). Counting is one parameterised raw SQL query (EF cannot write `AT TIME ZONE`), admin accounts excluded in SQL.
+  - Activity rows of deleted accounts (no user id) do not count as active people or person-days; they count in every other number.
+  - "All" with an end date before the first event gives a one-day range, not an error.
+  - In the all-time line "accounts" = Email and Google sign-ups only; guests are a separate number and a guest who later makes an account is not added to accounts.
+  - A non-admin with bad parameters gets 403, never 400 (the admin check runs first).
+  - **Step 3 (2026-11-04, frontend; VERIFIED by automated test: frontend 13275 of 13275):** `/admin` is the normal not-found page for a non-admin or guest (no redirect); the Statistics row in Settings shows only for an admin; the saved copy version is now 6 and the stats are never saved in the browser.
+  - Choices I made, Filip may change: a one-bar range shows its label once; a change that rounds to 0% says "same as the period before"; Active people bars draw people (not person-days); title and chips stay visible while loading and on an error; tapping Custom fills both dates with the period on screen; invalid custom dates show a message and keep the last valid numbers; changing a custom date resets the grouping (Day up to 92 days, else Week); the bars do not animate, only the cards fade while new numbers load (off under reduced motion); "1 person-days" has no singular form (only possible under Week, Month or Year with exactly one person-day).
+  - **Browser pass and code review (2026-11-04):** the browser pass (`reports/2026-11-04-phase-18-browser-pass.md`) found 5 things; bars that overflowed the card, the Settings row behind the bottom bar (one `scroll-padding-bottom` rule on `html` for the whole app), dimmed text contrast (the fade is 90 percent now) and percentages without a thousands separator were fixed; the other two are in BACKLOG. The code review (`/code-review high`) found 8 things: the earliest allowed day was added (`ADMIN_STATS_DATE_TOO_OLD`, 1 January 2026, so a half-typed year can no longer crash or flood the API); the other 7 are in BACKLOG "Phase 18 code-review leftovers".
+  - **The 7 / 30 days and 12 months chips never start before 1 January 2026** (until December 2026 "12 months" is shorter than 12 months). Filip may change.
+  - **New Macedonian drafts:** «Статистиката почнува од 1 јануари 2026. Избери подоцнежен почеток.» and «Почетокот мора да е од 1 јануари 2026 и пред крајот или ист ден, а крајот најдоцна денес.»
+  - **Macedonian drafts for Filip to read (Step 2 and 3):** Статистика; Период; 7 дена; 30 дена; Овој месец; 12 месеци; Сѐ; По избор; Од / До; «Почетокот мора да е пред крајот или ист ден, а крајот најдоцна денес.»; Групирај по; Ден / Недела / Месец / Година; «Од почетокот: …»; профил, гостин, група, трошок, плаќање (plural forms); Нови регистрации; Активни луѓе; Влегоа преку покана; Направени групи; Додадени трошоци; Потврдени плаќања; «Е-пошта … · Google … · Гостин …»; «Гости што направија профил: N»; «од нив гости N»; «N човеко-дена»; «+N% во однос на претходниот период», «исто како претходниот период», «ново, претходно ништо»; error texts: «Почетниот датум мора да е пред крајниот или ист со него.», «Избери датуми најдоцна до денес.», «Групирај по ден, недела, месец или година.», «Групирањето по ден работи за најмногу 92 дена. Избери пократок период или групирај по недела или месец.»
+
 ## 2026-11-03: Phase 17 (the outbox): done, the rules that stay
 The whole Phase 17 decision log (Filip's mockup picks, the planning answers, the Step 1 to 5 notes, the browser-pass choices, rejected alternatives) moved word for word to the end of `reports/2026-11-03-phase-17-outbox.md`, section "Decisions and rejected alternatives". What stays true:
 - **The queue:** new expenses, One bill, new personal spending and income, and a payment that counts right away are queued when the server gives no answer within 3 seconds (the clock covers only the server's answer to the save, not the refresh after it) or the browser cannot reach it (no connection, 502, 503, 504). Not queued: edits, deletes, Undo, repeating income, "I paid" to a person with an account. All saves run at once when the browser is offline, so nothing is held and fired later. Each item keeps its own request id; the server returns the first result for a repeat.

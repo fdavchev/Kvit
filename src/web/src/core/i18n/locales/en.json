@@ -151,7 +151,12 @@
     "SETTLEMENT_MEMBER_NOT_CURRENT": "This person is no longer in the group.",
     "SETTLEMENT_CURRENCY_INVALID": "Pick MKD or EUR.",
     "SETTLEMENT_AMOUNT_TOO_LARGE": "This amount is too large.",
-    "SETTLEMENT_CLIENT_REQUEST_ID_USED": "This request was already used for something else."
+    "SETTLEMENT_CLIENT_REQUEST_ID_USED": "This request was already used for something else.",
+    "ADMIN_STATS_RANGE_INVALID": "The start date must be on or before the end date.",
+    "ADMIN_STATS_FUTURE_DATE": "Pick dates up to today.",
+    "ADMIN_STATS_GROUPING_INVALID": "Group by day, week, month or year.",
+    "ADMIN_STATS_DAY_RANGE_TOO_LONG": "Grouping by day works for up to 92 days. Pick a shorter range or group by week or month.",
+    "ADMIN_STATS_DATE_TOO_OLD": "Statistics start on 1 January 2026. Pick a later start date."
   },
   "language": {
     "label": "Language",
@@ -759,6 +764,67 @@
       "haveAccount": "Have an account?",
       "logInWithEmail": "Log in with email",
       "logInNote": "After logging in you come back here and join."
+    }
+  },
+  "adminStats": {
+    "title": "Statistics",
+    "range": {
+      "label": "Range",
+      "days7": "7 days",
+      "days30": "30 days",
+      "thisMonth": "This month",
+      "months12": "12 months",
+      "all": "All",
+      "custom": "Custom"
+    },
+    "custom": {
+      "from": "From",
+      "to": "To",
+      "invalid": "Pick a start from 1 January 2026, on or before the end, and an end no later than today."
+    },
+    "by": {
+      "label": "Group by",
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "allTime": {
+      "line": "Since the start: {{accounts}} · {{guests}} · {{groups}} · {{expenses}} · {{payments}}"
+    },
+    "count": {
+      "account_one": "{{count}} account",
+      "account_other": "{{count}} accounts",
+      "guest_one": "{{count}} guest",
+      "guest_other": "{{count}} guests",
+      "group_one": "{{count}} group",
+      "group_other": "{{count}} groups",
+      "expense_one": "{{count}} expense",
+      "expense_other": "{{count}} expenses",
+      "payment_one": "{{count}} payment",
+      "payment_other": "{{count}} payments"
+    },
+    "card": {
+      "signUps": "New sign-ups",
+      "activePeople": "Active people",
+      "joinedViaInvite": "Joined via invite",
+      "groupsCreated": "Groups created",
+      "expensesAdded": "Expenses added",
+      "paymentsConfirmed": "Payments confirmed"
+    },
+    "signUps": {
+      "breakdown": "Email {{email}} · Google {{google}} · Guest {{guest}}",
+      "upgraded": "Guests who made an account: {{count}}"
+    },
+    "active": {
+      "guests": "of them guests {{count}}",
+      "personDays": "{{count}} person-days"
+    },
+    "compare": {
+      "up": "+{{percent}}% vs the period before",
+      "down": "-{{percent}}% vs the period before",
+      "same": "same as the period before",
+      "new": "new, none before"
     }
   },
   "notFound": {

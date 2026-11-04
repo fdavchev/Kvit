@@ -151,7 +151,12 @@
     "SETTLEMENT_MEMBER_NOT_CURRENT": "Оваа личност веќе не е во групата.",
     "SETTLEMENT_CURRENCY_INVALID": "Избери MKD или EUR.",
     "SETTLEMENT_AMOUNT_TOO_LARGE": "Овој износ е премногу голем.",
-    "SETTLEMENT_CLIENT_REQUEST_ID_USED": "Ова барање веќе е искористено за друго."
+    "SETTLEMENT_CLIENT_REQUEST_ID_USED": "Ова барање веќе е искористено за друго.",
+    "ADMIN_STATS_RANGE_INVALID": "Почетниот датум мора да е пред крајниот или ист со него.",
+    "ADMIN_STATS_FUTURE_DATE": "Избери датуми најдоцна до денес.",
+    "ADMIN_STATS_GROUPING_INVALID": "Групирај по ден, недела, месец или година.",
+    "ADMIN_STATS_DAY_RANGE_TOO_LONG": "Групирањето по ден работи за најмногу 92 дена. Избери пократок период или групирај по недела или месец.",
+    "ADMIN_STATS_DATE_TOO_OLD": "Статистиката почнува од 1 јануари 2026. Избери подоцнежен почеток."
   },
   "language": {
     "label": "Јазик",
@@ -759,6 +764,67 @@
       "haveAccount": "Имаш профил?",
       "logInWithEmail": "Најави се со е-пошта",
       "logInNote": "Откако ќе се најавиш, се враќаш тука и се придружуваш."
+    }
+  },
+  "adminStats": {
+    "title": "Статистика",
+    "range": {
+      "label": "Период",
+      "days7": "7 дена",
+      "days30": "30 дена",
+      "thisMonth": "Овој месец",
+      "months12": "12 месеци",
+      "all": "Сѐ",
+      "custom": "По избор"
+    },
+    "custom": {
+      "from": "Од",
+      "to": "До",
+      "invalid": "Почетокот мора да е од 1 јануари 2026 и пред крајот или ист ден, а крајот најдоцна денес."
+    },
+    "by": {
+      "label": "Групирај по",
+      "day": "Ден",
+      "week": "Недела",
+      "month": "Месец",
+      "year": "Година"
+    },
+    "allTime": {
+      "line": "Од почетокот: {{accounts}} · {{guests}} · {{groups}} · {{expenses}} · {{payments}}"
+    },
+    "count": {
+      "account_one": "{{count}} профил",
+      "account_other": "{{count}} профили",
+      "guest_one": "{{count}} гостин",
+      "guest_other": "{{count}} гости",
+      "group_one": "{{count}} група",
+      "group_other": "{{count}} групи",
+      "expense_one": "{{count}} трошок",
+      "expense_other": "{{count}} трошоци",
+      "payment_one": "{{count}} плаќање",
+      "payment_other": "{{count}} плаќања"
+    },
+    "card": {
+      "signUps": "Нови регистрации",
+      "activePeople": "Активни луѓе",
+      "joinedViaInvite": "Влегоа преку покана",
+      "groupsCreated": "Направени групи",
+      "expensesAdded": "Додадени трошоци",
+      "paymentsConfirmed": "Потврдени плаќања"
+    },
+    "signUps": {
+      "breakdown": "Е-пошта {{email}} · Google {{google}} · Гостин {{guest}}",
+      "upgraded": "Гости што направија профил: {{count}}"
+    },
+    "active": {
+      "guests": "од нив гости {{count}}",
+      "personDays": "{{count}} човеко-дена"
+    },
+    "compare": {
+      "up": "+{{percent}}% во однос на претходниот период",
+      "down": "-{{percent}}% во однос на претходниот период",
+      "same": "исто како претходниот период",
+      "new": "ново, претходно ништо"
     }
   },
   "notFound": {

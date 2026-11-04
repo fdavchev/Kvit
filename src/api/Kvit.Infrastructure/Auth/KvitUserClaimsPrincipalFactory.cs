@@ -5,8 +5,8 @@ using Microsoft.Extensions.Options;
 
 namespace Kvit.Infrastructure.Auth
 {
-    public sealed class KvitUserClaimsPrincipalFactory(UserManager<AppUser> userManager, IOptions<IdentityOptions> optionsAccessor)
-        : UserClaimsPrincipalFactory<AppUser>(userManager, optionsAccessor)
+    public sealed class KvitUserClaimsPrincipalFactory(UserManager<AppUser> userManager, RoleManager<IdentityRole<Guid>> roleManager, IOptions<IdentityOptions> optionsAccessor)
+        : UserClaimsPrincipalFactory<AppUser, IdentityRole<Guid>>(userManager, roleManager, optionsAccessor)
     {
         public const string MustChangePasswordClaimType = "kvit:must_change_password";
 

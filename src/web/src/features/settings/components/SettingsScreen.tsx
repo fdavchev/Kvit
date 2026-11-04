@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { errorMessageKey } from '@/core/api/errors'
+import { useIsAdmin } from '@/core/auth/useIsAdmin'
 import { useIsGuest } from '@/core/auth/useIsGuest'
 import { useMe } from '@/core/auth/useMe'
 import type { Language } from '@/core/i18n/language'
@@ -32,6 +33,7 @@ export function SettingsScreen() {
   const { theme, setTheme } = useTheme()
   const { data: me } = useMe()
   const isGuest = useIsGuest()
+  const isAdmin = useIsAdmin()
   const changeLanguage = useChangeLanguage()
   const logOut = useLogOut()
   const unsentItems = useOutboxItems()
@@ -106,6 +108,11 @@ export function SettingsScreen() {
         >
           {t('common.privacy')}
         </KvitLinkButton>
+        {isAdmin && (
+          <KvitLinkButton to={routes.admin} variant="secondary">
+            {t('adminStats.title')}
+          </KvitLinkButton>
+        )}
       </div>
       <div className="mt-auto pt-8">
         <KvitButton

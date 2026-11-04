@@ -1,4 +1,5 @@
 import { createBrowserRouter, type RouteObject } from 'react-router'
+import { AdminStatsScreen } from '@/features/admin/stats/components/AdminStatsScreen'
 import { ChangePasswordScreen } from '@/features/auth/changePassword/components/ChangePasswordScreen'
 import { GoogleSignUpScreen } from '@/features/auth/googleSignUp/components/GoogleSignUpScreen'
 import { LogInScreen } from '@/features/auth/logIn/components/LogInScreen'
@@ -28,6 +29,7 @@ import { PrivacyScreen } from '@/features/privacy/components/PrivacyScreen'
 import { SettingsScreen } from '@/features/settings/components/SettingsScreen'
 import { BottomBarLayout } from './BottomBarLayout'
 import { RequireAccount } from './RequireAccount'
+import { RequireAdmin } from './RequireAdmin'
 import { RequireAuth } from './RequireAuth'
 import { RouteError } from './RouteError'
 import { routes } from './routes'
@@ -64,6 +66,10 @@ export const routeObjects: RouteObject[] = [
                 ],
               },
               { path: routes.settings, element: <SettingsScreen /> },
+              {
+                element: <RequireAdmin />,
+                children: [{ path: routes.admin, element: <AdminStatsScreen /> }],
+              },
             ],
           },
           {

@@ -130,5 +130,10 @@ namespace Kvit.Domain.Results
         public const string INVITE_REMOVED = "INVITE_REMOVED";
         public const string INVITE_NOTHING_TO_UNDO = "INVITE_NOTHING_TO_UNDO";
         public const string INVITE_GUEST_CHOICE_INVALID = "INVITE_GUEST_CHOICE_INVALID";
+        public const string ADMIN_STATS_RANGE_INVALID = "ADMIN_STATS_RANGE_INVALID";
+        public const string ADMIN_STATS_FUTURE_DATE = "ADMIN_STATS_FUTURE_DATE";
+        public const string ADMIN_STATS_GROUPING_INVALID = "ADMIN_STATS_GROUPING_INVALID";
+        public const string ADMIN_STATS_DAY_RANGE_TOO_LONG = "ADMIN_STATS_DAY_RANGE_TOO_LONG";
+        public const string ADMIN_STATS_DATE_TOO_OLD = "ADMIN_STATS_DATE_TOO_OLD";
     }
 }

@@ -44,6 +44,14 @@ describe('getMe', () => {
     expect(me).toMatchObject({ email: null, isGuest: true })
   })
 
+  it.each([true, false])('keeps isAdmin %j as the answer sent it', async (isAdmin) => {
+    stubFetch(Response.json({ ...testMe, isAdmin }))
+
+    const me = await getMe()
+
+    expect(me).toMatchObject({ isAdmin })
+  })
+
   it.each(['MKD', 'EUR', null])('keeps budgetTotalCurrency %j as the answer sent it', async (budgetTotalCurrency) => {
     stubFetch(Response.json({ ...testMe, budgetTotalCurrency }))
 
@@ -131,6 +139,10 @@ describe('getMe', () => {
     ['email', {}],
     ['isGuest', 'true'],
     ['isGuest', null],
+    ['isAdmin', 'true'],
+    ['isAdmin', 1],
+    ['isAdmin', null],
+    ['isAdmin', {}],
     ['budgetTotalCurrency', 'USD'],
     ['budgetTotalCurrency', 'mkd'],
     ['budgetTotalCurrency', ''],

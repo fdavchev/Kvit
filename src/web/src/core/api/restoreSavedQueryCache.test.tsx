@@ -255,9 +255,21 @@ describe('restoring the saved data when the app starts', () => {
     expect(removeClient).toHaveBeenCalled()
   })
 
-  it('keeps a copy saved at version 5', async () => {
+  it('throws away a copy saved at version 5, which has me answers without isAdmin', async () => {
     stubFetchThatNeverAnswers()
     const { persister, removeClient } = await persisterHolding(savedCopy(testMe, '5'))
+
+    const queryClient = await startApp(persister)
+
+    expect(await screen.findByRole('status')).toBeTruthy()
+    expect(screen.queryByText('Greece trip')).toBeNull()
+    expect(queryClient.getQueryData(groupsKey)).toBeUndefined()
+    expect(removeClient).toHaveBeenCalled()
+  })
+
+  it('keeps a copy saved at version 6', async () => {
+    stubFetchThatNeverAnswers()
+    const { persister, removeClient } = await persisterHolding(savedCopy(testMe, '6'))
 
     await startApp(persister)
 

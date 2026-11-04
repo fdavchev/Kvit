@@ -46,11 +46,13 @@ export function recentMonths(lastMonth: string, count: number): string[] {
 export function formatMonthLabel(month: string, currentMonth: string, language: Language): string {
   const { year, monthIndex } = readCalendarMonth(month)
   const showsYear = year !== readCalendarMonth(currentMonth).year || monthIndex === 0
-  const name =
-    language === 'mk'
-      ? macedonianShortMonths[monthIndex]
-      : englishShortMonthFormat.format(new Date(Date.UTC(year, monthIndex, 1)))
+  const name = shortMonthName({ year, monthIndex }, language)
   return showsYear ? `${name} ${year}` : `${name}`
+}
+
+export function formatMonthWithYear(month: string, language: Language): string {
+  const calendarMonth = readCalendarMonth(month)
+  return `${shortMonthName(calendarMonth, language)} ${calendarMonth.year}`
 }
 
 export function isCalendarMonth(text: string): boolean {
@@ -64,6 +66,12 @@ function readCalendarMonth(text: string): CalendarMonth {
     throw new Error(`Expected a month like 2026-10, got "${text}"`)
   }
   return { year: Number(text.slice(0, 4)), monthIndex: Number(text.slice(5, 7)) - 1 }
+}
+
+function shortMonthName({ year, monthIndex }: CalendarMonth, language: Language): string {
+  return language === 'mk'
+    ? macedonianShortMonths[monthIndex]
+    : englishShortMonthFormat.format(new Date(Date.UTC(year, monthIndex, 1)))
 }
 
 function calendarMonthText({ year, monthIndex }: CalendarMonth): string {
