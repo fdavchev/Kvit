@@ -254,7 +254,14 @@ Queue while the server wakes, "All up to date ✓", failed items with Retry / Di
 - [x] **Done 2026-11-03 (VERIFIED by automated test: backend 5975 of 5975, 33 new, build 0 warnings; no production change, no migration).** Step 4: backend tests for late and repeated sends
 - [x] **Done 2026-11-03 (VERIFIED by live run, headless Chromium, local stack: 11 bugs found, `reports/2026-11-03-phase-17-browser-pass.md`; bugs 1 to 4, 6, 7, 10 and 11 fixed, VERIFIED by automated test: frontend 12613 of 12613, lint 0 warnings, build 0 type errors; the fixes are re-checked in a browser in the next entry; bugs 5, 8 and 9 and the product questions are left for Filip).** Step 5: desktop layout and the 360 px browser pass
 - [x] **Done 2026-11-03.** Step 6: code review (10 findings, none fixed yet, waiting for Filip), report `reports/2026-11-03-phase-17-outbox.md`, guide `guides/phase-17-outbox.md`; browser re-check of the fixes VERIFIED by live run (`reports/2026-11-03-phase-17-browser-pass.md`)
-- [ ] **Filip:** commit, push, PR, CI green, merge
+- [x] **Filip:** commit, push, PR, CI green, merge (PR #21 merged)
 
-## Release 3, later
-- Phase 18: admin statistics page
+## Phase 18: Admin statistics page · `feat/18-admin-stats`
+Last phase of Release 3. Prompt: `guides/phase-18-admin-stats-prompt.md`; first-push texts: `guides/phase-18-pr-text.md`.
+- [x] Step 0: mockup and Filip's picks (2026-11-04, `DECISIONS.md`)
+- [ ] Step 1: backend, the admin role (`Admin` role, `ADMIN_STATS_VIEW`, `isAdmin` on me, `scripts/GrantAdmin.cs`)
+- [ ] Step 2: backend, the statistics query (`GET /api/admin/stats`)
+- [ ] Step 3: frontend, the page and the Settings row
+- [ ] Step 4: desktop layout and the 360 px browser pass
+- [ ] Step 5: code review, report, guide
+- [ ] **Filip:** commit, push, PR, CI green, merge

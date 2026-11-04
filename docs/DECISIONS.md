@@ -1,5 +1,23 @@
 ﻿# Decisions
 
+## 2026-11-04: Phase 18 (admin statistics), in progress
+Last phase of Release 3. Plan: `guides/phase-18-admin-stats-prompt.md`; mockup: `design/2026-11-04-phase-18/`; first-push texts: `guides/phase-18-pr-text.md`.
+- **Filip's picks (2026-11-04):**
+  - **Layout A:** one card per count with a big total and small bars per day, week or month (no chart library).
+  - **Active people:** two lines, people (different people) and person-days; in Day view only one.
+  - **Entry:** a "Statistics" row in Settings that only Filip sees; for anyone else `/admin` is the normal not-found page.
+  - **Opens on:** This month, by day. Range chips: 7 days, 30 days, This month, 12 months, All, Custom. Grouping: Day, Week (Monday first), Month, Year.
+  - **Extras:** guests apart (sign-ups Email / Google / Guest, plus guests who made an account), an all-time totals line on top, a compare line against the period just before. No tap-a-bar.
+  - **Day clock:** Europe/Skopje.
+  - **Filip's own account is left out** of every number (every account with the admin role).
+  - **All-time totals** count everything that ever happened (deleted things included).
+  - **Guests count as active**, with the line "of them guests N".
+- **How Claude works this phase (Filip's words, 2026-11-04):** plan once, build and commit each step without stopping, collect open questions and ask them all at the end. Filip still pushes, opens the PR and merges. Branch started from `main` after the Phase 17 merge (PR #21).
+- **Decided while building, Filip may change (Claude's calls):**
+  - Admin is the Identity role `Admin`, permission `ADMIN_STATS_VIEW`, given only by the script `scripts/GrantAdmin.cs` (by email). `GET /api/me` carries `isAdmin`.
+  - `GET /api/admin/stats?from&to&by`; non-admin gets 403. Day grouping is limited to 92 days. Counted in SQL in Skopje time.
+  - Known edge: `Active` rows are kept once per UTC day, so a late-night Skopje visit can miss one person-day.
+
 ## 2026-11-03: Phase 17 (the outbox): done, the rules that stay
 The whole Phase 17 decision log (Filip's mockup picks, the planning answers, the Step 1 to 5 notes, the browser-pass choices, rejected alternatives) moved word for word to the end of `reports/2026-11-03-phase-17-outbox.md`, section "Decisions and rejected alternatives". What stays true:
 - **The queue:** new expenses, One bill, new personal spending and income, and a payment that counts right away are queued when the server gives no answer within 3 seconds (the clock covers only the server's answer to the save, not the refresh after it) or the browser cannot reach it (no connection, 502, 503, 504). Not queued: edits, deletes, Undo, repeating income, "I paid" to a person with an account. All saves run at once when the browser is offline, so nothing is held and fired later. Each item keeps its own request id; the server returns the first result for a repeat.
