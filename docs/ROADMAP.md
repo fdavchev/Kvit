@@ -264,15 +264,15 @@ Last phase of Release 3. Prompt: `guides/phase-18-admin-stats-prompt.md`; first-
 - [x] **Done 2026-11-04 (VERIFIED by automated test: frontend 13275 of 13275, lint 0 warnings, build 0 type errors; not seen in a browser).** Step 3: frontend, the page and the Settings row
 - [x] **Done 2026-11-04 (VERIFIED by live run, headless Chromium, local stack: 38 checks, 5 findings; findings 1, 2, 3 and 5 fixed and re-measured in a browser, VERIFIED by automated test: frontend 13288 of 13288, lint 0 warnings, build 0 type errors; findings 4 and the 7.5 s error delay in BACKLOG; `reports/2026-11-04-phase-18-browser-pass.md`).** Step 4: desktop layout and the 360 px browser pass
 - [x] **Done 2026-11-04 (VERIFIED by automated test: backend 6153 of 6153, frontend 13309 of 13309, lint 0 warnings, build 0 type errors).** Step 5: code review (8 findings: 1 fixed, 7 in BACKLOG), report `reports/2026-11-04-phase-18-admin-stats.md`, guide `guides/phase-18-admin-stats.md`
-- [ ] **Filip:** commit, push, PR, CI green, merge (no migration)
+- [x] **Filip:** commit, push, PR, CI green, merge (PR #22 merged 2026-11-04)
 
 ## Phase 19: Legal pages and data rights · `feat/19-legal`
 Terms of Use, a complete privacy notice, and the features the law and the platforms expect, so a small free app stays on the safe side. Added 2026-11-04 after four research runs; everything researched is in `reports/2026-11-04-phase-19-legal-research.md` (not legal advice, several points need a lawyer, listed at its end). Proposed choices and open questions: `DECISIONS.md`, "Phase 19".
-- [x] **Filip, answered 2026-11-04:** lives in North Macedonia, name and `davchevfilip31@gmail.com` may be on the site, no home address, minimum age 16, Google button kept, no lawyer (the open legal questions are accepted risks, `DECISIONS.md`)
+- [x] **Filip, answered 2026-11-04:** lives in North Macedonia, name may be on the site (contact email changed in the second round to `kvit.support@gmail.com`; the personal address is never used), no home address, minimum age 16, Google button kept, no lawyer (the open legal questions are accepted risks, `DECISIONS.md`)
 - [x] **Filip, answered 2026-11-04 (second round):** Macedonian law and courts line, keep the 90-day login, no repository licence, delete default "Keep my name" with the other choice allowed, inactive accounts kept for now, owner tools now, a separate Kvit mailbox
 - [x] **Filip:** made the Kvit mailbox `kvit.support@gmail.com` (2026-11-04). Prompt: `guides/phase-19-legal-prompt.md`; first-push texts: `guides/phase-19-pr-text.md`
 - [ ] **Filip:** say whether `START-HERE-PROMPT.md` stays in the public repository (asked again in Step 11)
-- [ ] Step 0: mockups (agree line under the buttons, "Delete my account" flow with the name choice, "Download my data", the terms-changed banner, the plain-name hint, "Report") and Filip's picks
+- [x] **Done 2026-11-04 (picks logged in `DECISIONS.md`; the mockup page was clicked through in headless Chromium, 15 of 15 checks).** Step 0: mockups (agree line under the buttons, "Delete my account" flow with the name choice, "Download my data", the terms-changed banner, the plain-name hint, "Report", the suspended person's screen, the owner tools, the rates source line) and Filip's picks
 - [ ] Step 1: the texts, EN + MK: Terms of Use, the full privacy notice with an "In short" box, rates source line and disclaimer, third-party licences page, `docs/legal/` with dated copies of every version; "records only" wording check across every EN and MK text (no "send", "transfer", "collect")
 - [ ] Step 2: backend, terms acceptance (`terms_version`, `accepted_at`, written at sign-up, Google and guest join; migration)
 - [ ] Step 3: frontend, the agree line under the sign-up, Google and guest-join buttons, the terms-changed banner, the plain-name hint, a 16+ line
@@ -281,7 +281,7 @@ Terms of Use, a complete privacy notice, and the features the law and the platfo
 - [ ] Step 6: frontend, the delete-account flow in Settings and the privacy-page "how to delete" text
 - [ ] Step 7: "Report" in the group menu (opens an email), the Kvit contact email on every legal page, `SECURITY.md`, `security.txt`, revocable invite links check, "You were added by X. Not you? Leave." banner
 - [ ] Step 7b: owner tools (needs Phase 18 Step 1, the `Admin` role): suspend a user, close a group, a log of what was done and why; the suspended person's screen; migration
-- [ ] Step 8: weekly encrypted database backup (the BACKLOG item; Neon free keeps only 6 hours), licence notices generated in CI with a GPL/AGPL check, the repository licence file, `docs/legal/` breach plan, breach log, vendor list with DPA screenshots
+- [ ] Step 8: weekly encrypted database backup (the BACKLOG item; Neon free keeps only 6 hours), licence notices generated in CI with a GPL/AGPL check (no LICENSE file for the repository: all rights reserved, Filip's decision), `docs/legal/` breach plan, breach log, vendor list with DPA screenshots
 - [ ] Step 9: desktop layout and the 360 px browser pass (EN and MK, light and dark)
 - [ ] Step 10: code review, report, guide
 - [ ] **Filip:** commit, push, PR, CI green, merge (CI applies the migrations on Neon)
