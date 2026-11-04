@@ -131,3 +131,21 @@ export const allTimeStats: AdminStats = statsWith({
   expensesAdded: { total: 78, previousTotal: null, counts: [30, 48] },
   paymentsConfirmed: { total: 12, previousTotal: null, counts: [6, 6] },
 })
+
+export function statsWithDailyBuckets(count: number): AdminStats {
+  const firstDay = Date.UTC(2026, 7, 4)
+  const dayInMilliseconds = 24 * 60 * 60 * 1000
+  const buckets = Array.from({ length: count }, (_, index) => new Date(firstDay + index * dayInMilliseconds).toISOString().slice(0, 10))
+  const counts = buckets.map((_, index) => (index % 7 === 3 ? 0 : (index * 13) % 40))
+  return statsWith({
+    from: buckets[0],
+    to: buckets[count - 1],
+    buckets,
+    signUps: { ...novemberStats.signUps, counts },
+    activePeople: { ...novemberStats.activePeople, peopleCounts: counts, personDayCounts: counts },
+    joinedViaInvite: { ...novemberStats.joinedViaInvite, counts },
+    groupsCreated: { ...novemberStats.groupsCreated, counts },
+    expensesAdded: { ...novemberStats.expensesAdded, counts },
+    paymentsConfirmed: { ...novemberStats.paymentsConfirmed, counts },
+  })
+}

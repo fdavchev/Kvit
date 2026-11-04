@@ -33,6 +33,8 @@ interface Comparison {
 
 const smallestBarPercent = 4
 
+const mostBarsWithTheWideGap = 31
+
 const allTimeNouns: Record<keyof AdminStatsAllTime, string> = {
   accounts: 'account',
   guests: 'guest',
@@ -63,7 +65,7 @@ export function AdminStatsCards({ stats, isUpdating }: AdminStatsCardsProps) {
         aria-busy={isUpdating}
         className={cn(
           'grid grid-cols-1 gap-3 transition-opacity duration-200 motion-reduce:transition-none lg:grid-cols-2',
-          isUpdating && 'opacity-60',
+          isUpdating && 'opacity-90',
         )}
       >
         {cardNumbers(stats, language, t).map((card) => (
@@ -71,7 +73,7 @@ export function AdminStatsCards({ stats, isUpdating }: AdminStatsCardsProps) {
             key={card.key}
             title={card.title}
             totalText={formatCount(card.total, language)}
-            comparison={comparisonOf(card.total, card.previousTotal, t)}
+            comparison={comparisonOf(card.total, card.previousTotal, language, t)}
             lines={card.lines}
             bars={barsOf(card.counts, stats.buckets)}
             axisLabels={axisLabels}
@@ -119,11 +121,15 @@ function StatsCard({ title, totalText, comparison, lines, bars, axisLabels }: St
           {line}
         </p>
       ))}
-      <div data-stats-bars aria-hidden="true" className="mt-2.5 flex h-14 items-end gap-0.5">
+      <div
+        data-stats-bars
+        aria-hidden="true"
+        className={cn('mt-2.5 flex h-14 items-end', bars.length > mostBarsWithTheWideGap ? 'gap-px' : 'gap-0.5')}
+      >
         {bars.map((bar) => (
           <span
             key={bar.bucket}
-            className="block min-w-0.5 flex-1 rounded-t-[3px] bg-primary"
+            className="block min-w-0 flex-1 rounded-t-[3px] bg-primary"
             style={{ height: `${bar.percent}%` }}
           />
         ))}
@@ -180,7 +186,7 @@ function cardNumbers(stats: AdminStats, language: Language, t: TFunction): Stats
   ]
 }
 
-function comparisonOf(total: number, previousTotal: number | null, t: TFunction): Comparison | null {
+function comparisonOf(total: number, previousTotal: number | null, language: Language, t: TFunction): Comparison | null {
   if (previousTotal === null || (total === 0 && previousTotal === 0)) {
     return null
   }
@@ -191,7 +197,10 @@ function comparisonOf(total: number, previousTotal: number | null, t: TFunction)
   if (change.direction === 'same' || change.percent === 0) {
     return { text: t('adminStats.compare.same'), direction: 'same' }
   }
-  return { text: t(`adminStats.compare.${change.direction}`, { percent: String(change.percent) }), direction: change.direction }
+  return {
+    text: t(`adminStats.compare.${change.direction}`, { percent: formatCount(change.percent, language) }),
+    direction: change.direction,
+  }
 }
 
 function barsOf(counts: readonly number[], buckets: readonly string[]): Bar[] {

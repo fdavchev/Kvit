@@ -375,6 +375,7 @@ html [data-sonner-toast][data-styled='true']:focus-visible {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     caret-color: var(--caret);
+    scroll-padding-bottom: calc(var(--bottom-bar-height) + var(--outbox-bar-space));
     @variant lg {
       font-size: clamp(100%, 87.5% + 0.25vw, 112.5%);
     }

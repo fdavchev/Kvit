@@ -29,7 +29,7 @@ None planned. If the query needs an index on the usage events, it is added with 
 - [x] Step 1: backend, the admin role
 - [x] Step 2: backend, the statistics query
 - [x] Step 3: frontend, the page and the Settings row
-- [ ] Step 4: desktop layout and the browser pass
+- [x] Step 4: desktop layout and the browser pass
 - [ ] Step 5: code review, report, guide
 
 ## Later one-line commit subjects
@@ -37,3 +37,4 @@ None planned. If the query needs an index on the usage events, it is added with 
 - Step 1: Add the Admin role, the admin policy, isAdmin on me and the GrantAdmin script.
 - Step 2: Add GET /api/admin/stats with sign-ups, active people, joins, groups, expenses and payments counted in Skopje time.
 - Step 3: Add the Statistics page, the admin-only route and the Settings row.
+- Step 4: Fix the Phase 18 browser-pass findings: bars that overflowed the card, the Settings row behind the bottom bar, dimmed text contrast and big percentages.

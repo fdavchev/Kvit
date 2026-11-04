@@ -22,6 +22,7 @@ import {
 import { problemResponse } from '@/test/apiTestHelpers'
 import { classesOf } from '@/test/budgetLeftCardTestHelpers'
 import { restoreRealRetryPolicy } from '@/test/expenseTestHelpers'
+import { colorOfToken, compositeOver, contrastOfColors, type ThemeName } from '@/test/indexCssColors'
 import { stubGoogleSignIn } from '@/test/googleTestHelpers'
 import { loadingLook } from '@/test/skeletonTestHelpers'
 import { stubDeviceColorScheme } from '@/test/themeTestHelpers'
@@ -33,6 +34,25 @@ const neverAnsweringStats: StatsAnswerFor = () => new Promise<Response>(() => {}
 const sevenDaysUrl = '/api/admin/stats?from=2026-10-29&to=2026-11-04&by=day'
 const weekUrl = '/api/admin/stats?from=2026-11-01&to=2026-11-04&by=week'
 const allowedPaths = ['/api/admin/stats', '/api/me', '/api/me/active']
+
+const smallTextTokensOfTheCards = ['card-foreground', 'muted-foreground', 'positive', 'negative']
+const smallestTextContrast = 4.5
+const smallestBarContrast = 3
+
+function opacityOfClasses(classes: readonly string[]): number {
+  const opacities = classes.filter((name) => /^opacity-\d+$/.test(name))
+  if (opacities.length !== 1) {
+    throw new Error(`Expected exactly one opacity class, got "${opacities.join(' ')}" in ${classes.join(' ')}`)
+  }
+  return Number(opacities[0].slice('opacity-'.length)) / 100
+}
+
+function dimmedContrast(foregroundToken: string, opacity: number, theme: ThemeName): number {
+  const page = colorOfToken('background', theme)
+  const card = compositeOver({ rgb: colorOfToken('card', theme), alpha: opacity }, page)
+  const foreground = compositeOver({ rgb: colorOfToken(foregroundToken, theme), alpha: opacity }, page)
+  return contrastOfColors(foreground, card)
+}
 
 function failingThenAnswering(failure: () => Response | Error): StatsAnswerFor {
   let calls = 0
@@ -243,6 +263,27 @@ describe('the statistics screen, loading, errors and the look', () => {
       expect(totalOf(screen.getByRole('region', { name: 'Expenses added' }))).toBe('78')
       expect(screen.queryByRole('status')).toBeNull()
     })
+
+    it.each(['light', 'dark'] as const)(
+      'dims the old cards only so far that their small text keeps 4.5:1 and the bars 3:1 against the card (%s)',
+      async (theme) => {
+        const held = holdAnswerFor(sevenDaysUrl, newStats)
+        await renderAdminStats({ statsAnswerFor: held.answerFor })
+        await findStatsCard('Expenses added')
+
+        pressChip('7 days')
+
+        await waitFor(() => {
+          expect(cardsContainer().getAttribute('aria-busy')).toBe('true')
+        })
+        const opacity = opacityOfClasses(classesOf(cardsContainer()))
+        expect(opacity).toBeLessThan(1)
+        for (const token of smallTextTokensOfTheCards) {
+          expect(dimmedContrast(token, opacity, theme), token).toBeGreaterThanOrEqual(smallestTextContrast)
+        }
+        expect(dimmedContrast('primary', opacity, theme)).toBeGreaterThanOrEqual(smallestBarContrast)
+      },
+    )
 
     it('keeps the chips usable while the old cards are dimmed', async () => {
       const held = holdAnswerFor(sevenDaysUrl, newStats)

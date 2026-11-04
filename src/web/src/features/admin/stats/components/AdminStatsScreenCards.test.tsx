@@ -7,6 +7,7 @@ import {
   novemberStats,
   statsWith,
   statsWithActivePeople,
+  statsWithDailyBuckets,
   statsWithEvents,
   statsWithSignUps,
   weeklyStats,
@@ -42,6 +43,34 @@ vi.mock('sonner', async () => (await import('@/test/sonnerMock')).sonnerMock)
 
 const signUpsTitle = 'New sign-ups'
 const activeTitle = 'Active people'
+
+const barBoxWidthOnA320PxPhone = 240
+
+const pixelsOfSpacingClass: Record<string, number> = {
+  'gap-0': 0,
+  'gap-px': 1,
+  'gap-0.5': 2,
+  'gap-1': 4,
+  'min-w-0': 0,
+  'min-w-px': 1,
+  'min-w-0.5': 2,
+  'min-w-1': 4,
+}
+
+function pixelsOf(classes: readonly string[], prefix: 'gap-' | 'min-w-'): number {
+  const spacing = classes.filter((name) => name.startsWith(prefix))
+  if (spacing.length > 1) {
+    throw new Error(`Expected at most one ${prefix} class, got ${spacing.join(' ')}`)
+  }
+  if (spacing.length === 0) {
+    return 0
+  }
+  const pixels = pixelsOfSpacingClass[spacing[0]]
+  if (pixels === undefined) {
+    throw new Error(`The test does not know how wide ${spacing[0]} is`)
+  }
+  return pixels
+}
 
 async function openStats(stats: AdminStats | StatsAnswerFor = novemberStats, language: Language = 'en') {
   const statsAnswerFor = typeof stats === 'function' ? stats : answerWith(stats)
@@ -325,6 +354,25 @@ describe('the statistics screen, the cards', () => {
     })
   })
 
+  describe('the line that compares with the period before, from 1000 per cent up', () => {
+    it.each([
+      ['en', '1,043'],
+      ['mk', '1.043'],
+    ] as const)('separates the thousands of the per cent as the counts are separated (%s: %s)', async (language, percent) => {
+      await openStats(statsWithEvents('expensesAdded', 1143, 100, [1143, 0, 0, 0]), language)
+
+      const card = await findStatsCard(translated(language, 'adminStats.card.expensesAdded'))
+
+      expect(compareOf(card)).toBe(normalizedLine(translated(language, 'adminStats.compare.up', { percent })))
+    })
+
+    it('writes "+1,043% vs the period before" in English', async () => {
+      await openStats(statsWithEvents('expensesAdded', 1143, 100, [1143, 0, 0, 0]))
+
+      expect(compareOf(await findStatsCard('Expenses added'))).toBe('+1,043% vs the period before')
+    })
+  })
+
   describe('the line that compares with the period before', () => {
     const cases: [number, number | null, string | null][] = [
       [78, 52, '+50% vs the period before'],
@@ -488,6 +536,38 @@ describe('the statistics screen, the cards', () => {
             expect(classes, title).toContain('motion-reduce:animate-none')
           }
         }
+      }
+    })
+  })
+
+  describe('many bars on a narrow phone', () => {
+    it.each([31, 62, 92, 100])('fits %i bars into the bar box of a 320 px phone on every card, each bar at least 1 px wide', async (count) => {
+      await openStats(statsWithDailyBuckets(count))
+
+      for (const title of cardTitlesInOrder()) {
+        const card = await findStatsCard(title)
+        const bars = barsOf(card)
+        const gap = pixelsOf(classesOf(barContainerOf(card)), 'gap-')
+        const narrowestRow = bars.reduce((width, bar) => width + pixelsOf(classesOf(bar), 'min-w-'), gap * (bars.length - 1))
+        const widthOfEachBar = (barBoxWidthOnA320PxPhone - gap * (bars.length - 1)) / bars.length
+
+        expect(bars, title).toHaveLength(count)
+        expect(narrowestRow, title).toBeLessThanOrEqual(barBoxWidthOnA320PxPhone)
+        expect(widthOfEachBar, title).toBeGreaterThanOrEqual(1)
+        for (const bar of bars) {
+          expect(classesOf(bar), title).toContain('flex-1')
+        }
+      }
+    })
+
+    it('still draws every bucket with nothing in it as a minimal bar among 92 bars', async () => {
+      await openStats(statsWithDailyBuckets(92))
+
+      const heights = barPercentsOf(await findStatsCard('Expenses added'))
+
+      expect(heights).toHaveLength(92)
+      for (const height of heights) {
+        expect(height).toBeGreaterThan(0)
       }
     })
   })
