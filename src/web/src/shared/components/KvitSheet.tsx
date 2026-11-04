@@ -12,9 +12,10 @@ interface KvitSheetProps {
   actionsRef?: RefObject<KvitSheetActions | null>
   returnsFocusOnClose?: () => boolean
   opener?: Element | null
+  isDismissible?: boolean
 }
 
-export function KvitSheet({ title, children, onClose, actionsRef, returnsFocusOnClose, opener }: KvitSheetProps) {
+export function KvitSheet({ title, children, onClose, actionsRef, returnsFocusOnClose, opener, isDismissible = true }: KvitSheetProps) {
   const [isOpen, setIsOpen] = useState<boolean>(true)
   const [openerElement] = useState<Element | null>(() => opener ?? document.activeElement)
   const popupRef = useRef<HTMLDivElement>(null)
@@ -38,8 +39,9 @@ export function KvitSheet({ title, children, onClose, actionsRef, returnsFocusOn
     <Dialog.Root
       open={isOpen}
       actionsRef={actionsRef}
-      onOpenChange={(open) => {
-        if (!open) {
+      disablePointerDismissal={!isDismissible}
+      onOpenChange={(open, eventDetails) => {
+        if (!open && (isDismissible || eventDetails.reason === 'imperative-action')) {
           setIsOpen(false)
         }
       }}

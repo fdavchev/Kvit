@@ -26,6 +26,7 @@ describe('endpoints', () => {
     ['personalEntries', '/api/personal/entries'],
     ['personalLimitsMonth', '/api/personal/limits/month'],
     ['meBudgetCurrency', '/api/me/budget-currency'],
+    ['meTermsAccept', '/api/me/terms/accept'],
   ] as const)('has the path %s at %s', (name, path) => {
     expect(endpoints[name]).toBe(path)
   })

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { collectTexts } from '@/test/localeTexts'
+import { legalNoticeTexts } from '@/test/legalNoticeTextsTestData'
 import { translated } from '@/test/translated'
 import en from './locales/en.json'
 import mk from './locales/mk.json'
@@ -115,8 +116,8 @@ describe('the approved Phase 19 legal texts', () => {
     expect(translated('mk', key)).toBe(macedonian)
   })
 
-  it.each(languageTexts)('has no text under terms, privacy or legal in %s that is not listed above, so every line is locked and the old privacy lines are gone', (_language, texts) => {
-    const keysListedAbove = legalTexts
+  it.each(languageTexts)('has no text under terms, privacy or legal in %s that is not listed above or in legalNoticeTexts.test.ts, so every line is locked and the old privacy lines are gone', (_language, texts) => {
+    const keysListedAbove = [...legalTexts, ...legalNoticeTexts]
       .map(([key]) => key)
       .filter((key) => legalNamespaces.test(key))
       .sort()

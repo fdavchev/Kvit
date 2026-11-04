@@ -144,8 +144,8 @@ describe('savedQueryCacheOptions', () => {
     expect(savedQueryCacheVersion).not.toBe('')
   })
 
-  it('is at version 6 because the saved me answers gained isAdmin', () => {
-    expect(savedQueryCacheVersion).toBe('6')
+  it('is at version 7 because the saved me answers gained termsVersion, termsUpToDate and termsUpdateIsMaterial', () => {
+    expect(savedQueryCacheVersion).toBe('7')
   })
 
   it('uses the persister it is given', () => {

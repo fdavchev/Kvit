@@ -431,7 +431,17 @@
     }
   },
   "legal": {
-    "ratesSource": "Exchange rates: National Bank of the Republic of North Macedonia (NBRM), nbrm.mk. Informational, may be late or wrong."
+    "ratesSource": "Exchange rates: National Bank of the Republic of North Macedonia (NBRM), nbrm.mk. Informational, may be late or wrong.",
+    "agree": "By continuing you agree to the <terms>Terms</terms> and <privacy>Privacy Policy</privacy>. Kvit is for people aged 16 and over.",
+    "termsUpdated": "We updated the Terms and Privacy.",
+    "termsRead": "Read",
+    "termsOk": "OK",
+    "termsMaterial": {
+      "title": "The Terms changed in a way that matters",
+      "body": "Please read them and agree to keep using Kvit.",
+      "read": "Read the Terms",
+      "agree": "I agree"
+    }
   },
   "groups": {
     "title": "Groups",
@@ -841,7 +851,7 @@
   "addName": {
     "title": "Add a name",
     "label": "Name",
-    "hint": "For someone without Kvit, like Grandma.",
+    "hint": "For someone without Kvit, like Grandma. Add only people who are fine with it.",
     "submit": "Add"
   },
   "groupSettings": {

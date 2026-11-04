@@ -59,7 +59,7 @@ const approvedPhase7Texts: [string, string, string][] = [
   ['group.settings', 'Group settings', 'Поставки на групата'],
   ['addName.title', 'Add a name', 'Додај име'],
   ['addName.label', 'Name', 'Име'],
-  ['addName.hint', 'For someone without Kvit, like Grandma.', 'За некој без Kvit, на пример баба.'],
+  ['addName.hint', 'For someone without Kvit, like Grandma. Add only people who are fine with it.', 'За некој без Kvit, на пример баба. Додавај само луѓе на кои им е во ред.'],
   ['addName.submit', 'Add', 'Додај'],
   ['groupSettings.title', 'Group settings', 'Поставки на групата'],
   ['groupSettings.save', 'Save', 'Зачувај'],

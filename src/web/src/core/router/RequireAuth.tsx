@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
 import { useMe } from '@/core/auth/useMe'
 import { useRecordActive } from '@/features/home/hooks/useRecordActive'
+import { TermsNotice } from '@/features/legal/components/TermsNotice'
 import { SignedInOutbox } from '@/features/outbox/components/SignedInOutbox'
 import { KvitError } from '@/shared/components/KvitError'
 import { KvitScreen } from '@/shared/components/KvitScreen'
@@ -46,6 +47,7 @@ function SignedInOutlet() {
   return (
     <SignedInOutbox>
       <DesktopRailLayout />
+      <TermsNotice />
     </SignedInOutbox>
   )
 }

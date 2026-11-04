@@ -7,9 +7,10 @@ import {
   stubFetch,
 } from '@/test/apiTestHelpers'
 import { testMe } from '@/test/testMe'
-import { changeBudgetTotalCurrency, changeLanguage, getMe } from './meService'
+import { acceptTerms, changeBudgetTotalCurrency, changeLanguage, getMe } from './meService'
 
-const meFields = Object.keys(testMe)
+const termsFields = ['termsVersion', 'termsUpToDate', 'termsUpdateIsMaterial']
+const meFields = Object.keys(testMe).filter((field) => !termsFields.includes(field))
 
 describe('getMe', () => {
   afterEach(() => {
@@ -50,6 +51,75 @@ describe('getMe', () => {
     const me = await getMe()
 
     expect(me).toMatchObject({ isAdmin })
+  })
+
+  it.each(['2026-11-04', null])('keeps termsVersion %j as the answer sent it', async (termsVersion) => {
+    stubFetch(Response.json({ ...testMe, termsVersion }))
+
+    const me = await getMe()
+
+    expect(me).toMatchObject({ termsVersion })
+  })
+
+  it.each([true, false])('keeps termsUpToDate %j as the answer sent it', async (termsUpToDate) => {
+    stubFetch(Response.json({ ...testMe, termsUpToDate }))
+
+    const me = await getMe()
+
+    expect(me).toMatchObject({ termsUpToDate })
+  })
+
+  it.each([true, false])('keeps termsUpdateIsMaterial %j as the answer sent it', async (termsUpdateIsMaterial) => {
+    stubFetch(Response.json({ ...testMe, termsUpdateIsMaterial }))
+
+    const me = await getMe()
+
+    expect(me).toMatchObject({ termsUpdateIsMaterial })
+  })
+
+  it('reads a person who must agree to a material change as it was sent', async () => {
+    const body = { ...testMe, termsVersion: null, termsUpToDate: false, termsUpdateIsMaterial: true }
+    stubFetch(Response.json(body))
+
+    const me = await getMe()
+
+    expect(me).toEqual(body)
+  })
+
+  it('reads an older answer without any terms field as: no version, up to date, not material, so no notice is shown before a fresh answer', async () => {
+    const olderAnswer = Object.fromEntries(
+      Object.entries(testMe).filter(([name]) => !termsFields.includes(name)),
+    )
+    stubFetch(Response.json(olderAnswer))
+
+    const me = await getMe()
+
+    expect(me).toEqual({
+      ...olderAnswer,
+      termsVersion: null,
+      termsUpToDate: true,
+      termsUpdateIsMaterial: false,
+    })
+  })
+
+  it.each(termsFields)('fills only "%s" when it is the one field missing from the answer', async (field) => {
+    const withoutField = Object.fromEntries(
+      Object.entries({ ...testMe, termsVersion: '2026-01-01', termsUpToDate: false, termsUpdateIsMaterial: true }).filter(
+        ([name]) => name !== field,
+      ),
+    )
+    const defaults = { termsVersion: null, termsUpToDate: true, termsUpdateIsMaterial: false }
+    stubFetch(Response.json(withoutField))
+
+    const me = await getMe()
+
+    expect(me).toEqual({
+      ...testMe,
+      termsVersion: '2026-01-01',
+      termsUpToDate: false,
+      termsUpdateIsMaterial: true,
+      [field]: defaults[field as keyof typeof defaults],
+    })
   })
 
   it.each(['MKD', 'EUR', null])('keeps budgetTotalCurrency %j as the answer sent it', async (budgetTotalCurrency) => {
@@ -143,6 +213,15 @@ describe('getMe', () => {
     ['isAdmin', 1],
     ['isAdmin', null],
     ['isAdmin', {}],
+    ['termsVersion', 5],
+    ['termsVersion', true],
+    ['termsVersion', {}],
+    ['termsUpToDate', 'true'],
+    ['termsUpToDate', 1],
+    ['termsUpToDate', null],
+    ['termsUpdateIsMaterial', 'false'],
+    ['termsUpdateIsMaterial', 0],
+    ['termsUpdateIsMaterial', null],
     ['budgetTotalCurrency', 'USD'],
     ['budgetTotalCurrency', 'mkd'],
     ['budgetTotalCurrency', ''],
@@ -161,6 +240,44 @@ describe('getMe', () => {
     stubFetch(Response.json(body))
 
     await expect(getMe()).rejects.toThrow(/object/)
+  })
+})
+
+describe('acceptTerms', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('sends POST /api/me/terms/accept and resolves on 204', async () => {
+    const fetchMock = stubFetch(new Response(null, { status: 204 }))
+
+    const result = await acceptTerms()
+
+    expect(result).toBeUndefined()
+    const request = sentRequest(fetchMock)
+    expect(request.url).toBe('/api/me/terms/accept')
+    expect(request.method).toBe('POST')
+  })
+
+  it.each([
+    ['nobody is signed in', 401, 'AUTH_NOT_SIGNED_IN'],
+    ['the server is busy', 429, 'RATE_LIMITED'],
+  ])('rethrows the ApiError unchanged when %s', async (_name, httpStatus, errorCode) => {
+    stubFetch(problemResponse(httpStatus, errorCode))
+
+    const error = await captureError(acceptTerms())
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ httpStatus, errorCode })
+  })
+
+  it('rethrows the ApiError unchanged when the network fails', async () => {
+    stubFetch(new TypeError('Failed to fetch'))
+
+    const error = await captureError(acceptTerms())
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ httpStatus: null })
   })
 })
 

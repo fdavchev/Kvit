@@ -2,7 +2,7 @@ import { ApiError, apiRequest, jsonRequest, unauthorizedStatus } from '@/core/ap
 import { endpoints } from '@/core/api/endpoints'
 import { isLanguage, type Language } from '@/core/i18n/language'
 import { groupCurrencies } from '@/core/services/groups/groupsService'
-import { readOneOf, readTextOrNull } from '@/core/services/readFields'
+import { readOneOf, readOrNullWhenMissing, readTextOrNull } from '@/core/services/readFields'
 import type { Currency } from '@/shared/utils/formatMoney'
 
 export interface Me {
@@ -16,6 +16,9 @@ export interface Me {
   pictureUrl: string | null
   isGuest: boolean
   isAdmin: boolean
+  termsVersion: string | null
+  termsUpToDate: boolean
+  termsUpdateIsMaterial: boolean
   budgetTotalCurrency: Currency | null
 }
 
@@ -39,6 +42,9 @@ export function parseMe(body: unknown): Me {
     pictureUrl: readTextOrNull(fields, 'pictureUrl', 'the signed-in person'),
     isGuest: readYesNo(fields, 'isGuest'),
     isAdmin: readYesNo(fields, 'isAdmin'),
+    termsVersion: readOrNullWhenMissing(fields, 'termsVersion', 'the signed-in person', readTextOrNull),
+    termsUpToDate: readYesNoOrWhenMissing(fields, 'termsUpToDate', true),
+    termsUpdateIsMaterial: readYesNoOrWhenMissing(fields, 'termsUpdateIsMaterial', false),
     budgetTotalCurrency: readBudgetTotalCurrency(fields),
   }
 }
@@ -58,6 +64,10 @@ export async function getMe(): Promise<Me | null> {
 
 export async function changeLanguage(language: Language): Promise<void> {
   await apiRequest(endpoints.meLanguage, jsonRequest('PUT', { language }))
+}
+
+export async function acceptTerms(): Promise<void> {
+  await apiRequest(endpoints.meTermsAccept, { method: 'POST' })
 }
 
 export async function changeBudgetTotalCurrency(budgetTotalCurrency: Currency | null): Promise<void> {
@@ -82,6 +92,10 @@ function readYesNo(fields: MeFields, name: keyof Me): boolean {
     )
   }
   return value
+}
+
+function readYesNoOrWhenMissing(fields: MeFields, name: keyof Me, whenMissing: boolean): boolean {
+  return Object.hasOwn(fields, name) ? readYesNo(fields, name) : whenMissing
 }
 
 function readLanguage(fields: MeFields): Language {

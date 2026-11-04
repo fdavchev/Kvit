@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { errorMessageKey, hasErrorCode } from '@/core/api/errors'
 import type { GuestJoinChoice, InvitePreview } from '@/core/services/invites/invitesService'
+import { AgreeLine } from '@/features/legal/components/AgreeLine'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitForm } from '@/shared/components/KvitForm'
@@ -141,6 +142,7 @@ export function SignedOutJoin({ token, preview, onGoogleCredential }: SignedOutJ
           />
         </KvitForm>
       )}
+      <AgreeLine />
       <p className="flex flex-wrap items-center justify-center gap-x-1 pt-2 text-center text-[0.9375rem] text-muted-foreground">
         <span>{t('join.guest.haveAccount')}</span>
         <KvitButton
