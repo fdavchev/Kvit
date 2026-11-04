@@ -1,6 +1,7 @@
 using Kvit.Application.Dispatching;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Me;
+using Kvit.Domain.Accounts;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +34,19 @@ namespace Kvit.Application.Queries.Me
             return _context.Users
                 .AsNoTracking()
                 .Where(user => user.Id == userId)
-                .Select(user => new MeResponse(user.Id, user.DisplayName, user.Email, user.Language, user.TimeZone, user.MustChangePassword, user.PasswordHash != null, user.GooglePictureUrl, user.IsGuest, user.BudgetTotalCurrency));
+                .Select(user => new MeResponse(
+                    user.Id,
+                    user.DisplayName,
+                    user.Email,
+                    user.Language,
+                    user.TimeZone,
+                    user.MustChangePassword,
+                    user.PasswordHash != null,
+                    user.GooglePictureUrl,
+                    user.IsGuest,
+                    user.BudgetTotalCurrency,
+                    _context.UserRoles.Any(userRole => userRole.UserId == user.Id
+                        && _context.Roles.Any(role => role.Id == userRole.RoleId && role.Name == Roles.Admin))));
         }
     }
 }

@@ -26,6 +26,7 @@ namespace Kvit.Api.Registers
             services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<PasswordResetService>();
+            services.AddScoped<AdminRoleService>();
             services.AddSingleton<IInviteTokenGenerator, InviteTokenGenerator>();
             services.AddSingleton<ExchangeRateRefreshGate>();
             services.AddSingleton<ActiveDayMemory>();

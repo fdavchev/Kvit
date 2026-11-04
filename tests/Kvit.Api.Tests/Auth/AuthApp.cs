@@ -2,6 +2,7 @@ using System.Net;
 using Kvit.Api.Tests.Persistence;
 using Kvit.Api.Tests.Postgres;
 using Kvit.Contracts.Auth;
+using Kvit.Domain.Accounts;
 using Kvit.Domain.Entities;
 using Kvit.Infrastructure.Auth;
 using Kvit.Infrastructure.Persistence;
@@ -115,6 +116,46 @@ namespace Kvit.Api.Tests.Auth
         {
             return await ResetPasswordAsync(email)
                 ?? throw new InvalidOperationException($"No account has the email '{email}', so no temporary password was made.");
+        }
+
+        public async Task<bool> GrantAdminAsync(string email)
+        {
+            using IServiceScope scope = CreateScope();
+            AdminRoleService service = ActivatorUtilities.CreateInstance<AdminRoleService>(scope.ServiceProvider);
+
+            return await service.GrantAsync(email, TestContext.Current.CancellationToken);
+        }
+
+        public async Task<bool> RevokeAdminAsync(string email)
+        {
+            using IServiceScope scope = CreateScope();
+            AdminRoleService service = ActivatorUtilities.CreateInstance<AdminRoleService>(scope.ServiceProvider);
+
+            return await service.RevokeAsync(email, TestContext.Current.CancellationToken);
+        }
+
+        public async Task MakeAdminAsync(string email)
+        {
+            Assert.True(await GrantAdminAsync(email), $"No account has the email '{email}', so it was not made an admin.");
+        }
+
+        public async Task<int> CountAdminRowsOfAsync(string email)
+        {
+            List<string?> counts = await QueryAsync(
+                "SELECT count(*)::text FROM user_roles JOIN roles ON roles.id = user_roles.role_id JOIN users ON users.id = user_roles.user_id WHERE users.email = @email AND roles.name = @role",
+                new NpgsqlParameter("email", email),
+                new NpgsqlParameter("role", Roles.Admin));
+
+            return int.Parse(Assert.Single(counts) ?? throw new InvalidOperationException($"The admin row count is null for '{email}'."));
+        }
+
+        public async Task<int> CountAdminRoleRowsAsync()
+        {
+            List<string?> counts = await QueryAsync(
+                "SELECT count(*)::text FROM roles WHERE name = @role",
+                new NpgsqlParameter("role", Roles.Admin));
+
+            return int.Parse(Assert.Single(counts) ?? throw new InvalidOperationException("The count of Admin role rows is null."));
         }
 
         public async Task<ResetAccount> CreateResetAccountAsync()

@@ -34,6 +34,7 @@ namespace Kvit.Api.Registers
                     options.Lockout.MaxFailedAccessAttempts = LockoutLadder.FailedTriesBeforeLock;
                     options.Lockout.DefaultLockoutTimeSpan = LockoutLadder.LockDurationFor(1);
                 })
+                .AddRoles<IdentityRole<Guid>>()
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddSignInManager()
                 .AddClaimsPrincipalFactory<KvitUserClaimsPrincipalFactory>();
@@ -58,10 +59,15 @@ namespace Kvit.Api.Registers
                 .RequireAuthenticatedUser()
                 .AddRequirements(new PasswordChangedRequirement())
                 .Build();
+            AuthorizationPolicy adminStatsViewPolicy = new AuthorizationPolicyBuilder()
+                .Combine(signedInPolicy)
+                .RequireRole(Roles.Admin)
+                .Build();
             services.AddAuthorization(options =>
             {
                 options.DefaultPolicy = signedInPolicy;
                 options.FallbackPolicy = signedInPolicy;
+                options.AddPolicy(Permissions.AdminStatsView, adminStatsViewPolicy);
             });
             services.AddSingleton<IAuthorizationMiddlewareResultHandler, MustChangePasswordResultHandler>();
 
