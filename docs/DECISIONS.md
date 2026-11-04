@@ -1,5 +1,35 @@
 ﻿# Decisions
 
+## 2026-11-04: Phase 19 (legal pages and data rights), planned, first five answers in, seven questions still open
+Source: `reports/2026-11-04-phase-19-legal-research.md` (four research runs; not legal advice). Filip's request: have Terms of Use, privacy and the rest, so that he cannot be sued over something stupid. Honest limit told to Filip: documents lower the risk, they cannot remove it; a short lawyer consultation is the only real way to close the points marked LAWYER in the report.
+- **Proposed by Claude, waiting for Filip (marked so nobody builds them as decided):**
+  - **Agree line, no tick box:** small grey text "By continuing you agree to the Terms and Privacy Policy" directly under the sign-up, Google and guest-join buttons. Store `terms_version` + `accepted_at`, no IP. Small changes: thin banner, one OK tap. Material changes: blocking sheet.
+  - **Delete my account:** off at once, 30 days counted from the tap, log in again to cancel, then purge. Choice "Keep my name" (default) or "Show as Former member". Changes the BACKLOG plan (30 days from the request, not "switched off" without the immediate lock-out) and adds the name choice.
+  - **Download my data:** JSON, one tap in Settings, no email.
+  - **Records only:** wording rule in every text: "record" and "confirm", never "send", "transfer", "collect". No kitty, wallet, pay button, payment link, bank link, interest or fees, ever, without a new decision and a lawyer.
+  - **Proposed to bring forward:** the weekly encrypted backup from BACKLOG, because Neon free restores only 6 hours.
+- **Where this conflicts with something already decided (Filip decides):**
+  - **Phase 6 Google button** is Google's own script loaded when Welcome opens, so Google sees the visitor's address before any tap. Loading it only on tap is the cleaner privacy choice but may slow the first tap, against "speed is the product". Alternative: keep it and say so in the privacy notice. Claude's lean: keep the button, disclose it, and ask the lawyer.
+  - **Phase 4: 90-day login cookie.** An opt-in "stay signed in" or a shorter life is the safer reading of cookie rules (UNCLEAR). Claude's lean: keep 90 days, because it is strictly necessary for the app Filip asked for, and mention it in the notice. More taps for every user if changed.
+  - **Phase 6: "Privacy page names no email".** The research says a contact email is required. This reverses that decision (BACKLOG item already planned it).
+  - **Free forever:** a company, a custom domain (to show "Kvit" on Google's window) and a lawyer all cost money. None is decided; each needs Filip's explicit word.
+- **Filip's answers (2026-11-04):**
+  - Lives in North Macedonia; his name may appear on the site if needed.
+  - Contact email: `davchevfilip31@gmail.com` (his own address, not a new Kvit mailbox; Claude advised a separate one, Filip's call). No home address on the site "for now"; only if a lawyer says it is required.
+  - Minimum age line: **16**.
+  - Google button: **keep as is** (loaded when Welcome opens), disclosed in the privacy notice.
+  - **No lawyer.** Kvit is for friends and family; legal work is for the case that it actually grows. Consequence written down: the seven LAWYER questions in the research report stay open as **accepted risks**, and the site shows only name + email. Triggers to reconsider: strangers joining in numbers, any money feature, ads or fees, a complaint or a request from an authority.
+- **Filip's second round of answers (2026-11-04):**
+  - **Contact email changes:** a new, separate Gmail for Kvit, made by Filip: **`kvit.support@gmail.com`** (public: legal pages, `security.txt`, Google's console). `davchevfilip31@gmail.com` is no longer used on the site.
+  - Prompt for the building session: `guides/phase-19-legal-prompt.md`; first-push texts: `guides/phase-19-pr-text.md`.
+  - **Terms:** Macedonian law and courts, plus the line that consumer rights stay.
+  - **Login:** the 90-day cookie stays; the privacy notice mentions it.
+  - **Repository licence:** none (all rights reserved; people may view and fork on GitHub but not reuse the code).
+  - **Delete my account:** the person chooses "Keep my name" or "Former member"; the default selected is **Keep my name**.
+  - **Inactive accounts:** kept forever for now (closed circle); revisit if Kvit grows. The privacy notice must therefore not promise automatic deletion of inactive accounts.
+  - **Reporting:** the "Report" email item **and** owner tools now: suspend a user, close a group, and a log of what Filip did and why. These build on Phase 18's `Admin` role and `scripts/GrantAdmin.cs`, so Phase 19 starts only after Phase 18 Step 1 is merged. What a suspended person sees, and what "close a group" does to its members, need a mockup in Step 0.
+- **Still open:** does `START-HERE-PROMPT.md` stay in the public repository? (first asked in `STATUS.md`; with "no licence" it is still readable by everyone).
+
 ## 2026-11-04: Phase 18 (admin statistics), in progress
 Last phase of Release 3. Plan: `guides/phase-18-admin-stats-prompt.md`; mockup: `design/2026-11-04-phase-18/`; first-push texts: `guides/phase-18-pr-text.md`.
 - **Filip's picks (2026-11-04):**

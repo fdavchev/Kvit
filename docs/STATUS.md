@@ -10,7 +10,7 @@ _Last updated: 2026-11-03 (Phase 17 built, browser-checked, code-reviewed and th
 ## Next step
 1. Phase 17 is built, browser-checked, code-reviewed and the review findings are fixed (VERIFIED by automated test: frontend 12765 of 12765, backend 5975 of 5975; the first round of fixes re-checked by live run; the last round of fixes is re-checked next). Everything is committed on `feat/17-outbox`, nothing is pushed by Claude.
 2. Filip: read the Macedonian drafts, push, open the PR with the texts in `docs/guides/phase-17-pr-text.md`, CI green, merge (no migration). Then follow `docs/guides/phase-17-outbox.md` on the real site and a phone.
-3. After that: Phase 18, the admin statistics page (last phase of Release 3).
+3. After that: Phase 18, the admin statistics page, then Phase 19 (legal pages and data rights; planned 2026-11-04, research in `docs/reports/2026-11-04-phase-19-legal-research.md`, Filip's open questions at the top of `docs/DECISIONS.md`).
 
 ## Then
 - Filip, once on the real site: one real EUR expense (first real NBRM call), a real phone check of the Phase 16 screens, the Macedonian drafts of Phases 9 to 16, the Google button and "Make an account", the invite link on his phone.
