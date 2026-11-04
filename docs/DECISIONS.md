@@ -47,6 +47,11 @@ Last phase of Release 3. Plan: `guides/phase-18-admin-stats-prompt.md`; mockup: 
   - Admin is the Identity role `Admin`, permission `ADMIN_STATS_VIEW`, given only by the script `scripts/GrantAdmin.cs` (by email). `GET /api/me` carries `isAdmin`.
   - `GET /api/admin/stats?from&to&by`; non-admin gets 403. Day grouping is limited to 92 days. Counted in SQL in Skopje time.
   - Known edge: `Active` rows are kept once per UTC day, so a late-night Skopje visit can miss one person-day.
+  - **Step 2 (2026-11-04):** `GET /api/admin/stats` answers 6131 of 6131 backend tests, no migration (family-sized data; the filter is on a calculated Skopje day, so an index would not help). Counting is one parameterised raw SQL query (EF cannot write `AT TIME ZONE`), admin accounts excluded in SQL.
+  - Activity rows of deleted accounts (no user id) do not count as active people or person-days; they count in every other number.
+  - "All" with an end date before the first event gives a one-day range, not an error.
+  - Allowed-in-all-time "accounts" = Email and Google sign-ups only; guests are a separate number and a guest who later makes an account is not added to accounts.
+  - A non-admin with bad parameters gets 403, never 400 (the admin check runs first).
 
 ## 2026-11-03: Phase 17 (the outbox): done, the rules that stay
 The whole Phase 17 decision log (Filip's mockup picks, the planning answers, the Step 1 to 5 notes, the browser-pass choices, rejected alternatives) moved word for word to the end of `reports/2026-11-03-phase-17-outbox.md`, section "Decisions and rejected alternatives". What stays true:

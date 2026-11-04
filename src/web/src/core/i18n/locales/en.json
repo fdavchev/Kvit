@@ -151,7 +151,11 @@
     "SETTLEMENT_MEMBER_NOT_CURRENT": "This person is no longer in the group.",
     "SETTLEMENT_CURRENCY_INVALID": "Pick MKD or EUR.",
     "SETTLEMENT_AMOUNT_TOO_LARGE": "This amount is too large.",
-    "SETTLEMENT_CLIENT_REQUEST_ID_USED": "This request was already used for something else."
+    "SETTLEMENT_CLIENT_REQUEST_ID_USED": "This request was already used for something else.",
+    "ADMIN_STATS_RANGE_INVALID": "The start date must be on or before the end date.",
+    "ADMIN_STATS_FUTURE_DATE": "Pick dates up to today.",
+    "ADMIN_STATS_GROUPING_INVALID": "Group by day, week, month or year.",
+    "ADMIN_STATS_DAY_RANGE_TOO_LONG": "Grouping by day works for up to 92 days. Pick a shorter range or group by week or month."
   },
   "language": {
     "label": "Language",

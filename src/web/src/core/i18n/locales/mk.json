@@ -151,7 +151,11 @@
     "SETTLEMENT_MEMBER_NOT_CURRENT": "Оваа личност веќе не е во групата.",
     "SETTLEMENT_CURRENCY_INVALID": "Избери MKD или EUR.",
     "SETTLEMENT_AMOUNT_TOO_LARGE": "Овој износ е премногу голем.",
-    "SETTLEMENT_CLIENT_REQUEST_ID_USED": "Ова барање веќе е искористено за друго."
+    "SETTLEMENT_CLIENT_REQUEST_ID_USED": "Ова барање веќе е искористено за друго.",
+    "ADMIN_STATS_RANGE_INVALID": "Почетниот датум мора да е пред крајниот или ист со него.",
+    "ADMIN_STATS_FUTURE_DATE": "Избери датуми најдоцна до денес.",
+    "ADMIN_STATS_GROUPING_INVALID": "Групирај по ден, недела, месец или година.",
+    "ADMIN_STATS_DAY_RANGE_TOO_LONG": "Групирањето по ден работи за најмногу 92 дена. Избери пократок период или групирај по недела или месец."
   },
   "language": {
     "label": "Јазик",

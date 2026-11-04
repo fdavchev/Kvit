@@ -27,7 +27,7 @@ None planned. If the query needs an index on the usage events, it is added with 
 ### Checklist
 - [x] Step 0: mockup, picks and plan logged
 - [x] Step 1: backend, the admin role
-- [ ] Step 2: backend, the statistics query
+- [x] Step 2: backend, the statistics query
 - [ ] Step 3: frontend, the page and the Settings row
 - [ ] Step 4: desktop layout and the browser pass
 - [ ] Step 5: code review, report, guide
@@ -35,3 +35,4 @@ None planned. If the query needs an index on the usage events, it is added with 
 ## Later one-line commit subjects
 - Step 0: Add the Phase 18 prompt, mockup and decisions for the admin statistics page.
 - Step 1: Add the Admin role, the admin policy, isAdmin on me and the GrantAdmin script.
+- Step 2: Add GET /api/admin/stats with sign-ups, active people, joins, groups, expenses and payments counted in Skopje time.

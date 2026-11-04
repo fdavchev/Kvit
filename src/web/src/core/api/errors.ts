@@ -130,6 +130,10 @@ const translatedErrorCodes = [
   'SETTLEMENT_CURRENCY_INVALID',
   'SETTLEMENT_AMOUNT_TOO_LARGE',
   'SETTLEMENT_CLIENT_REQUEST_ID_USED',
+  'ADMIN_STATS_RANGE_INVALID',
+  'ADMIN_STATS_FUTURE_DATE',
+  'ADMIN_STATS_GROUPING_INVALID',
+  'ADMIN_STATS_DAY_RANGE_TOO_LONG',
 ]
 const errorCodeMessageKeys = new Map<string, string>(
   translatedErrorCodes.map((code) => [code, `errors.${code}`]),
