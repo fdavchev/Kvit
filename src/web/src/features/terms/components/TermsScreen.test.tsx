@@ -23,6 +23,7 @@ import { TermsScreen } from './TermsScreen'
 const sectionCount = 15
 const sectionNumbers = numbersUpTo(sectionCount)
 const textWithTheEmail = 'sections.13.body'
+const licencesFilePath = '/third-party-licenses.txt'
 
 const sectionsInEachLanguage = languages.flatMap((language) =>
   sectionNumbers.map((number) => [language, number] as const),
@@ -33,6 +34,10 @@ async function renderTerms(options: { language?: Language; routerState?: unknown
     language: options.language ?? 'en',
     routerState: options.routerState,
   })
+}
+
+function licencesLink(): HTMLElement {
+  return screen.getByRole('link', { name: translated('en', 'legal.licences') })
 }
 
 describe('TermsScreen', () => {
@@ -129,6 +134,44 @@ describe('TermsScreen', () => {
 
     expect(mailtoLinks()).toHaveLength(countOfEmailsInDocument(language, 'terms', sectionCount))
     expect(mailtoLinks().length).toBeGreaterThan(0)
+  })
+
+  it.each(languages)('shows one third-party licences link with the approved text (%s)', async (language) => {
+    await renderTerms({ language })
+
+    expect(screen.getAllByRole('link', { name: translated(language, 'legal.licences') })).toHaveLength(1)
+  })
+
+  it('links to the static file /third-party-licenses.txt', async () => {
+    await renderTerms()
+
+    expect(licencesLink().getAttribute('href')).toBe(licencesFilePath)
+  })
+
+  it('opens the licences file in a new tab without giving the new page access to this one', async () => {
+    await renderTerms()
+
+    expect(licencesLink().getAttribute('target')).toBe('_blank')
+    expect(licencesLink().getAttribute('rel')).toBe('noopener noreferrer')
+  })
+
+  it('draws the licences link as a plain anchor, because the file is not a screen of the app', async () => {
+    await renderTerms()
+
+    expect(licencesLink().tagName).toBe('A')
+  })
+
+  it.each(languages)('puts the licences link at the bottom, after the paragraph of the last section and after every other link (%s)', async (language) => {
+    await renderTerms({ language })
+
+    const lastParagraph = screen.getByRole('heading', {
+      level: 2,
+      name: sectionHeading(language, 'terms', sectionCount),
+    }).nextElementSibling
+    const link = screen.getByRole('link', { name: translated(language, 'legal.licences') })
+
+    expect(lastParagraph?.compareDocumentPosition(link)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(screen.getAllByRole('link').at(-1)).toBe(link)
   })
 
   it('shows the screen without asking the server anything, so it works for a signed-out visitor', async () => {

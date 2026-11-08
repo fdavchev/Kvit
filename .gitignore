@@ -46,3 +46,4 @@ appsettings.*.local.json
 .wrangler/
 .dev.vars
 .vitest/
+src/web/public/third-party-licenses.txt

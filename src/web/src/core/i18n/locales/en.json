@@ -301,7 +301,7 @@
       },
       "2": {
         "heading": "What Kvit keeps",
-        "body": "Your name, language and time zone. For an email account: your email and a scrambled form of your password. For Google sign-in: your email, the link to your Google picture and Google's ID for you. The groups, expenses, payments and notes that you and your friends enter, and your personal budget if you use it. Simple counts of how the app is used, tied to your account but never with amounts or names. A guest keeps only a name and what the guest enters."
+        "body": "Your name, language and time zone. For an email account: your email and a scrambled form of your password. For Google sign-in: your email, the link to your Google picture and Google's ID for you. The groups, expenses, payments and notes that you and your friends enter, and your personal budget if you use it. Simple counts of how the app is used, tied to your account for 12 months but never with amounts or names. A guest keeps only a name and what the guest enters."
       },
       "3": {
         "heading": "Why Kvit uses it",
@@ -313,11 +313,11 @@
       },
       "5": {
         "heading": "Companies that help run Kvit",
-        "body": "Cloudflare delivers the website and passes requests on. Render runs the server. Neon stores the database. Google handles sign-in if you use it. These companies process data only to give their service to Kvit. The National Bank of the Republic of North Macedonia only receives requests for exchange rates, with no personal data."
+        "body": "Cloudflare delivers the website and passes requests on. Render runs the server. Neon stores the database. GitHub keeps an encrypted weekly copy of the database as a backup. Google handles sign-in if you use it. These companies process data only to give their service to Kvit. The National Bank of the Republic of North Macedonia only receives requests for exchange rates, with no personal data."
       },
       "6": {
         "heading": "Data outside the EU",
-        "body": "The database is in Frankfurt, Germany. Cloudflare, Render and Google are US companies and may handle data outside the EU. They say they use approved safeguards, such as the EU-US Data Privacy Framework or standard contractual clauses."
+        "body": "The database is in Frankfurt, Germany. Cloudflare, Render, GitHub and Google are US companies and may handle data outside the EU. They say they use approved safeguards, such as the EU-US Data Privacy Framework or standard contractual clauses."
       },
       "7": {
         "heading": "Sign in with Google",
@@ -333,7 +333,7 @@
       },
       "10": {
         "heading": "How long Kvit keeps things",
-        "body": "Your data stays while your account exists. When you delete your account it is switched off at once and removed within 30 days. A deleted group or expense can be restored for a while, and is removed 30 days after that. Single usage events are merged into monthly totals after 12 months. The companies above keep technical logs for a short time, from days to a few weeks. Kvit's database can be restored up to 6 hours back, and Kvit keeps an encrypted weekly backup for up to 90 days. Accounts that are not used are kept and are not deleted automatically."
+        "body": "Your data stays while your account exists. When you delete your account it is switched off at once and removed within 30 days. A deleted group or expense can be restored for a while, and is removed 30 days after that. After 12 months, usage events are no longer tied to an account. The companies above keep technical logs for a short time, from days to a few weeks. Kvit's database can be restored up to 6 hours back, and Kvit keeps an encrypted weekly backup for up to 90 days. Accounts that are not used are kept and are not deleted automatically."
       },
       "11": {
         "heading": "If someone added your name",
@@ -460,7 +460,8 @@
       "body": "Please read them and agree to keep using Kvit.",
       "read": "Read the Terms",
       "agree": "I agree"
-    }
+    },
+    "licences": "Third-party licences"
   },
   "groups": {
     "title": "Groups",

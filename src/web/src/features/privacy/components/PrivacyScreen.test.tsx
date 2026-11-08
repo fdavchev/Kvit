@@ -140,6 +140,17 @@ describe('PrivacyScreen', () => {
     expect(mailtoLinks().length).toBeGreaterThan(0)
   })
 
+  it.each(languages)('has no third-party licences link, because that link belongs to the Terms only (%s)', async (language) => {
+    await renderPrivacy({ language })
+
+    const linksToTheFile = screen
+      .getAllByRole('link')
+      .filter((link) => link.getAttribute('href') === '/third-party-licenses.txt')
+
+    expect(linksToTheFile).toEqual([])
+    expect(screen.queryByRole('link', { name: translated(language, 'legal.licences') })).toBeNull()
+  })
+
   it('shows the screen without asking the server anything, so it works for a signed-out visitor', async () => {
     const fetchMock = stubFetch(new Response(null, { status: 401 }))
 

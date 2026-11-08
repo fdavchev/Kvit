@@ -63,6 +63,18 @@ export function LegalDocument({ document, sectionCount }: LegalDocumentProps) {
           <p className={bodyLook}>{withEmailLinks(t(`${document}.sections.${number}.body`))}</p>
         </section>
       ))}
+      {document === 'terms' && (
+        <p className="mt-6 text-[0.9375rem]">
+          <a
+            href="/third-party-licenses.txt"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-link hover:underline"
+          >
+            {t('legal.licences')}
+          </a>
+        </p>
+      )}
     </KvitScreen>
   )
 }

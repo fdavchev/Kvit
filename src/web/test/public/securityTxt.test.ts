@@ -124,10 +124,10 @@ describe('how the site serves /.well-known/security.txt', () => {
     expect(viteConfig).not.toMatch(/\broot\s*:/)
   })
 
-  it('has _headers rules for /* only, so no rule is written for the /.well-known path', () => {
+  it('has _headers rules for /* and /third-party-licenses.txt only, so no rule is written for the /.well-known path', () => {
     const headers = readFileSync(path.join(publicFolder, '_headers'), 'utf8')
 
-    expect(headerFilePatterns(headers)).toEqual(['/*'])
+    expect(headerFilePatterns(headers)).toEqual(['/*', '/third-party-licenses.txt'])
     expect(headers).not.toContain('.well-known')
   })
 
