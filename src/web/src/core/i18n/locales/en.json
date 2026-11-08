@@ -867,7 +867,11 @@
     "left": "You left {{name}}",
     "ownerCannotLeave": "You are the owner. Make someone else the owner before you leave.",
     "countInBudget": "Count my shares in my budget",
-    "countInBudgetHint": "From now on. Past months stay as they were."
+    "countInBudgetHint": "From now on. Past months stay as they were.",
+    "report": "Report this group",
+    "reportHint": "Opens your email app with the group's number filled in.",
+    "reportSubject": "Report a Kvit group",
+    "reportBody": "Group number: {{id}}\n\nWhat is wrong:\n"
   },
   "members": {
     "title": "Members",
