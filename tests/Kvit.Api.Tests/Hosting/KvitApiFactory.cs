@@ -17,6 +17,7 @@ namespace Kvit.Api.Tests.Hosting
         private const string CertificatePasswordKey = "DataProtection:CertificatePassword";
         private const string ProxySecretKey = "Proxy:SharedSecret";
         private const string GoogleClientIdKey = "Google:ClientId";
+        private const string CleanupSecretKey = "Cleanup:Secret";
         public const string TestGoogleClientId = "test-google-client-id";
         public const string UnreachableConnectionString = "Host=127.0.0.1;Port=1;Database=kvit;Username=kvit;Timeout=2";
 
@@ -50,6 +51,8 @@ namespace Kvit.Api.Tests.Hosting
         public FakeGoogleTokenChecker GoogleTokens { get; }
 
         public Action<IServiceCollection>? AdditionalTestServices { get; set; }
+
+        public string? CleanupSecret { get; set; }
 
         public static KvitApiFactory WithConnectionString(string? connectionString)
         {
@@ -108,6 +111,7 @@ namespace Kvit.Api.Tests.Hosting
                     new KeyValuePair<string, string?>(CertificatePasswordKey, _certificatePassword),
                     new KeyValuePair<string, string?>(ProxySecretKey, _proxySecret),
                     new KeyValuePair<string, string?>(GoogleClientIdKey, _googleClientId),
+                    new KeyValuePair<string, string?>(CleanupSecretKey, CleanupSecret),
                 ]));
 
             if (string.IsNullOrWhiteSpace(_proxySecret))

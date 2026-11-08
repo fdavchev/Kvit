@@ -62,7 +62,7 @@ namespace Kvit.Api.Tests.Scripts
             return new ScriptRun(process.ExitCode, await standardOutput + await standardError);
         }
 
-        private static string FindRepositoryRoot()
+        public static string FindRepositoryRoot()
         {
             DirectoryInfo? directory = new(AppContext.BaseDirectory);
             while (directory is not null && !File.Exists(Path.Combine(directory.FullName, RepositoryMarkerFile)))
