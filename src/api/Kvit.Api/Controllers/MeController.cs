@@ -65,5 +65,12 @@ namespace Kvit.Api.Controllers
             Result result = await _dispatcher.Send(new AcceptTermsCommand(), cancellationToken);
             return Result(result);
         }
+
+        [HttpPost("delete")]
+        public async Task<ActionResult> Delete(DeleteAccountRequest request, CancellationToken cancellationToken)
+        {
+            Result result = await _dispatcher.Send(new DeleteAccountCommand(request.NameChoice), cancellationToken);
+            return Result(result);
+        }
     }
 }

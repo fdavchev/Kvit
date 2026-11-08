@@ -19,8 +19,11 @@ export interface Me {
   termsVersion: string | null
   termsUpToDate: boolean
   termsUpdateIsMaterial: boolean
+  deletionCancelled: boolean
   budgetTotalCurrency: Currency | null
 }
+
+export type DeleteAccountNameChoice = 'KeepName' | 'FormerMember'
 
 type MeFields = Record<string, unknown>
 
@@ -45,6 +48,7 @@ export function parseMe(body: unknown): Me {
     termsVersion: readOrNullWhenMissing(fields, 'termsVersion', 'the signed-in person', readTextOrNull),
     termsUpToDate: readYesNoOrWhenMissing(fields, 'termsUpToDate', true),
     termsUpdateIsMaterial: readYesNoOrWhenMissing(fields, 'termsUpdateIsMaterial', false),
+    deletionCancelled: readYesNoOrWhenMissing(fields, 'deletionCancelled', false),
     budgetTotalCurrency: readBudgetTotalCurrency(fields),
   }
 }
@@ -80,6 +84,10 @@ const exportFileNameWhenHeaderMissing = 'kvit-my-data.json'
 export async function exportMyData(): Promise<ExportedData> {
   const file = await apiFileRequest(endpoints.meExport)
   return { blob: file.blob, fileName: file.fileName ?? exportFileNameWhenHeaderMissing }
+}
+
+export async function deleteMyAccount(nameChoice: DeleteAccountNameChoice): Promise<void> {
+  await apiRequest(endpoints.meDelete, jsonRequest('POST', { nameChoice }))
 }
 
 export async function changeBudgetTotalCurrency(budgetTotalCurrency: Currency | null): Promise<void> {

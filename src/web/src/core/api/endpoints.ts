@@ -20,6 +20,7 @@ export const endpoints = {
   meBudgetCurrency: '/api/me/budget-currency',
   meTermsAccept: '/api/me/terms/accept',
   meExport: '/api/me/export',
+  meDelete: '/api/me/delete',
   meActive: '/api/me/active',
   dashboard: '/api/dashboard',
   adminStats: ({ from, to, by }: AdminStatsRequest) => `/api/admin/stats?${adminStatsQuery(from, to, by)}`,

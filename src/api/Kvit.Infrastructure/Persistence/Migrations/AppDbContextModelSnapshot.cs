@@ -1075,6 +1075,15 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("DeletionNameChoice")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("deletion_name_choice");
+
+                    b.Property<DateTimeOffset?>("DeletionRequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletion_requested_at");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -1153,6 +1162,10 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("phone_number_confirmed");
 
+                    b.Property<DateTimeOffset?>("PurgedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("purged_at");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text")
                         .HasColumnName("security_stamp");
@@ -1197,11 +1210,17 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_users_created_at_set", "created_at > '0002-01-01 00:00:00+00'");
 
+                            t.HasCheckConstraint("ck_users_deletion_name_choice", "deletion_name_choice IN ('KeepName', 'FormerMember')");
+
+                            t.HasCheckConstraint("ck_users_deletion_request_and_choice_together", "(deletion_requested_at IS NULL AND deletion_name_choice IS NULL) OR (deletion_requested_at IS NOT NULL AND deletion_name_choice IS NOT NULL AND char_length(deletion_name_choice) >= 1)");
+
                             t.HasCheckConstraint("ck_users_display_name_not_empty", "char_length(display_name) >= 1");
 
                             t.HasCheckConstraint("ck_users_guest_has_no_email_or_password", "NOT is_guest OR (email IS NULL AND normalized_email IS NULL AND password_hash IS NULL)");
 
                             t.HasCheckConstraint("ck_users_language", "language IN ('en', 'mk')");
+
+                            t.HasCheckConstraint("ck_users_purged_only_after_request", "purged_at IS NULL OR deletion_requested_at IS NOT NULL");
 
                             t.HasCheckConstraint("ck_users_terms_version_and_time_together", "(terms_version IS NULL AND terms_accepted_at IS NULL) OR (terms_version IS NOT NULL AND terms_accepted_at IS NOT NULL AND char_length(terms_version) >= 1)");
 

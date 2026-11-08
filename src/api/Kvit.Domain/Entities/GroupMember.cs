@@ -168,6 +168,12 @@ namespace Kvit.Domain.Entities
             ClaimedAt = null;
         }
 
+        public void TurnIntoPlainNameCalled(string name)
+        {
+            TurnIntoPlainName();
+            Name = name;
+        }
+
         private Guid AccountUserId()
         {
             return UserId ?? throw new InvalidOperationException($"Member {Id} of group {GroupId} is a plain name with no account, but this step needs the account.");

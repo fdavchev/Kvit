@@ -135,6 +135,7 @@ const translatedErrorCodes = [
   'ADMIN_STATS_GROUPING_INVALID',
   'ADMIN_STATS_DAY_RANGE_TOO_LONG',
   'ADMIN_STATS_DATE_TOO_OLD',
+  'ACCOUNT_DELETE_NAME_CHOICE_INVALID',
 ]
 const errorCodeMessageKeys = new Map<string, string>(
   translatedErrorCodes.map((code) => [code, `errors.${code}`]),

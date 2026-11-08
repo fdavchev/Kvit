@@ -82,6 +82,7 @@ const mappedErrorCodes = [
   'RECURRING_INCOME_NOT_STOPPED',
   'RECURRING_INCOME_RESTART_EXPIRED',
   'BUDGET_LIMIT_AMOUNT_INVALID',
+  'ACCOUNT_DELETE_NAME_CHOICE_INVALID',
 ]
 
 const errorTexts: Record<'en' | 'mk', Record<string, unknown>> = {

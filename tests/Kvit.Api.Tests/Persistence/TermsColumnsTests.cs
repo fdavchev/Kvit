@@ -40,7 +40,7 @@ namespace Kvit.Api.Tests.Persistence
         }
 
         [Fact]
-        public async Task Users_HaveNoColumnBeyondTheKnownOnesAndTheTwoTermsOnes()
+        public async Task Users_HaveNoColumnBeyondTheKnownOnesTheTwoTermsOnesAndTheThreeDeletionOnes()
         {
             string[] expected =
             [
@@ -48,6 +48,8 @@ namespace Kvit.Api.Tests.Persistence
                 "budget_total_currency",
                 "concurrency_stamp",
                 "created_at",
+                "deletion_name_choice",
+                "deletion_requested_at",
                 "display_name",
                 "email",
                 "email_confirmed",
@@ -65,6 +67,7 @@ namespace Kvit.Api.Tests.Persistence
                 "password_hash",
                 "phone_number",
                 "phone_number_confirmed",
+                "purged_at",
                 "security_stamp",
                 "terms_accepted_at",
                 "terms_version",

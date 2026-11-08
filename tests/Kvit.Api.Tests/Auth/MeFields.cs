@@ -5,6 +5,7 @@ namespace Kvit.Api.Tests.Auth
         public static readonly string[] SortedAccountFieldNames =
         [
             "budgetTotalCurrency",
+            "deletionCancelled",
             "displayName",
             "email",
             "hasPassword",

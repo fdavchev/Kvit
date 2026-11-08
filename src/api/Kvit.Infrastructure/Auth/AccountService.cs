@@ -209,9 +209,10 @@ namespace Kvit.Infrastructure.Auth
                 user.TimeZone = timeZone;
             }
 
+            bool deletionCancelled = user.CancelPendingDeletion();
             await UpdateAsync(user);
 
-            return Result.Ok(await MeResponseOfAsync(user));
+            return Result.Ok(await MeResponseOfAsync(user) with { DeletionCancelled = deletionCancelled });
         }
 
         public async Task<Result<MeResponse>> CheckGoogleLogInAsync(GoogleIdentity identity, string timeZone, CancellationToken cancellationToken)
@@ -234,9 +235,10 @@ namespace Kvit.Infrastructure.Auth
             }
 
             user.GooglePictureUrl = identity.PictureUrl;
+            bool deletionCancelled = user.CancelPendingDeletion();
             await UpdateAsync(user);
 
-            return Result.Ok(await MeResponseOfAsync(user));
+            return Result.Ok(await MeResponseOfAsync(user) with { DeletionCancelled = deletionCancelled });
         }
 
         public async Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken)
@@ -344,6 +346,21 @@ namespace Kvit.Infrastructure.Auth
             {
                 return Result.Unauthorized(NotSignedInMessage, ResultCodes.AUTH_NOT_SIGNED_IN);
             }
+
+            return Result.Ok();
+        }
+
+        public async Task<Result> RequestDeletionAsync(Guid userId, DeletionNameChoice nameChoice, CancellationToken cancellationToken)
+        {
+            AppUser? user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user is null)
+            {
+                return Result.Unauthorized(NotSignedInMessage, ResultCodes.AUTH_NOT_SIGNED_IN);
+            }
+
+            user.RequestDeletion(nameChoice, _timeProvider.GetUtcNow());
+            IdentityResultChecks.ThrowIfFailed(await _userManager.UpdateSecurityStampAsync(user), $"save the deletion request of user {user.Id}");
+            await _signInManager.SignOutAsync();
 
             return Result.Ok();
         }
@@ -489,7 +506,8 @@ namespace Kvit.Infrastructure.Auth
                 isAdmin,
                 user.TermsVersion,
                 TermsVersion.IsCurrent(user.TermsVersion),
-                TermsVersion.UpdateIsMaterial(user.TermsVersion, TermsVersion.Current, TermsVersion.CurrentIsMaterial));
+                TermsVersion.UpdateIsMaterial(user.TermsVersion, TermsVersion.Current, TermsVersion.CurrentIsMaterial),
+                false);
         }
     }
 }

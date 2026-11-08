@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { errorMessageKey } from '@/core/api/errors'
 import { useIsAdmin } from '@/core/auth/useIsAdmin'
@@ -10,6 +11,7 @@ import { useLanguage } from '@/core/i18n/useLanguage'
 import { removeOutboxItem } from '@/core/outbox/outboxStorage'
 import { useOutboxItems } from '@/core/outbox/useOutbox'
 import { routes } from '@/core/router/routes'
+import type { DeleteAccountNameChoice } from '@/core/services/me/meService'
 import { useTheme } from '@/core/theme/useTheme'
 import { useSaveOnce } from '@/features/budget/categories/hooks/useSaveOnce'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
@@ -21,16 +23,23 @@ import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 import { KvitThemeSwitch } from '@/shared/components/KvitThemeSwitch'
 import { cn } from '@/shared/utils/cn'
 import { useChangeLanguage } from '../hooks/useChangeLanguage'
+import { useDeleteMyAccount } from '../hooks/useDeleteMyAccount'
 import { useDownloadMyData } from '../hooks/useDownloadMyData'
 import { useLogOut } from '../hooks/useLogOut'
 import { BudgetTotalSettings } from './BudgetTotalSettings'
+import { DeleteAccountSheet } from './DeleteAccountSheet'
 import { GuestLogOutSheet } from './GuestLogOutSheet'
 import { UnsentChangesLogOutSheet } from './UnsentChangesLogOutSheet'
 
 type LogOutSheet = 'guest' | 'unsentChanges'
 
+type DeleteAccountStep =
+  | { sheet: 'nameChoice' }
+  | { sheet: 'unsentChanges'; nameChoice: DeleteAccountNameChoice }
+
 export function SettingsScreen() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { language } = useLanguage()
   const { theme, setTheme } = useTheme()
   const { data: me } = useMe()
@@ -40,10 +49,13 @@ export function SettingsScreen() {
   const logOut = useLogOut()
   const downloadMyData = useDownloadMyData()
   const oneDownloadAtATime = useSaveOnce()
+  const deleteMyAccount = useDeleteMyAccount()
+  const oneDeletionAtATime = useSaveOnce()
   const downloadHintId = useId()
   const unsentItems = useOutboxItems()
   const unsentCount = unsentItems.length
   const [openLogOutSheet, setOpenLogOutSheet] = useState<LogOutSheet | null>(null)
+  const [deleteAccountStep, setDeleteAccountStep] = useState<DeleteAccountStep | null>(null)
 
   function showFailure(error: Error): void {
     console.error('A settings action failed', error)
@@ -89,6 +101,32 @@ export function SettingsScreen() {
       return
     }
     logOutNow()
+  }
+
+  function deleteAccountNow(nameChoice: DeleteAccountNameChoice): void {
+    if (!oneDeletionAtATime.tryStart()) {
+      return
+    }
+    const personId = me?.id
+    const countedIds = unsentItems.map((item) => item.id)
+    const doneTextKey = isGuest ? 'settings.deleteAccountDoneGuest' : 'settings.deleteAccountDone'
+    deleteMyAccount.mutateAsync(nameChoice).then(() => {
+      toast.success(t(doneTextKey))
+      navigate(routes.welcome, { replace: true })
+      if (personId !== undefined && countedIds.length > 0) {
+        removeCountedChanges(personId, countedIds).catch((error: unknown) => {
+          console.error(`Deleted the account, but the unsent changes of person ${personId} could not be removed from this browser`, error)
+        })
+      }
+    }, showFailure).finally(oneDeletionAtATime.finish)
+  }
+
+  function confirmDeleteAccount(nameChoice: DeleteAccountNameChoice): void {
+    if (unsentCount > 0) {
+      setDeleteAccountStep({ sheet: 'unsentChanges', nameChoice })
+      return
+    }
+    deleteAccountNow(nameChoice)
   }
 
   return (
@@ -153,7 +191,10 @@ export function SettingsScreen() {
           </KvitLinkButton>
         )}
       </div>
-      <div className="mt-auto pt-8">
+      <div className="mt-auto flex flex-col gap-3 pt-8">
+        <KvitButton variant="danger" onClick={() => setDeleteAccountStep({ sheet: 'nameChoice' })}>
+          {t('settings.deleteAccount')}
+        </KvitButton>
         <KvitButton
           variant="secondary"
           disabled={logOut.isPending}
@@ -176,6 +217,22 @@ export function SettingsScreen() {
           isLoggingOut={logOut.isPending}
           onLogOut={logOutNow}
           onClose={() => setOpenLogOutSheet(null)}
+        />
+      )}
+      {deleteAccountStep?.sheet === 'nameChoice' && (
+        <DeleteAccountSheet
+          isGuest={isGuest}
+          isDeleting={deleteMyAccount.isPending}
+          onConfirm={confirmDeleteAccount}
+          onClose={() => setDeleteAccountStep(null)}
+        />
+      )}
+      {deleteAccountStep?.sheet === 'unsentChanges' && (
+        <UnsentChangesLogOutSheet
+          unsentCount={unsentCount}
+          isLoggingOut={deleteMyAccount.isPending}
+          onLogOut={() => deleteAccountNow(deleteAccountStep.nameChoice)}
+          onClose={() => setDeleteAccountStep(null)}
         />
       )}
     </KvitScreen>

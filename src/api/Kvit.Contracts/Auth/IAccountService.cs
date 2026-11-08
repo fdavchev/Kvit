@@ -34,5 +34,7 @@ namespace Kvit.Contracts.Auth
         Task<Result> SetBudgetTotalCurrencyAsync(Guid userId, Currency? budgetTotalCurrency, CancellationToken cancellationToken);
 
         Task<Result> AcceptCurrentTermsAsync(Guid userId, CancellationToken cancellationToken);
+
+        Task<Result> RequestDeletionAsync(Guid userId, DeletionNameChoice nameChoice, CancellationToken cancellationToken);
     }
 }

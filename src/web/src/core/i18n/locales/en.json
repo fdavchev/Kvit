@@ -157,7 +157,8 @@
     "ADMIN_STATS_FUTURE_DATE": "Pick dates up to today.",
     "ADMIN_STATS_GROUPING_INVALID": "Group by day, week, month or year.",
     "ADMIN_STATS_DAY_RANGE_TOO_LONG": "Grouping by day works for up to 92 days. Pick a shorter range or group by week or month.",
-    "ADMIN_STATS_DATE_TOO_OLD": "Statistics start on 1 January 2026. Pick a later start date."
+    "ADMIN_STATS_DATE_TOO_OLD": "Statistics start on 1 January 2026. Pick a later start date.",
+    "ACCOUNT_DELETE_NAME_CHOICE_INVALID": "Choose how your name should show."
   },
   "language": {
     "label": "Language",
@@ -216,7 +217,8 @@
     "makeAccount": {
       "keeps": "You keep all your groups and expenses.",
       "done": "Your account is ready"
-    }
+    },
+    "deletionCancelled": "Deletion cancelled. Your account is back."
   },
   "home": {
     "greeting": "Hi, {{name}}",
@@ -248,6 +250,20 @@
     "downloadData": "Download my data",
     "downloadDataHint": "Your profile, personal budget and groups, as a file. Other people's emails are not in it.",
     "downloadDataDone": "Your data was saved as a file",
+    "deleteAccount": "Delete my account",
+    "deleteAccountSheet": {
+      "title": "Delete your account?",
+      "nameLabel": "Your name in groups",
+      "keepName": "Keep my name",
+      "keepNameHint": "Your name stays on old expenses, so everyone can still read them.",
+      "formerMember": "Show as “Former member”",
+      "formerMemberHint": "Your name is replaced everywhere, also in the activity list.",
+      "whatHappens": "Right away you are logged out everywhere and can't use this account. If you log in again within 30 days, the deletion is cancelled. After 30 days your email, login, Google link, personal budget and sessions are removed. Shared expenses stay, because other people's balances need them.",
+      "whatHappensGuest": "Right away you are logged out and can't use this account. A guest account can't be logged into again, so this can't be undone. After 30 days it is removed. Shared expenses stay, because other people's balances need them.",
+      "confirm": "Delete my account"
+    },
+    "deleteAccountDone": "Deleted. Log in within 30 days to undo.",
+    "deleteAccountDoneGuest": "Deleted.",
     "guest": {
       "title": "You're a guest",
       "body": "Make an account to use Kvit on any phone and to create your own groups.",

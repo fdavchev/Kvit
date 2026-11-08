@@ -25,6 +25,7 @@ namespace Kvit.Api.Registers
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IAccountPurger, AccountPurger>();
             services.AddScoped<PasswordResetService>();
             services.AddScoped<AdminRoleService>();
             services.AddSingleton<IInviteTokenGenerator, InviteTokenGenerator>();

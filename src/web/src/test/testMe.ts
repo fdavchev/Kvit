@@ -17,6 +17,7 @@ export const testMe: Me & { email: string } = {
   termsVersion: legalVersion,
   termsUpToDate: true,
   termsUpdateIsMaterial: false,
+  deletionCancelled: false,
   budgetTotalCurrency: null,
 }
 
@@ -34,6 +35,7 @@ export const testGuestMe: Me = {
   termsVersion: legalVersion,
   termsUpToDate: true,
   termsUpdateIsMaterial: false,
+  deletionCancelled: false,
   budgetTotalCurrency: null,
 }
 

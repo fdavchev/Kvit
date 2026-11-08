@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router'
+import { toast } from 'sonner'
 import { errorMessageKey, hasErrorCode } from '@/core/api/errors'
 import {
   joinTokenState,
@@ -37,7 +38,14 @@ export function LogInScreen() {
   function submit(): void {
     logIn.mutate(
       { email, password },
-      { onSuccess: () => navigate(pathAfterSignIn(joinToken), { replace: true }) },
+      {
+        onSuccess: (me) => {
+          if (me.deletionCancelled) {
+            toast.success(t('auth.deletionCancelled'))
+          }
+          navigate(pathAfterSignIn(joinToken), { replace: true })
+        },
+      },
     )
   }
 

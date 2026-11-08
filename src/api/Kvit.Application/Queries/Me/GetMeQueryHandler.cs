@@ -49,7 +49,8 @@ namespace Kvit.Application.Queries.Me
                         && _context.Roles.Any(role => role.Id == userRole.RoleId && role.Name == Roles.Admin)),
                     user.TermsVersion,
                     TermsVersion.IsCurrent(user.TermsVersion),
-                    TermsVersion.UpdateIsMaterial(user.TermsVersion, TermsVersion.Current, TermsVersion.CurrentIsMaterial)));
+                    TermsVersion.UpdateIsMaterial(user.TermsVersion, TermsVersion.Current, TermsVersion.CurrentIsMaterial),
+                    false));
         }
     }
 }
