@@ -3,7 +3,7 @@
 Written 2026-11-09 (Phase 19). Read this once now, so you know it works before you ever need it.
 
 ## What the backup is
-Every Sunday at about 04:41 (Macedonian time) GitHub makes a copy of the whole Kvit database, locks it with a password (the secret `BACKUP_PASSPHRASE`) and keeps the locked file for 90 days. Anyone logged in to GitHub could download that file, but without the password it is useless. **If you lose the password, the backups are useless too.** Keep it in your private notes (the same place as your other secrets), never in the repository.
+Every Sunday at 02:41 UTC (03:41 in Macedonia in winter, 04:41 in summer) GitHub makes a copy of the whole Kvit database, locks it with a password (the secret `BACKUP_PASSPHRASE`) and keeps the locked file for 90 days. Anyone logged in to GitHub could download that file, but without the password it is useless. **If you lose the password, the backups are useless too.** Keep it in your private notes (the same place as your other secrets), never in the repository.
 
 Neon also keeps the last 6 hours on its own. The weekly backup is for bigger accidents.
 

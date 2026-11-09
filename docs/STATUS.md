@@ -1,25 +1,28 @@
 # Status: Kvit
 
-_Last updated: 2026-11-04 (Phase 18 merged; Phase 19 Step 0 started: branch, doc fixes, mockup page)_
+_Last updated: 2026-11-09 (handoff: Phase 19 Steps 0 to 8 built and committed; Step 9 browser pass, Step 10 review and Step 11 questions still open)_
 
 ## Where we stopped
-- Release 1 accepted 2026-10-16. Phases 12 to 18 are merged (`main` = `ddf41f2`, PR #22). Branch `feat/19-legal`: Phase 19, legal pages and data rights, being built without Filip at the laptop (his go for all steps, 2026-11-04; one commit per step, never pushed).
-- Done: Step 0 (mockups, ten picks in `DECISIONS.md`); Step 1 (Terms of Use, new privacy notice, rates source line, `docs/legal/`; frontend 13655 tests pass). Step 2 (backend terms acceptance, 6226 backend tests pass); Step 3 (frontend agree line, terms-changed notice, plain-name hint; 13818 frontend tests pass). Step 4 (Download my data; backend 6375 and frontend 13918 tests pass). Step 5a and Step 6 (delete my account: backend 6653, frontend 14252 tests pass). Step 5b (cleanup job, backend 6813 tests) and Step 8 front (licences) are done. Step 7b (owner tools; backend 7289 and frontend 15626 tests pass) is done. Step 8 (weekly backup, licences) is done: backend 7397, frontend 15626 tests pass. Next: Step 9 (browser pass), Step 10 (review, report, guide), Step 11 (questions).
-- Brief: `docs/guides/phase-19-legal-prompt.md`; research: `docs/reports/2026-11-04-phase-19-legal-research.md` (not legal advice); decisions: `docs/DECISIONS.md`, "Phase 19"; first-push texts: `docs/guides/phase-19-pr-text.md`.
-- Nothing is pushed by Claude.
+- Branch: `feat/19-legal` (made from `main` = `ddf41f2`, the Phase 18 merge), last commit `b3301e6 Add the weekly encrypted database backup, its connection script and the restore guide.` Nothing is pushed; Filip pushes, opens the PR and merges.
+- Uncommitted changes: only docs: `docs/guides/phase-19-legal.md` (new), `docs/guides/phase-19-step-9-browser-pass-prompt.md` (new), `docs/guides/restore-a-backup.md` (changed), `docs/reports/2026-11-09-phase-19-legal.md` (new), ROADMAP and STATUS edits. Suggested commit subject: "Add the Phase 19 guide, the interim report and the Step 9 brief."
+- Last thing done: Step 8, the weekly encrypted backup (restore proven on throwaway local databases). The browser pass (Step 9) was started and stopped before any result; the local stack is stopped (`-Stop` was run).
+- Phase 19 map: report `docs/reports/2026-11-09-phase-19-legal.md` (what was built, results, accepted risks, 8 questions for Filip); Filip's step-by-step guide `docs/guides/phase-19-legal.md`; PR text `docs/guides/phase-19-pr-text.md`; decisions in `DECISIONS.md` ("Phase 19", entries marked "decided by Claude, please confirm"); research `docs/reports/2026-11-04-phase-19-legal-research.md`.
 
 ## Next step
-1. Claude: Steps 2 to 11 in order (see ROADMAP). The final report and guide are written at Step 10.
-2. Filip, whenever: make the online account admin (`docs/guides/grant-admin.md`); Phase 19 Step 7b needs it.
+Run Step 9 in a new session: give the `tester` agent the brief in `docs/guides/phase-19-step-9-browser-pass-prompt.md` (add the memory folder path `C:\Users\Davchev\.claude\projects\c--Users-Davchev-Projects-Kvit\memory\`; Docker Desktop must be open; apply the 3 new migrations locally first: `dotnet ef database update --project src/api/Kvit.Infrastructure --startup-project src/api/Kvit.Api`). Then fix the findings with the coder. Filip's standing go for all Phase 19 steps (2026-11-04): tester first, then coder, one commit per step, never push.
 
 ## Then
-- Filip, once on the real site: one real EUR expense (first real NBRM call), a real phone check of the Phase 16 to 18 screens, the Macedonian drafts of Phases 9 to 18, the Google button and "Make an account", the invite link on his phone.
-- BACKLOG: future and planned payments, the Phase 18, 17, 16, 15, 14, 12 and 12b leftovers.
+- Step 10: `/code-review high` on the branch and fix findings; extend the interim report into the final one; update ROADMAP, STATUS, BACKLOG and the PR text; commit.
+- Step 11: ask Filip the 8 questions at the end of the report (including `START-HERE-PROMPT.md`).
+- Filip: the secrets, first workflow runs and the outside-the-code list in `docs/guides/phase-19-legal.md` (three secrets before the merge: `Cleanup__Secret` on Render, `CLEANUP_SECRET` and `BACKUP_PASSPHRASE` on GitHub).
 
 ## Blockers and open questions
-- Nothing blocks the next step. Filip to decide: whether `START-HERE-PROMPT.md` stays in the public repository (asked again at the end of Phase 19); whether the light theme gets a lighter peach; whether the Totals tab gets bars later; the Phase 18 questions in its report.
+- Docker Desktop must be open for the backend tests (it was off once; ask Filip, never work around it).
+- Waiting for Filip: the 8 questions in the report; Phase 18 leftovers (light theme peach, Totals bars).
+- The usage limit interrupted agents twice; if an agent shows "completed" without a report, check `git status` and resume it with SendMessage.
 
 ## Verification state
-- Last full run (Phase 18, 2026-11-04, VERIFIED by automated test): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 6153/6153; `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 13309/13309. Phase 19 has changed no code yet.
-- VERIFIED by live run (headless Chromium, local stack): the Statistics page at 320/360/768/1280/1920 px in EN/MK, light/dark, reduced motion, as admin, normal user and guest.
-- NOT VERIFIED: a real phone, iOS Safari, Firefox, a screen reader, the real Neon data and the Cloudflare Pages path for `/api/admin/stats`, a real visit at 23:30 UTC, the Macedonian drafts.
+- VERIFIED by automated test (2026-11-09): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 7397/7397; `dotnet ef migrations has-pending-model-changes` clean; frontend `npm run lint` 0 warnings, `npm run build` 0 type errors, `npm test` 15626/15626 (last run before the backup step, which changed no frontend file); `npm run check:licenses` ok.
+- VERIFIED by live run: backup, lock, unlock and restore on local throwaway databases (24 tables identical).
+- NOT VERIFIED: every new screen in a real browser, a real phone, the Macedonian drafts, both new GitHub workflows, the cleanup call through Cloudflare, the real Neon dump, the 3 migrations on Neon.
+- Known flaky test under load: `GroupScreenMarkPaid.test.tsx` "queues the payment…" (passes alone; in BACKLOG).
