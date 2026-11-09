@@ -9,11 +9,16 @@ namespace Kvit.Api.Tests.Cleanup
 
         public static string ReadWithoutCommentLines()
         {
+            return ReadWithoutCommentLines(RelativePath);
+        }
+
+        public static string ReadWithoutCommentLines(string relativePath)
+        {
             string repositoryRoot = DotnetScript.FindRepositoryRoot();
-            string path = Path.Combine(repositoryRoot, RelativePath);
+            string path = Path.Combine(repositoryRoot, relativePath);
             if (!File.Exists(path))
             {
-                throw new FileNotFoundException($"The cleanup workflow does not exist yet: {RelativePath} (looked in {repositoryRoot}).");
+                throw new FileNotFoundException($"The workflow does not exist yet: {relativePath} (looked in {repositoryRoot}).");
             }
 
             IEnumerable<string> lines = File.ReadAllLines(path).Where(line => !line.TrimStart().StartsWith('#'));
@@ -27,7 +32,7 @@ namespace Kvit.Api.Tests.Cleanup
             int start = lines.FindIndex(line => Regex.IsMatch(line, $@"^[""']?{Regex.Escape(key)}[""']?\s*:"));
             if (start < 0)
             {
-                throw new InvalidOperationException($"{RelativePath} has no top-level key '{key}'.");
+                throw new InvalidOperationException($"The workflow has no top-level key '{key}'.");
             }
 
             List<string> block = [];

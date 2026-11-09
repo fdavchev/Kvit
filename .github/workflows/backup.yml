@@ -1,0 +1,98 @@
+name: Backup
+
+on:
+  schedule:
+    - cron: "41 2 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+    steps:
+      - name: Check the backup secrets are set
+        env:
+          NEON_DIRECT_CONNECTION_STRING: ${{ secrets.NEON_DIRECT_CONNECTION_STRING }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          missing=0
+          if [ -z "$NEON_DIRECT_CONNECTION_STRING" ]; then
+            echo "::error::The repository secret NEON_DIRECT_CONNECTION_STRING is missing or empty, so the database cannot be backed up. Add it under Settings > Secrets and variables > Actions > Secrets."
+            missing=1
+          fi
+          if [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::The repository secret BACKUP_PASSPHRASE is missing or empty, so the backup cannot be encrypted. Add it under Settings > Secrets and variables > Actions > Secrets."
+            missing=1
+          fi
+          exit "$missing"
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Install the PostgreSQL 18 client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install --yes postgresql-client-18
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
+
+      - name: Build the connection settings script
+        run: dotnet build scripts/BackupEnv.cs
+
+      - name: Pick the backup date
+        id: date
+        run: echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Dump the database and encrypt the dump
+        shell: bash
+        env:
+          NEON_DIRECT_CONNECTION_STRING: ${{ secrets.NEON_DIRECT_CONNECTION_STRING }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          settings="$(dotnet run scripts/BackupEnv.cs --no-build)"
+          eval "$settings"
+          if [ "$PGSSLMODE" = "verify-full" ]; then
+            export PGSSLROOTCERT=system
+          fi
+          pg_dump --format=custom --no-owner --no-acl --file="$RUNNER_TEMP/kvit.dump"
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 600000 -pass env:BACKUP_PASSPHRASE \
+            -in "$RUNNER_TEMP/kvit.dump" -out "$RUNNER_TEMP/kvit.dump.enc"
+          rm "$RUNNER_TEMP/kvit.dump"
+
+      - name: Check that the encrypted backup can be read back
+        shell: bash
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ ! -s "$RUNNER_TEMP/kvit.dump.enc" ]; then
+            echo "::error::The encrypted backup is missing or empty."
+            exit 1
+          fi
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass env:BACKUP_PASSPHRASE \
+            -in "$RUNNER_TEMP/kvit.dump.enc" -out "$RUNNER_TEMP/check.dump"
+          magic="$(head -c 5 "$RUNNER_TEMP/check.dump")"
+          if [ "$magic" != "PGDMP" ]; then
+            echo "::error::The decrypted backup does not start with PGDMP, so it is not a pg_dump custom-format file."
+            exit 1
+          fi
+          pg_restore --list "$RUNNER_TEMP/check.dump" > /dev/null
+          rm "$RUNNER_TEMP/check.dump"
+
+      - name: Keep the encrypted backup for 90 days
+        uses: actions/upload-artifact@v7
+        with:
+          name: kvit-backup-${{ steps.date.outputs.date }}
+          path: ${{ runner.temp }}/kvit.dump.enc
+          retention-days: 90
+          if-no-files-found: error

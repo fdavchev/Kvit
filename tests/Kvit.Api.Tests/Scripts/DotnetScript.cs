@@ -59,7 +59,7 @@ namespace Kvit.Api.Tests.Scripts
                 throw new TimeoutException($"'dotnet run {scriptPath}' did not finish within {MaximumRunTime.TotalMinutes} minutes.");
             }
 
-            return new ScriptRun(process.ExitCode, await standardOutput + await standardError);
+            return new ScriptRun(process.ExitCode, await standardOutput, await standardError);
         }
 
         public static string FindRepositoryRoot()

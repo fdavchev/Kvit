@@ -66,6 +66,10 @@ Source: `reports/2026-11-04-phase-19-legal-research.md` (four research runs; not
   - **Erase name** (owner tool): the same purge as "Delete my account" with "Former member", now, for people who send an erasure request by email; the person's sessions end. It is not one transaction with its log row (a failed log write after a purge answers 500 with no log row).
   - **Action log:** every effective action writes a row with a snapshot of the name and the reason; repeats write nothing; rows are visible to admins only.
   - Owner tools UI: Suspend, Erase name and Close group are red buttons; Confirm in the reason sheet is the normal button (a red Confirm for Erase name is in BACKLOG).
+- **Step 8, backup, built while Filip was away, decided by Claude, please confirm (2026-11-09):**
+  - The backup uses the existing secret `NEON_DIRECT_CONNECTION_STRING` (a small script turns it into the settings `pg_dump` needs; pooled hosts are refused) and one new secret, `BACKUP_PASSPHRASE`. File format: PostgreSQL custom dump, encrypted with openssl AES-256-CBC (PBKDF2, 600000 rounds); the plain dump is deleted before the upload; the job checks that the file decrypts and lists. The openssl mode does not authenticate the file (tampering is only caught when restoring); accepted for a private-notes passphrase scenario.
+  - It works with `SSL Mode=Require` and `VerifyFull`; `VerifyCA` would fail on the runner.
+  - GitHub stops scheduled workflows after about 60 days without repository activity; documented in `guides/restore-a-backup.md`.
 - **Still open:** does `START-HERE-PROMPT.md` stay in the public repository? (first asked in `STATUS.md`; with "no licence" it is still readable by everyone).
 
 ## 2026-11-04: Phase 18 (admin statistics), in progress

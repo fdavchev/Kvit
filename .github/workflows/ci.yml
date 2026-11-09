@@ -32,6 +32,9 @@ jobs:
       - name: Build the Render deploy script
         run: dotnet build scripts/RenderDeploy.cs --configuration Release
 
+      - name: Build the backup connection settings script
+        run: dotnet build scripts/BackupEnv.cs --configuration Release
+
       - name: Test
         run: dotnet test Kvit.slnx --no-build --configuration Release
 
