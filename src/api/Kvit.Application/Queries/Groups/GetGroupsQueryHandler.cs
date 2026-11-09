@@ -46,7 +46,8 @@ namespace Kvit.Application.Queries.Groups
                         group.Name,
                         group.Emoji,
                         group.DefaultCurrency,
-                        currentMembers.Count(member => member.GroupId == group.Id)),
+                        currentMembers.Count(member => member.GroupId == group.Id),
+                        group.AdminClosedAt != null),
                     group.Status,
                     group.ClosingStartedAt));
         }

@@ -18,6 +18,7 @@ export const testMe: Me & { email: string } = {
   termsUpToDate: true,
   termsUpdateIsMaterial: false,
   deletionCancelled: false,
+  isSuspended: false,
   budgetTotalCurrency: null,
 }
 
@@ -36,10 +37,13 @@ export const testGuestMe: Me = {
   termsUpToDate: true,
   termsUpdateIsMaterial: false,
   deletionCancelled: false,
+  isSuspended: false,
   budgetTotalCurrency: null,
 }
 
 export const testAdminMe: Me = { ...testMe, isAdmin: true }
+
+export const testSuspendedMe: Me = { ...testMe, isSuspended: true }
 
 export const testMeWithOldTerms: Me = { ...testMe, termsVersion: null, termsUpToDate: false }
 

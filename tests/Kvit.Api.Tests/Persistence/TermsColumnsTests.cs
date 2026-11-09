@@ -40,7 +40,7 @@ namespace Kvit.Api.Tests.Persistence
         }
 
         [Fact]
-        public async Task Users_HaveNoColumnBeyondTheKnownOnesTheTwoTermsOnesAndTheThreeDeletionOnes()
+        public async Task Users_HaveNoColumnBeyondTheKnownOnesTheTwoTermsOnesTheThreeDeletionOnesAndSuspendedAt()
         {
             string[] expected =
             [
@@ -69,6 +69,7 @@ namespace Kvit.Api.Tests.Persistence
                 "phone_number_confirmed",
                 "purged_at",
                 "security_stamp",
+                "suspended_at",
                 "terms_accepted_at",
                 "terms_version",
                 "time_zone",

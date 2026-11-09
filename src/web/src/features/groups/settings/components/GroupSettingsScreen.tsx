@@ -44,7 +44,7 @@ export function GroupSettingsScreen() {
             <CountInBudgetSwitch group={group} />
           </div>
         )}
-        {group.isOwner && <OwnerGroupSettings group={group} />}
+        {group.isOwner && !group.closedByAdmin && <OwnerGroupSettings group={group} />}
         {(group.isOwner || canLeaveGroup(group)) && (
           <div className={group.isOwner ? 'pt-8' : 'pt-2'}>
             <LeaveGroupSection group={group} />

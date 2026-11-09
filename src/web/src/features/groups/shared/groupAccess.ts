@@ -1,11 +1,14 @@
 import type { Group } from '@/core/services/groups/groupsService'
 
 export function canChangeGroup(group: Group): boolean {
+  if (group.closedByAdmin) {
+    return false
+  }
   return group.status === 'Open' || (group.status === 'Closing' && group.isOwner)
 }
 
 export function canInviteToGroup(group: Group): boolean {
-  return group.status === 'Open'
+  return group.status === 'Open' && !group.closedByAdmin
 }
 
 export function canLeaveGroup(group: Group): boolean {

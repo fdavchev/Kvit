@@ -9,11 +9,13 @@ namespace Kvit.Infrastructure.Auth
         : UserClaimsPrincipalFactory<AppUser, IdentityRole<Guid>>(userManager, roleManager, optionsAccessor)
     {
         public const string MustChangePasswordClaimType = "kvit:must_change_password";
+        public const string IsSuspendedClaimType = "kvit:is_suspended";
 
         protected override async Task<ClaimsIdentity> GenerateClaimsAsync(AppUser user)
         {
             ClaimsIdentity identity = await base.GenerateClaimsAsync(user);
             identity.AddClaim(new Claim(MustChangePasswordClaimType, user.MustChangePassword.ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Boolean));
+            identity.AddClaim(new Claim(IsSuspendedClaimType, (user.SuspendedAt is not null).ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Boolean));
 
             return identity;
         }

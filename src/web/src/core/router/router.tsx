@@ -1,5 +1,6 @@
 import { createBrowserRouter, type RouteObject } from 'react-router'
 import { AdminStatsScreen } from '@/features/admin/stats/components/AdminStatsScreen'
+import { OwnerToolsScreen } from '@/features/admin/tools/components/OwnerToolsScreen'
 import { ChangePasswordScreen } from '@/features/auth/changePassword/components/ChangePasswordScreen'
 import { GoogleSignUpScreen } from '@/features/auth/googleSignUp/components/GoogleSignUpScreen'
 import { LogInScreen } from '@/features/auth/logIn/components/LogInScreen'
@@ -70,7 +71,10 @@ export const routeObjects: RouteObject[] = [
               { path: routes.settings, element: <SettingsScreen /> },
               {
                 element: <RequireAdmin />,
-                children: [{ path: routes.admin, element: <AdminStatsScreen /> }],
+                children: [
+                  { path: routes.admin, element: <AdminStatsScreen /> },
+                  { path: routes.adminTools, element: <OwnerToolsScreen /> },
+                ],
               },
             ],
           },

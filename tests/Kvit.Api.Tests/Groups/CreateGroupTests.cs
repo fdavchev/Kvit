@@ -10,7 +10,7 @@ namespace Kvit.Api.Tests.Groups
     public class CreateGroupTests(GroupsApp _app) : IClassFixture<GroupsApp>
     {
         [Fact]
-        public async Task Create_ValidRequest_AnswersExactlyTheEighteenGroupFields()
+        public async Task Create_ValidRequest_AnswersExactlyTheNineteenGroupFields()
         {
             SignedInUser user = await _app.SignUpAsync();
 

@@ -15,7 +15,7 @@ namespace Kvit.Api.Tests.Terms
         private static readonly DateTimeOffset AcceptedTime = new(2025, 1, 1, 8, 0, 0, TimeSpan.Zero);
 
         [Fact]
-        public async Task Me_LoggedIn_AnswersTheThreeTermsFieldsRightAfterIsAdminAndThenDeletionCancelled()
+        public async Task Me_LoggedIn_AnswersTheThreeTermsFieldsRightAfterIsAdminThenDeletionCancelledAndLastIsSuspended()
         {
             HttpClient client = await _app.CreateRegisteredClientAsync(RegistrationForm.Valid());
 
@@ -24,7 +24,7 @@ namespace Kvit.Api.Tests.Terms
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             JsonElement body = await AuthRequests.ReadJsonAsync(response);
             string[] propertyNames = [.. body.EnumerateObject().Select(property => property.Name)];
-            Assert.Equal(["isAdmin", "termsVersion", "termsUpToDate", "termsUpdateIsMaterial", "deletionCancelled"], propertyNames[^5..]);
+            Assert.Equal(["isAdmin", "termsVersion", "termsUpToDate", "termsUpdateIsMaterial", "deletionCancelled", "isSuspended"], propertyNames[^6..]);
         }
 
         [Fact]

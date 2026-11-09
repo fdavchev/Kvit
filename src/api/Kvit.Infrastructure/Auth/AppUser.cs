@@ -45,6 +45,8 @@ namespace Kvit.Infrastructure.Auth
 
         public DateTimeOffset? PurgedAt { get; private set; }
 
+        public DateTimeOffset? SuspendedAt { get; private set; }
+
         public static string TombstoneUserNameOf(Guid userId)
         {
             return $"{TombstoneUserNamePrefix}{userId:N}";
@@ -76,6 +78,30 @@ namespace Kvit.Infrastructure.Auth
 
             DeletionRequestedAt = null;
             DeletionNameChoice = null;
+
+            return true;
+        }
+
+        public bool Suspend(DateTimeOffset suspendedAt)
+        {
+            if (SuspendedAt is not null)
+            {
+                return false;
+            }
+
+            SuspendedAt = suspendedAt;
+
+            return true;
+        }
+
+        public bool Unsuspend()
+        {
+            if (SuspendedAt is null)
+            {
+                return false;
+            }
+
+            SuspendedAt = null;
 
             return true;
         }

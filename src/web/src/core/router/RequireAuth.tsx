@@ -9,6 +9,7 @@ import { KvitError } from '@/shared/components/KvitError'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { DesktopRailLayout } from './DesktopRailLayout'
 import { routes } from './routes'
+import { SuspendedScreen } from './SuspendedScreen'
 import { WakingUp } from './WakingUp'
 
 export function RequireAuth() {
@@ -32,6 +33,9 @@ export function RequireAuth() {
   }
   if (me === null) {
     return <Navigate to={routes.welcome} replace />
+  }
+  if (me.isSuspended) {
+    return <SuspendedScreen />
   }
   if (me.mustChangePassword && location.pathname !== routes.changePassword) {
     return <Navigate to={routes.changePassword} replace />

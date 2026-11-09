@@ -34,6 +34,19 @@ namespace Kvit.Infrastructure.Repositories
             return Result.Ok(group);
         }
 
+        public async Task<Result<Group>> LockAnyIncludingDeletedAsync(Guid groupId, CancellationToken cancellationToken)
+        {
+            List<Group> groups = await _context.Groups
+                .FromSql($"SELECT * FROM groups WHERE id = {groupId} FOR UPDATE")
+                .ToListAsync(cancellationToken);
+            if (groups.SingleOrDefault() is not Group group)
+            {
+                return Group.NotFoundAnywhere<Group>(groupId);
+            }
+
+            return Result.Ok(group);
+        }
+
         private static async Task<Result<Group>> SingleOrNotFoundAsync(IQueryable<Group> groups, Guid groupId, CancellationToken cancellationToken)
         {
             Group? group = await groups.SingleOrDefaultAsync(candidate => candidate.Id == groupId, cancellationToken);

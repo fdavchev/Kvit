@@ -12,6 +12,7 @@ namespace Kvit.Api.Tests.Auth
             "id",
             "isAdmin",
             "isGuest",
+            "isSuspended",
             "language",
             "mustChangePassword",
             "pictureUrl",

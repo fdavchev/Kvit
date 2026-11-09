@@ -21,5 +21,6 @@ namespace Kvit.Contracts.Groups
         bool CanStartClosing,
         bool CountsInBudget,
         long? PlanAmountMinor,
-        Currency? PlanCurrency);
+        Currency? PlanCurrency,
+        bool ClosedByAdmin);
 }

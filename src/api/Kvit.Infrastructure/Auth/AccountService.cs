@@ -507,7 +507,8 @@ namespace Kvit.Infrastructure.Auth
                 user.TermsVersion,
                 TermsVersion.IsCurrent(user.TermsVersion),
                 TermsVersion.UpdateIsMaterial(user.TermsVersion, TermsVersion.Current, TermsVersion.CurrentIsMaterial),
-                false);
+                false,
+                user.SuspendedAt is not null);
         }
     }
 }

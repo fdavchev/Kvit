@@ -158,7 +158,13 @@
     "ADMIN_STATS_GROUPING_INVALID": "Group by day, week, month or year.",
     "ADMIN_STATS_DAY_RANGE_TOO_LONG": "Grouping by day works for up to 92 days. Pick a shorter range or group by week or month.",
     "ADMIN_STATS_DATE_TOO_OLD": "Statistics start on 1 January 2026. Pick a later start date.",
-    "ACCOUNT_DELETE_NAME_CHOICE_INVALID": "Choose how your name should show."
+    "ACCOUNT_DELETE_NAME_CHOICE_INVALID": "Choose how your name should show.",
+    "ACCOUNT_SUSPENDED": "Your account is suspended. Contact kvit.support@gmail.com.",
+    "GROUP_CLOSED_BY_ADMIN": "This group was closed by the owner of Kvit.",
+    "OWNER_REASON_INVALID": "Write a reason (up to 500 characters).",
+    "OWNER_PERSON_NOT_FOUND": "This person doesn't exist.",
+    "OWNER_GROUP_NOT_FOUND": "This group doesn't exist.",
+    "OWNER_CANNOT_ACT_ON_ADMIN": "You can't do this to an owner of Kvit."
   },
   "language": {
     "label": "Language",
@@ -279,7 +285,8 @@
       "inMkd": "In MKD",
       "inEur": "In EUR",
       "hint": "Euro amounts are converted with the rate saved on each entry."
-    }
+    },
+    "ownerTools": "Owner tools"
   },
   "privacy": {
     "title": "Privacy",
@@ -513,7 +520,8 @@
     "addName": "Add a name",
     "shareLink": "Share invite link",
     "linkCopied": "Link copied",
-    "settings": "Group settings"
+    "settings": "Group settings",
+    "closedByAdmin": "🔒 Closed by the owner of Kvit · read-only"
   },
   "expenses": {
     "title": "Expenses",
@@ -1042,5 +1050,92 @@
     "hours_other": "{{count}} hours ago",
     "days_one": "{{count}} day ago",
     "days_other": "{{count}} days ago"
+  },
+  "ownerTools": {
+    "title": "Owner tools",
+    "tabs": {
+      "people": "People",
+      "groups": "Groups",
+      "log": "Log"
+    },
+    "people": {
+      "searchLabel": "Find by email, name or number",
+      "search": "Search",
+      "empty": "Nobody found.",
+      "groupCount_one": "{{count}} group",
+      "groupCount_other": "{{count}} groups"
+    },
+    "badge": {
+      "suspended": "Suspended",
+      "guest": "Guest",
+      "admin": "Owner of Kvit",
+      "deletionPending": "Deleting",
+      "deleted": "Deleted"
+    },
+    "suspend": "Suspend",
+    "unsuspend": "Unsuspend",
+    "eraseName": "Erase name",
+    "reasonLabel": "Reason (saved in the log)",
+    "confirm": "Confirm",
+    "sheet": {
+      "suspend": {
+        "title": "Suspend {{name}}?",
+        "body": "They can still log in but see only a suspended screen. Everything else is refused until you unsuspend."
+      },
+      "unsuspend": {
+        "title": "Unsuspend {{name}}?",
+        "body": "They can use Kvit again."
+      },
+      "eraseName": {
+        "title": "Erase the name of {{name}}?",
+        "body": "This deletes the account now and shows “Former member” everywhere. It cannot be undone."
+      },
+      "closeGroup": {
+        "title": "Close {{name}}?",
+        "body": "The group becomes read-only for everyone and its owner cannot unlock it."
+      },
+      "reopenGroup": {
+        "title": "Reopen {{name}}?",
+        "body": "The group works normally again."
+      }
+    },
+    "done": {
+      "suspend": "{{name}} is suspended",
+      "unsuspend": "{{name}} can use Kvit again",
+      "eraseName": "The name is erased",
+      "closeGroup": "Group closed",
+      "reopenGroup": "Group reopened"
+    },
+    "groups": {
+      "searchLabel": "Group number (from a report email)",
+      "search": "Find",
+      "members_one": "{{count}} member",
+      "members_other": "{{count}} members",
+      "owner": "Owner: {{name}}",
+      "status": {
+        "open": "Open",
+        "closing": "Closing",
+        "finished": "Finished",
+        "closedByOwner": "Closed by the owner of Kvit",
+        "deleted": "Deleted"
+      },
+      "close": "Close group",
+      "reopen": "Reopen group"
+    },
+    "log": {
+      "empty": "Nothing done yet.",
+      "line": "{{admin}} · {{action}} · {{target}}",
+      "action": {
+        "Suspended": "Suspended",
+        "Unsuspended": "Unsuspended",
+        "GroupClosed": "Closed a group",
+        "GroupReopened": "Reopened a group",
+        "NameErased": "Erased a name"
+      }
+    }
+  },
+  "suspended": {
+    "title": "Your account is suspended",
+    "body": "Contact kvit.support@gmail.com."
   }
 }

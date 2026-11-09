@@ -17,6 +17,7 @@ namespace Kvit.Api.Controllers
     {
         [HttpGet]
         [AllowedWithTemporaryPassword]
+        [AllowedWhileSuspended]
         public async Task<ActionResult<MeResponse>> Get(CancellationToken cancellationToken)
         {
             Result<MeResponse> result = await _dispatcher.Query<GetMeQuery, MeResponse>(new GetMeQuery(), cancellationToken);

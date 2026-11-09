@@ -35,7 +35,7 @@ const fullList = groupListOf({
   recentlyDeleted: [dinnerDeletedRow],
 })
 
-const groupFields = Object.keys(testGroup)
+const groupFields = Object.keys(testGroup).filter((field) => field !== 'closedByAdmin')
 const rowFields = Object.keys(greeceGroupRow)
 const deletedRowFields = Object.keys(dinnerDeletedRow)
 const listFields = Object.keys(emptyGroupList)
@@ -183,6 +183,8 @@ describe('getGroup', () => {
     ['isOwner', false],
     ['countsInBudget', false],
     ['countsInBudget', true],
+    ['closedByAdmin', true],
+    ['closedByAdmin', false],
     ['planCurrency', null],
   ])('accepts %s with the value %j', async (field, value) => {
     stubFetch(Response.json({ ...testGroup, [field]: value }))
@@ -210,6 +212,15 @@ describe('getGroup', () => {
     const group = await getGroup(testGroupId)
 
     expect(group).toMatchObject({ planAmountMinor: null, planCurrency: null })
+  })
+
+  it('reads closedByAdmin as false when an older answer does not carry it, and changes no other field', async () => {
+    const olderAnswer = withoutField(testGroup, 'closedByAdmin')
+    stubFetch(Response.json(olderAnswer))
+
+    const group = await getGroup(testGroupId)
+
+    expect(group).toEqual({ ...olderAnswer, closedByAdmin: false })
   })
 
   it('rethrows the ApiError unchanged when the group is not found', async () => {
@@ -246,6 +257,10 @@ describe('getGroup', () => {
     ['countsInBudget', 'yes'],
     ['countsInBudget', 1],
     ['countsInBudget', null],
+    ['closedByAdmin', 'yes'],
+    ['closedByAdmin', 1],
+    ['closedByAdmin', null],
+    ['closedByAdmin', {}],
     ['planAmountMinor', '150000'],
     ['planAmountMinor', 'none'],
     ['planAmountMinor', true],

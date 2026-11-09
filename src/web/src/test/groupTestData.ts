@@ -40,6 +40,7 @@ export const testGroup: Group = {
   closingWaitingFor: [],
   canStartClosing: false,
   countsInBudget: true,
+  closedByAdmin: false,
   planAmountMinor: null,
   planCurrency: null,
 }

@@ -91,6 +91,7 @@ namespace Kvit.Domain.Results
         public const string LANGUAGE_INVALID = "LANGUAGE_INVALID";
         public const string ME_BUDGET_CURRENCY_INVALID = "ME_BUDGET_CURRENCY_INVALID";
         public const string ACCOUNT_DELETE_NAME_CHOICE_INVALID = "ACCOUNT_DELETE_NAME_CHOICE_INVALID";
+        public const string ACCOUNT_SUSPENDED = "ACCOUNT_SUSPENDED";
         public const string RATE_LIMITED = "RATE_LIMITED";
         public const string GROUP_NOT_FOUND = "GROUP_NOT_FOUND";
         public const string GROUP_NOT_OWNER = "GROUP_NOT_OWNER";
@@ -110,6 +111,7 @@ namespace Kvit.Domain.Results
         public const string GROUP_IS_ONE_BILL = "GROUP_IS_ONE_BILL";
         public const string GROUP_FINISHED = "GROUP_FINISHED";
         public const string GROUP_CLOSING = "GROUP_CLOSING";
+        public const string GROUP_CLOSED_BY_ADMIN = "GROUP_CLOSED_BY_ADMIN";
         public const string CLOSING_OWNER_CANNOT_ANSWER = "CLOSING_OWNER_CANNOT_ANSWER";
         public const string CLOSING_REASON_TOO_LONG = "CLOSING_REASON_TOO_LONG";
         public const string CLOSING_ALREADY_ANSWERED = "CLOSING_ALREADY_ANSWERED";
@@ -136,5 +138,9 @@ namespace Kvit.Domain.Results
         public const string ADMIN_STATS_GROUPING_INVALID = "ADMIN_STATS_GROUPING_INVALID";
         public const string ADMIN_STATS_DAY_RANGE_TOO_LONG = "ADMIN_STATS_DAY_RANGE_TOO_LONG";
         public const string ADMIN_STATS_DATE_TOO_OLD = "ADMIN_STATS_DATE_TOO_OLD";
+        public const string OWNER_REASON_INVALID = "OWNER_REASON_INVALID";
+        public const string OWNER_PERSON_NOT_FOUND = "OWNER_PERSON_NOT_FOUND";
+        public const string OWNER_GROUP_NOT_FOUND = "OWNER_GROUP_NOT_FOUND";
+        public const string OWNER_CANNOT_ACT_ON_ADMIN = "OWNER_CANNOT_ACT_ON_ADMIN";
     }
 }

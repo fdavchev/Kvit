@@ -8,7 +8,7 @@ namespace Kvit.Api.Tests.Auth
     public class MeTests(AuthApp _app) : IClassFixture<AuthApp>
     {
         [Fact]
-        public async Task Me_LoggedIn_AnswersExactlyTheFifteenAccountFields()
+        public async Task Me_LoggedIn_AnswersExactlyTheSixteenAccountFields()
         {
             RegistrationForm form = RegistrationForm.Valid();
             HttpClient client = await _app.CreateRegisteredClientAsync(form);

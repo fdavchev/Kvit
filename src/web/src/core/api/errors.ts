@@ -136,6 +136,12 @@ const translatedErrorCodes = [
   'ADMIN_STATS_DAY_RANGE_TOO_LONG',
   'ADMIN_STATS_DATE_TOO_OLD',
   'ACCOUNT_DELETE_NAME_CHOICE_INVALID',
+  'ACCOUNT_SUSPENDED',
+  'GROUP_CLOSED_BY_ADMIN',
+  'OWNER_REASON_INVALID',
+  'OWNER_PERSON_NOT_FOUND',
+  'OWNER_GROUP_NOT_FOUND',
+  'OWNER_CANNOT_ACT_ON_ADMIN',
 ]
 const errorCodeMessageKeys = new Map<string, string>(
   translatedErrorCodes.map((code) => [code, `errors.${code}`]),

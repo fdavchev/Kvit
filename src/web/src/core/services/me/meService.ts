@@ -20,6 +20,7 @@ export interface Me {
   termsUpToDate: boolean
   termsUpdateIsMaterial: boolean
   deletionCancelled: boolean
+  isSuspended: boolean
   budgetTotalCurrency: Currency | null
 }
 
@@ -49,6 +50,7 @@ export function parseMe(body: unknown): Me {
     termsUpToDate: readYesNoOrWhenMissing(fields, 'termsUpToDate', true),
     termsUpdateIsMaterial: readYesNoOrWhenMissing(fields, 'termsUpdateIsMaterial', false),
     deletionCancelled: readYesNoOrWhenMissing(fields, 'deletionCancelled', false),
+    isSuspended: readYesNoOrWhenMissing(fields, 'isSuspended', false),
     budgetTotalCurrency: readBudgetTotalCurrency(fields),
   }
 }

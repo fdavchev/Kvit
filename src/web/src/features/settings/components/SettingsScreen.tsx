@@ -190,6 +190,11 @@ export function SettingsScreen() {
             {t('adminStats.title')}
           </KvitLinkButton>
         )}
+        {isAdmin && (
+          <KvitLinkButton to={routes.adminTools} variant="secondary">
+            {t('settings.ownerTools')}
+          </KvitLinkButton>
+        )}
       </div>
       <div className="mt-auto flex flex-col gap-3 pt-8">
         <KvitButton variant="danger" onClick={() => setDeleteAccountStep({ sheet: 'nameChoice' })}>

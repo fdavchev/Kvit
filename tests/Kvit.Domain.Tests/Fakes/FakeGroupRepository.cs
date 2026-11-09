@@ -52,6 +52,16 @@ namespace Kvit.Domain.Tests.Fakes
             return Task.FromResult(Result.Ok(group));
         }
 
+        public Task<Result<Group>> LockAnyIncludingDeletedAsync(Guid groupId, CancellationToken cancellationToken)
+        {
+            if (!_groups.TryGetValue(groupId, out Group? group))
+            {
+                return Task.FromResult(Group.NotFoundAnywhere<Group>(groupId));
+            }
+
+            return Task.FromResult(Result.Ok(group));
+        }
+
         private Result<Group> FindIncludingDeleted(Guid groupId, Guid userId)
         {
             if (!_groups.TryGetValue(groupId, out Group? group) || !_currentMembers.Contains((groupId, userId)))

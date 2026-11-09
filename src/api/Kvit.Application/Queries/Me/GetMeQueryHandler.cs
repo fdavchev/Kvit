@@ -50,7 +50,8 @@ namespace Kvit.Application.Queries.Me
                     user.TermsVersion,
                     TermsVersion.IsCurrent(user.TermsVersion),
                     TermsVersion.UpdateIsMaterial(user.TermsVersion, TermsVersion.Current, TermsVersion.CurrentIsMaterial),
-                    false));
+                    false,
+                    user.SuspendedAt != null));
         }
     }
 }

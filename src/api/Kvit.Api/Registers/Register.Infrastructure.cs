@@ -1,6 +1,7 @@
 using Kvit.Api.Settings;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Cleanup;
+using Kvit.Contracts.OwnerTools;
 using Kvit.Contracts.Persistence;
 using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Interfaces;
@@ -28,6 +29,7 @@ namespace Kvit.Api.Registers
             services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IAccountPurger, AccountPurger>();
+            services.AddScoped<IAccountModeration, AccountModeration>();
             services.AddScoped<IDataCleanup, DataCleanup>();
             services.AddScoped<PasswordResetService>();
             services.AddScoped<AdminRoleService>();

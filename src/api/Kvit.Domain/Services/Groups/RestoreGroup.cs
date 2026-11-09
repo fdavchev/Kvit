@@ -24,6 +24,12 @@ namespace Kvit.Domain.Services.Groups
                 return owner;
             }
 
+            Result notClosedByAdmin = group.CheckNotClosedByAdmin();
+            if (!notClosedByAdmin.IsSuccess)
+            {
+                return notClosedByAdmin;
+            }
+
             DateTimeOffset now = _timeProvider.GetUtcNow();
             Result restored = group.Restore(now);
             if (!restored.IsSuccess)

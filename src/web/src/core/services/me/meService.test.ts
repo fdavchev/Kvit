@@ -10,7 +10,7 @@ import { testMe } from '@/test/testMe'
 import { acceptTerms, changeBudgetTotalCurrency, changeLanguage, getMe } from './meService'
 
 const termsFields = ['termsVersion', 'termsUpToDate', 'termsUpdateIsMaterial']
-const fieldsThatMayBeMissing = [...termsFields, 'deletionCancelled']
+const fieldsThatMayBeMissing = [...termsFields, 'deletionCancelled', 'isSuspended']
 const meFields = Object.keys(testMe).filter((field) => !fieldsThatMayBeMissing.includes(field))
 
 describe('getMe', () => {
@@ -93,6 +93,23 @@ describe('getMe', () => {
     const me = await getMe()
 
     expect(me).toEqual({ ...olderAnswer, deletionCancelled: false })
+  })
+
+  it.each([true, false])('keeps isSuspended %j as the answer sent it', async (isSuspended) => {
+    stubFetch(Response.json({ ...testMe, isSuspended }))
+
+    const me = await getMe()
+
+    expect(me).toMatchObject({ isSuspended })
+  })
+
+  it('reads isSuspended as false when an older answer does not carry it, and changes no other field', async () => {
+    const olderAnswer = Object.fromEntries(Object.entries(testMe).filter(([name]) => name !== 'isSuspended'))
+    stubFetch(Response.json(olderAnswer))
+
+    const me = await getMe()
+
+    expect(me).toEqual({ ...olderAnswer, isSuspended: false })
   })
 
   it('reads a person who must agree to a material change as it was sent', async () => {
@@ -244,6 +261,10 @@ describe('getMe', () => {
     ['deletionCancelled', 1],
     ['deletionCancelled', null],
     ['deletionCancelled', {}],
+    ['isSuspended', 'true'],
+    ['isSuspended', 1],
+    ['isSuspended', null],
+    ['isSuspended', {}],
     ['budgetTotalCurrency', 'USD'],
     ['budgetTotalCurrency', 'mkd'],
     ['budgetTotalCurrency', ''],

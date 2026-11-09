@@ -7,12 +7,16 @@ export type ClosingBarView =
   | { kind: 'prompt'; ownerName: string; endsAt: string }
   | { kind: 'confirmed'; waitingNames: string[]; endsAt: string }
   | { kind: 'finished'; canUnlock: boolean }
+  | { kind: 'closedByAdmin' }
 
 export function needsMembersForClosingBar(group: Group): boolean {
-  return group.status === 'Closing' && !group.isOwner
+  return group.status === 'Closing' && !group.isOwner && !group.closedByAdmin
 }
 
 export function closingBarView(group: Group, members: readonly GroupMember[] | undefined): ClosingBarView | null {
+  if (group.closedByAdmin) {
+    return { kind: 'closedByAdmin' }
+  }
   switch (group.status) {
     case 'Open':
       return group.isOwner && group.canStartClosing ? { kind: 'ready' } : null
