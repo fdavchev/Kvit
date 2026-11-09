@@ -1,18 +1,26 @@
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router'
 import { routes } from '@/core/router/routes'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { kvitGlassPanelLook } from '@/shared/components/kvitGlassLooks'
+import { useElementHeightOnPage } from '@/shared/hooks/useElementHeightOnPage'
 import { cn } from '@/shared/utils/cn'
 import { useAcceptTerms } from '../hooks/useAcceptTerms'
+
+const termsPillSpaceProperty = '--terms-pill-space'
+const gapAbovePillPx = 10
 
 export function TermsChangedPill() {
   const { t } = useTranslation()
   const location = useLocation()
   const acceptTerms = useAcceptTerms()
+  const pillRef = useRef<HTMLDivElement>(null)
+  useElementHeightOnPage(pillRef, termsPillSpaceProperty, gapAbovePillPx)
 
   return (
     <div
+      ref={pillRef}
       data-terms-pill
       role="status"
       className="pointer-events-none fixed inset-x-0 bottom-[calc(max(calc(var(--bottom-bar-height)+4px),calc(env(safe-area-inset-bottom)+8px))+var(--outbox-bar-space))] z-20 mx-auto w-full max-w-md px-4 motion-safe:animate-outbox-bar-in lg:left-(--rail-width)"
@@ -32,7 +40,7 @@ export function TermsChangedPill() {
           {t('legal.termsRead')}
         </Link>
         <KvitButton
-          className="min-h-9 w-auto min-w-11 flex-none rounded-full px-4 text-[0.9375rem]"
+          className="min-h-11 w-auto min-w-11 flex-none rounded-full px-4 text-[0.9375rem]"
           disabled={acceptTerms.isPending}
           onClick={() => acceptTerms.mutate()}
         >

@@ -45,7 +45,7 @@ describe('MakeAccountScreen, the agree line', () => {
     fireEvent.click(within(agreeLineBelowSave()).getByRole('link', { name: agreeLineLabels().terms }))
 
     expect(router.state.location.pathname).toBe(routes.terms)
-    expect(router.state.location.state).toEqual({ from: routes.makeAccount })
+    expect(router.state.location.state).toEqual({ from: routes.makeAccount, fromState: null })
   })
 
   it('opens the Privacy Policy from the line and remembers the make-account screen for Back', async () => {
@@ -54,7 +54,7 @@ describe('MakeAccountScreen, the agree line', () => {
     fireEvent.click(within(agreeLineBelowSave()).getByRole('link', { name: agreeLineLabels().privacy }))
 
     expect(router.state.location.pathname).toBe(routes.privacy)
-    expect(router.state.location.state).toEqual({ from: routes.makeAccount })
+    expect(router.state.location.state).toEqual({ from: routes.makeAccount, fromState: null })
   })
 })
 

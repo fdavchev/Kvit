@@ -65,7 +65,7 @@ export function WelcomeScreen() {
         <KvitLinkButton to={routes.logIn} variant="link">
           {t('welcome.haveAccount')}
         </KvitLinkButton>
-        <div className="flex">
+        <div className="mx-auto grid w-fit max-w-full grid-cols-2">
           <KvitLinkButton
             to={routes.terms}
             state={{ from: routes.welcome }}

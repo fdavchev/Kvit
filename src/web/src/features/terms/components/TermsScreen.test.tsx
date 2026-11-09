@@ -2,6 +2,7 @@ import { screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { languages, type Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
+import { kvitInlineLinkHitArea } from '@/shared/components/kvitInlineLinkLook'
 import { stubFetch } from '@/test/apiTestHelpers'
 import {
   countOfEmailsInDocument,
@@ -192,5 +193,13 @@ describe('TermsScreen', () => {
     const back = screen.getByRole('link', { name: translated('en', 'common.back') })
 
     expect(back.getAttribute('href')).toBe(path)
+  })
+
+  it('gives the email links and the licences link a tap area 44px high without changing the text', async () => {
+    await renderTerms()
+
+    for (const link of [...mailtoLinks(), licencesLink()]) {
+      expect(link.className.split(/\s+/)).toEqual(expect.arrayContaining(kvitInlineLinkHitArea.split(' ')))
+    }
   })
 })

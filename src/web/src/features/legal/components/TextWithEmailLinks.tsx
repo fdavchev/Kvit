@@ -1,4 +1,6 @@
 import { supportEmail } from '@/core/legal/legalInfo'
+import { kvitInlineLinkHitArea } from '@/shared/components/kvitInlineLinkLook'
+import { cn } from '@/shared/utils/cn'
 
 interface TextWithEmailLinksProps {
   text: string
@@ -12,7 +14,7 @@ export function TextWithEmailLinks({ text }: TextWithEmailLinksProps) {
           <a
             key={index}
             href={`mailto:${supportEmail}`}
-            className="font-semibold text-link hover:underline"
+            className={cn('font-semibold text-link hover:underline', kvitInlineLinkHitArea)}
           >
             {supportEmail}
           </a>,

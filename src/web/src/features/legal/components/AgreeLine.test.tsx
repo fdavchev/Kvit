@@ -2,8 +2,10 @@ import { fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
+import { TermsScreen } from '@/features/terms/components/TermsScreen'
 import { agreeLine, agreeLineLabels, agreeLineText, agreeLines } from '@/test/agreeLineTestHelpers'
-import { renderElementWithProviders } from '@/test/renderWithProviders'
+import { renderElementWithProviders, renderRoutesWithProviders } from '@/test/renderWithProviders'
+import { translated } from '@/test/translated'
 import { AgreeLine } from './AgreeLine'
 
 const pathsItCanSitOn = [routes.signUp, routes.googleSignUp, routes.makeAccount]
@@ -55,7 +57,7 @@ describe('AgreeLine', () => {
     fireEvent.click(screen.getByRole('link', { name: agreeLineLabels().terms }))
 
     expect(router.state.location.pathname).toBe(routes.terms)
-    expect(router.state.location.state).toEqual({ from: path })
+    expect(router.state.location.state).toEqual({ from: path, fromState: null })
   })
 
   it.each(pathsItCanSitOn)('opens the Privacy Policy with the page it sits on as the place Back returns to (%s)', async (path) => {
@@ -64,6 +66,41 @@ describe('AgreeLine', () => {
     fireEvent.click(screen.getByRole('link', { name: agreeLineLabels().privacy }))
 
     expect(router.state.location.pathname).toBe(routes.privacy)
-    expect(router.state.location.state).toEqual({ from: path })
+    expect(router.state.location.state).toEqual({ from: path, fromState: null })
+  })
+
+  it('passes the router state of the page it sits on to the Terms, so the Google sign-in token survives', async () => {
+    const googleState = { idToken: 'google-token-1' }
+    const { router } = await renderElementWithProviders(<AgreeLine />, routes.googleSignUp, { routerState: googleState })
+
+    fireEvent.click(screen.getByRole('link', { name: agreeLineLabels().terms }))
+
+    expect(router.state.location.state).toEqual({ from: routes.googleSignUp, fromState: googleState })
+  })
+
+  it('comes back from the Terms to the Google sign-in screen with its token still there', async () => {
+    const googleState = { idToken: 'google-token-1', joinToken: 'join-token-1' }
+    const { router } = await renderRoutesWithProviders(
+      [
+        { path: routes.googleSignUp, element: <AgreeLine /> },
+        { path: routes.terms, element: <TermsScreen /> },
+      ],
+      routes.googleSignUp,
+      { routerState: googleState },
+    )
+
+    fireEvent.click(screen.getByRole('link', { name: agreeLineLabels().terms }))
+    fireEvent.click(await screen.findByRole('link', { name: translated('en', 'common.back') }))
+
+    expect(router.state.location.pathname).toBe(routes.googleSignUp)
+    expect(router.state.location.state).toEqual(googleState)
+  })
+
+  it('keeps each link on one line, so a wrapped link is never a two-line tap target', async () => {
+    await renderElementWithProviders(<AgreeLine />, routes.signUp)
+
+    for (const link of within(agreeLine()).getAllByRole('link')) {
+      expect(link.className.split(/\s+/)).toContain('whitespace-nowrap')
+    }
   })
 })

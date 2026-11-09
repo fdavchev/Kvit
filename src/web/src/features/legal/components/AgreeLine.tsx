@@ -2,11 +2,11 @@ import { Trans } from 'react-i18next'
 import { Link, useLocation } from 'react-router'
 import { routes } from '@/core/router/routes'
 
-const linkLook = 'font-semibold text-link underline underline-offset-2'
+const linkLook = 'font-semibold text-link underline underline-offset-2 whitespace-nowrap'
 
 export function AgreeLine() {
   const location = useLocation()
-  const backState = { from: location.pathname }
+  const backState = { from: location.pathname, fromState: location.state }
 
   return (
     <p className="text-center text-[0.8125rem] leading-snug text-pretty text-muted-foreground">

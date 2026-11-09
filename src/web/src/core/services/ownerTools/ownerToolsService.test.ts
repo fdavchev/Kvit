@@ -333,7 +333,9 @@ describe('loadLog', () => {
   })
 
   it.each([
-    ['id', 3],
+    ['id', 'log-3'],
+    ['id', 0],
+    ['id', 2.5],
     ['createdAt', 'yesterday'],
     ['createdAt', 20261104],
     ['adminName', null],

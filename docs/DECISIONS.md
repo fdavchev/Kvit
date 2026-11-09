@@ -70,6 +70,10 @@ Source: `reports/2026-11-04-phase-19-legal-research.md` (four research runs; not
   - The backup uses the existing secret `NEON_DIRECT_CONNECTION_STRING` (a small script turns it into the settings `pg_dump` needs; pooled hosts are refused) and one new secret, `BACKUP_PASSPHRASE`. File format: PostgreSQL custom dump, encrypted with openssl AES-256-CBC (PBKDF2, 600000 rounds); the plain dump is deleted before the upload; the job checks that the file decrypts and lists. The openssl mode does not authenticate the file (tampering is only caught when restoring); accepted for a private-notes passphrase scenario.
   - It works with `SSL Mode=Require` and `VerifyFull`; `VerifyCA` would fail on the runner.
   - GitHub stops scheduled workflows after about 60 days without repository activity; documented in `guides/restore-a-backup.md`.
+- **Step 9, browser pass, Filip's answers (2026-11-09):**
+  - **Group closed by the owner of Kvit, its own owner:** stays unable to leave or hand over (option A). Reason: Kvit's owner can reopen or delete the group, so nobody is stuck for good. Rejected: allowing leave/hand-over while closed (a backend rule change plus tests).
+  - **Agree line (Sign up, Join, make-account, Google screen):** stays compact, links about 17 px high (option A). Rejected: B, rows of 44 px (adds about 60 px of height on each of those screens), and C, the two links as separate 44 px buttons under the sentence. Reason: legal fine print; speed on the form matters more.
+  - **Rates source name:** English keeps "NBRM" (the bank's own English pages use it, not "NBRNM"). The Macedonian «НБРСМ» is our own short form; the bank writes the full name in Macedonian. Filip kept «(НБРСМ)» in brackets after the full name (the full name is already written out in the same sentence), so no text changes.
 - **Still open:** does `START-HERE-PROMPT.md` stay in the public repository? (first asked in `STATUS.md`; with "no licence" it is still readable by everyone).
 
 ## 2026-11-04: Phase 18 (admin statistics), in progress

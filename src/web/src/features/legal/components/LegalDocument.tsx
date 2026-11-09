@@ -4,6 +4,7 @@ import { readRouterStateText } from '@/core/router/readRouterStateText'
 import { routes } from '@/core/router/routes'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
+import { kvitInlineLinkHitArea } from '@/shared/components/kvitInlineLinkLook'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 import { cn } from '@/shared/utils/cn'
@@ -18,15 +19,23 @@ const shortItemNumbers = [1, 2, 3, 4, 5] as const
 
 const bodyLook = 'text-[0.9375rem] leading-[1.5] text-pretty text-muted-foreground'
 
+function readStateOfThePageBefore(state: unknown): unknown {
+  if (typeof state !== 'object' || state === null) {
+    return null
+  }
+  return Reflect.get(state, 'fromState') ?? null
+}
+
 export function LegalDocument({ document, sectionCount }: LegalDocumentProps) {
   const { t } = useTranslation()
   const location = useLocation()
   const backTo = readRouterStateText(location.state, 'from') ?? routes.welcome
+  const backState = readStateOfThePageBefore(location.state)
   const sectionNumbers = Array.from({ length: sectionCount }, (_, index) => index + 1)
 
   return (
     <KvitScreen className="pb-16">
-      <KvitBackButton to={backTo} />
+      <KvitBackButton to={backTo} state={backState} />
       <KvitScreenTitle>{t(`${document}.title`)}</KvitScreenTitle>
       <p className="-mt-4 text-[0.9375rem] text-muted-foreground">{t(`${document}.updated`)}</p>
       <section className={cn(balancesCardLook, 'mt-6 flex flex-col gap-2')}>
@@ -55,7 +64,7 @@ export function LegalDocument({ document, sectionCount }: LegalDocumentProps) {
             href="/third-party-licenses.txt"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-link hover:underline"
+            className={cn('font-semibold text-link hover:underline', kvitInlineLinkHitArea)}
           >
             {t('legal.licences')}
           </a>

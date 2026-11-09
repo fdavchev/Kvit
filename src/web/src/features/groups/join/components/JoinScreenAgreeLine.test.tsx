@@ -69,7 +69,7 @@ describe('JoinScreen, the agree line', () => {
       fireEvent.click(screen.getByRole('link', { name: agreeLineLabels().terms }))
 
       expect(router.state.location.pathname).toBe(routes.terms)
-      expect(router.state.location.state).toEqual({ from: routes.join(testInviteToken) })
+      expect(router.state.location.state).toEqual({ from: routes.join(testInviteToken), fromState: null })
     })
 
     it('opens the Privacy Policy from the line and remembers the invite page for Back', async () => {
@@ -78,7 +78,7 @@ describe('JoinScreen, the agree line', () => {
       fireEvent.click(screen.getByRole('link', { name: agreeLineLabels().privacy }))
 
       expect(router.state.location.pathname).toBe(routes.privacy)
-      expect(router.state.location.state).toEqual({ from: routes.join(testInviteToken) })
+      expect(router.state.location.state).toEqual({ from: routes.join(testInviteToken), fromState: null })
     })
   })
 

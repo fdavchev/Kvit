@@ -87,7 +87,7 @@ export const tripGroup: OwnerToolsGroup = {
 export const closedTripGroup: OwnerToolsGroup = { ...tripGroup, closedByAdminAt: '2026-11-03T09:00:00Z' }
 
 export const logEntry: OwnerToolsLogEntry = {
-  id: 'log-3',
+  id: 3,
   createdAt: '2026-11-04T08:00:00Z',
   adminName: 'Filip Davchev',
   action: 'Suspended',
@@ -97,7 +97,7 @@ export const logEntry: OwnerToolsLogEntry = {
 }
 
 export const olderLogEntry: OwnerToolsLogEntry = {
-  id: 'log-2',
+  id: 2,
   createdAt: '2026-10-20T09:00:00Z',
   adminName: 'Filip Davchev',
   action: 'GroupClosed',
@@ -107,7 +107,7 @@ export const olderLogEntry: OwnerToolsLogEntry = {
 }
 
 export const oldestLogEntry: OwnerToolsLogEntry = {
-  id: 'log-1',
+  id: 1,
   createdAt: '2026-10-01T09:00:00Z',
   adminName: 'Dime Admin',
   action: 'NameErased',

@@ -41,7 +41,7 @@ describe('GoogleSignUpScreen, the agree line', () => {
     fireEvent.click(screen.getByRole('link', { name: agreeLineLabels().terms }))
 
     expect(router.state.location.pathname).toBe(routes.terms)
-    expect(router.state.location.state).toEqual({ from: routes.googleSignUp })
+    expect(router.state.location.state).toEqual({ from: routes.googleSignUp, fromState: { idToken: testIdToken } })
   })
 
   it('opens the Privacy Policy from the line and remembers this screen for Back', async () => {
@@ -50,7 +50,7 @@ describe('GoogleSignUpScreen, the agree line', () => {
     fireEvent.click(screen.getByRole('link', { name: agreeLineLabels().privacy }))
 
     expect(router.state.location.pathname).toBe(routes.privacy)
-    expect(router.state.location.state).toEqual({ from: routes.googleSignUp })
+    expect(router.state.location.state).toEqual({ from: routes.googleSignUp, fromState: { idToken: testIdToken } })
   })
 
   it('shows no agree line to a visitor who arrives without a Google token and is sent to Welcome', async () => {

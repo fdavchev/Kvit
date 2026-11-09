@@ -39,7 +39,7 @@ describe('SignUpScreen, the agree line', () => {
     fireEvent.click(screen.getByRole('link', { name: agreeLineLabels().terms }))
 
     expect(router.state.location.pathname).toBe(routes.terms)
-    expect(router.state.location.state).toEqual({ from: routes.signUp })
+    expect(router.state.location.state).toEqual({ from: routes.signUp, fromState: null })
   })
 
   it('opens the Privacy Policy from the line and remembers the sign-up screen for Back', async () => {
@@ -48,6 +48,6 @@ describe('SignUpScreen, the agree line', () => {
     fireEvent.click(screen.getByRole('link', { name: agreeLineLabels().privacy }))
 
     expect(router.state.location.pathname).toBe(routes.privacy)
-    expect(router.state.location.state).toEqual({ from: routes.signUp })
+    expect(router.state.location.state).toEqual({ from: routes.signUp, fromState: null })
   })
 })

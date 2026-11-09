@@ -11,6 +11,7 @@ import { stubGoogleSignIn } from '@/test/googleTestHelpers'
 import { testGroupId } from '@/test/groupTestData'
 import { testOutboxItem } from '@/test/outboxTestData'
 import { seedOutbox } from '@/test/outboxTestHelpers'
+import { installFakeResizeObservers } from '@/test/resizeObserverTestHelpers'
 import {
   jsonAnswer,
   neverAnswer,
@@ -21,6 +22,7 @@ import {
 } from '@/test/requestTestHelpers'
 import { seedMe, testGuestMe, testMe, testMeWithMaterialTerms, testMeWithOldTerms } from '@/test/testMe'
 import { stubDeviceColorScheme } from '@/test/themeTestHelpers'
+import { rectOfHeight } from '@/test/toastLiftTestHelpers'
 import { translated } from '@/test/translated'
 import { routes } from './routes'
 
@@ -102,6 +104,10 @@ function sheetControl(sheet: HTMLElement, key: string, language: Language = 'en'
     throw new Error(`The text of ${key} is not inside a link or a button`)
   }
   return control
+}
+
+function termsPillSpaceOnPage(): string {
+  return document.documentElement.style.getPropertyValue('--terms-pill-space')
 }
 
 function isBefore(first: Node, second: Node): boolean {
@@ -215,6 +221,40 @@ describe('the terms-changed notice, a thin pill above the tab bar', () => {
       expect(pill()).toBeNull()
     })
     expect(screen.getByRole('heading', { level: 1, name: translated('en', 'settings.title') })).toBeTruthy()
+  })
+
+  it('makes room on the page for its own height and a 10px gap while it shows, and gives the room back after OK', async () => {
+    const observers = installFakeResizeObservers()
+    await renderAs(testMeWithOldTerms)
+    const notice = await findPill()
+
+    notice.getBoundingClientRect = () => rectOfHeight(85)
+    observers.fireFor(notice)
+
+    expect(termsPillSpaceOnPage()).toBe('95px')
+
+    tapOk(notice)
+
+    await waitFor(() => {
+      expect(pill()).toBeNull()
+    })
+    expect(termsPillSpaceOnPage()).toBe('')
+  })
+
+  it('gives the OK button a tap target at least 44px high', async () => {
+    await renderAs(testMeWithOldTerms)
+    const notice = await findPill()
+
+    const ok = within(notice).getByRole('button', { name: translated('en', 'legal.termsOk') })
+
+    expect(ok.className.split(/\s+/)).toContain('min-h-11')
+  })
+
+  it('makes no room for the pill for a person whose terms are up to date', async () => {
+    await renderAs(testMe)
+    await settingsHasOpened()
+
+    expect(termsPillSpaceOnPage()).toBe('')
   })
 
   it.each(failedAccepts)('shows the error toast and keeps the notice when OK is tapped and %s', async (_name, acceptAnswer, textKey) => {

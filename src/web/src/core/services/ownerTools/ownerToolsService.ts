@@ -3,6 +3,7 @@ import { endpoints } from '@/core/api/endpoints'
 import { groupStatuses, type GroupStatus } from '@/core/services/groups/groupsService'
 import {
   readCount,
+  readCountAboveZero,
   readDate,
   readDateOrNull,
   readObject,
@@ -41,7 +42,7 @@ export interface OwnerToolsGroup {
 }
 
 export interface OwnerToolsLogEntry {
-  id: string
+  id: number
   createdAt: string
   adminName: string
   action: (typeof ownerToolsLogActions)[number]
@@ -130,7 +131,7 @@ function parseLogEntry(row: unknown): OwnerToolsLogEntry {
   const what = 'an entry of the owner tools log'
   const fields = readObject(row, what)
   return {
-    id: readText(fields, 'id', what),
+    id: readCountAboveZero(fields, 'id', what),
     createdAt: readDate(fields, 'createdAt', what),
     adminName: readText(fields, 'adminName', what),
     action: readOneOf(fields, 'action', ownerToolsLogActions, what),
