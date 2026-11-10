@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
+using Kvit.Api.Tests.AccountDeletion;
 using Kvit.Api.Tests.Groups;
 using Kvit.Api.Tests.Persistence;
 using Npgsql;
@@ -129,7 +130,7 @@ namespace Kvit.Api.Tests.OwnerTools
         }
 
         [Fact]
-        public async Task Log_ErasedPerson_RowKeepsTheNameFromBeforeTheErase()
+        public async Task Log_ErasedPerson_RowShowsFormerMemberAndNeverTheErasedName()
         {
             (SignedInUser admin, string adminName) = await NewAdminAsync();
             SignedInUser person = await _app.SignUpAsync("Zorica Petrovska");
@@ -137,7 +138,7 @@ namespace Kvit.Api.Tests.OwnerTools
 
             JsonElement item = Assert.Single(await ItemsOfAsync(admin, adminName));
 
-            Assert.Equal("Zorica Petrovska", item.GetProperty("targetLabel").GetString());
+            Assert.Equal(DeletionRequests.FormerMemberEnglish, item.GetProperty("targetLabel").GetString());
         }
 
         [Fact]

@@ -216,5 +216,17 @@ namespace Kvit.Api.Tests.OwnerTools
 
             Assert.Equal(secondAdmin.UserId, Assert.Single(await OwnerToolsRows.ActionsAboutAsync(_app, person.UserId)).AdminUserId);
         }
+
+        [Fact]
+        public async Task Suspend_PersonWhoWasPurgedKeepingTheirName_WritesFormerMemberNotTheName()
+        {
+            SignedInUser admin = await _app.SharedAdminAsync();
+            SignedInUser person = await _app.SignUpAsync("Zorica Petrovska");
+            await DeletionSteps.RequestAndPurgeAsync(_app, person.Client, person.UserId, DeletionRequests.KeepName);
+
+            await OwnerToolsSteps.SuspendAsync(admin, person.UserId);
+
+            Assert.Equal(DeletionRequests.FormerMemberEnglish, Assert.Single(await OwnerToolsRows.ActionsAboutAsync(_app, person.UserId)).TargetLabel);
+        }
     }
 }

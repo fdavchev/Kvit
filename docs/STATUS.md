@@ -1,28 +1,23 @@
 # Status: Kvit
 
-_Last updated: 2026-11-09 (handoff: Phase 19 Steps 0 to 8 built and committed; Step 9 browser pass, Step 10 review and Step 11 questions still open)_
+_Last updated: 2026-11-09 (Phase 19 built and reviewed; waiting for Filip's commit, answers to the questions and the merge steps)_
 
 ## Where we stopped
-- Branch: `feat/19-legal` (made from `main` = `ddf41f2`, the Phase 18 merge), last commit `b3301e6 Add the weekly encrypted database backup, its connection script and the restore guide.` Nothing is pushed; Filip pushes, opens the PR and merges.
-- Uncommitted changes: only docs: `docs/guides/phase-19-legal.md` (new), `docs/guides/phase-19-step-9-browser-pass-prompt.md` (new), `docs/guides/restore-a-backup.md` (changed), `docs/reports/2026-11-09-phase-19-legal.md` (new), ROADMAP and STATUS edits. Suggested commit subject: "Add the Phase 19 guide, the interim report and the Step 9 brief."
-- Last thing done: Step 8, the weekly encrypted backup (restore proven on throwaway local databases). The browser pass (Step 9) was started and stopped before any result; the local stack is stopped (`-Stop` was run).
-- Phase 19 map: report `docs/reports/2026-11-09-phase-19-legal.md` (what was built, results, accepted risks, 8 questions for Filip); Filip's step-by-step guide `docs/guides/phase-19-legal.md`; PR text `docs/guides/phase-19-pr-text.md`; decisions in `DECISIONS.md` ("Phase 19", entries marked "decided by Claude, please confirm"); research `docs/reports/2026-11-04-phase-19-legal-research.md`.
+- Branch: `feat/19-legal` (made from `main` = `ddf41f2`, the Phase 18 merge). Nothing is pushed; Filip pushes, opens the PR and merges.
+- Committed: Steps 0 to 8 (one commit each), `97db15b` (guide, interim report, Step 9 brief), `0023b3c` (browser-pass fixes).
+- **Uncommitted:** the code-review fixes (backend: `AccountPurger`, `AccountModeration`, `AdminAction`, `IAccountPurger`, `MeController`, tests, `backup.yml`) and docs (final report, ROADMAP, STATUS, BACKLOG, DECISIONS, PR text, the guide's passphrase line). Suggested commit subjects: "Fix the Phase 19 code-review findings." and then "Add the final Phase 19 report and update the roadmap, status and PR text."
+- Phase 19 map: report `docs/reports/2026-11-09-phase-19-legal.md` (final; 8 questions for Filip at its end); browser pass `docs/reports/2026-11-09-phase-19-browser-pass.md`; Filip's step-by-step guide `docs/guides/phase-19-legal.md`; PR text `docs/guides/phase-19-pr-text.md`; decisions in `DECISIONS.md` ("Phase 19"); research `docs/reports/2026-11-04-phase-19-legal-research.md`.
 
 ## Next step
-Run Step 9 in a new session: give the `tester` agent the brief in `docs/guides/phase-19-step-9-browser-pass-prompt.md` (add the memory folder path `C:\Users\Davchev\.claude\projects\c--Users-Davchev-Projects-Kvit\memory\`; Docker Desktop must be open; apply the 3 new migrations locally first: `dotnet ef database update --project src/api/Kvit.Infrastructure --startup-project src/api/Kvit.Api`). Then fix the findings with the coder. Filip's standing go for all Phase 19 steps (2026-11-04): tester first, then coder, one commit per step, never push.
-
-## Then
-- Step 10: `/code-review high` on the branch and fix findings; extend the interim report into the final one; update ROADMAP, STATUS, BACKLOG and the PR text; commit.
-- Step 11: ask Filip the 8 questions at the end of the report (including `START-HERE-PROMPT.md`).
-- Filip: the secrets, first workflow runs and the outside-the-code list in `docs/guides/phase-19-legal.md` (three secrets before the merge: `Cleanup__Secret` on Render, `CLEANUP_SECRET` and `BACKUP_PASSPHRASE` on GitHub).
+Filip: commit the review fixes and docs, answer the 8 questions at the end of the Phase 19 report (Step 11), then push, open the PR with `docs/guides/phase-19-pr-text.md`, add three secrets before merging (`Cleanup__Secret` on Render, `CLEANUP_SECRET` and `BACKUP_PASSPHRASE` on GitHub; the passphrase at least 30 random characters, the repository is public), CI green, merge, run the Cleanup and Backup workflows once by hand, and do the outside-the-code list in `docs/guides/phase-19-legal.md`. After the merge: update ROADMAP and STATUS for Phase 20 (or whatever Filip picks next).
 
 ## Blockers and open questions
-- Docker Desktop must be open for the backend tests (it was off once; ask Filip, never work around it).
-- Waiting for Filip: the 8 questions in the report; Phase 18 leftovers (light theme peach, Totals bars).
-- The usage limit interrupted agents twice; if an agent shows "completed" without a report, check `git status` and resume it with SendMessage.
+- Waiting for Filip: the 8 questions in the Phase 19 report (including `START-HERE-PROMPT.md` in the public repository); Phase 18 leftovers (light theme peach, Totals bars); the Macedonian legal drafts to read (list in the report).
+- Docker Desktop must be open for the backend tests (ask Filip, never work around it).
+- Local database has throwaway `p19*@example.com` accounts from the browser pass; `p19admin1794216234@example.com` has the Admin role (revoke command in the browser-pass report). Harmless.
 
 ## Verification state
-- VERIFIED by automated test (2026-11-09): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 7397/7397; `dotnet ef migrations has-pending-model-changes` clean; frontend `npm run lint` 0 warnings, `npm run build` 0 type errors, `npm test` 15626/15626 (last run before the backup step, which changed no frontend file); `npm run check:licenses` ok.
-- VERIFIED by live run: backup, lock, unlock and restore on local throwaway databases (24 tables identical).
-- NOT VERIFIED: every new screen in a real browser, a real phone, the Macedonian drafts, both new GitHub workflows, the cleanup call through Cloudflare, the real Neon dump, the 3 migrations on Neon.
-- Known flaky test under load: `GroupScreenMarkPaid.test.tsx` "queues the payment…" (passes alone; in BACKLOG).
+- VERIFIED by automated test (tester, 2026-11-09, after the last change): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 7417/7417; `dotnet ef migrations has-pending-model-changes` clean; frontend `npm run lint` 0 warnings, `npm run build` 0 type errors, `npm test` 15645/15645 (last full run after the browser-pass fixes, no frontend change after it); `npm run check:licenses` ok.
+- VERIFIED by live run: the browser pass in headless Chromium (432 views plus 40 flow checks); backup, lock, unlock and restore on local throwaway databases (24 tables identical).
+- NOT VERIFIED: a real phone, iOS Safari, Firefox, a screen reader, the real Google sign-in, the terms pill fix in a browser, the Macedonian drafts, both new GitHub workflows (and the passphrase-length step), the cleanup call through Cloudflare, the real Neon dump, the 3 migrations on Neon, the Cloudflare build serving the licence file.
+- Known flaky tests under load (pass alone; in BACKLOG): `GroupScreenMarkPaid.test.tsx` "queues the payment…", `JoinScreen.test.tsx` "goes straight to the group…".

@@ -19,29 +19,29 @@ namespace Kvit.Infrastructure.Auth
         {
             DateTimeOffset now = _timeProvider.GetUtcNow();
 
-            return ChangeLockedPersonAsync(adminUserId, personId, reason, AdminActionType.Suspended, person => person.Suspend(now), now, cancellationToken);
+            return ChangeLockedPersonAsync(
+                adminUserId, personId, reason, AdminActionType.Suspended, TargetLabelOf, person => Task.FromResult(person.Suspend(now)), now, cancellationToken);
         }
 
         public Task<Result> UnsuspendAsync(Guid adminUserId, Guid personId, string reason, CancellationToken cancellationToken)
         {
-            return ChangeLockedPersonAsync(adminUserId, personId, reason, AdminActionType.Unsuspended, person => person.Unsuspend(), _timeProvider.GetUtcNow(), cancellationToken);
+            return ChangeLockedPersonAsync(
+                adminUserId, personId, reason, AdminActionType.Unsuspended, TargetLabelOf, person => Task.FromResult(person.Unsuspend()), _timeProvider.GetUtcNow(), cancellationToken);
         }
 
-        public async Task<Result> EraseNameAsync(Guid adminUserId, Guid personId, string reason, CancellationToken cancellationToken)
+        public Task<Result> EraseNameAsync(Guid adminUserId, Guid personId, string reason, CancellationToken cancellationToken)
         {
-            AppUser? found = await _context.Users.AsNoTracking().SingleOrDefaultAsync(user => user.Id == personId, cancellationToken);
-            Result<AppUser> person = await PersonToActOnAsync(adminUserId, personId, found, cancellationToken);
-            if (!person.IsSuccess || person.Value.PurgedAt is not null)
-            {
-                return person;
-            }
-
             DateTimeOffset now = _timeProvider.GetUtcNow();
-            await _accountPurger.PurgeAccountAsync(personId, DeletionNameChoice.FormerMember, now, cancellationToken);
-            _context.AdminActions.Add(AdminAction.AboutPerson(adminUserId, AdminActionType.NameErased, personId, person.Value.DisplayName, reason, now));
-            await _context.SaveChangesAsync(cancellationToken);
 
-            return Result.Ok();
+            return ChangeLockedPersonAsync(
+                adminUserId,
+                personId,
+                reason,
+                AdminActionType.NameErased,
+                _ => AdminAction.PurgedPersonLabel,
+                person => _accountPurger.PurgeAccountAsync(person.Id, DeletionNameChoice.FormerMember, now, cancellationToken),
+                now,
+                cancellationToken);
         }
 
         private async Task<Result> ChangeLockedPersonAsync(
@@ -49,7 +49,8 @@ namespace Kvit.Infrastructure.Auth
             Guid personId,
             string reason,
             AdminActionType action,
-            Func<AppUser, bool> change,
+            Func<AppUser, string> targetLabelOf,
+            Func<AppUser, Task<bool>> change,
             DateTimeOffset now,
             CancellationToken cancellationToken)
         {
@@ -62,9 +63,10 @@ namespace Kvit.Infrastructure.Auth
                 return person;
             }
 
-            if (change(person.Value))
+            string targetLabel = targetLabelOf(person.Value);
+            if (await change(person.Value))
             {
-                _context.AdminActions.Add(AdminAction.AboutPerson(adminUserId, action, personId, person.Value.DisplayName, reason, now));
+                _context.AdminActions.Add(AdminAction.AboutPerson(adminUserId, action, personId, targetLabel, reason, now));
             }
 
             await _unitOfWork.CommitAsync(cancellationToken);
@@ -85,6 +87,11 @@ namespace Kvit.Infrastructure.Auth
             }
 
             return Result.Ok(found);
+        }
+
+        private static string TargetLabelOf(AppUser person)
+        {
+            return person.PurgedAt is null ? person.DisplayName : AdminAction.PurgedPersonLabel;
         }
 
         private Task<bool> IsAdminAsync(Guid userId, CancellationToken cancellationToken)

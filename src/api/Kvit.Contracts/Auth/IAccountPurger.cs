@@ -4,7 +4,7 @@ namespace Kvit.Contracts.Auth
 {
     public interface IAccountPurger
     {
-        Task PurgeAccountAsync(Guid userId, DeletionNameChoice nameChoice, DateTimeOffset now, CancellationToken cancellationToken);
+        Task<bool> PurgeAccountAsync(Guid userId, DeletionNameChoice nameChoice, DateTimeOffset now, CancellationToken cancellationToken);
 
         Task<int> PurgeDueAccountsAsync(DateTimeOffset now, CancellationToken cancellationToken);
     }

@@ -24,6 +24,13 @@ namespace Kvit.Api.Tests.OwnerTools
         private const string UnprotectedPath = "/api/test/unprotected";
         private const int MinimumEndpointsInTheSweep = 60;
 
+        private static readonly (string Method, string Path)[] AllowedWhileSuspended =
+        [
+            ("GET", "/api/me"),
+            ("GET", "/api/me/export"),
+            ("POST", DeletionRequests.DeletePath),
+        ];
+
         [Theory]
         [MemberData(nameof(SuspendedCalls.Names), MemberType = typeof(SuspendedCalls))]
         public async Task Call_ByASuspendedAdmin_Answers403AccountSuspended(string name)
@@ -51,7 +58,7 @@ namespace Kvit.Api.Tests.OwnerTools
         }
 
         [Fact]
-        public async Task EveryAuthenticatedEndpoint_ExceptGetMe_Answers403AccountSuspendedToASuspendedAdmin()
+        public async Task EveryAuthenticatedEndpoint_ExceptGetMeExportAndDeleteAccount_Answers403AccountSuspendedToASuspendedAdmin()
         {
             SignedInUser admin = await _app.SignInAdminAsync();
             await OwnerToolsRows.SetSuspendedAtAsync(_app, admin.UserId, _app.Clock.GetUtcNow());
@@ -70,8 +77,8 @@ namespace Kvit.Api.Tests.OwnerTools
                 HttpResponseMessage response = await admin.Client.SendAsync(request, TestContext.Current.CancellationToken);
                 string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
                 bool isRefusedAsSuspended = response.StatusCode == HttpStatusCode.Forbidden && body.Contains(OwnerToolsRequests.AccountSuspendedCode, StringComparison.Ordinal);
-                bool isGetMe = method == "GET" && path == "/api/me";
-                if (isRefusedAsSuspended == isGetMe)
+                bool isAllowedWhileSuspended = AllowedWhileSuspended.Contains((method, path));
+                if (isRefusedAsSuspended == isAllowedWhileSuspended)
                 {
                     unexpected.Add($"{method} {path} -> {(int)response.StatusCode} {body}");
                 }
@@ -294,14 +301,59 @@ namespace Kvit.Api.Tests.OwnerTools
         }
 
         [Fact]
-        public async Task DeleteAccount_ByASuspendedPerson_IsRefusedAndStoresNoDeletion()
+        public async Task DeleteAccount_ByASuspendedPerson_Answers204StoresTheDeletionAndEndsTheSession()
         {
             SignedInUser person = await _app.SignUpSuspendedAsync();
 
-            await DeletionRequests.DeleteAsync(person.Client, DeletionRequests.KeepName);
+            HttpResponseMessage response = await DeletionRequests.DeleteAsync(person.Client, DeletionRequests.FormerMember);
 
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            StoredDeletion stored = await DeletionRows.ReadAsync(_app, person.UserId);
+            Assert.Equal(_app.Clock.GetUtcNow(), stored.RequestedAt);
+            Assert.Equal(DeletionRequests.FormerMember, stored.NameChoice);
+            Assert.Null(stored.PurgedAt);
+            Assert.Equal(HttpStatusCode.Unauthorized, (await AuthRequests.GetMeAsync(person.Client)).StatusCode);
+        }
+
+        [Fact]
+        public async Task DeleteAccount_ByASuspendedPersonWhoLogsInAgain_IsCancelledAndTheyAreStillSuspended()
+        {
+            SignedInUser person = await _app.SignUpSuspendedAsync();
+            await DeletionSteps.RequestAsync(person.Client, DeletionRequests.KeepName);
+            HttpClient fresh = _app.CreateClient();
+
+            JsonElement me = await DeletionSteps.ReadLogInAsync(await AuthRequests.LogInAsync(fresh, person.Form.Email, person.Form.Password));
+
+            Assert.True(DeletionSteps.DeletionCancelledOf(me));
+            Assert.True(IsSuspendedOf(me));
             Assert.Equal(StoredDeletion.None, await DeletionRows.ReadAsync(_app, person.UserId));
-            Assert.Equal(HttpStatusCode.OK, (await AuthRequests.GetMeAsync(person.Client)).StatusCode);
+            await ProblemResponse.AssertAsync(await GroupRequests.ListAsync(fresh), HttpStatusCode.Forbidden, OwnerToolsRequests.AccountSuspendedCode);
+        }
+
+        [Fact]
+        public async Task DeleteAccount_ByASuspendedPerson_IsPurgedAfterThirtyDaysLikeAnyoneElse()
+        {
+            SignedInUser person = await _app.SignUpSuspendedAsync("Dragan Ilievski");
+            DateTimeOffset requestedAt = _app.Clock.GetUtcNow();
+            await DeletionSteps.RequestAsync(person.Client, DeletionRequests.FormerMember);
+
+            await AccountPurges.PurgeAsync(_app, person.UserId, DeletionRequests.FormerMember, requestedAt + DeletionRequests.GraceTime);
+
+            Assert.NotNull((await DeletionRows.ReadAsync(_app, person.UserId)).PurgedAt);
+            Assert.Equal(DeletionRequests.FormerMemberEnglish, await DeletionRows.UserValueAsync(_app, person.UserId, "display_name"));
+            HttpResponseMessage logIn = await AuthRequests.LogInAsync(_app.CreateClient(), person.Form.Email, person.Form.Password);
+            await ProblemResponse.AssertAsync(logIn, HttpStatusCode.Unauthorized, ResultCodes.AUTH_INVALID_CREDENTIALS);
+        }
+
+        [Fact]
+        public async Task DeleteAccount_ByASuspendedPersonWithAnInvalidChoice_Answers400NotTheSuspension()
+        {
+            SignedInUser person = await _app.SignUpSuspendedAsync();
+
+            HttpResponseMessage response = await DeletionRequests.DeleteAsync(person.Client, "Whatever");
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, DeletionRequests.NameChoiceInvalidCode);
+            Assert.Equal(StoredDeletion.None, await DeletionRows.ReadAsync(_app, person.UserId));
         }
 
         [Fact]
@@ -336,14 +388,26 @@ namespace Kvit.Api.Tests.OwnerTools
         }
 
         [Fact]
-        public async Task Export_ByASuspendedPerson_IsRefusedWithNoFileBody()
+        public async Task Export_ByASuspendedPerson_Answers200WithTheirOwnDataFile()
         {
             SignedInUser person = await _app.SignUpSuspendedAsync("Dragan Ilievski");
 
             HttpResponseMessage response = await person.Client.GetAsync("/api/me/export", TestContext.Current.CancellationToken);
 
-            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-            Assert.DoesNotContain("Dragan Ilievski", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("attachment", response.Content.Headers.ContentDisposition?.DispositionType);
+            Assert.Contains("Dragan Ilievski", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public async Task Export_ByASuspendedPerson_DoesNotOpenAnyOtherEndpoint()
+        {
+            SignedInUser person = await _app.SignUpSuspendedAsync();
+            Assert.Equal(HttpStatusCode.OK, (await person.Client.GetAsync("/api/me/export", TestContext.Current.CancellationToken)).StatusCode);
+
+            HttpResponseMessage response = await GroupRequests.ListAsync(person.Client);
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.Forbidden, OwnerToolsRequests.AccountSuspendedCode);
         }
 
         [Fact]

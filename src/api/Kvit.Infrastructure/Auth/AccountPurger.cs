@@ -1,3 +1,4 @@
+using System.Text;
 using Kvit.Contracts.Auth;
 using Kvit.Domain.Accounts;
 using Kvit.Domain.Entities;
@@ -11,6 +12,8 @@ namespace Kvit.Infrastructure.Auth
 {
     public sealed class AccountPurger(AppDbContext _context, ILookupNormalizer _normalizer) : IAccountPurger
     {
+        private const string PostgresRegexSpecialCharacters = @"\^$.|?*+()[]{}";
+
         private static readonly string[] MemberNameEventTypes =
         [
             nameof(ActivityEventType.MemberAdded),
@@ -40,18 +43,24 @@ namespace Kvit.Infrastructure.Auth
             nameof(ActivityEventType.SettlementRestored),
         ];
 
-        public async Task PurgeAccountAsync(Guid userId, DeletionNameChoice nameChoice, DateTimeOffset now, CancellationToken cancellationToken)
+        public async Task<bool> PurgeAccountAsync(Guid userId, DeletionNameChoice nameChoice, DateTimeOffset now, CancellationToken cancellationToken)
         {
-            await using IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            if (_context.Database.CurrentTransaction is null)
+            {
+                throw new InvalidOperationException(
+                    $"User {userId} was asked to be purged outside a transaction. The caller must open one first, so the purge and the caller's own writes are saved or undone together.");
+            }
+
             AppUser user = await LockUserAsync(userId, cancellationToken)
                 ?? throw new InvalidOperationException($"User {userId} was asked to be purged, but no such user exists.");
             if (user.PurgedAt is not null)
             {
-                return;
+                return false;
             }
 
             await PurgeLockedUserAsync(user, nameChoice, now, cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+
+            return true;
         }
 
         public async Task<int> PurgeDueAccountsAsync(DateTimeOffset now, CancellationToken cancellationToken)
@@ -111,6 +120,9 @@ namespace Kvit.Infrastructure.Auth
             await _context.UsageEvents
                 .Where(usageEvent => usageEvent.UserId == user.Id)
                 .ExecuteUpdateAsync(setters => setters.SetProperty(usageEvent => usageEvent.UserId, (Guid?)null), cancellationToken);
+            await _context.AdminActions
+                .Where(adminAction => adminAction.TargetUserId == user.Id)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(adminAction => adminAction.TargetLabel, AdminAction.PurgedPersonLabel), cancellationToken);
             await DeleteSignInDataAsync(user.Id, cancellationToken);
 
             string userName = AppUser.TombstoneUserNameOf(user.Id);
@@ -193,6 +205,8 @@ namespace Kvit.Infrastructure.Auth
             await ReplaceNameInDataFieldAsync(groupId, "claimedName", ClaimEventTypes, oldName, newName, cancellationToken);
             await ReplaceNameInDataFieldAsync(groupId, "fromName", SettlementEventTypes, oldName, newName, cancellationToken);
             await ReplaceNameInDataFieldAsync(groupId, "toName", SettlementEventTypes, oldName, newName, cancellationToken);
+            string splitNamePattern = $"(: |, ){PostgresRegexLiteralOf(oldName)}(?= -?[0-9]+(,|$))";
+            string splitNameReplacement = @"\1" + newName.Replace(@"\", @"\\", StringComparison.Ordinal);
             await _context.Database.ExecuteSqlInterpolatedAsync(
                 $"""
                 UPDATE activity_events
@@ -203,8 +217,8 @@ namespace Kvit.Infrastructure.Auth
                                 || CASE WHEN item.change ->> 'old' = {oldName} THEN jsonb_build_object('old', {newName}::text) ELSE jsonb_build_object() END
                                 || CASE WHEN item.change ->> 'new' = {oldName} THEN jsonb_build_object('new', {newName}::text) ELSE jsonb_build_object() END
                             WHEN item.change ->> 'field' = 'split' THEN item.change
-                                || CASE WHEN jsonb_typeof(item.change -> 'old') = 'string' THEN jsonb_build_object('old', replace(item.change ->> 'old', {oldName}, {newName})) ELSE jsonb_build_object() END
-                                || CASE WHEN jsonb_typeof(item.change -> 'new') = 'string' THEN jsonb_build_object('new', replace(item.change ->> 'new', {oldName}, {newName})) ELSE jsonb_build_object() END
+                                || CASE WHEN jsonb_typeof(item.change -> 'old') = 'string' THEN jsonb_build_object('old', regexp_replace(item.change ->> 'old', {splitNamePattern}, {splitNameReplacement}, 'g')) ELSE jsonb_build_object() END
+                                || CASE WHEN jsonb_typeof(item.change -> 'new') = 'string' THEN jsonb_build_object('new', regexp_replace(item.change ->> 'new', {splitNamePattern}, {splitNameReplacement}, 'g')) ELSE jsonb_build_object() END
                             ELSE item.change
                         END
                         ORDER BY item.position)
@@ -231,6 +245,22 @@ namespace Kvit.Infrastructure.Auth
                     AND data ->> {field} = {oldName}
                 """,
                 cancellationToken);
+        }
+
+        private static string PostgresRegexLiteralOf(string text)
+        {
+            StringBuilder literal = new(text.Length * 2);
+            foreach (char character in text)
+            {
+                if (PostgresRegexSpecialCharacters.Contains(character, StringComparison.Ordinal))
+                {
+                    literal.Append('\\');
+                }
+
+                literal.Append(character);
+            }
+
+            return literal.ToString();
         }
 
         private async Task DeletePersonalDataAsync(Guid userId, CancellationToken cancellationToken)

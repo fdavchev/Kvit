@@ -8,6 +8,7 @@ namespace Kvit.Domain.Entities
         public const int TargetLabelMaxLength = 120;
         public const int LogDefaultLimit = 50;
         public const int LogMaxLimit = 200;
+        public const string PurgedPersonLabel = "Former member";
 
         private AdminAction()
         {

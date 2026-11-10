@@ -14,6 +14,7 @@ namespace Kvit.Api.Tests.Backup
         private const string OpensslPattern = @"openssl\s+enc\b";
         private const string DecryptOption = @"\s-d(\s|$)";
         private const int MinimumIterations = 600000;
+        private const string PassphraseLengthCheckPattern = @"\[\s+""\$\{#" + PassphraseSecret + @"\}""\s+-lt\s+30\s+\]";
         private const string UploadAction = "actions/upload-artifact";
 
         public static TheoryData<string> ForbiddenLiterals =>
@@ -241,6 +242,27 @@ namespace Kvit.Api.Tests.Backup
         }
 
         [Fact]
+        public void PassphraseLengthCheck_FailsWhenThePassphraseIsShorterThanThirtyCharacters()
+        {
+            string text = BackupWorkflowFile.ReadWithoutCommentLines();
+
+            string step = Assert.Single(BackupWorkflowFile.StepsOf(text), candidate => Regex.IsMatch(candidate, PassphraseLengthCheckPattern));
+            Assert.Matches(@"::error::[^\n]*\b" + PassphraseSecret + @"\b[^\n]*30 characters", step);
+            Assert.Matches(@"(?m)^\s+exit\s+1\s*$", step);
+        }
+
+        [Fact]
+        public void PassphraseLengthCheck_HappensBeforeTheDumpAndTheEncryption()
+        {
+            string text = BackupWorkflowFile.ReadWithoutCommentLines();
+
+            Match check = Regex.Match(text, PassphraseLengthCheckPattern);
+            Assert.True(check.Success, "The workflow has no check that BACKUP_PASSPHRASE is at least 30 characters long.");
+            Assert.True(check.Index < RequireCommand(text, PgDumpPattern).Index, "The passphrase length is checked after pg_dump runs.");
+            Assert.True(check.Index < RequireEncryption(text).Index, "The passphrase length is checked after the encryption.");
+        }
+
+        [Fact]
         public void Workflow_UsesExactlyTheTwoBackupSecrets()
         {
             string text = BackupWorkflowFile.ReadWithoutCommentLines();
@@ -271,6 +293,7 @@ namespace Kvit.Api.Tests.Backup
                 @"-z\s+""\$\{?" + secretName + @"\}?""",
                 @"::error::",
                 @"-pass\s+env:" + secretName + @"(\s|\\|$)",
+                @"""\$\{#" + secretName + @"\}""\s+-lt\s+\d+",
             ];
             string[] mentions = [.. text.Split('\n').Where(line => line.Contains(secretName, StringComparison.Ordinal))];
             Assert.NotEmpty(mentions);

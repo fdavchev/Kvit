@@ -1,4 +1,3 @@
-using Kvit.Api.Tests.AccountDeletion;
 using Kvit.Api.Tests.Auth;
 using Kvit.Api.Tests.Balances;
 using Kvit.Api.Tests.BudgetShares;
@@ -28,8 +27,6 @@ namespace Kvit.Api.Tests.OwnerTools
             new SuspendedCall("JoinWithInvite", false, client => GroupRequests.JoinAsync(client, "token")),
             new SuspendedCall("Dashboard", false, client => client.GetAsync("/api/dashboard", TestContext.Current.CancellationToken)),
             new SuspendedCall("PersonalEntries", false, client => client.GetAsync("/api/personal/entries", TestContext.Current.CancellationToken)),
-            new SuspendedCall("Export", false, client => client.GetAsync("/api/me/export", TestContext.Current.CancellationToken)),
-            new SuspendedCall("DeleteAccount", false, client => DeletionRequests.DeleteAsync(client, DeletionRequests.KeepName)),
             new SuspendedCall("AcceptTerms", false, client => client.PostAsync("/api/me/terms/accept", null, TestContext.Current.CancellationToken)),
             new SuspendedCall("ChangeLanguage", false, client => AuthRequests.ChangeLanguageAsync(client, "mk")),
             new SuspendedCall("RecordActive", false, client => client.PostAsync("/api/me/active", null, TestContext.Current.CancellationToken)),

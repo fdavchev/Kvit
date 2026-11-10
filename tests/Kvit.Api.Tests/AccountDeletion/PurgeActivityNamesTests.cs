@@ -94,6 +94,28 @@ namespace Kvit.Api.Tests.AccountDeletion
             Assert.Contains("Equal: Ana 60000, Former member 60000", await DeletionRows.EventValueAsync(_app, eventId, "changes->0->>'old'"));
         }
 
+        [Theory]
+        [InlineData("Ana", "Equal: Ana 100, Anabel 100, Dana 100", "Equal: Former member 100, Anabel 100, Dana 100")]
+        [InlineData("Ana", "Equal: Dana 100, Anabel 100, Ana 100", "Equal: Dana 100, Anabel 100, Former member 100")]
+        [InlineData("Ana", "Equal: Ana 2 100, Ana 100", "Equal: Ana 2 100, Former member 100")]
+        [InlineData("Equal", "Equal: Equal 100, Ana 100", "Equal: Former member 100, Ana 100")]
+        [InlineData("Percentage", "Percentage: Ana 5000, Percentage 5000", "Percentage: Ana 5000, Former member 5000")]
+        [InlineData("Ана", "Equal: Ана 100, Анабела 100, Дана 100", "Equal: Former member 100, Анабела 100, Дана 100")]
+        [InlineData("Zorica Petrovska", "Exact: Zorica 100, Zorica Petrovska 200", "Exact: Zorica 100, Former member 200")]
+        [InlineData("A.a (B+)?", "Exact: AXa B 100, A.a (B+)? 100", "Exact: AXa B 100, Former member 100")]
+        [InlineData(@"Ana\d", @"Shares: Ana5 100, Ana\d 100", "Shares: Ana5 100, Former member 100")]
+        public async Task Purge_FormerMember_ReplacesOnlyTheirWholeNameInASplitChangeText(string leaverName, string splitText, string expected)
+        {
+            ExpenseGroup group = await GroupWithLeaverAsync(leaverName);
+            string changes = JsonSerializer.Serialize(new[] { new { field = "split", old = splitText, @new = splitText } });
+            Guid eventId = await DeletionRows.InsertEventAsync(_app, group.GroupId, group.Owner.UserId, "ExpenseEdited", null, "{\"currency\": \"MKD\"}", changes);
+
+            await DeletionSteps.RequestAndPurgeAsync(_app, group.Member.Client, group.Member.UserId, DeletionRequests.FormerMember);
+
+            Assert.Equal(expected, await DeletionRows.EventValueAsync(_app, eventId, "changes->0->>'old'"));
+            Assert.Equal(expected, await DeletionRows.EventValueAsync(_app, eventId, "changes->0->>'new'"));
+        }
+
         [Fact]
         public async Task Purge_FormerMember_TitleAndNoteChangesEqualToTheNameAreFreeTextAndStay()
         {
@@ -240,10 +262,10 @@ namespace Kvit.Api.Tests.AccountDeletion
             Assert.True(events.GetArrayLength() >= 3);
         }
 
-        private async Task<ExpenseGroup> GroupWithLeaverAsync()
+        private async Task<ExpenseGroup> GroupWithLeaverAsync(string leaverName = OldName)
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync("Marko");
-            await UserRows.SetDisplayNameAsync(_app, group.Member.UserId, OldName);
+            await UserRows.SetDisplayNameAsync(_app, group.Member.UserId, leaverName);
 
             return group;
         }

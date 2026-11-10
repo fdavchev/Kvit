@@ -91,7 +91,7 @@ namespace Kvit.Api.Tests.OwnerTools
         }
 
         [Fact]
-        public async Task EraseName_Person_WritesOneLogRowWithTheNameFromBeforeTheChange()
+        public async Task EraseName_Person_WritesOneLogRowWithFormerMemberInsteadOfTheErasedName()
         {
             SignedInUser admin = await _app.SharedAdminAsync();
             SignedInUser person = await _app.SignUpAsync("Zorica Petrovska");
@@ -99,7 +99,94 @@ namespace Kvit.Api.Tests.OwnerTools
             await OwnerToolsSteps.EraseNameAsync(admin, person.UserId, "  Asked by email  ");
 
             StoredAction row = Assert.Single(await OwnerToolsRows.ActionsAboutAsync(_app, person.UserId));
-            Assert.Equal(new StoredAction(admin.UserId, "NameErased", person.UserId, null, "Zorica Petrovska", "Asked by email", _app.Clock.GetUtcNow()), row);
+            Assert.Equal(new StoredAction(admin.UserId, "NameErased", person.UserId, null, DeletionRequests.FormerMemberEnglish, "Asked by email", _app.Clock.GetUtcNow()), row);
+        }
+
+        [Fact]
+        public async Task EraseName_PersonWhoUsesMacedonian_TheLogRowStillSaysFormerMemberInEnglish()
+        {
+            SignedInUser admin = await _app.SharedAdminAsync();
+            SignedInUser person = await _app.SignUpAsync("Зорица Петровска");
+            await AuthRequests.ChangeLanguageAsync(person.Client, "mk");
+
+            await OwnerToolsSteps.EraseNameAsync(admin, person.UserId);
+
+            Assert.Equal(DeletionRequests.FormerMemberEnglish, Assert.Single(await OwnerToolsRows.ActionsAboutAsync(_app, person.UserId)).TargetLabel);
+        }
+
+        [Fact]
+        public async Task EraseName_PersonWithEarlierSuspendRows_NoRowAboutThemShowsTheOldNameAnyMore()
+        {
+            SignedInUser admin = await _app.SharedAdminAsync();
+            SignedInUser person = await _app.SignUpAsync("Zorica Petrovska");
+            await OwnerToolsSteps.SuspendAsync(admin, person.UserId);
+            await OwnerToolsSteps.UnsuspendAsync(admin, person.UserId);
+
+            await OwnerToolsSteps.EraseNameAsync(admin, person.UserId);
+
+            List<StoredAction> rows = await OwnerToolsRows.ActionsAboutAsync(_app, person.UserId);
+            Assert.Equal(["Suspended", "Unsuspended", "NameErased"], rows.Select(row => row.Action));
+            Assert.All(rows, row => Assert.Equal(DeletionRequests.FormerMemberEnglish, row.TargetLabel));
+            HttpResponseMessage log = await OwnerToolsRequests.LogAsync(admin.Client);
+            Assert.DoesNotContain("Zorica Petrovska", await log.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public async Task EraseName_Person_LeavesLogRowsAboutOtherPeopleUnchanged()
+        {
+            SignedInUser admin = await _app.SharedAdminAsync();
+            SignedInUser person = await _app.SignUpAsync("Zorica Petrovska");
+            SignedInUser bystander = await _app.SignUpAsync("Dragan Ilievski");
+            await OwnerToolsSteps.SuspendAsync(admin, bystander.UserId);
+
+            await OwnerToolsSteps.EraseNameAsync(admin, person.UserId);
+
+            Assert.Equal("Dragan Ilievski", Assert.Single(await OwnerToolsRows.ActionsAboutAsync(_app, bystander.UserId)).TargetLabel);
+        }
+
+        [Fact]
+        public async Task EraseName_WhenTheLogRowCannotBeSaved_Answers500AndThePurgeIsUndone()
+        {
+            SignedInUser admin = await _app.SharedAdminAsync();
+            SignedInUser person = await _app.SignUpAsync("Zorica Petrovska");
+            string userBefore = await DeletionRows.SnapshotOfUserRowAsync(_app, person.UserId);
+            string tablesBefore = await DeletionRows.SnapshotOfEveryTableExceptUsersAsync(_app);
+            await _app.ExecuteAsync(
+                "CREATE OR REPLACE FUNCTION block_name_erased_row() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action = 'NameErased' THEN RAISE EXCEPTION 'log row is blocked by the test'; END IF; RETURN NEW; END $$; "
+                + "DROP TRIGGER IF EXISTS block_name_erased_row ON admin_actions; "
+                + "CREATE TRIGGER block_name_erased_row BEFORE INSERT ON admin_actions FOR EACH ROW EXECUTE FUNCTION block_name_erased_row();");
+
+            HttpResponseMessage response;
+            try
+            {
+                response = await OwnerToolsRequests.EraseNameAsync(admin.Client, person.UserId);
+            }
+            finally
+            {
+                await _app.ExecuteAsync("DROP TRIGGER IF EXISTS block_name_erased_row ON admin_actions");
+            }
+
+            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+            Assert.Contains("log row is blocked by the test", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
+            Assert.Equal(userBefore, await DeletionRows.SnapshotOfUserRowAsync(_app, person.UserId));
+            Assert.Equal(tablesBefore, await DeletionRows.SnapshotOfEveryTableExceptUsersAsync(_app));
+            Assert.Equal(HttpStatusCode.OK, (await AuthRequests.GetMeAsync(person.Client)).StatusCode);
+        }
+
+        [Fact]
+        public async Task OwnDeletion_PurgedAfterThirtyDays_EarlierSuspendRowsNoLongerShowTheName()
+        {
+            SignedInUser admin = await _app.SharedAdminAsync();
+            SignedInUser person = await _app.SignUpAsync("Zorica Petrovska");
+            await OwnerToolsSteps.SuspendAsync(admin, person.UserId);
+            await OwnerToolsSteps.UnsuspendAsync(admin, person.UserId);
+            DateTimeOffset requestedAt = _app.Clock.GetUtcNow();
+            await DeletionSteps.RequestAsync(person.Client, DeletionRequests.KeepName);
+
+            await AccountPurges.PurgeDueAsync(_app, requestedAt + DeletionRequests.GraceTime);
+
+            Assert.NotNull((await DeletionRows.ReadAsync(_app, person.UserId)).PurgedAt);
+            Assert.All(await OwnerToolsRows.ActionsAboutAsync(_app, person.UserId), row => Assert.Equal(DeletionRequests.FormerMemberEnglish, row.TargetLabel));
         }
 
         [Fact]

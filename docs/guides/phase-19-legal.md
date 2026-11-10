@@ -18,7 +18,7 @@ All three are long random texts. Make them in PowerShell (it prints one text; co
 ```
 - [ ] **`Cleanup__Secret` on Render:** Render dashboard, your service, **Environment**, add `Cleanup__Secret` = a new random text. (Two underscores.)
 - [ ] **`CLEANUP_SECRET` on GitHub:** repository, **Settings**, **Secrets and variables**, **Actions**, **New repository secret**, name `CLEANUP_SECRET`, **the same text** as on Render.
-- [ ] **`BACKUP_PASSPHRASE` on GitHub:** a second new repository secret with a different random text of your own. **Write this one in your notes twice (two places). If you lose it, the backups are useless.**
+- [ ] **`BACKUP_PASSPHRASE` on GitHub:** a second new repository secret with a different random text of your own, **at least 30 characters, truly random (a password manager's generator, not a sentence you can remember)**: the repository is public, so anyone with a GitHub account can download the locked backup file, and only this text keeps it closed. **Write this one in your notes twice (two places). If you lose it, the backups are useless.**
 - [ ] On GitHub: repository **Settings**, **Code security**, turn on **Private vulnerability reporting** (so `SECURITY.md` is true).
 
 ## C. Push and merge
@@ -45,7 +45,7 @@ All three are long random texts. Make them in PowerShell (it prints one text; co
   >
   > Македонски: Здраво, водам мала бесплатна апликација за делење трошоци меѓу пријатели (Kvit, kvit-mk.pages.dev). Прикажува износи во денари и евра и автоматски ја презема дневната курсна листа од nbrm.mk, околу три пати дневно, а НБРСМ е наведена како извор. Дали ваквото користење е во ред и дали има страница или услуга што ја препорачувате? Благодарам. Filip Davchev, kvit.support@gmail.com
 - [ ] **Read the Macedonian texts** (they are drafts, Claude is not a native speaker). They are in `src/web/src/core/i18n/locales/mk.json` under `terms`, `privacy`, `legal`, `ownerTools`, `suspended`, and the new lines in `settings` (download, delete), `auth.deletionCancelled`, `group.closedByAdmin`, `groupSettings.report*`, `addName.hint` and `errors` (the new codes). The two long documents are also in `docs/legal/terms-2026-11-04.md` and `privacy-2026-11-04.md` (English first, then Macedonian). Changing a text means changing its pinned test too: ask Claude.
-- [ ] **Decide** the questions at the end of the report (including whether `START-HERE-PROMPT.md` stays in the public repository).
+- [x] **Decided 2026-11-10:** the questions at the end of the report (`START-HERE-PROMPT.md` leaves the public repository; the other answers are in `DECISIONS.md`, "Step 11").
 
 ## F. Yearly and later
 - [ ] **Before 2027-09-30:** renew the date in `src/web/public/.well-known/security.txt` (a test turns red when it is due).

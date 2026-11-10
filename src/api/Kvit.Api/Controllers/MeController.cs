@@ -26,6 +26,7 @@ namespace Kvit.Api.Controllers
 
         [HttpGet("export")]
         [EnableRateLimiting("export")]
+        [AllowedWhileSuspended]
         public async Task<ActionResult<MyDataExportResponse>> Export(CancellationToken cancellationToken)
         {
             Result<MyDataExportResponse> result = await _dispatcher.Query<GetMyDataExportQuery, MyDataExportResponse>(new GetMyDataExportQuery(), cancellationToken);
@@ -68,6 +69,7 @@ namespace Kvit.Api.Controllers
         }
 
         [HttpPost("delete")]
+        [AllowedWhileSuspended]
         public async Task<ActionResult> Delete(DeleteAccountRequest request, CancellationToken cancellationToken)
         {
             Result result = await _dispatcher.Send(new DeleteAccountCommand(request.NameChoice), cancellationToken);
