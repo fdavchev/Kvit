@@ -53,6 +53,14 @@ export const finishedGroupWithoutAnswers: Group = groupOf({
   closingWaitingFor: [],
 })
 
+export const closedByAdminGroup: Group = groupOf({ memberCount: 5, closedByAdmin: true })
+
+export const closedByAdminFinishedGroup: Group = { ...finishedGroup, closedByAdmin: true }
+
+export const closedByAdminClosingGroup: Group = { ...closingGroup, closedByAdmin: true }
+
+export const closedByAdminSingleMemberGroup: Group = groupOf({ memberCount: 1, closedByAdmin: true })
+
 export function asMemberOf(group: Group): Group {
   return { ...group, isOwner: false }
 }
@@ -180,6 +188,12 @@ export const finishedBarText: ClosingText = {
   key: 'groups.finishedReadOnly',
   en: 'Finished · read-only',
   mk: 'Завршена · само за читање',
+}
+
+export const closedByAdminBarText: ClosingText = {
+  key: 'group.closedByAdmin',
+  en: '🔒 Closed by the owner of Kvit · read-only',
+  mk: '🔒 Затворена од сопственикот на Kvit · само за читање',
 }
 
 export const closingActivityTexts = {

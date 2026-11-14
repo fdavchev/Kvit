@@ -8,6 +8,7 @@ import {
   readList,
   readObject,
   readOneOf,
+  readOrNullWhenMissing,
   readText,
   readYesNo,
   type Fields,
@@ -62,6 +63,7 @@ export interface Group {
   closingWaitingFor: ClosingPerson[]
   canStartClosing: boolean
   countsInBudget: boolean
+  closedByAdmin: boolean
   planAmountMinor: number | null
   planCurrency: Currency | null
 }
@@ -194,6 +196,7 @@ function parseGroup(body: unknown): Group {
     closingWaitingFor: readClosingPeople(fields, 'closingWaitingFor', what),
     canStartClosing: readYesNo(fields, 'canStartClosing', what),
     countsInBudget: readYesNo(fields, 'countsInBudget', what),
+    closedByAdmin: readOrNullWhenMissing(fields, 'closedByAdmin', what, readYesNo) ?? false,
     ...readGroupPlan(fields, what),
   }
 }

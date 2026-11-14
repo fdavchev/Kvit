@@ -78,7 +78,7 @@ namespace Kvit.Api.Tests.GroupSpending
         }
 
         [Fact]
-        public async Task GetGroup_AfterTheSpendingAnswer_HasExactlyTheEighteenGroupFields()
+        public async Task GetGroup_AfterTheSpendingAnswer_HasExactlyTheNineteenGroupFields()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             await GroupSpendingSteps.AddAsync(_app, group, ExpenseInputs.OneThousandMkd, categoryId: GroupSpendingSteps.Food);

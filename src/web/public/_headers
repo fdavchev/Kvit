@@ -3,3 +3,6 @@
   Cross-Origin-Opener-Policy: same-origin-allow-popups
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+
+/third-party-licenses.txt
+  Content-Type: text/plain; charset=utf-8

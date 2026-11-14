@@ -193,8 +193,9 @@
   --avatar-9: var(--category-gray);
   --bottom-bar-height: 0px;
   --outbox-bar-space: 0px;
+  --terms-pill-space: 0px;
   --rail-width: 0px;
-  --toast-offset-bottom: calc(16px + env(safe-area-inset-bottom) + var(--outbox-bar-space));
+  --toast-offset-bottom: calc(16px + env(safe-area-inset-bottom) + var(--outbox-bar-space) + var(--terms-pill-space));
   --radius: 0.625rem;
 
   @variant dark {
@@ -264,7 +265,7 @@
 
 :root:has([data-bottom-bar]) {
   --bottom-bar-height: calc(82px + env(safe-area-inset-bottom));
-  --toast-offset-bottom: calc(var(--bottom-bar-height) + 4px + var(--outbox-bar-space));
+  --toast-offset-bottom: calc(var(--bottom-bar-height) + 4px + var(--outbox-bar-space) + var(--terms-pill-space));
 }
 
 :root:has([data-outbox-bar]) {
@@ -328,16 +329,16 @@ html [data-sonner-toast][data-styled='true']:focus-visible {
 @utility screen-padding {
   padding-top: max(12px, env(safe-area-inset-top));
   padding-right: max(24px, env(safe-area-inset-right));
-  padding-bottom: calc(max(24px, calc(env(safe-area-inset-bottom) + 12px)) + var(--outbox-bar-space));
+  padding-bottom: calc(max(24px, calc(env(safe-area-inset-bottom) + 12px)) + var(--outbox-bar-space) + var(--terms-pill-space));
   padding-left: max(24px, env(safe-area-inset-left));
   @variant md {
     padding-top: max(64px, env(safe-area-inset-top));
-    padding-bottom: calc(max(48px, calc(env(safe-area-inset-bottom) + 12px)) + var(--outbox-bar-space));
+    padding-bottom: calc(max(48px, calc(env(safe-area-inset-bottom) + 12px)) + var(--outbox-bar-space) + var(--terms-pill-space));
   }
   @variant lg {
     padding-top: max(clamp(2.5rem, 5vw, 4.5rem), env(safe-area-inset-top));
     padding-right: max(clamp(1.5rem, 3vw, 3rem), env(safe-area-inset-right));
-    padding-bottom: max(clamp(2rem, 4vw, 3.5rem) + var(--outbox-bar-space), calc(env(safe-area-inset-bottom) + 12px + var(--outbox-bar-space)));
+    padding-bottom: max(clamp(2rem, 4vw, 3.5rem) + var(--outbox-bar-space) + var(--terms-pill-space), calc(env(safe-area-inset-bottom) + 12px + var(--outbox-bar-space) + var(--terms-pill-space)));
     padding-left: max(clamp(1.5rem, 3vw, 3rem), env(safe-area-inset-left));
   }
 }
@@ -375,7 +376,7 @@ html [data-sonner-toast][data-styled='true']:focus-visible {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     caret-color: var(--caret);
-    scroll-padding-bottom: calc(var(--bottom-bar-height) + var(--outbox-bar-space));
+    scroll-padding-bottom: calc(var(--bottom-bar-height) + var(--outbox-bar-space) + var(--terms-pill-space));
     @variant lg {
       font-size: clamp(100%, 87.5% + 0.25vw, 112.5%);
     }

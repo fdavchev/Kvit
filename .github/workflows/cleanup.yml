@@ -1,0 +1,25 @@
+name: Cleanup
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run the daily cleanup
+        env:
+          CLEANUP_SECRET: ${{ secrets.CLEANUP_SECRET }}
+        run: |
+          if [ -z "$CLEANUP_SECRET" ]; then
+            echo "::error::The repository secret CLEANUP_SECRET is missing or empty, so the cleanup cannot be started. Add it under Settings > Secrets and variables > Actions > Secrets, with the same value as Cleanup__Secret on Render."
+            exit 1
+          fi
+          curl -X POST --fail --silent --show-error --max-time 150 --retry 3 --retry-delay 30 \
+            -H "X-Kvit-Cleanup-Secret: $CLEANUP_SECRET" \
+            https://kvit-mk.pages.dev/api/internal/cleanup

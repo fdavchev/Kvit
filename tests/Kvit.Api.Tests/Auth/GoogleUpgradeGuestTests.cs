@@ -25,7 +25,8 @@ namespace Kvit.Api.Tests.Auth
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             JsonElement body = await AuthRequests.ReadJsonAsync(response);
-            Assert.Equal(["budgetTotalCurrency", "displayName", "email", "hasPassword", "id", "isAdmin", "isGuest", "language", "mustChangePassword", "pictureUrl", "timeZone"], [.. body.EnumerateObject().Select(property => property.Name).Order(StringComparer.Ordinal)]);
+            string[] propertyNames = [.. body.EnumerateObject().Select(property => property.Name).Order(StringComparer.Ordinal)];
+            Assert.Equal(MeFields.SortedAccountFieldNames, propertyNames);
             Assert.Equal(guest.UserId, body.GetProperty("id").GetGuid());
             Assert.Equal(identity.Email, body.GetProperty("email").GetString());
             Assert.Equal(FreeName, body.GetProperty("displayName").GetString());

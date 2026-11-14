@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { meQueryKey } from '@/core/auth/useMe'
+import { legalVersion } from '@/core/legal/legalInfo'
 import type { Me } from '@/core/services/me/meService'
 
 export const testMe: Me & { email: string } = {
@@ -13,6 +14,11 @@ export const testMe: Me & { email: string } = {
   pictureUrl: null,
   isGuest: false,
   isAdmin: false,
+  termsVersion: legalVersion,
+  termsUpToDate: true,
+  termsUpdateIsMaterial: false,
+  deletionCancelled: false,
+  isSuspended: false,
   budgetTotalCurrency: null,
 }
 
@@ -27,10 +33,21 @@ export const testGuestMe: Me = {
   pictureUrl: null,
   isGuest: true,
   isAdmin: false,
+  termsVersion: legalVersion,
+  termsUpToDate: true,
+  termsUpdateIsMaterial: false,
+  deletionCancelled: false,
+  isSuspended: false,
   budgetTotalCurrency: null,
 }
 
 export const testAdminMe: Me = { ...testMe, isAdmin: true }
+
+export const testSuspendedMe: Me = { ...testMe, isSuspended: true }
+
+export const testMeWithOldTerms: Me = { ...testMe, termsVersion: null, termsUpToDate: false }
+
+export const testMeWithMaterialTerms: Me = { ...testMeWithOldTerms, termsUpdateIsMaterial: true }
 
 export function seedMe(me: Me | null): (queryClient: QueryClient) => void {
   return (queryClient) => {

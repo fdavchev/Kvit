@@ -94,6 +94,7 @@ describe('routes followed through the real route table', () => {
     [routes.signUp, 'heading', 'auth.signUp.title'],
     [routes.logIn, 'heading', 'auth.logIn.title'],
     [routes.privacy, 'heading', 'privacy.title'],
+    [routes.terms, 'heading', 'terms.title'],
   ])('shows the screen at %s to a visitor without asking who is signed in', async (path, role, key) => {
     const fetchMock = stubFetch(signedOutAnswer)
 

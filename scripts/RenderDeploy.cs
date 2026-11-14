@@ -1,3 +1,5 @@
+#:property PublishAot=false
+
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;

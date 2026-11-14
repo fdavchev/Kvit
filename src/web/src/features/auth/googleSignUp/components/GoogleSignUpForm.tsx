@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
 import { readGoogleProfile } from '@/core/google/readGoogleProfile'
 import { pathAfterSignIn, pathBeforeSignIn } from '@/core/invites/joinRoundTrip'
+import { AgreeLine } from '@/features/legal/components/AgreeLine'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitForm } from '@/shared/components/KvitForm'
 import { KvitScreen } from '@/shared/components/KvitScreen'
@@ -40,6 +41,7 @@ export function GoogleSignUpForm({ idToken, joinToken }: GoogleSignUpFormProps) 
         isPending={signUp.isPending}
         errorMessage={signUp.isError ? t(errorMessageKey(signUp.error)) : null}
         onSubmit={submit}
+        footer={<AgreeLine />}
       >
         <KvitTextField
           id="google-sign-up-name"

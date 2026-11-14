@@ -57,9 +57,13 @@ namespace Kvit.Api.Registers
 
             AuthorizationPolicy signedInPolicy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .AddRequirements(new PasswordChangedRequirement())
+                .AddRequirements(new PasswordChangedRequirement(), new NotSuspendedRequirement())
                 .Build();
             AuthorizationPolicy adminStatsViewPolicy = new AuthorizationPolicyBuilder()
+                .Combine(signedInPolicy)
+                .RequireRole(Roles.Admin)
+                .Build();
+            AuthorizationPolicy ownerToolsUsePolicy = new AuthorizationPolicyBuilder()
                 .Combine(signedInPolicy)
                 .RequireRole(Roles.Admin)
                 .Build();
@@ -68,8 +72,9 @@ namespace Kvit.Api.Registers
                 options.DefaultPolicy = signedInPolicy;
                 options.FallbackPolicy = signedInPolicy;
                 options.AddPolicy(Permissions.AdminStatsView, adminStatsViewPolicy);
+                options.AddPolicy(Permissions.OwnerToolsUse, ownerToolsUsePolicy);
             });
-            services.AddSingleton<IAuthorizationMiddlewareResultHandler, MustChangePasswordResultHandler>();
+            services.AddSingleton<IAuthorizationMiddlewareResultHandler, AccountStateResultHandler>();
 
             return services;
         }

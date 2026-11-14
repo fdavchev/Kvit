@@ -385,6 +385,37 @@ describe('ExpenseDetailScreen', () => {
 
       expect(screen.queryByText(/1 EUR =/)).toBeNull()
     })
+
+    it.each(languages)('shows the rates source note under the rate line of an EUR expense, before the History heading (%s)', async (language) => {
+      await renderDetail({ language, detail: groceriesDetail })
+      await showsDetail('Groceries')
+
+      const rateLine = screen.getByText(/1 EUR = 61/)
+      const note = screen.getByText(translated(language, 'legal.ratesSource'))
+      const historyHeading = screen.getByRole('heading', {
+        level: 2,
+        name: translated(language, 'expense.history'),
+      })
+
+      expect(rateLine.compareDocumentPosition(note)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+      expect(note.compareDocumentPosition(historyHeading)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    })
+
+    it('shows the rates source note in grey', async () => {
+      await renderDetail({ detail: groceriesDetail })
+      await showsDetail('Groceries')
+
+      const note = screen.getByText(translated('en', 'legal.ratesSource'))
+
+      expect(Array.from(note.classList)).toContain('text-muted-foreground')
+    })
+
+    it.each(languages)('shows no rates source note for an MKD expense, because no rate is shown (%s)', async (language) => {
+      await renderDetail({ language })
+      await showsDetail()
+
+      expect(screen.queryByText(translated(language, 'legal.ratesSource'))).toBeNull()
+    })
   })
 
   describe('the history', () => {

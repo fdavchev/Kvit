@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phase 19 mockup: legal pages and data rights</title>
+<style>
+  :root {
+    --bg: #ffd9a8; --fg: #3d2610; --card: #fff1dc; --line: #9c6f47; --primary: #b54a00; --primary-fg: #fff;
+    --muted: #7a3300; --pill: #fff; --danger: #b71f1f; --danger-fg: #fff; --field: #fff; --glass: rgba(255,241,220,.92);
+  }
+  [data-theme='dark'] {
+    --bg: #1f1816; --fg: #fff1dc; --card: #2c2220; --line: #8d7d77; --primary: #ffa53a; --primary-fg: #3d2610;
+    --muted: #ffd9a8; --pill: #423531; --danger: #ff8a80; --danger-fg: #3d2610; --field: #161110; --glass: rgba(44,34,32,.94);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.4 system-ui, sans-serif; }
+  .page { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 24px; margin: 4px 0 8px; }
+  h2 { font-size: 19px; margin: 0 0 4px; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; position: sticky; top: 0; background: var(--bg); padding: 8px 0; z-index: 5; }
+  .intro { font-size: 14px; color: var(--muted); margin: 0 0 16px; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .theme, .opt { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--pill); }
+  .opt[aria-pressed='true'] { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+  section.block { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 20px; }
+  .lean { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+  .opts { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 12px; }
+  .stage { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+  .desc { flex: 1 1 260px; font-size: 14px; }
+  .desc p { margin: 0 0 8px; }
+  .phone { width: 340px; max-width: 100%; min-height: 420px; background: var(--bg); border: 2px solid var(--line); border-radius: 22px; padding: 14px; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+  .phone h3 { margin: 4px 0 0; font-size: 20px; }
+  .panel { display: none; } .panel.on { display: block; }
+  .phone .panel.on { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .btn { min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--pill); padding: 0 14px; width: 100%; text-align: center; }
+  .btn.primary { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+  .btn.danger { background: var(--danger); color: var(--danger-fg); border-color: var(--danger); }
+  .btn.google { background: #fff; color: #1f1f1f; border-color: #dadce0; }
+  .link { background: none; border: 0; text-decoration: underline; color: var(--muted); min-height: 44px; }
+  .grey { font-size: 12px; color: var(--muted); text-align: center; margin: 0; }
+  .field { background: var(--field); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; min-height: 44px; padding: 0 12px; width: 100%; font: inherit; }
+  label.lbl { font-size: 13px; color: var(--muted); display: block; margin-bottom: 2px; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; min-height: 48px; padding: 8px 12px; width: 100%; text-align: left; }
+  .cardbox { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .pill { position: absolute; left: 14px; right: 14px; bottom: 60px; background: var(--glass); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; display: flex; gap: 8px; justify-content: space-between; align-items: center; font-size: 13px; box-shadow: 0 4px 14px rgba(61,38,16,.2); }
+  .pill.top { bottom: auto; top: 12px; }
+  .pill button { min-height: 36px; border-radius: 999px; border: 1px solid var(--line); background: var(--primary); color: var(--primary-fg); padding: 0 14px; }
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: 48px; background: var(--card); border-top: 1px solid var(--line); display: flex; justify-content: space-around; align-items: center; font-size: 13px; color: var(--muted); }
+  .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; }
+  .scrim.on { display: block; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--glass); border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; padding: 16px 14px 18px; display: none; flex-direction: column; gap: 10px; box-shadow: 0 -6px 20px rgba(0,0,0,.2); }
+  .sheet.on { display: flex; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--card); min-height: 48px; cursor: pointer; }
+  .choice input { margin-top: 4px; width: 20px; height: 20px; accent-color: var(--primary); }
+  .choice small { display: block; color: var(--muted); font-size: 12px; }
+  .toast { position: absolute; left: 14px; right: 14px; bottom: 60px; background: var(--fg); color: var(--bg); border-radius: 12px; padding: 10px 14px; font-size: 14px; display: none; }
+  .toast.on { display: block; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--pill); }
+  .red { border-color: var(--danger); }
+  .small { font-size: 12px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td, th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs .chip[aria-pressed='true'] { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+  .reset { font-size: 12px; }
+  @media (prefers-reduced-motion: no-preference) { .sheet.on { animation: up .2s ease-out; } @keyframes up { from { transform: translateY(40px); opacity: 0; } } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top"><h1>Phase 19 mockup</h1><button class="theme" id="theme">Light / dark</button></div>
+  <p class="intro">Made-up screens, English only (the Macedonian texts come in Step 1). Every section has Option A and Option B: tap the A / B buttons, then tap inside the phone. Colours are the app's real ones. For each section tell Claude: A, B, or "other: ...". Claude's lean is written under each title. Nothing here is legal advice.</p>
+
+  <!-- a -->
+  <section class="block" data-g="a">
+    <h2>a. The "agree" line and the 16+ line</h2>
+    <p class="lean">Claude's lean: B. Every way of making an account is covered, and Welcome stays clean. Not shown on Log in.</p>
+    <div class="opts"><button class="opt" data-o="A" aria-pressed="true">A: on Welcome and on the 3 account screens</button><button class="opt" data-o="B" aria-pressed="false">B: only on the 3 account screens</button></div>
+    <div class="stage">
+      <div class="phone"><h3>Welcome</h3>
+        <p style="margin:0;color:var(--muted)">We're even.</p>
+        <div style="flex:1"></div>
+        <button class="btn google">Sign in with Google</button>
+        <p class="grey" style="margin:0">or</p>
+        <button class="btn">Sign up with email</button>
+        <div class="panel" data-p="A"><p class="grey">By continuing you agree to the <u>Terms</u> and <u>Privacy Policy</u>. Kvit is for people aged 16 and over.</p></div>
+        <button class="link">I already have an account</button>
+        <p class="grey"><u>Terms</u> &middot; <u>Privacy</u></p>
+      </div>
+      <div class="phone"><h3>Create account</h3>
+        <div><label class="lbl">Your name</label><input class="field" value="Filip"></div>
+        <div><label class="lbl">Email</label><input class="field" value="filip@example.com"></div>
+        <div><label class="lbl">Password</label><input class="field" type="password" value="Abcdefg1"></div>
+        <button class="btn primary">Create account</button>
+        <p class="grey">By continuing you agree to the <u>Terms</u> and <u>Privacy Policy</u>. Kvit is for people aged 16 and over.</p>
+        <p class="small" style="text-align:center">Same line under Google "Continue" ("Almost there") and under the guest "Join" button. Log in has no line.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- b -->
+  <section class="block" data-g="b">
+    <h2>b. Delete my account</h2>
+    <p class="lean">Claude's lean: B. It tells the person the exact date and how to undo it. Tap "Delete my account", choose a name option, confirm. Then use "Pretend I log in again".</p>
+    <div class="opts"><button class="opt" data-o="A" aria-pressed="true">A: straight to Welcome + toast; log-in cancels silently</button><button class="opt" data-o="B" aria-pressed="false">B: "deleted on 4 December" screen; log-in asks "Cancel deletion?"</button></div>
+    <div class="stage">
+      <div class="phone" id="b-phone"><h3>Settings</h3>
+        <button class="row">Change password <span>&rsaquo;</span></button>
+        <button class="row">Download my data <span>&rsaquo;</span></button>
+        <button class="row">Terms &middot; Privacy <span>&rsaquo;</span></button>
+        <div style="flex:1"></div>
+        <button class="row red" id="b-open" style="color:var(--danger)">Delete my account <span>&rsaquo;</span></button>
+        <button class="btn">Log out</button>
+        <div class="scrim" id="b-scrim"></div>
+        <div class="sheet" id="b-sheet">
+          <strong>Delete your account?</strong>
+          <p class="small" style="margin:0">Your name in groups:</p>
+          <label class="choice"><input type="radio" name="bname" checked><span>Keep my name<small>Friends still see "Filip paid 2,400" in old expenses.</small></span></label>
+          <label class="choice"><input type="radio" name="bname"><span>Show as "Former member"<small>Your name is replaced everywhere, also in the activity list.</small></span></label>
+          <p class="small" style="margin:0">Right away you can't sign in. After 30 days your email, login, Google link, budget and sign-in sessions are removed. Shared expenses stay, because other people's balances need them. Log in within 30 days to change your mind.</p>
+          <button class="btn danger" id="b-confirm">Delete my account</button>
+          <button class="link" id="b-cancel">Cancel</button>
+        </div>
+      </div>
+      <div class="phone" id="b-after" style="display:none"><h3 id="b-after-title">Welcome</h3>
+        <div class="panel" data-p="A"><p style="margin:0;color:var(--muted)">We're even.</p><div style="flex:1;min-height:200px"></div><button class="btn google">Sign in with Google</button><button class="btn">Sign up with email</button>
+          <div class="toast on" style="position:static;display:block">Deleted. Log in within 30 days to undo.</div></div>
+        <div class="panel" data-p="B"><div class="cardbox"><strong>Your account will be deleted on 4 December 2026.</strong><p class="small">Until then nobody can sign in with it. Changed your mind? Log in.</p></div><button class="btn primary">Log in</button><button class="btn">Back to start</button></div>
+        <button class="btn" id="b-login" style="margin-top:auto">Pretend I log in again</button>
+        <div id="b-login-result" class="cardbox" style="display:none"></div>
+      </div>
+      <div style="flex-basis:100%"><h3 style="margin:8px 0">Side by side: what you see after confirming, and when you log in again</h3></div>
+      <div class="phone" style="min-height:0"><strong>Option A</strong>
+        <div class="cardbox small"><strong>1. After tapping "Delete my account":</strong><br>You are sent to the Welcome screen at once. A message says: "Deleted. Log in within 30 days to undo."</div>
+        <div class="cardbox small"><strong>2. Logging in within 30 days:</strong><br>You are simply in again. A message says "Deletion cancelled. Your account is back." Nothing to decide.</div>
+        <div class="cardbox small"><strong>Good:</strong> fewest taps. <strong>Bad:</strong> the date is never shown, and a person who logs in by accident cancels the deletion without noticing.</div>
+      </div>
+      <div class="phone" style="min-height:0"><strong>Option B</strong>
+        <div class="cardbox small"><strong>1. After tapping "Delete my account":</strong><br>A screen says: "Your account will be deleted on 4 December 2026. Nobody can sign in until then. Changed your mind? Log in."</div>
+        <div class="cardbox small"><strong>2. Logging in within 30 days:</strong><br>A screen asks "Cancel the deletion? Your account is due to be deleted on 4 December." with two buttons: "Yes, keep my account" / "No, log out".</div>
+        <div class="cardbox small"><strong>Good:</strong> the person always knows the date and can't cancel by accident. <strong>Bad:</strong> one extra tap when changing your mind.</div>
+      </div>
+      <div class="desc"><p><strong>Why this matters:</strong> the law expects deletion within a month; tapping must switch the account off at once. "Keep my name" is preselected (your decision).</p><p class="reset"><button class="link" id="b-reset">Reset this demo</button></p></div>
+    </div>
+  </section>
+
+  <!-- c -->
+  <section class="block" data-g="c">
+    <h2>c. Download my data</h2>
+    <p class="lean">Claude's lean: B. One tap either way; the grey line tells people what they get, which the law asks for.</p>
+    <div class="opts"><button class="opt" data-o="A" aria-pressed="true">A: plain row</button><button class="opt" data-o="B" aria-pressed="false">B: row + grey line</button></div>
+    <div class="stage">
+      <div class="phone"><h3>Settings</h3>
+        <button class="row">Change password <span>&rsaquo;</span></button>
+        <button class="row" id="c-dl">Download my data <span>&darr;</span></button>
+        <div class="panel" data-p="B"><p class="small" style="margin:-4px 4px 0">Your profile, personal budget and your groups, as a file. Other people's emails are not in it.</p></div>
+        <button class="row">Terms &middot; Privacy <span>&rsaquo;</span></button>
+        <div class="toast" id="c-toast">kvit-my-data.json saved</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- d -->
+  <section class="block" data-g="d">
+    <h2>d. "Terms changed" notice</h2>
+    <p class="lean">Claude's lean: A for the small change (the same place as the "waiting changes" bar people already know), and the sheet for a big change. Tap OK; tap "Show a big change" to see the sheet.</p>
+    <div class="opts"><button class="opt" data-o="A" aria-pressed="true">A: pill above the tab bar</button><button class="opt" data-o="B" aria-pressed="false">B: pill at the top</button></div>
+    <div class="stage">
+      <div class="phone" id="d-phone"><h3>Home</h3>
+        <div class="cardbox">Trip to Ohrid &middot; You are owed 1,200 MKD</div>
+        <div class="cardbox">Flat &middot; You owe 300 MKD</div>
+        <div class="panel" data-p="A"><div class="pill" id="d-pillA"><span>We updated the Terms. <u>Read</u></span><button class="d-ok">OK</button></div></div>
+        <div class="panel" data-p="B"><div class="pill top" id="d-pillB"><span>We updated the Terms. <u>Read</u></span><button class="d-ok">OK</button></div></div>
+        <div class="tabbar"><span>Home</span><span>Groups</span><span>Budget</span><span>Settings</span></div>
+        <div class="scrim" id="d-scrim"></div>
+        <div class="sheet" id="d-sheet"><strong>The Terms changed in a way that matters</strong><p class="small" style="margin:0">Example: Kvit now keeps a new kind of data. Please read it and agree to keep using Kvit.</p><button class="btn">Read the Terms</button><button class="btn primary" id="d-agree">I agree</button></div>
+      </div>
+      <div class="desc"><p><button class="opt" id="d-big">Show a big change</button> <button class="opt" id="d-again">Bring the small pill back</button></p><p class="small">Small change = thin pill, one OK tap, nothing blocks you. Big change (new data use, fees) = a sheet you must answer. After OK the accepted version is saved on your account.</p></div>
+    </div>
+  </section>
+
+  <!-- e -->
+  <section class="block" data-g="e">
+    <h2>e. Hint when adding a name for someone else</h2>
+    <p class="lean">Claude's lean: B. One short hint, less to read. The first sentence is today's text.</p>
+    <div class="opts"><button class="opt" data-o="A" aria-pressed="true">A: two grey lines</button><button class="opt" data-o="B" aria-pressed="false">B: one merged line</button></div>
+    <div class="stage">
+      <div class="phone" id="e-phone"><h3>Add a name</h3>
+        <div><label class="lbl">Name</label><input class="field" value="Grandma"></div>
+        <div class="panel" data-p="A"><p class="small" style="margin:-4px 0 0">For someone without Kvit, like Grandma.</p><p class="small" style="margin:2px 0 0">Add only people who are fine with it. They can ask to be removed.</p></div>
+        <div class="panel" data-p="B"><p class="small" style="margin:-4px 0 0">For someone without Kvit, like Grandma. Add only people who are fine with it.</p></div>
+        <button class="btn primary">Add</button><button class="link">Close</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- f -->
+  <section class="block" data-g="f">
+    <h2>f. "Report" a group</h2>
+    <p class="lean">Claude's lean: A. Rare action, so no clutter on the main group screen. Note: the app has no group menu today (only chips), so "menu" in the plan became one of these two places. Tap Report to see the email it opens.</p>
+    <div class="opts"><button class="opt" data-o="A" aria-pressed="true">A: row at the bottom of Group settings</button><button class="opt" data-o="B" aria-pressed="false">B: chip next to Group settings</button></div>
+    <div class="stage">
+      <div class="phone"><h3>Trip to Ohrid</h3>
+        <div class="panel" data-p="B"><div class="chips"><span class="chip">Members</span><span class="chip">Group settings</span><button class="chip f-report">Report</button></div></div>
+        <div class="panel" data-p="A"><div class="chips"><span class="chip">Members</span><span class="chip">Group settings</span></div><div class="cardbox" style="margin-top:8px">Group settings:<br><span class="small">Count my shares in my budget &middot; Leave group</span><br><br><button class="row f-report" style="color:var(--danger)">Report this group <span>&rsaquo;</span></button></div></div>
+        <div class="cardbox small" id="f-mail" style="display:none"><strong>Opens your email app:</strong><br>To: kvit.support@gmail.com<br>Subject: Report group<br>Body: "Group id: 7c1f-... Please tell us what is wrong:"</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- g -->
+  <section class="block" data-g="g">
+    <h2>g. "You were added by someone" banner</h2>
+    <p class="lean">Claude's lean: B (skip it). Nobody can put a real account into a group without that person tapping an invite link, and a claimed name already has Undo. The only case left is "someone typed my name and I claimed it". If you want protection there, A covers it.</p>
+    <div class="opts"><button class="opt" data-o="A" aria-pressed="true">A: banner after claiming a name</button><button class="opt" data-o="B" aria-pressed="false">B: skip it</button></div>
+    <div class="stage">
+      <div class="phone"><h3>Trip to Ohrid</h3>
+        <div class="panel" data-p="A"><div class="cardbox"><strong>Marko added you as "Filip".</strong><p class="small" style="margin:4px 0 8px">Not you?</p><button class="btn">Undo and leave</button></div></div>
+        <div class="panel" data-p="B"><div class="cardbox small">No banner. The first open of the group is the normal Expenses tab, as today.</div></div>
+        <div class="cardbox">Dinner &middot; 1,800 MKD &middot; Marko paid</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- h -->
+  <section class="block" data-g="h">
+    <h2>h. What a suspended person sees</h2>
+    <p class="lean">Claude's lean: A. It is the same place every time, and Log out is one tap. The API refuses everything except "me" and log out.</p>
+    <div class="opts"><button class="opt" data-o="A" aria-pressed="true">A: full screen</button><button class="opt" data-o="B" aria-pressed="false">B: Welcome with a red card</button></div>
+    <div class="stage">
+      <div class="phone"><div class="panel" data-p="A"><h3>Your account is suspended</h3><p style="margin:0">Contact kvit.support@gmail.com.</p><div style="flex:1;min-height:200px"></div><button class="btn">Log out</button></div>
+        <div class="panel" data-p="B"><h3>Kvit</h3><div class="cardbox red"><strong>Your account is suspended.</strong><p class="small" style="margin:4px 0 0">Contact kvit.support@gmail.com.</p></div><div style="flex:1;min-height:150px"></div><button class="btn google">Sign in with Google</button><button class="btn">Sign up with email</button></div></div>
+    </div>
+  </section>
+
+  <!-- i -->
+  <section class="block" data-g="i">
+    <h2>i. Owner tools (only you, the admin)</h2>
+    <p class="lean">Claude's lean: A. It reuses the Statistics page you already have as the home for admin things. The group owner can unlock a "Finished" group, so a group closed by you needs its own state "Closed by the owner of Kvit" with no unlock for the group's owner. Try the tabs, the buttons and the group preview.</p>
+    <div class="opts"><button class="opt" data-o="A" aria-pressed="true">A: tabs on the admin page</button><button class="opt" data-o="B" aria-pressed="false">B: separate "Owner tools" row in Settings</button></div>
+    <div class="stage">
+      <div class="phone" id="i-phone">
+        <div class="panel" data-p="B"><h3>Settings</h3><button class="row">Statistics <span>&rsaquo;</span></button><button class="row">Owner tools <span>&rsaquo;</span></button><p class="small">Then the same tabs below, without "Statistics".</p></div>
+        <div class="panel" data-p="A"><h3>Admin</h3></div>
+        <div class="tabs" id="i-tabs"><button class="chip" data-t="stats" aria-pressed="true">Statistics</button><button class="chip" data-t="people" aria-pressed="false">People</button><button class="chip" data-t="groups" aria-pressed="false">Groups</button><button class="chip" data-t="log" aria-pressed="false">Log</button></div>
+        <div class="it on" data-t="stats"><div class="cardbox">New sign-ups: <strong>9</strong> (as today)</div></div>
+        <div class="it" data-t="people" style="display:none"><label class="lbl">Find by email or name</label><input class="field" value="marko@example.com"><div class="cardbox" style="margin-top:8px"><strong>Marko</strong> &middot; account &middot; 3 groups<br><span class="small" id="i-state">Status: active</span></div><label class="lbl" style="margin-top:8px">Reason (saved in the log)</label><input class="field" id="i-reason" value="Harassing a group member (report 12 Nov)"><button class="btn danger" id="i-suspend" style="margin-top:8px">Suspend</button></div>
+        <div class="it" data-t="groups" style="display:none"><label class="lbl">Group id (from the Report email)</label><input class="field" value="7c1f-3a90"><div class="cardbox" style="margin-top:8px"><strong>Trip to Ohrid</strong> &middot; 4 members<br><span class="small" id="i-gstate">Status: open</span></div><label class="lbl" style="margin-top:8px">Reason (saved in the log)</label><input class="field" value="Illegal content reported"><button class="btn danger" id="i-close" style="margin-top:8px">Close this group</button><div class="cardbox" id="i-closed-look" style="display:none;margin-top:8px"><strong>How the group looks to its members:</strong><br>Closed by the owner of Kvit. Read-only. No unlock button.</div></div>
+        <div class="it" data-t="log" style="display:none"><table id="i-log"><tr><th>When</th><th>What</th><th>Why</th></tr><tr><td>4 Nov</td><td>Suspended anna@...</td><td>Spam invite links</td></tr></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- j -->
+  <section class="block" data-g="j">
+    <h2>j. Where exchange rates come from</h2>
+    <p class="lean">Claude's lean: B on the screens, with the full sentence in the Terms. The National Bank asks only that it is named as the source. Kvit's own converted totals are never called "NBRM rates".</p>
+    <div class="opts"><button class="opt" data-o="A" aria-pressed="true">A: full sentence under the rate</button><button class="opt" data-o="B" aria-pressed="false">B: short line under the rate</button></div>
+    <div class="stage">
+      <div class="phone"><h3>Coffee</h3>
+        <div class="cardbox">12.00 EUR<br><span class="small">Rate: 1 EUR = 61.50 MKD &middot; 3 Nov 2026</span>
+          <div class="panel" data-p="A"><p class="small" style="margin:4px 0 0">Exchange rates: National Bank of the Republic of North Macedonia (NBRM), nbrm.mk. Informational, may be late or wrong.</p></div>
+          <div class="panel" data-p="B"><p class="small" style="margin:4px 0 0">Rates: NBRM (nbrm.mk), informational.</p></div></div>
+        <div class="cardbox small">Same line under the Settings budget hint and next to "includes converted" lines. Kvit's own totals just say "converted", never "NBRM".</div>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+  const root = document.documentElement;
+  document.getElementById('theme').onclick = () => { root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; };
+
+  function selectOpt(block, o) {
+    block.querySelectorAll('.opts .opt').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.o === o)));
+    block.querySelectorAll('.panel[data-p]').forEach(p => p.classList.toggle('on', p.dataset.p === o));
+    block.dataset.o = o;
+  }
+  document.querySelectorAll('section.block').forEach(block => {
+    block.querySelectorAll('.opts .opt').forEach(b => b.onclick = () => { selectOpt(block, b.dataset.o); if (block.dataset.g === 'b') resetB(); });
+    selectOpt(block, 'A');
+  });
+
+  const $ = id => document.getElementById(id);
+
+  function resetB() {
+    $('b-after').style.display = 'none';
+    $('b-sheet').classList.remove('on');
+    $('b-scrim').classList.remove('on');
+    $('b-login-result').style.display = 'none';
+    $('b-login').style.display = '';
+  }
+  $('b-open').onclick = () => { $('b-sheet').classList.add('on'); $('b-scrim').classList.add('on'); };
+  $('b-cancel').onclick = resetB;
+  $('b-scrim').onclick = resetB;
+  $('b-confirm').onclick = () => {
+    $('b-sheet').classList.remove('on'); $('b-scrim').classList.remove('on');
+    $('b-after').style.display = 'flex';
+    $('b-after-title').textContent = document.querySelector('[data-g=b]').dataset.o === 'A' ? 'Welcome' : 'Account deletion started';
+  };
+  $('b-login').onclick = () => {
+    const r = $('b-login-result'); r.style.display = 'block'; $('b-login').style.display = 'none';
+    r.innerHTML = document.querySelector('[data-g=b]').dataset.o === 'A'
+      ? '<strong>Welcome back.</strong><p class="small" style="margin:4px 0 0">Toast: "Deletion cancelled. Your account is back."</p>'
+      : '<strong>Cancel the deletion?</strong><p class="small" style="margin:4px 0 8px">Your account is due to be deleted on 4 December.</p><button class="btn primary">Yes, keep my account</button><button class="btn" style="margin-top:6px">No, log out</button>';
+  };
+  $('b-reset').onclick = resetB;
+
+  $('c-dl').onclick = () => { const t = $('c-toast'); t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2200); };
+
+  document.querySelectorAll('.d-ok').forEach(b => b.onclick = () => { b.closest('.pill').style.display = 'none'; });
+  $('d-big').onclick = () => { $('d-sheet').classList.add('on'); $('d-scrim').classList.add('on'); };
+  $('d-agree').onclick = () => { $('d-sheet').classList.remove('on'); $('d-scrim').classList.remove('on'); };
+  $('d-again').onclick = () => { document.querySelectorAll('.pill').forEach(p => p.style.display = ''); };
+
+  document.querySelectorAll('.f-report').forEach(b => b.onclick = () => { $('f-mail').style.display = 'block'; });
+
+  document.querySelectorAll('#i-tabs .chip').forEach(c => c.onclick = () => {
+    document.querySelectorAll('#i-tabs .chip').forEach(x => x.setAttribute('aria-pressed', String(x === c)));
+    document.querySelectorAll('.it').forEach(p => { p.style.display = p.dataset.t === c.dataset.t ? 'block' : 'none'; });
+  });
+  let suspended = false;
+  $('i-suspend').onclick = () => {
+    suspended = !suspended;
+    $('i-state').textContent = suspended ? 'Status: SUSPENDED (cannot use Kvit)' : 'Status: active';
+    $('i-suspend').textContent = suspended ? 'Unsuspend' : 'Suspend';
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>now</td><td>' + (suspended ? 'Suspended' : 'Unsuspended') + ' marko@...</td><td>' + $('i-reason').value + '</td>';
+    $('i-log').appendChild(tr);
+  };
+  $('i-close').onclick = () => {
+    $('i-gstate').textContent = 'Status: CLOSED by the owner of Kvit';
+    $('i-closed-look').style.display = 'block';
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>now</td><td>Closed group 7c1f-3a90</td><td>Illegal content reported</td>';
+    $('i-log').appendChild(tr);
+  };
+</script>
+</body>
+</html>

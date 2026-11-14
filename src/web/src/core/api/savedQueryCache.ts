@@ -6,7 +6,7 @@ import { meQueryKey } from '@/core/auth/useMe'
 import type { Me } from '@/core/services/me/meService'
 import { readWithinTimeLimit } from './readWithinTimeLimit'
 
-export const savedQueryCacheVersion = '6'
+export const savedQueryCacheVersion = '7'
 export const savedQueryCacheMaxAge = 24 * 60 * 60 * 1000
 export const savedCopyReadTimeLimitMs = 3000
 

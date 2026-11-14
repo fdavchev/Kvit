@@ -120,6 +120,25 @@ describe('SettingsScreen budget card', () => {
       expect(screen.getByText(translated(language, 'settings.budget.hint'))).toBeTruthy()
     })
 
+    it.each(languages)('shows the rates source note under the hint inside the Budget card (%s)', async (language) => {
+      await renderSettings({ language })
+
+      const hint = screen.getByText(translated(language, 'settings.budget.hint'))
+      const note = screen.getByText(translated(language, 'legal.ratesSource'))
+
+      expect(hint.compareDocumentPosition(note)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+      expect(note.closest('section')).toBe(hint.closest('section'))
+    })
+
+    it('shows the rates source note once, in grey', async () => {
+      await renderSettings()
+
+      const notes = screen.getAllByText(translated('en', 'legal.ratesSource'))
+
+      expect(notes).toHaveLength(1)
+      expect(Array.from(notes[0].classList)).toContain('text-muted-foreground')
+    })
+
     it.each([
       ['keep apart', keepApart, null],
       ['in MKD', inMkd, 'MKD'],
@@ -151,6 +170,7 @@ describe('SettingsScreen budget card', () => {
       expect(screen.queryByRole('radiogroup')).toBeNull()
       expect(screen.queryAllByRole('radio')).toEqual([])
       expect(screen.queryByText(translated(language, 'settings.budget.hint'))).toBeNull()
+      expect(screen.queryByText(translated(language, 'legal.ratesSource'))).toBeNull()
     })
   })
 

@@ -9,6 +9,7 @@ import {
   readJoinToken,
 } from '@/core/invites/joinRoundTrip'
 import { routes } from '@/core/router/routes'
+import { AgreeLine } from '@/features/legal/components/AgreeLine'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitEmailField } from '@/shared/components/KvitEmailField'
 import { KvitForm } from '@/shared/components/KvitForm'
@@ -46,13 +47,16 @@ export function SignUpScreen() {
         errorMessage={signUp.isError ? t(errorMessageKey(signUp.error)) : null}
         onSubmit={submit}
         footer={
-          <KvitLinkButton
-            to={routes.logIn}
-            state={joinTokenState(joinToken)}
-            variant="underlinedLink"
-          >
-            {t('welcome.haveAccount')}
-          </KvitLinkButton>
+          <>
+            <AgreeLine />
+            <KvitLinkButton
+              to={routes.logIn}
+              state={joinTokenState(joinToken)}
+              variant="underlinedLink"
+            >
+              {t('welcome.haveAccount')}
+            </KvitLinkButton>
+          </>
         }
       >
         <KvitTextField

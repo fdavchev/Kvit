@@ -45,7 +45,7 @@ namespace Kvit.Api.Tests.Proxy
             return WithHeaders(client, proxySecret, visitorAddress);
         }
 
-        private static HttpClient WithHeaders(HttpClient client, string? proxySecret, string? visitorAddress)
+        protected static HttpClient WithHeaders(HttpClient client, string? proxySecret, string? visitorAddress)
         {
             if (proxySecret is not null)
             {

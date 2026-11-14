@@ -112,6 +112,34 @@ describe('SettingsScreen', () => {
     expect(router.state.location.state).toEqual({ from: routes.settings })
   })
 
+  it.each([true, false])('has a Terms link to the terms screen when hasPassword is %s', async (hasPassword) => {
+    await renderSettings('en', hasPassword)
+
+    const link = screen.getByRole('link', { name: translated('en', 'common.terms') })
+
+    expect(link.getAttribute('href')).toBe(routes.terms)
+  })
+
+  it.each(languages)('puts the Terms link right next to the Privacy link (%s)', async (language) => {
+    await renderSettings(language)
+
+    const privacy = screen.getByRole('link', { name: translated(language, 'common.privacy') })
+    const terms = screen.getByRole('link', { name: translated(language, 'common.terms') })
+
+    expect(terms.parentElement).toBe(privacy.parentElement)
+  })
+
+  it('opens the terms screen and tells it to come back to the settings when the Terms link is pressed', async () => {
+    const { router } = await renderSettings()
+
+    fireEvent.click(screen.getByRole('link', { name: translated('en', 'common.terms') }))
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(routes.terms)
+    })
+    expect(router.state.location.state).toEqual({ from: routes.settings })
+  })
+
   it.each([true, false])('puts Log out after every link on the screen when hasPassword is %s', async (hasPassword) => {
     await renderSettings('en', hasPassword)
     const logOut = screen.getByRole('button', { name: translated('en', 'settings.logOut') })

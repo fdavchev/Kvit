@@ -34,11 +34,35 @@ export function jsonRequest(method: 'POST' | 'PUT' | 'DELETE', body: unknown): R
   }
 }
 
+export interface ApiFile {
+  blob: Blob
+  fileName: string | null
+}
+
 export async function apiRequest(
   path: string,
   init: RequestInit = {},
 ): Promise<unknown> {
   const request = `${init.method ?? 'GET'} ${path}`
+  const response = await sendRequest(path, init, request)
+  return readBody(response, request)
+}
+
+export async function apiFileRequest(path: string): Promise<ApiFile> {
+  const request = `GET ${path}`
+  const response = await sendRequest(path, {}, request)
+  const fileName = readFileName(response, request)
+  try {
+    return { blob: await response.blob(), fileName }
+  } catch (error) {
+    throw new ApiError(`${request} returned a file that could not be read`, {
+      httpStatus: response.status,
+      cause: error,
+    })
+  }
+}
+
+async function sendRequest(path: string, init: RequestInit, request: string): Promise<Response> {
   let response: Response
   try {
     response = await fetch(path, { ...init, credentials: 'same-origin' })
@@ -49,14 +73,31 @@ export async function apiRequest(
     })
   }
 
-  const body = await readBody(response, request)
   if (!response.ok) {
+    const body = await readBody(response, request)
     throw new ApiError(`${request} failed with status ${response.status}`, {
       httpStatus: response.status,
       ...readProblemDetails(body),
     })
   }
-  return body
+  return response
+}
+
+const fileNameParameter = /(?:^|;)\s*filename\s*=\s*(?:"((?:[^"\\]|\\.)*)"|([^;]*))/i
+
+function readFileName(response: Response, request: string): string | null {
+  const contentDisposition = response.headers.get('content-disposition')
+  if (contentDisposition === null) {
+    return null
+  }
+  const match = fileNameParameter.exec(contentDisposition)
+  const fileName = (match?.[1]?.replace(/\\(.)/g, '$1') ?? match?.[2] ?? '').trim()
+  if (fileName === '') {
+    throw new ApiError(`${request} sent a Content-Disposition header without a file name: ${contentDisposition}`, {
+      httpStatus: response.status,
+    })
+  }
+  return fileName
 }
 
 async function readBody(response: Response, request: string): Promise<unknown> {

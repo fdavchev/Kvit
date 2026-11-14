@@ -18,7 +18,7 @@ export function BudgetFloatingAddButton({ onClick }: BudgetAddButtonProps) {
     <div
       ref={floatingAreaRef}
       data-floating-add
-      className="pointer-events-none sticky bottom-[calc(var(--bottom-bar-height)+var(--outbox-bar-space)+16px)] z-10 mt-auto flex justify-end pt-4"
+      className="pointer-events-none sticky bottom-[calc(var(--bottom-bar-height)+var(--outbox-bar-space)+var(--terms-pill-space)+16px)] z-10 mt-auto flex justify-end pt-4"
     >
       <button
         type="button"

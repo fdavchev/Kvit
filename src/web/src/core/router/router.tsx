@@ -1,5 +1,6 @@
 import { createBrowserRouter, type RouteObject } from 'react-router'
 import { AdminStatsScreen } from '@/features/admin/stats/components/AdminStatsScreen'
+import { OwnerToolsScreen } from '@/features/admin/tools/components/OwnerToolsScreen'
 import { ChangePasswordScreen } from '@/features/auth/changePassword/components/ChangePasswordScreen'
 import { GoogleSignUpScreen } from '@/features/auth/googleSignUp/components/GoogleSignUpScreen'
 import { LogInScreen } from '@/features/auth/logIn/components/LogInScreen'
@@ -27,6 +28,7 @@ import { HomeScreen } from '@/features/home/components/HomeScreen'
 import { NotFoundScreen } from '@/features/notFound/components/NotFoundScreen'
 import { PrivacyScreen } from '@/features/privacy/components/PrivacyScreen'
 import { SettingsScreen } from '@/features/settings/components/SettingsScreen'
+import { TermsScreen } from '@/features/terms/components/TermsScreen'
 import { BottomBarLayout } from './BottomBarLayout'
 import { RequireAccount } from './RequireAccount'
 import { RequireAdmin } from './RequireAdmin'
@@ -47,6 +49,7 @@ export const routeObjects: RouteObject[] = [
       { path: routes.logIn, element: <LogInScreen /> },
       { path: routes.googleSignUp, element: <GoogleSignUpScreen /> },
       { path: routes.privacy, element: <PrivacyScreen /> },
+      { path: routes.terms, element: <TermsScreen /> },
       { path: routes.join(inviteTokenPattern), element: <JoinScreen /> },
       {
         element: <RequireAuth />,
@@ -68,7 +71,10 @@ export const routeObjects: RouteObject[] = [
               { path: routes.settings, element: <SettingsScreen /> },
               {
                 element: <RequireAdmin />,
-                children: [{ path: routes.admin, element: <AdminStatsScreen /> }],
+                children: [
+                  { path: routes.admin, element: <AdminStatsScreen /> },
+                  { path: routes.adminTools, element: <OwnerToolsScreen /> },
+                ],
               },
             ],
           },

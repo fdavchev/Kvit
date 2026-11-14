@@ -14,6 +14,10 @@ namespace Kvit.Api.Registers
         private const int InviteWindowMinutes = 10;
         private const int GuestJoinsPerWindow = 10;
         private const int GuestJoinWindowMinutes = 10;
+        private const int ExportRequestsPerWindow = 10;
+        private const int ExportWindowMinutes = 10;
+        private const int CleanupRequestsPerWindow = 5;
+        private const int CleanupWindowMinutes = 10;
 
         public static IServiceCollection AddRateLimits(this IServiceCollection services)
         {
@@ -25,6 +29,10 @@ namespace Kvit.Api.Registers
                     FixedWindowPerVisitor(httpContext, LogInAttemptsPerWindow, TimeSpan.FromMinutes(LogInWindowMinutes)));
                 options.AddPolicy("invite", httpContext =>
                     FixedWindowPerVisitor(httpContext, InviteRequestsPerWindow, TimeSpan.FromMinutes(InviteWindowMinutes)));
+                options.AddPolicy("export", httpContext =>
+                    FixedWindowPerVisitor(httpContext, ExportRequestsPerWindow, TimeSpan.FromMinutes(ExportWindowMinutes)));
+                options.AddPolicy("cleanup", httpContext =>
+                    FixedWindowPerVisitor(httpContext, CleanupRequestsPerWindow, TimeSpan.FromMinutes(CleanupWindowMinutes)));
             });
 
             services.AddSingleton(_ => new SignUpLimitFilter(PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>

@@ -3,11 +3,13 @@ import { Navigate, Outlet, useLocation } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
 import { useMe } from '@/core/auth/useMe'
 import { useRecordActive } from '@/features/home/hooks/useRecordActive'
+import { TermsNotice } from '@/features/legal/components/TermsNotice'
 import { SignedInOutbox } from '@/features/outbox/components/SignedInOutbox'
 import { KvitError } from '@/shared/components/KvitError'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { DesktopRailLayout } from './DesktopRailLayout'
 import { routes } from './routes'
+import { SuspendedScreen } from './SuspendedScreen'
 import { WakingUp } from './WakingUp'
 
 export function RequireAuth() {
@@ -32,6 +34,9 @@ export function RequireAuth() {
   if (me === null) {
     return <Navigate to={routes.welcome} replace />
   }
+  if (me.isSuspended) {
+    return <SuspendedScreen />
+  }
   if (me.mustChangePassword && location.pathname !== routes.changePassword) {
     return <Navigate to={routes.changePassword} replace />
   }
@@ -46,6 +51,7 @@ function SignedInOutlet() {
   return (
     <SignedInOutbox>
       <DesktopRailLayout />
+      <TermsNotice />
     </SignedInOutbox>
   )
 }

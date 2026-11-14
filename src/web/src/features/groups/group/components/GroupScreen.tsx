@@ -187,7 +187,7 @@ function FloatingActions({ hasBar, children }: FloatingActionsProps) {
       ref={rootRef}
       className={cn(
         'pointer-events-none sticky z-10 mt-auto flex flex-col items-end gap-3 pt-3',
-        hasBar ? '-mx-3 bottom-[calc(max(12px,env(safe-area-inset-bottom))+var(--outbox-bar-space))]' : 'bottom-[calc(max(24px,env(safe-area-inset-bottom))+var(--outbox-bar-space))]',
+        hasBar ? '-mx-3 bottom-[calc(max(12px,env(safe-area-inset-bottom))+var(--outbox-bar-space)+var(--terms-pill-space))]' : 'bottom-[calc(max(24px,env(safe-area-inset-bottom))+var(--outbox-bar-space)+var(--terms-pill-space))]',
       )}
     >
       {children}

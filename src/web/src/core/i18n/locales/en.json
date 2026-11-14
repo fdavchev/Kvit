@@ -11,6 +11,7 @@
     "switchToDarkMode": "Switch to dark mode",
     "switchToLightMode": "Switch to light mode",
     "privacy": "Privacy",
+    "terms": "Terms",
     "close": "Close",
     "undo": "Undo",
     "updating": "Updating…"
@@ -156,7 +157,14 @@
     "ADMIN_STATS_FUTURE_DATE": "Pick dates up to today.",
     "ADMIN_STATS_GROUPING_INVALID": "Group by day, week, month or year.",
     "ADMIN_STATS_DAY_RANGE_TOO_LONG": "Grouping by day works for up to 92 days. Pick a shorter range or group by week or month.",
-    "ADMIN_STATS_DATE_TOO_OLD": "Statistics start on 1 January 2026. Pick a later start date."
+    "ADMIN_STATS_DATE_TOO_OLD": "Statistics start on 1 January 2026. Pick a later start date.",
+    "ACCOUNT_DELETE_NAME_CHOICE_INVALID": "Choose how your name should show.",
+    "ACCOUNT_SUSPENDED": "Your account is suspended. Contact kvit.support@gmail.com.",
+    "GROUP_CLOSED_BY_ADMIN": "This group was closed by the owner of Kvit.",
+    "OWNER_REASON_INVALID": "Write a reason (up to 500 characters).",
+    "OWNER_PERSON_NOT_FOUND": "This person doesn't exist.",
+    "OWNER_GROUP_NOT_FOUND": "This group doesn't exist.",
+    "OWNER_CANNOT_ACT_ON_ADMIN": "You can't do this to an owner of Kvit."
   },
   "language": {
     "label": "Language",
@@ -215,7 +223,8 @@
     "makeAccount": {
       "keeps": "You keep all your groups and expenses.",
       "done": "Your account is ready"
-    }
+    },
+    "deletionCancelled": "Deletion cancelled. Your account is back."
   },
   "home": {
     "greeting": "Hi, {{name}}",
@@ -244,6 +253,23 @@
     "themeSystem": "Same as device",
     "themeLight": "Light",
     "themeDark": "Dark",
+    "downloadData": "Download my data",
+    "downloadDataHint": "Your profile, personal budget and groups with their activity, as a file. Other people's emails are not in it.",
+    "downloadDataDone": "Your data was saved as a file",
+    "deleteAccount": "Delete my account",
+    "deleteAccountSheet": {
+      "title": "Delete your account?",
+      "nameLabel": "Your name in groups",
+      "keepName": "Keep my name",
+      "keepNameHint": "Your name stays on old expenses, so everyone can still read them.",
+      "formerMember": "Show as “Former member”",
+      "formerMemberHint": "Your name is replaced everywhere, also in the activity list.",
+      "whatHappens": "Right away you are logged out everywhere and can't use this account. If you log in again within 30 days, the deletion is cancelled. After 30 days your email, login, Google link, personal budget and sessions are removed. Shared expenses stay, because other people's balances need them.",
+      "whatHappensGuest": "Right away you are logged out and can't use this account. A guest account can't be logged into again, so this can't be undone. After 30 days it is removed. Shared expenses stay, because other people's balances need them.",
+      "confirm": "Delete my account"
+    },
+    "deleteAccountDone": "Deleted. Log in within 30 days to undo.",
+    "deleteAccountDoneGuest": "Deleted.",
     "guest": {
       "title": "You're a guest",
       "body": "Make an account to use Kvit on any phone and to create your own groups.",
@@ -259,41 +285,190 @@
       "inMkd": "In MKD",
       "inEur": "In EUR",
       "hint": "Euro amounts are converted with the rate saved on each entry."
-    }
+    },
+    "ownerTools": "Owner tools"
   },
   "privacy": {
     "title": "Privacy",
-    "updated": "Last updated 3 October 2026.",
+    "updated": "Last updated 4 November 2026 · version 2026-11-04",
+    "short": {
+      "title": "In short",
+      "items": {
+        "1": "Kvit keeps your name, your groups, expenses and payments, and your personal budget if you make one. Email accounts also keep an email and a scrambled password.",
+        "2": "Your data is used only to run Kvit. It is never sold, and there are no ads and no tracking.",
+        "3": "People in your group see that group's expenses. Nobody else does, except the person who runs Kvit if a group is reported.",
+        "4": "You can download your data and delete your account in Settings.",
+        "5": "Questions: kvit.support@gmail.com."
+      }
+    },
     "sections": {
       "1": {
-        "heading": "What Kvit keeps",
-        "body": "Your name, email, language and time zone. The groups, expenses and payments that you or your friends enter. Simple counts of how the app is used (for example how many people signed up), never amounts or names."
+        "heading": "Who runs Kvit",
+        "body": "Kvit is run by Filip Davchev in North Macedonia, as a free project for family and friends. He decides how your data is used. Contact: kvit.support@gmail.com."
       },
       "2": {
-        "heading": "Passwords",
-        "body": "A password is never stored the way you type it, only as a scrambled code that nobody can turn back into the password."
+        "heading": "What Kvit keeps",
+        "body": "Your name, language and time zone. For an email account: your email and a scrambled form of your password. For Google sign-in: your email, the link to your Google picture and Google's ID for you. The groups, expenses, payments and notes that you and your friends enter, and your personal budget if you use it. Simple counts of how the app is used, tied to your account for 12 months but never with amounts or names. A guest keeps only a name and what the guest enters."
       },
       "3": {
-        "heading": "Sign in with Google",
-        "body": "If you use Google, Kvit receives only your name, email address and profile picture link. Kvit cannot read your Gmail, your contacts or anything else in your Google account."
+        "heading": "Why Kvit uses it",
+        "body": "To run your account, your groups and your budget (this is what you ask Kvit to do). To keep Kvit safe, stop abuse and limit too many tries (a legitimate interest: keeping a free service working). To count how many people use Kvit (also a legitimate interest, with counts only)."
       },
       "4": {
         "heading": "Who can see what",
-        "body": "People in a group see that group's expenses and balances. The person who runs Kvit sees only totals (for example how many accounts exist), not your expenses."
+        "body": "People in a group see that group's expenses, payments and balances. Your personal budget is seen only by you. The person who runs Kvit sees only totals, for example how many accounts exist. If someone reports a group or an account, he can look at what he needs to decide, and he keeps a note of what he did and why."
       },
       "5": {
-        "heading": "Cookies and tracking",
-        "body": "One login cookie keeps you signed in for 90 days. No ads, no tracking, and your data is never sold or shared."
+        "heading": "Companies that help run Kvit",
+        "body": "Cloudflare delivers the website and passes requests on. Render runs the server. Neon stores the database. GitHub keeps an encrypted weekly copy of the database as a backup. Google handles sign-in if you use it. These companies process data only to give their service to Kvit. The National Bank of the Republic of North Macedonia only receives requests for exchange rates, with no personal data."
       },
       "6": {
-        "heading": "Where it is stored",
-        "body": "On Cloudflare (the website), Render and Neon (the data, in Frankfurt, Germany)."
+        "heading": "Data outside the EU",
+        "body": "The database is in Frankfurt, Germany. Cloudflare, Render, GitHub and Google are US companies and may handle data outside the EU. They say they use approved safeguards, such as the EU-US Data Privacy Framework or standard contractual clauses."
       },
       "7": {
-        "heading": "Deleting your account",
-        "body": "Ask Filip to delete your account. Your name stays on old group expenses, so other people's balances stay correct."
+        "heading": "Sign in with Google",
+        "body": "The Google button loads a script from Google when the first screen opens, so Google can see your internet address and browser details even if you don't tap it. If you sign in, Kvit receives your name, email and picture link. Kvit cannot read your Gmail, your contacts or anything else in your Google account."
+      },
+      "8": {
+        "heading": "Passwords",
+        "body": "A password is never stored the way you type it, only as a scrambled code that nobody can turn back into the password."
+      },
+      "9": {
+        "heading": "In your browser",
+        "body": "One login cookie keeps you signed in for 90 days, and Kvit needs it to work. Your phone or browser also keeps a saved copy of your screens so they open fast, a queue of changes waiting to be sent, and your language and theme. The saved copy is cleared when you log out. No ads, no tracking cookies."
+      },
+      "10": {
+        "heading": "How long Kvit keeps things",
+        "body": "Your data stays while your account exists. When you delete your account it is switched off at once and removed within 30 days. A deleted group or expense can be restored for a while, and is removed 30 days after that. After 12 months, usage events are no longer tied to an account. The companies above keep technical logs for a short time, from days to a few weeks. Kvit's database can be restored up to 6 hours back, and Kvit keeps an encrypted weekly backup for up to 90 days. Accounts that are not used are kept and are not deleted automatically."
+      },
+      "11": {
+        "heading": "If someone added your name",
+        "body": "Someone in a group may type your name to add you, for example for a shared trip. Kvit keeps that name and the group's expenses in that group only. If you don't want to be there, write to kvit.support@gmail.com with the group link, and we will take your name out or replace it with “Former member”."
+      },
+      "12": {
+        "heading": "Your rights",
+        "body": "You can ask to see your data, correct it, delete it, limit its use, get a copy, or object to its use. You can also complain to the Personal Data Protection Agency of North Macedonia, or to the authority where you live."
+      },
+      "13": {
+        "heading": "Download your data",
+        "body": "In Settings, tap “Download my data”. You get a file with your profile, your personal budget and your groups with their expenses, payments and activity. It does not contain other people's emails or private budgets."
+      },
+      "14": {
+        "heading": "Delete your account",
+        "body": "In Settings, tap “Delete my account”, or write to kvit.support@gmail.com. Your account is switched off at once. If you log in again within 30 days, the deletion is cancelled. After 30 days your email, login, Google link, password, personal budget and sessions are removed. Guests can delete their account too."
+      },
+      "15": {
+        "heading": "What stays after deletion",
+        "body": "Expenses and payments in your groups stay, because other people's balances depend on them. Your name stays on them, or shows as “Former member” if you choose that when you delete. The saved copy and the queue in your own browser are removed when you log out. Backups can hold your data for up to 90 days."
+      },
+      "16": {
+        "heading": "Do you have to give data?",
+        "body": "To make an account you give a name, and for an email account also an email and a password. Without them Kvit can't work for you. A guest gives only a name."
+      },
+      "17": {
+        "heading": "No automated decisions",
+        "body": "Kvit makes no decisions about you by computer and does no profiling. Your data is not sold."
+      },
+      "18": {
+        "heading": "Age",
+        "body": "Kvit is for people aged 16 and over."
+      },
+      "19": {
+        "heading": "Changes",
+        "body": "If this notice changes, the date and version at the top change and you see a notice in the app."
       }
     }
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "updated": "Last updated 4 November 2026 · version 2026-11-04",
+    "short": {
+      "title": "In short",
+      "items": {
+        "1": "Kvit is a notebook for sharing expenses with friends and family. It does not hold, send or receive money.",
+        "2": "You must be 16 or older.",
+        "3": "Amounts and exchange rates can be wrong. Check them before you rely on them.",
+        "4": "Kvit is free and comes with no promises: it can be slow, change or stop, and data can be lost.",
+        "5": "What you write is yours. Be fair to other people, or your account can be suspended."
+      }
+    },
+    "sections": {
+      "1": {
+        "heading": "Who can use Kvit",
+        "body": "Kvit is for people aged 16 and over. If you are younger than 16, please don't make an account or join a group."
+      },
+      "2": {
+        "heading": "Your account",
+        "body": "You are responsible for everything that happens with your login. Keep your password to yourself. A guest has no email, so if a guest loses the phone or the browser, the account can't be recovered. Tell us if someone else is using your account."
+      },
+      "3": {
+        "heading": "A notebook, not a bank",
+        "body": "Kvit only keeps a record of who paid and who owes. It does not hold, send or receive money, and it does not make anyone pay. “Paid” and “confirmed” mean what the people in the group say. Pay each other outside Kvit, the way you always did."
+      },
+      "4": {
+        "heading": "Amounts, rounding and rates",
+        "body": "Kvit rounds amounts and changes euros and denars with the exchange rates of the National Bank of the Republic of North Macedonia. Rates can be late or wrong, and rounding can leave small differences. Kvit gives no financial, tax or legal advice."
+      },
+      "5": {
+        "heading": "How to use Kvit",
+        "body": "Don't use Kvit to harass, threaten or cheat anyone, to share illegal content, to pretend to be someone else, to send spam, or to try to break or overload it."
+      },
+      "6": {
+        "heading": "What you write",
+        "body": "The names, amounts and notes you enter stay yours. By entering them you let Kvit store them and show them to the other members of your group, so that the app can work."
+      },
+      "7": {
+        "heading": "Between members",
+        "body": "Disagreements about money or anything else in a group are between its members. Kvit is not a party to them and can't settle them."
+      },
+      "8": {
+        "heading": "No promises",
+        "body": "Kvit is free and offered as it is. It can be slow, stop, change or lose data, with or without warning. Keep your own copy of anything important: you can download your data in Settings."
+      },
+      "9": {
+        "heading": "Responsibility",
+        "body": "As far as the law allows, the person who runs Kvit is not responsible for losses that come from using Kvit or from not being able to use it. This does not limit anything that the law does not allow to be limited."
+      },
+      "10": {
+        "heading": "Suspending and removing",
+        "body": "Kvit can suspend an account or close a group that breaks these Terms or that someone reports, and can remove content. You can delete your own account at any time in Settings."
+      },
+      "11": {
+        "heading": "Changes",
+        "body": "If these Terms change, you will see a notice in the app, and the date and version at the top change. For big changes we ask you to agree again. If you keep using Kvit after a change, you accept the new Terms."
+      },
+      "12": {
+        "heading": "Open-source parts",
+        "body": "Kvit is built with open-source software, and each part keeps its own licence. The name Kvit and Kvit's own code are not offered for reuse."
+      },
+      "13": {
+        "heading": "Contact",
+        "body": "Questions, reports and requests about these Terms or your data: write to kvit.support@gmail.com."
+      },
+      "14": {
+        "heading": "Law and courts",
+        "body": "These Terms follow the law of North Macedonia, and its courts decide disputes about them. This does not take away any right that the law gives you as a consumer where you live."
+      },
+      "15": {
+        "heading": "If a part does not apply",
+        "body": "If one part of these Terms is not valid, the rest still applies. Nothing in these Terms removes a right that the law gives you."
+      }
+    }
+  },
+  "legal": {
+    "ratesSource": "Exchange rates: National Bank of the Republic of North Macedonia (NBRM), nbrm.mk. Informational, may be late or wrong.",
+    "agree": "By continuing you agree to the <terms>Terms</terms> and <privacy>Privacy Policy</privacy>. Kvit is for people aged 16 and over.",
+    "termsUpdated": "We updated the Terms and Privacy.",
+    "termsRead": "Read",
+    "termsOk": "OK",
+    "termsMaterial": {
+      "title": "The Terms changed in a way that matters",
+      "body": "Please read them and agree to keep using Kvit.",
+      "read": "Read the Terms",
+      "agree": "I agree"
+    },
+    "licences": "Third-party licences"
   },
   "groups": {
     "title": "Groups",
@@ -345,7 +520,8 @@
     "addName": "Add a name",
     "shareLink": "Share invite link",
     "linkCopied": "Link copied",
-    "settings": "Group settings"
+    "settings": "Group settings",
+    "closedByAdmin": "🔒 Closed by the owner of Kvit · read-only"
   },
   "expenses": {
     "title": "Expenses",
@@ -703,7 +879,7 @@
   "addName": {
     "title": "Add a name",
     "label": "Name",
-    "hint": "For someone without Kvit, like Grandma.",
+    "hint": "For someone without Kvit, like Grandma. Add only people who are fine with it.",
     "submit": "Add"
   },
   "groupSettings": {
@@ -716,7 +892,11 @@
     "left": "You left {{name}}",
     "ownerCannotLeave": "You are the owner. Make someone else the owner before you leave.",
     "countInBudget": "Count my shares in my budget",
-    "countInBudgetHint": "From now on. Past months stay as they were."
+    "countInBudgetHint": "From now on. Past months stay as they were.",
+    "report": "Report this group",
+    "reportHint": "Opens your email app with the group's number filled in.",
+    "reportSubject": "Report a Kvit group",
+    "reportBody": "Group number: {{id}}\n\nWhat is wrong:\n"
   },
   "members": {
     "title": "Members",
@@ -870,5 +1050,92 @@
     "hours_other": "{{count}} hours ago",
     "days_one": "{{count}} day ago",
     "days_other": "{{count}} days ago"
+  },
+  "ownerTools": {
+    "title": "Owner tools",
+    "tabs": {
+      "people": "People",
+      "groups": "Groups",
+      "log": "Log"
+    },
+    "people": {
+      "searchLabel": "Find by email, name or number",
+      "search": "Search",
+      "empty": "Nobody found.",
+      "groupCount_one": "{{count}} group",
+      "groupCount_other": "{{count}} groups"
+    },
+    "badge": {
+      "suspended": "Suspended",
+      "guest": "Guest",
+      "admin": "Owner of Kvit",
+      "deletionPending": "Deleting",
+      "deleted": "Deleted"
+    },
+    "suspend": "Suspend",
+    "unsuspend": "Unsuspend",
+    "eraseName": "Erase name",
+    "reasonLabel": "Reason (saved in the log)",
+    "confirm": "Confirm",
+    "sheet": {
+      "suspend": {
+        "title": "Suspend {{name}}?",
+        "body": "They can still log in but see only a suspended screen. Everything else is refused until you unsuspend."
+      },
+      "unsuspend": {
+        "title": "Unsuspend {{name}}?",
+        "body": "They can use Kvit again."
+      },
+      "eraseName": {
+        "title": "Erase the name of {{name}}?",
+        "body": "This deletes the account now and shows “Former member” everywhere. It cannot be undone."
+      },
+      "closeGroup": {
+        "title": "Close {{name}}?",
+        "body": "The group becomes read-only for everyone and its owner cannot unlock it."
+      },
+      "reopenGroup": {
+        "title": "Reopen {{name}}?",
+        "body": "The group works normally again."
+      }
+    },
+    "done": {
+      "suspend": "{{name}} is suspended",
+      "unsuspend": "{{name}} can use Kvit again",
+      "eraseName": "The name is erased",
+      "closeGroup": "Group closed",
+      "reopenGroup": "Group reopened"
+    },
+    "groups": {
+      "searchLabel": "Group number (from a report email)",
+      "search": "Find",
+      "members_one": "{{count}} member",
+      "members_other": "{{count}} members",
+      "owner": "Owner: {{name}}",
+      "status": {
+        "open": "Open",
+        "closing": "Closing",
+        "finished": "Finished",
+        "closedByOwner": "Closed by the owner of Kvit",
+        "deleted": "Deleted"
+      },
+      "close": "Close group",
+      "reopen": "Reopen group"
+    },
+    "log": {
+      "empty": "Nothing done yet.",
+      "line": "{{admin}} · {{action}} · {{target}}",
+      "action": {
+        "Suspended": "Suspended",
+        "Unsuspended": "Unsuspended",
+        "GroupClosed": "Closed a group",
+        "GroupReopened": "Reopened a group",
+        "NameErased": "Erased a name"
+      }
+    }
+  },
+  "suspended": {
+    "title": "Your account is suspended",
+    "body": "Contact kvit.support@gmail.com."
   }
 }

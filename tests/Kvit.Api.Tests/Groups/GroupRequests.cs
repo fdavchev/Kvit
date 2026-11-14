@@ -23,6 +23,7 @@ namespace Kvit.Api.Tests.Groups
         public static readonly string[] GroupFieldNames =
         [
             "canStartClosing",
+            "closedByAdmin",
             "closingConfirmedBy",
             "closingEndsAt",
             "closingStartedAt",

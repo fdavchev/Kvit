@@ -26,6 +26,12 @@ namespace Kvit.Domain.Services.Groups
                 return owner;
             }
 
+            Result notClosedByAdmin = group.CheckNotClosedByAdmin();
+            if (!notClosedByAdmin.IsSuccess)
+            {
+                return notClosedByAdmin;
+            }
+
             GroupMoney money = await _money.MoneyOfAsync(group.Id, cancellationToken);
             Result settled = money.CheckEveryoneSettled();
             if (!settled.IsSuccess)

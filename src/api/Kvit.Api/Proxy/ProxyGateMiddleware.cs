@@ -1,6 +1,6 @@
 using System.Net;
-using System.Security.Cryptography;
 using System.Text;
+using Kvit.Api.Authorization;
 using Microsoft.Extensions.Primitives;
 
 namespace Kvit.Api.Proxy
@@ -20,7 +20,7 @@ namespace Kvit.Api.Proxy
                 return;
             }
 
-            if (!CarriesTheSecret(context.Request.Headers[SecretHeader]))
+            if (!SharedSecret.IsCarriedBy(context.Request.Headers[SecretHeader], _secretBytes))
             {
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
                 return;
@@ -42,17 +42,6 @@ namespace Kvit.Api.Proxy
         {
             return path.Equals("/health", StringComparison.OrdinalIgnoreCase)
                 || path.Equals("/api/health", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private bool CarriesTheSecret(StringValues sentSecret)
-        {
-            if (sentSecret.Count != 1)
-            {
-                return false;
-            }
-
-            byte[] sentBytes = Encoding.UTF8.GetBytes(sentSecret[0] ?? string.Empty);
-            return CryptographicOperations.FixedTimeEquals(sentBytes, _secretBytes);
         }
     }
 }

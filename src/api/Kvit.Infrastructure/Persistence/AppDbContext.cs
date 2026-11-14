@@ -38,6 +38,8 @@ namespace Kvit.Infrastructure.Persistence
 
         public DbSet<DuplicateAnswer> DuplicateAnswers => Set<DuplicateAnswer>();
 
+        public DbSet<AdminAction> AdminActions => Set<AdminAction>();
+
         public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
         protected override void OnModelCreating(ModelBuilder builder)

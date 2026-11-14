@@ -6,6 +6,7 @@ import { useIsGuest } from '@/core/auth/useIsGuest'
 import { GoogleSignInButton } from '@/core/google/GoogleSignInButton'
 import { routes } from '@/core/router/routes'
 import { GoogleEmailTakenDialog } from '@/features/auth/welcome/components/GoogleEmailTakenDialog'
+import { AgreeLine } from '@/features/legal/components/AgreeLine'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitEmailField } from '@/shared/components/KvitEmailField'
 import { KvitForm } from '@/shared/components/KvitForm'
@@ -68,9 +69,12 @@ export function MakeAccountScreen() {
         errorMessage={emailError === null ? null : t(errorMessageKey(emailError))}
         onSubmit={save}
         footer={
-          <p className="text-center text-[0.9375rem] text-pretty text-muted-foreground">
-            {t('auth.makeAccount.keeps')}
-          </p>
+          <>
+            <AgreeLine />
+            <p className="text-center text-[0.9375rem] text-pretty text-muted-foreground">
+              {t('auth.makeAccount.keeps')}
+            </p>
+          </>
         }
       >
         <KvitEmailField

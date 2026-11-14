@@ -50,6 +50,8 @@ namespace Kvit.Domain.Entities
 
         public Currency? PlanCurrency { get; private set; }
 
+        public DateTimeOffset? AdminClosedAt { get; private set; }
+
         public static Result<Group> Create(string name, string emoji, string currency, Guid ownerUserId, string inviteToken, DateTimeOffset createdAt)
         {
             return New(GroupKind.Group, name, emoji, currency, ownerUserId, inviteToken, createdAt);
@@ -68,6 +70,11 @@ namespace Kvit.Domain.Entities
         public static Result<T> NotFound<T>(Guid groupId)
         {
             return Result.NotFound<T>($"Group {groupId} does not exist, or you are not in it.", ResultCodes.GROUP_NOT_FOUND);
+        }
+
+        public static Result<T> NotFoundAnywhere<T>(Guid groupId)
+        {
+            return Result.NotFound<T>($"No group has the id {groupId}.", ResultCodes.OWNER_GROUP_NOT_FOUND);
         }
 
         public static Result<T> InviteNotFound<T>()
@@ -105,8 +112,24 @@ namespace Kvit.Domain.Entities
             return EffectiveStatusOf(Status, ClosingStartedAt, now);
         }
 
+        public Result CheckNotClosedByAdmin()
+        {
+            if (AdminClosedAt is not null)
+            {
+                return Result.Forbid($"Group {Id} was closed by the owner of Kvit, so nothing in it can change.", ResultCodes.GROUP_CLOSED_BY_ADMIN);
+            }
+
+            return Result.Ok();
+        }
+
         public Result CheckCanBeChangedBy(Guid userId, DateTimeOffset now)
         {
+            Result notClosedByAdmin = CheckNotClosedByAdmin();
+            if (!notClosedByAdmin.IsSuccess)
+            {
+                return notClosedByAdmin;
+            }
+
             if (EffectiveStatusAt(now) == GroupStatus.Finished)
             {
                 return Result.Failure($"Group {Id} is finished, so nothing in it can change until its owner unlocks it.", ResultCodes.GROUP_FINISHED);
@@ -133,6 +156,12 @@ namespace Kvit.Domain.Entities
                 return owner;
             }
 
+            Result notClosedByAdmin = CheckNotClosedByAdmin();
+            if (!notClosedByAdmin.IsSuccess)
+            {
+                return notClosedByAdmin;
+            }
+
             if (Kind == GroupKind.OneBill)
             {
                 return Result.Failure($"Group {Id} is a one bill, which finishes by itself once everyone is kvit.", ResultCodes.GROUP_IS_ONE_BILL);
@@ -154,6 +183,12 @@ namespace Kvit.Domain.Entities
                 return Result.Failure($"The owner of group {Id} started the closing and cannot confirm or object to it.", ResultCodes.CLOSING_OWNER_CANNOT_ANSWER);
             }
 
+            Result notClosedByAdmin = CheckNotClosedByAdmin();
+            if (!notClosedByAdmin.IsSuccess)
+            {
+                return notClosedByAdmin;
+            }
+
             GroupStatus status = EffectiveStatusAt(now);
             if (status != GroupStatus.Closing)
             {
@@ -169,6 +204,12 @@ namespace Kvit.Domain.Entities
             if (!owner.IsSuccess)
             {
                 return owner;
+            }
+
+            Result notClosedByAdmin = CheckNotClosedByAdmin();
+            if (!notClosedByAdmin.IsSuccess)
+            {
+                return notClosedByAdmin;
             }
 
             GroupStatus status = EffectiveStatusAt(now);
@@ -216,6 +257,30 @@ namespace Kvit.Domain.Entities
             Status = GroupStatus.Open;
             ClosingStartedAt = null;
             FinishedAt = null;
+        }
+
+        public bool CloseByAdmin(DateTimeOffset closedAt)
+        {
+            if (AdminClosedAt is not null)
+            {
+                return false;
+            }
+
+            AdminClosedAt = closedAt;
+
+            return true;
+        }
+
+        public bool ReopenByAdmin()
+        {
+            if (AdminClosedAt is null)
+            {
+                return false;
+            }
+
+            AdminClosedAt = null;
+
+            return true;
         }
 
         public Result<GroupChanges> Update(string name, string emoji, string currency)

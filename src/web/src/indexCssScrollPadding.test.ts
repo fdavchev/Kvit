@@ -20,7 +20,11 @@ describe('index.css room for the floating bars when the page scrolls to a focuse
     expect(scrollPaddingBottomOfThePage()).toContain('var(--outbox-bar-space)')
   })
 
-  it('adds the two heights in one calc, so it is no room at all on screens without the bars', () => {
-    expect(scrollPaddingBottomOfThePage()).toBe('calc(var(--bottom-bar-height) + var(--outbox-bar-space))')
+  it('keeps a focused element above the terms-changed pill too', () => {
+    expect(scrollPaddingBottomOfThePage()).toContain('var(--terms-pill-space)')
+  })
+
+  it('adds the three heights in one calc, so it is no room at all on screens without the bars', () => {
+    expect(scrollPaddingBottomOfThePage()).toBe('calc(var(--bottom-bar-height) + var(--outbox-bar-space) + var(--terms-pill-space))')
   })
 })

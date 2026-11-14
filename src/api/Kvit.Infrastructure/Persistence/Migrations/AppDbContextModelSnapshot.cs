@@ -79,6 +79,71 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Kvit.Domain.Entities.AdminAction", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("action");
+
+                    b.Property<Guid>("AdminUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("admin_user_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid?>("TargetGroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_group_id");
+
+                    b.Property<string>("TargetLabel")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("target_label");
+
+                    b.Property<Guid?>("TargetUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_admin_actions");
+
+                    b.HasIndex("AdminUserId")
+                        .HasDatabaseName("ix_admin_actions_admin_user_id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("ix_admin_actions_created_at");
+
+                    b.HasIndex("TargetUserId")
+                        .HasDatabaseName("ix_admin_actions_target_user_id");
+
+                    b.ToTable("admin_actions", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_admin_actions_action", "action IN ('Suspended', 'Unsuspended', 'GroupClosed', 'GroupReopened', 'NameErased')");
+
+                            t.HasCheckConstraint("ck_admin_actions_one_target", "(target_user_id IS NULL) <> (target_group_id IS NULL)");
+
+                            t.HasCheckConstraint("ck_admin_actions_reason_not_empty", "char_length(reason) >= 1");
+                        });
+                });
+
             modelBuilder.Entity("Kvit.Domain.Entities.BudgetLimit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -542,6 +607,10 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("AdminClosedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("admin_closed_at");
 
                     b.Property<DateTimeOffset?>("ClosingStartedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1075,6 +1144,15 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("DeletionNameChoice")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("deletion_name_choice");
+
+                    b.Property<DateTimeOffset?>("DeletionRequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletion_requested_at");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -1153,9 +1231,26 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("phone_number_confirmed");
 
+                    b.Property<DateTimeOffset?>("PurgedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("purged_at");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text")
                         .HasColumnName("security_stamp");
+
+                    b.Property<DateTimeOffset?>("SuspendedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("suspended_at");
+
+                    b.Property<DateTimeOffset?>("TermsAcceptedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("terms_accepted_at");
+
+                    b.Property<string>("TermsVersion")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("terms_version");
 
                     b.Property<string>("TimeZone")
                         .IsRequired()
@@ -1188,11 +1283,19 @@ namespace Kvit.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_users_created_at_set", "created_at > '0002-01-01 00:00:00+00'");
 
+                            t.HasCheckConstraint("ck_users_deletion_name_choice", "deletion_name_choice IN ('KeepName', 'FormerMember')");
+
+                            t.HasCheckConstraint("ck_users_deletion_request_and_choice_together", "(deletion_requested_at IS NULL AND deletion_name_choice IS NULL) OR (deletion_requested_at IS NOT NULL AND deletion_name_choice IS NOT NULL AND char_length(deletion_name_choice) >= 1)");
+
                             t.HasCheckConstraint("ck_users_display_name_not_empty", "char_length(display_name) >= 1");
 
                             t.HasCheckConstraint("ck_users_guest_has_no_email_or_password", "NOT is_guest OR (email IS NULL AND normalized_email IS NULL AND password_hash IS NULL)");
 
                             t.HasCheckConstraint("ck_users_language", "language IN ('en', 'mk')");
+
+                            t.HasCheckConstraint("ck_users_purged_only_after_request", "purged_at IS NULL OR deletion_requested_at IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_users_terms_version_and_time_together", "(terms_version IS NULL AND terms_accepted_at IS NULL) OR (terms_version IS NOT NULL AND terms_accepted_at IS NOT NULL AND char_length(terms_version) >= 1)");
 
                             t.HasCheckConstraint("ck_users_time_zone_not_empty", "char_length(time_zone) >= 1");
                         });
@@ -1391,6 +1494,22 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_activity_events_groups_group_id");
+                });
+
+            modelBuilder.Entity("Kvit.Domain.Entities.AdminAction", b =>
+                {
+                    b.HasOne("Kvit.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("AdminUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_admin_actions_users_admin_user_id");
+
+                    b.HasOne("Kvit.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("TargetUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_admin_actions_users_target_user_id");
                 });
 
             modelBuilder.Entity("Kvit.Domain.Entities.BudgetLimit", b =>

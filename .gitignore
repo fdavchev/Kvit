@@ -46,3 +46,7 @@ appsettings.*.local.json
 .wrangler/
 .dev.vars
 .vitest/
+src/web/public/third-party-licenses.txt
+
+# Private planning prompt (kept locally, not in the public repository)
+START-HERE-PROMPT.md

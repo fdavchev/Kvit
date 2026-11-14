@@ -86,6 +86,8 @@ export function ClosingBar({ group, view }: ClosingBarProps) {
             {view.canUnlock && <UnlockGroupButton groupId={group.id} className={cn(barButtonLook, barOutlineButtonLook)} />}
           </ClosingBarFrame>
         )
+      case 'closedByAdmin':
+        return <ClosingBarFrame title={t('group.closedByAdmin')} />
     }
   }
 

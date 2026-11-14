@@ -1,24 +1,23 @@
 # Status: Kvit
 
-_Last updated: 2026-11-04 (Phase 18 built, browser-checked, code-reviewed; waiting for Filip: read the questions in the report, push, PR, merge)_
+_Last updated: 2026-11-14 (Phase 19 built, reviewed and committed; Step 11 answered; waiting for Filip to push, check CI, add the secrets and merge)_
 
 ## Where we stopped
-- Release 1 accepted 2026-10-16. Phases 12 to 17 are merged (Release 2 done; Phase 17, the outbox, merged as PR #21 on 2026-11-04). Branch `feat/18-admin-stats`: Phase 18 (the admin statistics page, last phase of Release 3) is finished, Steps 0 to 5. No migration.
-- Report: `docs/reports/2026-11-04-phase-18-admin-stats.md` (with the questions for Filip at the end); browser pass: `docs/reports/2026-11-04-phase-18-browser-pass.md`; guide: `docs/guides/phase-18-admin-stats.md`; make-admin steps: `docs/guides/grant-admin.md`; first-push texts: `docs/guides/phase-18-pr-text.md`; mockup: `docs/design/2026-11-04-phase-18/`.
-- Everything is committed on the branch; nothing is pushed by Claude.
+- Branch: `feat/19-legal` (made from `main` = `ddf41f2`, the Phase 18 merge). Pushed up to `f7e2478`; the PR exists. Filip pushes the rest and merges.
+- Committed: Steps 0 to 10, the browser-pass fixes (`0023b3c`), the code-review fixes and final report (`f7e2478`), the activity feed in Download my data (`2cb5b94`), and the fix for the one failing GitHub test plus the Render deploy script build (`c3eabe7`). The last two are NOT pushed yet.
+- CI on `f7e2478` failed on exactly one test, `CleanupGroupTests.Post_RemovedGroup_TakesTheDuplicateAnswers...` (Release build runs the tests of a class in a different order than Debug; an earlier test left an answer behind). Fixed in `c3eabe7` and reproduced and proven in a Release run. NOT VERIFIED on GitHub until the next push.
+- Phase 19 map: report `docs/reports/2026-11-09-phase-19-legal.md` (final; 8 questions for Filip at its end); browser pass `docs/reports/2026-11-09-phase-19-browser-pass.md`; Filip's step-by-step guide `docs/guides/phase-19-legal.md`; PR text `docs/guides/phase-19-pr-text.md`; decisions in `DECISIONS.md` ("Phase 19"); research `docs/reports/2026-11-04-phase-19-legal-research.md`.
 
 ## Next step
-1. Filip: read the open questions at the end of the Phase 18 report, push, open the PR with the texts in `docs/guides/phase-18-pr-text.md`, CI green, merge (no migration). Then make the online account admin (`docs/guides/grant-admin.md`) and look at the page on the real site and a phone (`docs/guides/phase-18-admin-stats.md`).
-2. After that: Phase 19 (legal pages and data rights; planned 2026-11-04, research in `docs/reports/2026-11-04-phase-19-legal-research.md`, Filip's open questions at the top of `docs/DECISIONS.md`). Its Step 7b needs the `Admin` role from Phase 18.
-
-## Then
-- Filip, once on the real site: one real EUR expense (first real NBRM call), a real phone check of the Phase 16 to 18 screens, the Macedonian drafts of Phases 9 to 18, the Google button and "Make an account", the invite link on his phone.
-- BACKLOG: future and planned payments, the Phase 18, 17, 16, 15, 14, 12 and 12b leftovers.
+Filip: push, check CI is green, add three secrets before merging (`Cleanup__Secret` on Render, `CLEANUP_SECRET` and `BACKUP_PASSPHRASE` on GitHub; the passphrase at least 30 random characters, the repository is public), CI green, merge, run the Cleanup and Backup workflows once by hand, and do the outside-the-code list in `docs/guides/phase-19-legal.md`. After the merge: update ROADMAP and STATUS for Phase 20 (or whatever Filip picks next).
 
 ## Blockers and open questions
-- Nothing blocks the next step. Filip to decide: whether `START-HERE-PROMPT.md` stays in the public repository; whether the light theme gets a lighter peach; whether the Totals tab gets bars later; the Phase 18 questions in its report.
+- Open from Step 11: old "active people" numbers drop after 12 months (Filip said that is not fine; options: a monthly summary table or keeping the tie longer; not decided, not built). Waiting for Filip: Phase 18 leftovers (light theme peach, Totals bars); the Macedonian legal drafts to read (list in the report).
+- Docker Desktop must be open for the backend tests (ask Filip, never work around it).
+- Local database has throwaway `p19*@example.com` accounts from the browser pass; `p19admin1794216234@example.com` has the Admin role (revoke command in the browser-pass report). Harmless.
 
 ## Verification state
-- VERIFIED by automated test (2026-11-04, run by Claude after the last coder run): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 6153/6153; `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 13309/13309.
-- VERIFIED by live run (headless Chromium, local stack): the Statistics page at 320/360/768/1280/1920 px in EN/MK, light/dark, reduced motion, as admin, normal user and guest (5 findings; 4 fixed and re-measured in a browser, 1 in BACKLOG; the earliest-date fix from the code review is VERIFIED by automated test only).
-- NOT VERIFIED: a real phone, iOS Safari, Firefox, a screen reader, the real Neon data and the Cloudflare Pages path for `/api/admin/stats`, a real visit at 23:30 UTC, the Macedonian drafts.
+- VERIFIED by automated test (tester, 2026-11-09, after the last change): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 7432/7432; `dotnet ef migrations has-pending-model-changes` clean; frontend `npm run lint` 0 warnings, `npm run build` 0 type errors, `npm test` 15645/15645 (last full run after the browser-pass fixes, no frontend change after it); `npm run check:licenses` ok.
+- VERIFIED by live run: the browser pass in headless Chromium (432 views plus 40 flow checks); backup, lock, unlock and restore on local throwaway databases (24 tables identical).
+- NOT VERIFIED: a real phone, iOS Safari, Firefox, a screen reader, the real Google sign-in, the terms pill fix in a browser, the Macedonian drafts, both new GitHub workflows (and the passphrase-length step), the cleanup call through Cloudflare, the real Neon dump, the 3 migrations on Neon, the Cloudflare build serving the licence file.
+- Known flaky tests under load (pass alone; in BACKLOG): `GroupScreenMarkPaid.test.tsx` "queues the payment…", `JoinScreen.test.tsx` "goes straight to the group…".

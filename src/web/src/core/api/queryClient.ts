@@ -8,13 +8,14 @@ import { ApiError, forbiddenStatus, unauthorizedStatus } from './apiClient'
 import { savedQueryCacheMaxAge } from './savedQueryCache'
 
 const wrongPasswordAtLogInCode = 'AUTH_INVALID_CREDENTIALS'
-const mustChangePasswordCode = 'AUTH_MUST_CHANGE_PASSWORD'
+const codesThatChangeMe: readonly string[] = ['AUTH_MUST_CHANGE_PASSWORD', 'ACCOUNT_SUSPENDED']
 export const groupStateChangedCodes: readonly string[] = [
   'GROUP_CLOSING',
   'GROUP_FINISHED',
   'GROUP_NOT_CLOSING',
   'GROUP_NOT_OPEN',
   'GROUP_NOT_FINISHED',
+  'GROUP_CLOSED_BY_ADMIN',
 ]
 const maxQueryRetries = 3
 const firstClientErrorStatus = 400
@@ -77,7 +78,8 @@ function updateMeAfterFailure(queryClient: QueryClient, error: unknown): void {
   }
   if (
     error.httpStatus === forbiddenStatus &&
-    error.errorCode === mustChangePasswordCode
+    error.errorCode !== null &&
+    codesThatChangeMe.includes(error.errorCode)
   ) {
     void queryClient.invalidateQueries({ queryKey: meQueryKey })
   }

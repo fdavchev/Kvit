@@ -20,7 +20,10 @@ export function useGoogleSignIn(
 
   return (idToken) => {
     logIn.mutate(idToken, {
-      onSuccess: () => {
+      onSuccess: (me) => {
+        if (me.deletionCancelled) {
+          toast.success(t('auth.deletionCancelled'))
+        }
         if (joinToken !== null) {
           void queryClient.invalidateQueries({ queryKey: invitePreviewQueryKey(joinToken) })
         }
