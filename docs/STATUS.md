@@ -17,7 +17,7 @@ Filip: commit the review fixes and docs, answer the 8 questions at the end of th
 - Local database has throwaway `p19*@example.com` accounts from the browser pass; `p19admin1794216234@example.com` has the Admin role (revoke command in the browser-pass report). Harmless.
 
 ## Verification state
-- VERIFIED by automated test (tester, 2026-11-09, after the last change): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 7417/7417; `dotnet ef migrations has-pending-model-changes` clean; frontend `npm run lint` 0 warnings, `npm run build` 0 type errors, `npm test` 15645/15645 (last full run after the browser-pass fixes, no frontend change after it); `npm run check:licenses` ok.
+- VERIFIED by automated test (tester, 2026-11-09, after the last change): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 7432/7432; `dotnet ef migrations has-pending-model-changes` clean; frontend `npm run lint` 0 warnings, `npm run build` 0 type errors, `npm test` 15645/15645 (last full run after the browser-pass fixes, no frontend change after it); `npm run check:licenses` ok.
 - VERIFIED by live run: the browser pass in headless Chromium (432 views plus 40 flow checks); backup, lock, unlock and restore on local throwaway databases (24 tables identical).
 - NOT VERIFIED: a real phone, iOS Safari, Firefox, a screen reader, the real Google sign-in, the terms pill fix in a browser, the Macedonian drafts, both new GitHub workflows (and the passphrase-length step), the cleanup call through Cloudflare, the real Neon dump, the 3 migrations on Neon, the Cloudflare build serving the licence file.
 - Known flaky tests under load (pass alone; in BACKLOG): `GroupScreenMarkPaid.test.tsx` "queues the payment…", `JoinScreen.test.tsx` "goes straight to the group…".

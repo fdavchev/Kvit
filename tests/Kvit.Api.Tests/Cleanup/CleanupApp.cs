@@ -39,6 +39,7 @@ namespace Kvit.Api.Tests.Cleanup
         {
             Clock.SetTo(ClockStart);
             await ExpenseRows.AllowAllShareChangesAsync(this);
+            await CleanupRows.RemoveAllDuplicateAnswersAsync(this);
             await CleanupRows.RemoveSoftDeletedRowsAsync(this);
             await CleanupRows.ForgetPendingDeletionRequestsAsync(this);
             await CleanupRows.DetachAllUsageEventsAsync(this);

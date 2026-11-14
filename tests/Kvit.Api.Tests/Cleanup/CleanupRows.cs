@@ -25,6 +25,11 @@ namespace Kvit.Api.Tests.Cleanup
                 + "DELETE FROM groups WHERE deleted_at IS NOT NULL");
         }
 
+        public static Task RemoveAllDuplicateAnswersAsync(MigratedDatabase database)
+        {
+            return database.ExecuteAsync("DELETE FROM duplicate_answers");
+        }
+
         public static Task ForgetPendingDeletionRequestsAsync(MigratedDatabase database)
         {
             return database.ExecuteAsync(
