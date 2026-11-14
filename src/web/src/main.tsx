@@ -11,6 +11,7 @@ import {
 } from '@/core/api/savedQueryCache'
 import { startI18n } from '@/core/i18n/i18n'
 import { RouterAfterRestore } from '@/core/router/RouterAfterRestore'
+import { ServerAsleepBar } from '@/core/router/ServerAsleepBar'
 import { renderStartupFailure } from '@/core/startup/renderStartupFailure'
 import { startTheme } from '@/core/theme/startTheme'
 import { KvitToaster } from '@/shared/components/KvitToaster'
@@ -40,6 +41,7 @@ createRoot(rootElement).render(
         onError={() => reportRestoreFailure(persister)}
       >
         <RouterAfterRestore />
+        <ServerAsleepBar />
         <KvitToaster />
       </PersistQueryClientProvider>
     </I18nextProvider>

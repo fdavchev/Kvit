@@ -9,7 +9,7 @@ namespace Kvit.Api.Tests.Cleanup
     public class CleanupSettlementTests(CleanupApp app) : CleanupTestBase(app)
     {
         [Fact]
-        public async Task Post_SettlementDeletedThirtyFourDaysAndTwentyThreeHoursAgo_Stays()
+        public async Task Run_SettlementDeletedThirtyFourDaysAndTwentyThreeHoursAgo_Stays()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid settlementId = await CleanupSteps.RecordSettlementDeletedAgoAsync(_app, group, CleanupSteps.SoftDeletedRowLimit - CleanupSteps.OneHour);
@@ -21,7 +21,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_SettlementDeletedExactlyThirtyFiveDaysAgo_IsRemoved()
+        public async Task Run_SettlementDeletedExactlyThirtyFiveDaysAgo_IsRemoved()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid settlementId = await CleanupSteps.RecordSettlementDeletedAgoAsync(_app, group, CleanupSteps.SoftDeletedRowLimit);
@@ -33,7 +33,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_SettlementDeletedTwentyDaysAgo_StaysAndCanStillBeRestored()
+        public async Task Run_SettlementDeletedTwentyDaysAgo_StaysAndCanStillBeRestored()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid settlementId = await CleanupSteps.RecordSettlementDeletedAgoAsync(_app, group, TimeSpan.FromDays(20));
@@ -45,7 +45,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_SettlementThatWasNeverDeleted_StaysWhileOldOnesAreRemoved()
+        public async Task Run_SettlementThatWasNeverDeleted_StaysWhileOldOnesAreRemoved()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid liveId = await CleanupSteps.RecordSettlementAsync(group);
@@ -58,7 +58,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_SettlementsRemovedFromTwoGroups_CountsAllOfThemAndNotTheStayingOne()
+        public async Task Run_SettlementsRemovedFromTwoGroups_CountsAllOfThemAndNotTheStayingOne()
         {
             ExpenseGroup first = await _app.CreateExpenseGroupAsync();
             ExpenseGroup second = await _app.CreateExpenseGroupAsync();
@@ -73,7 +73,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedSettlement_ActivityFeedStillAnswers200WithTheSameEvents()
+        public async Task Run_RemovedSettlement_ActivityFeedStillAnswers200WithTheSameEvents()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             await CleanupSteps.RecordSettlementDeletedAgoAsync(_app, group, CleanupSteps.SoftDeletedRowLimit);
@@ -87,7 +87,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedSettlement_BalancesOfTheGroupStayTheSame()
+        public async Task Run_RemovedSettlement_BalancesOfTheGroupStayTheSame()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             await CleanupSteps.AddExpenseAsync(_app, group);

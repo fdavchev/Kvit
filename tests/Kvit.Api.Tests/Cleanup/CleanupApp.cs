@@ -1,38 +1,17 @@
 using Kvit.Api.Tests.Expenses;
-using Kvit.Api.Tests.Hosting;
 using Kvit.Api.Tests.Persistence;
 using Kvit.Api.Tests.Postgres;
+using Kvit.Contracts.Cleanup;
+using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace Kvit.Api.Tests.Cleanup
 {
-    public class CleanupApp : ExpensesApp
+    public class CleanupApp(PostgresFixture postgres) : ExpensesApp(postgres)
     {
-        public const string Secret = "test-cleanup-secret-0123456789abcdef";
-
-        private readonly KvitApiFactory _unconfiguredFactory;
-
-        public CleanupApp(PostgresFixture postgres)
-            : base(postgres)
-        {
-            _factory.CleanupSecret = Secret;
-            _unconfiguredFactory = _factory.CreateAnotherInstanceOnTheSameDatabase();
-            _unconfiguredFactory.AdditionalTestServices = _factory.AdditionalTestServices;
-        }
-
         public DateTimeOffset Now
         {
             get { return Clock.GetUtcNow(); }
-        }
-
-        public override async ValueTask DisposeAsync()
-        {
-            await _unconfiguredFactory.DisposeAsync();
-            await base.DisposeAsync();
-        }
-
-        public HttpClient CreateClientOfTheHostWithoutTheSecret()
-        {
-            return _unconfiguredFactory.CreateClient(HttpsWithCookies());
         }
 
         public async Task ResetAsync()
@@ -47,9 +26,18 @@ namespace Kvit.Api.Tests.Cleanup
 
         public async Task<CleanupResult> RunCleanupAsync()
         {
-            HttpResponseMessage response = await CleanupRequests.PostAsync(CreateClientWithoutCookies(), Secret);
+            using IServiceScope scope = CreateScope();
+            IDataCleanup dataCleanup = scope.ServiceProvider.GetRequiredService<IDataCleanup>();
 
-            return await CleanupRequests.ReadResultAsync(response);
+            CleanupResponse response = await dataCleanup.RunAsync(Now, TestContext.Current.CancellationToken);
+
+            return new CleanupResult(
+                response.AccountsPurged,
+                response.GroupsRemoved,
+                response.ExpensesRemoved,
+                response.SettlementsRemoved,
+                response.PersonalEntriesRemoved,
+                response.UsageEventsDetached);
         }
     }
 }

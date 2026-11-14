@@ -10,7 +10,7 @@ namespace Kvit.Api.Tests.Cleanup
     public class CleanupPersonalEntryTests(CleanupApp app) : CleanupTestBase(app)
     {
         [Fact]
-        public async Task Post_EntryDeletedThirtyFourDaysAndTwentyThreeHoursAgo_Stays()
+        public async Task Run_EntryDeletedThirtyFourDaysAndTwentyThreeHoursAgo_Stays()
         {
             SignedInUser user = await _app.SignUpAsync();
             Guid entryId = await CleanupSteps.AddPersonalEntryDeletedAgoAsync(_app, user, CleanupSteps.SoftDeletedRowLimit - CleanupSteps.OneHour);
@@ -22,7 +22,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_EntryDeletedExactlyThirtyFiveDaysAgo_IsRemoved()
+        public async Task Run_EntryDeletedExactlyThirtyFiveDaysAgo_IsRemoved()
         {
             SignedInUser user = await _app.SignUpAsync();
             Guid entryId = await CleanupSteps.AddPersonalEntryDeletedAgoAsync(_app, user, CleanupSteps.SoftDeletedRowLimit);
@@ -34,7 +34,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_IncomeDeletedExactlyThirtyFiveDaysAgo_IsRemovedToo()
+        public async Task Run_IncomeDeletedExactlyThirtyFiveDaysAgo_IsRemovedToo()
         {
             SignedInUser user = await _app.SignUpAsync();
             Guid entryId = await CleanupSteps.AddIncomeDeletedAgoAsync(_app, user, CleanupSteps.SoftDeletedRowLimit);
@@ -46,7 +46,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_IncomeDeletedThirtyFourDaysAndTwentyThreeHoursAgo_Stays()
+        public async Task Run_IncomeDeletedThirtyFourDaysAndTwentyThreeHoursAgo_Stays()
         {
             SignedInUser user = await _app.SignUpAsync();
             Guid entryId = await CleanupSteps.AddIncomeDeletedAgoAsync(_app, user, CleanupSteps.SoftDeletedRowLimit - CleanupSteps.OneHour);
@@ -58,7 +58,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_GeneratedIncomeDeletedExactlyThirtyFiveDaysAgo_StaysWhileAManualEntryOfTheSameAgeIsRemoved()
+        public async Task Run_GeneratedIncomeDeletedExactlyThirtyFiveDaysAgo_StaysWhileAManualEntryOfTheSameAgeIsRemoved()
         {
             SignedInUser user = await _app.SignUpAsync();
             Guid recurringIncomeId = await RecurringIncomeRows.InsertAsync(_app, user.UserId);
@@ -73,7 +73,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_EntryDeletedTwoDaysAgo_StaysAndCanStillBeRestored()
+        public async Task Run_EntryDeletedTwoDaysAgo_StaysAndCanStillBeRestored()
         {
             SignedInUser user = await _app.SignUpAsync();
             Guid entryId = await CleanupSteps.AddPersonalEntryDeletedAgoAsync(_app, user, TimeSpan.FromDays(2));
@@ -85,7 +85,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_EntryThatWasNeverDeleted_StaysAndStillShowsInItsMonth()
+        public async Task Run_EntryThatWasNeverDeleted_StaysAndStillShowsInItsMonth()
         {
             SignedInUser user = await _app.SignUpAsync();
             Guid liveId = await CleanupSteps.AddPersonalEntryAsync(user);
@@ -97,7 +97,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_EntriesRemovedFromTwoPeople_CountsAllOfThemAndNotTheStayingOne()
+        public async Task Run_EntriesRemovedFromTwoPeople_CountsAllOfThemAndNotTheStayingOne()
         {
             SignedInUser first = await _app.SignUpAsync();
             SignedInUser second = await _app.SignUpAsync();
@@ -112,7 +112,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_DuplicateAnswerPointingAtARemovedEntry_IsRemovedAndTheExpenseStays()
+        public async Task Run_DuplicateAnswerPointingAtARemovedEntry_IsRemovedAndTheExpenseStays()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid expenseId = await CleanupSteps.AddExpenseAsync(_app, group);
@@ -127,7 +127,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_DuplicateAnswerOfAStayingEntry_Stays()
+        public async Task Run_DuplicateAnswerOfAStayingEntry_Stays()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid expenseId = await CleanupSteps.AddExpenseAsync(_app, group);
@@ -141,7 +141,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedEntryOfOnePerson_LeavesTheOtherPersonsEntriesAlone()
+        public async Task Run_RemovedEntryOfOnePerson_LeavesTheOtherPersonsEntriesAlone()
         {
             SignedInUser leaver = await _app.SignUpAsync();
             SignedInUser other = await _app.SignUpAsync();

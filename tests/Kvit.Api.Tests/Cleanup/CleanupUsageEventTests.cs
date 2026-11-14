@@ -26,7 +26,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_EventOneSecondOlderThanTwelveMonths_LosesItsLinkToTheAccount()
+        public async Task Run_EventOneSecondOlderThanTwelveMonths_LosesItsLinkToTheAccount()
         {
             SignedInUser user = await _app.SignUpAsync();
             long eventId = await CleanupRows.InsertUsageEventAsync(_app, user.UserId, AnyType, TwelveMonthsAgo - CleanupSteps.OneSecond);
@@ -38,7 +38,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_EventExactlyTwelveMonthsOld_StaysLinked()
+        public async Task Run_EventExactlyTwelveMonthsOld_StaysLinked()
         {
             SignedInUser user = await _app.SignUpAsync();
             long eventId = await CleanupRows.InsertUsageEventAsync(_app, user.UserId, AnyType, TwelveMonthsAgo);
@@ -50,7 +50,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_EventOneSecondYoungerThanTwelveMonths_StaysLinked()
+        public async Task Run_EventOneSecondYoungerThanTwelveMonths_StaysLinked()
         {
             SignedInUser user = await _app.SignUpAsync();
             long eventId = await CleanupRows.InsertUsageEventAsync(_app, user.UserId, AnyType, TwelveMonthsAgo + CleanupSteps.OneSecond);
@@ -62,7 +62,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_EventElevenMonthsOld_StaysLinked()
+        public async Task Run_EventElevenMonthsOld_StaysLinked()
         {
             SignedInUser user = await _app.SignUpAsync();
             long eventId = await CleanupRows.InsertUsageEventAsync(_app, user.UserId, AnyType, _app.Now.AddMonths(-11));
@@ -74,7 +74,7 @@ namespace Kvit.Api.Tests.Cleanup
 
         [Theory]
         [MemberData(nameof(EveryEventType))]
-        public async Task Post_OldEventOfAnyType_LosesItsLinkToTheAccount(string type)
+        public async Task Run_OldEventOfAnyType_LosesItsLinkToTheAccount(string type)
         {
             SignedInUser user = await _app.SignUpAsync();
             long eventId = await CleanupRows.InsertUsageEventAsync(_app, user.UserId, type, TwelveMonthsAgo - CleanupSteps.OneSecond);
@@ -86,7 +86,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_TwoOldActiveEventsOfOnePerson_BothLoseTheirLink()
+        public async Task Run_TwoOldActiveEventsOfOnePerson_BothLoseTheirLink()
         {
             SignedInUser user = await _app.SignUpAsync();
             long first = await CleanupRows.InsertUsageEventAsync(_app, user.UserId, "Active", _app.Now.AddMonths(-14));
@@ -100,7 +100,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_DetachedEvent_KeepsItsRowTypeDetailAndDates()
+        public async Task Run_DetachedEvent_KeepsItsRowTypeDetailAndDates()
         {
             SignedInUser user = await _app.SignUpAsync();
             long eventId = await CleanupRows.InsertUsageEventAsync(_app, user.UserId, "SignedUp", TwelveMonthsAgo - TimeSpan.FromDays(40), "Google");
@@ -112,7 +112,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_Detaching_TheNumberOfUsageEventsStaysTheSame()
+        public async Task Run_Detaching_TheNumberOfUsageEventsStaysTheSame()
         {
             SignedInUser user = await _app.SignUpAsync();
             await CleanupRows.InsertUsageEventAsync(_app, user.UserId, AnyType, _app.Now.AddMonths(-20));
@@ -125,7 +125,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_OldEventThatHasNoPersonAnyMore_IsNotCounted()
+        public async Task Run_OldEventThatHasNoPersonAnyMore_IsNotCounted()
         {
             SignedInUser user = await _app.SignUpAsync();
             await CleanupRows.InsertUsageEventAsync(_app, null, AnyType, _app.Now.AddMonths(-20));
@@ -138,7 +138,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_OldEventsOfThreePeople_CountsEachEventOnce()
+        public async Task Run_OldEventsOfThreePeople_CountsEachEventOnce()
         {
             SignedInUser first = await _app.SignUpAsync();
             SignedInUser second = await _app.SignUpAsync();
@@ -155,7 +155,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_YoungEventsOfAPersonWithOldEvents_StayLinked()
+        public async Task Run_YoungEventsOfAPersonWithOldEvents_StayLinked()
         {
             SignedInUser user = await _app.SignUpAsync();
             long oldId = await CleanupRows.InsertUsageEventAsync(_app, user.UserId, AnyType, _app.Now.AddMonths(-13));
@@ -168,7 +168,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_YoungEventsOfOtherPeople_AreUntouched()
+        public async Task Run_YoungEventsOfOtherPeople_AreUntouched()
         {
             SignedInUser oldPerson = await _app.SignUpAsync();
             SignedInUser youngPerson = await _app.SignUpAsync();
@@ -183,7 +183,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_PersonWhoseEventsWereDetached_CanStillUseTheAccount()
+        public async Task Run_PersonWhoseEventsWereDetached_CanStillUseTheAccount()
         {
             SignedInUser user = await _app.SignUpAsync();
             await CleanupRows.InsertUsageEventAsync(_app, user.UserId, AnyType, _app.Now.AddMonths(-13));
@@ -194,7 +194,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_TheAppClockDecidesWhatIsOld_NotTheRealClock()
+        public async Task Run_TheAppClockDecidesWhatIsOld_NotTheRealClock()
         {
             SignedInUser user = await _app.SignUpAsync();
             int eventsOfThePerson = (await _app.UsageEventsOfAsync(user.UserId)).Count;

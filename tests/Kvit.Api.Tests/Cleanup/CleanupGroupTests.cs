@@ -14,7 +14,7 @@ namespace Kvit.Api.Tests.Cleanup
     public class CleanupGroupTests(CleanupApp app) : CleanupTestBase(app)
     {
         [Fact]
-        public async Task Post_GroupDeletedFiftyNineDaysAndTwentyThreeHoursAgo_StaysWithEverythingInIt()
+        public async Task Run_GroupDeletedFiftyNineDaysAndTwentyThreeHoursAgo_StaysWithEverythingInIt()
         {
             FullGroup full = await CleanupSteps.CreateFullGroupAsync(_app);
             await CleanupSteps.SetGroupDeletedAgoAsync(_app, full.Group, CleanupSteps.DeletedGroupLimit - CleanupSteps.OneHour);
@@ -27,7 +27,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_GroupDeletedFiftyNineDaysAgo_StaysAndIsPastItsRestoreWindow()
+        public async Task Run_GroupDeletedFiftyNineDaysAgo_StaysAndIsPastItsRestoreWindow()
         {
             ExpenseGroup group = await CleanupSteps.CreateGroupDeletedAgoAsync(_app, TimeSpan.FromDays(59));
 
@@ -38,7 +38,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_GroupDeletedTwentyNineDaysAgo_StaysAndCanStillBeRestored()
+        public async Task Run_GroupDeletedTwentyNineDaysAgo_StaysAndCanStillBeRestored()
         {
             ExpenseGroup group = await CleanupSteps.CreateGroupDeletedAgoAsync(_app, TimeSpan.FromDays(29));
 
@@ -49,7 +49,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_GroupDeletedExactlySixtyDaysAgo_IsRemoved()
+        public async Task Run_GroupDeletedExactlySixtyDaysAgo_IsRemoved()
         {
             ExpenseGroup group = await CleanupSteps.CreateGroupDeletedAgoAsync(_app, CleanupSteps.DeletedGroupLimit);
 
@@ -60,7 +60,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_GroupDeletedNinetyDaysAgo_IsRemoved()
+        public async Task Run_GroupDeletedNinetyDaysAgo_IsRemoved()
         {
             ExpenseGroup group = await CleanupSteps.CreateGroupDeletedAgoAsync(_app, TimeSpan.FromDays(90));
 
@@ -71,7 +71,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_GroupThatWasNeverDeleted_StaysWithEverythingInIt()
+        public async Task Run_GroupThatWasNeverDeleted_StaysWithEverythingInIt()
         {
             FullGroup full = await CleanupSteps.CreateFullGroupAsync(_app);
             await CleanupSteps.CreateGroupDeletedAgoAsync(_app, CleanupSteps.DeletedGroupLimit);
@@ -82,7 +82,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedGroup_TakesEverythingInsideItWithIt()
+        public async Task Run_RemovedGroup_TakesEverythingInsideItWithIt()
         {
             FullGroup full = await CleanupSteps.CreateFullGroupAsync(_app);
             await CleanupSteps.SetGroupDeletedAgoAsync(_app, full.Group, CleanupSteps.DeletedGroupLimit);
@@ -95,7 +95,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedGroup_CountsItsExpensesAndSettlementsInTheTotals()
+        public async Task Run_RemovedGroup_CountsItsExpensesAndSettlementsInTheTotals()
         {
             FullGroup full = await CleanupSteps.CreateFullGroupAsync(_app);
             await CleanupSteps.SetGroupDeletedAgoAsync(_app, full.Group, CleanupSteps.DeletedGroupLimit);
@@ -106,7 +106,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedGroup_TakesTheDuplicateAnswersAboutItsExpensesButNotTheEntry()
+        public async Task Run_RemovedGroup_TakesTheDuplicateAnswersAboutItsExpensesButNotTheEntry()
         {
             FullGroup full = await CleanupSteps.CreateFullGroupAsync(_app);
             await CleanupSteps.SetGroupDeletedAgoAsync(_app, full.Group, CleanupSteps.DeletedGroupLimit);
@@ -119,7 +119,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedGroup_LeavesTheAccountsOfItsMembers()
+        public async Task Run_RemovedGroup_LeavesTheAccountsOfItsMembers()
         {
             FullGroup full = await CleanupSteps.CreateFullGroupAsync(_app);
             await CleanupSteps.SetGroupDeletedAgoAsync(_app, full.Group, CleanupSteps.DeletedGroupLimit);
@@ -132,7 +132,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedGroup_IsGoneForItsOwner()
+        public async Task Run_RemovedGroup_IsGoneForItsOwner()
         {
             ExpenseGroup group = await CleanupSteps.CreateGroupDeletedAgoAsync(_app, CleanupSteps.DeletedGroupLimit);
 
@@ -143,7 +143,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_GroupWithAnOldDeletedExpenseInsideIt_IsRemovedOnceAndCountsTheExpenseOnce()
+        public async Task Run_GroupWithAnOldDeletedExpenseInsideIt_IsRemovedOnceAndCountsTheExpenseOnce()
         {
             FullGroup full = await CleanupSteps.CreateFullGroupAsync(_app);
             Guid oldExpenseId = await CleanupSteps.AddExpenseDeletedAgoAsync(_app, full.Group, CleanupSteps.SoftDeletedRowLimit);
@@ -158,7 +158,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_TwoGroupsRemovedAndOneStaying_CountsTwo()
+        public async Task Run_TwoGroupsRemovedAndOneStaying_CountsTwo()
         {
             ExpenseGroup first = await CleanupSteps.CreateGroupDeletedAgoAsync(_app, CleanupSteps.DeletedGroupLimit);
             ExpenseGroup second = await CleanupSteps.CreateGroupDeletedAgoAsync(_app, TimeSpan.FromDays(75));
@@ -173,7 +173,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedGroup_LeavesAnotherGroupOfTheSameMembersUntouched()
+        public async Task Run_RemovedGroup_LeavesAnotherGroupOfTheSameMembersUntouched()
         {
             FullGroup removed = await CleanupSteps.CreateFullGroupAsync(_app);
             await CleanupSteps.SetGroupDeletedAgoAsync(_app, removed.Group, CleanupSteps.DeletedGroupLimit);
@@ -190,25 +190,24 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_GroupThatCannotBeFullyRemoved_Answers500AndKeepsEverythingInIt()
+        public async Task Run_GroupThatCannotBeFullyRemoved_FailsAndKeepsEverythingInIt()
         {
             FullGroup full = await CleanupSteps.CreateFullGroupAsync(_app);
             await CleanupSteps.SetGroupDeletedAgoAsync(_app, full.Group, CleanupSteps.DeletedGroupLimit);
             await ExpenseRows.BlockAllShareChangesAsync(_app);
 
-            HttpResponseMessage response = await CleanupRequests.PostAsync(_app.CreateClientWithoutCookies(), CleanupApp.Secret);
+            await Assert.ThrowsAnyAsync<Exception>(_app.RunCleanupAsync);
 
-            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
             Assert.Equal(FullGroup.ExpectedCounts, await CleanupRows.CountRowsOfGroupAsync(_app, full.Group.GroupId));
         }
 
         [Fact]
-        public async Task Post_AfterAFailedRunOnceTheCauseIsGone_RemovesTheGroupOnTheNextRun()
+        public async Task Run_AfterAFailedRunOnceTheCauseIsGone_RemovesTheGroupOnTheNextRun()
         {
             FullGroup full = await CleanupSteps.CreateFullGroupAsync(_app);
             await CleanupSteps.SetGroupDeletedAgoAsync(_app, full.Group, CleanupSteps.DeletedGroupLimit);
             await ExpenseRows.BlockAllShareChangesAsync(_app);
-            await CleanupRequests.PostAsync(_app.CreateClientWithoutCookies(), CleanupApp.Secret);
+            await Assert.ThrowsAnyAsync<Exception>(_app.RunCleanupAsync);
             await ExpenseRows.AllowAllShareChangesAsync(_app);
 
             CleanupResult result = await _app.RunCleanupAsync();
@@ -218,7 +217,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_FailureAfterTheAccountPart_KeepsThePurgeThatAlreadyCommitted()
+        public async Task Run_FailureAfterTheAccountPart_KeepsThePurgeThatAlreadyCommitted()
         {
             SignedInUser leaver = await CleanupSteps.CreateAccountRequestingDeletionAsync(_app);
             _app.Clock.Advance(DeletionRequests.GraceTime);
@@ -226,9 +225,8 @@ namespace Kvit.Api.Tests.Cleanup
             await CleanupSteps.SetGroupDeletedAgoAsync(_app, full.Group, CleanupSteps.DeletedGroupLimit);
             await ExpenseRows.BlockAllShareChangesAsync(_app);
 
-            HttpResponseMessage response = await CleanupRequests.PostAsync(_app.CreateClientWithoutCookies(), CleanupApp.Secret);
+            await Assert.ThrowsAnyAsync<Exception>(_app.RunCleanupAsync);
 
-            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
             Assert.Equal(_app.Now, (await DeletionRows.ReadAsync(_app, leaver.UserId)).PurgedAt);
         }
     }

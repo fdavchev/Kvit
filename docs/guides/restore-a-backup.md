@@ -12,7 +12,7 @@ Neon also keeps the last 6 hours on its own. The weekly backup is for bigger acc
 2. Make sure the secret `NEON_DIRECT_CONNECTION_STRING` exists (it already does, it is used for the database updates).
 3. Add a new secret named `BACKUP_PASSPHRASE`. The value is a long random text of at least 30 characters. Write the same text in your private notes.
 4. Open the **Actions** tab, choose **Backup** on the left, press **Run workflow**. After about two minutes the run should show a green tick, and the run page lists a file under **Artifacts** named `kvit-backup-<date>`. If it is red, open it: the message says what is missing.
-5. Do the same for **Cleanup** once, after adding the secret `CLEANUP_SECRET` (see the Phase 19 guide).
+5. (Changed 2026-11-14: there is no **Cleanup** workflow any more; the cleanup runs by itself inside the server the first time someone uses Kvit each day, so there is nothing to run here.)
 
 Two things to know:
 - GitHub switches off scheduled jobs in a public repository after about 60 days without any activity (a push, a merge). It sends you an email first. If it happens, open the Actions tab and press **Enable**.

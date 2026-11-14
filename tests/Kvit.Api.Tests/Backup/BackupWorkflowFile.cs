@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using Kvit.Api.Tests.Cleanup;
 
 namespace Kvit.Api.Tests.Backup
 {
@@ -12,12 +11,12 @@ namespace Kvit.Api.Tests.Backup
 
         public static string ReadWithoutCommentLines()
         {
-            return CleanupWorkflowFile.ReadWithoutCommentLines(RelativePath);
+            return WorkflowFile.ReadWithoutCommentLines(RelativePath);
         }
 
         public static List<string> StepsOf(string text)
         {
-            string jobs = CleanupWorkflowFile.BlockOf(text, "jobs");
+            string jobs = WorkflowFile.BlockOf(text, "jobs");
             List<string> steps = [];
             List<string> current = [];
             foreach (string line in jobs.Split('\n'))

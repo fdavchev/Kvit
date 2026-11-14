@@ -1,3 +1,5 @@
+import { followServerAnswer } from './serverWake'
+
 interface ApiErrorDetails {
   httpStatus: number | null
   errorCode?: string | null
@@ -73,6 +75,7 @@ async function sendRequest(path: string, init: RequestInit, request: string): Pr
     })
   }
 
+  followServerAnswer(init.method ?? 'GET', path, response)
   if (!response.ok) {
     const body = await readBody(response, request)
     throw new ApiError(`${request} failed with status ${response.status}`, {

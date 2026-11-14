@@ -1014,7 +1014,9 @@
   },
   "wakingUp": {
     "title": "Waking up the server…",
-    "hint": "This takes about a minute the first time."
+    "hint": "This takes about a minute the first time.",
+    "asleep": "The server is asleep.",
+    "wake": "Wake the server"
   },
   "outbox": {
     "notSynced": "Not synced yet",
