@@ -14,7 +14,7 @@ namespace Kvit.Api.Proxy
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if (IsHealthCheck(context.Request.Path))
+            if (IsOpenWithoutTheProxy(context.Request.Path))
             {
                 await _next(context);
                 return;
@@ -38,10 +38,11 @@ namespace Kvit.Api.Proxy
             await _next(context);
         }
 
-        private static bool IsHealthCheck(PathString path)
+        private static bool IsOpenWithoutTheProxy(PathString path)
         {
             return path.Equals("/health", StringComparison.OrdinalIgnoreCase)
-                || path.Equals("/api/health", StringComparison.OrdinalIgnoreCase);
+                || path.Equals("/api/health", StringComparison.OrdinalIgnoreCase)
+                || path.Equals("/wake", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

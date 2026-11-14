@@ -10,7 +10,7 @@ namespace Kvit.Api.Tests.Cleanup
         private static readonly DateTimeOffset FarFuture = new(2100, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
         [Fact]
-        public async Task Post_RequestedTwentyNineDaysAndTwentyThreeHoursAgo_PurgesNothing()
+        public async Task Run_RequestedTwentyNineDaysAndTwentyThreeHoursAgo_PurgesNothing()
         {
             SignedInUser user = await CleanupSteps.CreateAccountRequestingDeletionAsync(_app);
             DateTimeOffset requestedAt = _app.Now;
@@ -22,7 +22,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RequestedOneSecondLessThanThirtyDaysAgo_PurgesNothing()
+        public async Task Run_RequestedOneSecondLessThanThirtyDaysAgo_PurgesNothing()
         {
             SignedInUser user = await CleanupSteps.CreateAccountRequestingDeletionAsync(_app);
             DateTimeOffset requestedAt = _app.Now;
@@ -34,7 +34,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RequestedExactlyThirtyDaysAgo_PurgesItAtTheClockTime()
+        public async Task Run_RequestedExactlyThirtyDaysAgo_PurgesItAtTheClockTime()
         {
             SignedInUser user = await CleanupSteps.CreateAccountRequestingDeletionAsync(_app);
             DateTimeOffset now = _app.Now + DeletionRequests.GraceTime;
@@ -46,7 +46,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RequestedThirtyOneDaysAgo_PurgesIt()
+        public async Task Run_RequestedThirtyOneDaysAgo_PurgesIt()
         {
             SignedInUser user = await CleanupSteps.CreateAccountRequestingDeletionAsync(_app, DeletionRequests.FormerMember);
 
@@ -57,7 +57,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_TwoDueAndOneNotYetDue_CountsTwoAndLeavesTheOtherPending()
+        public async Task Run_TwoDueAndOneNotYetDue_CountsTwoAndLeavesTheOtherPending()
         {
             SignedInUser firstDue = await CleanupSteps.CreateAccountRequestingDeletionAsync(_app);
             SignedInUser secondDue = await CleanupSteps.CreateAccountRequestingDeletionAsync(_app, DeletionRequests.FormerMember);
@@ -75,7 +75,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_AccountThatNeverAskedToBeDeleted_IsNeverPurged()
+        public async Task Run_AccountThatNeverAskedToBeDeleted_IsNeverPurged()
         {
             SignedInUser user = await _app.SignUpAsync();
 
@@ -87,7 +87,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_DeletionCancelledByLogIn_IsSkipped()
+        public async Task Run_DeletionCancelledByLogIn_IsSkipped()
         {
             SignedInUser user = await CleanupSteps.CreateAccountRequestingDeletionAsync(_app);
             await AuthRequests.LogInAsync(_app.CreateClient(), user.Form.Email, user.Form.Password);
@@ -99,7 +99,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_GuestRequestedThirtyDaysAgo_IsPurged()
+        public async Task Run_GuestRequestedThirtyDaysAgo_IsPurged()
         {
             (_, GuestMember guest) = await GuestSteps.CreateExpenseGroupWithGuestAsync(_app, "Marko");
             await DeletionSteps.RequestAsync(guest.Client, DeletionRequests.KeepName);
@@ -111,7 +111,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_DueAccountWithKeepName_RemovesTheEmailAndKeepsTheName()
+        public async Task Run_DueAccountWithKeepName_RemovesTheEmailAndKeepsTheName()
         {
             SignedInUser user = await CleanupSteps.CreateAccountRequestingDeletionAsync(_app);
 
@@ -122,7 +122,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_DueAccountWithFormerMember_ShowsTheFormerMemberName()
+        public async Task Run_DueAccountWithFormerMember_ShowsTheFormerMemberName()
         {
             SignedInUser user = await CleanupSteps.CreateAccountRequestingDeletionAsync(_app, DeletionRequests.FormerMember);
 
@@ -132,7 +132,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_AccountAlreadyPurgedByAnEarlierRun_IsNotCountedAgainAndKeepsItsFirstPurgeTime()
+        public async Task Run_AccountAlreadyPurgedByAnEarlierRun_IsNotCountedAgainAndKeepsItsFirstPurgeTime()
         {
             SignedInUser user = await CleanupSteps.CreateAccountRequestingDeletionAsync(_app);
             DateTimeOffset firstRun = _app.Now + DeletionRequests.GraceTime;

@@ -19,6 +19,8 @@ const wakingUpTexts: WakingUpText[] = [
     en: 'This takes about a minute the first time.',
     mk: 'Првиот пат ова трае околу една минута.',
   },
+  { key: 'wakingUp.asleep', en: 'The server is asleep.', mk: 'Серверот спие.' },
+  { key: 'wakingUp.wake', en: 'Wake the server', mk: 'Разбуди го серверот' },
 ]
 
 function wakingUpKeysOf(texts: object): string[] {

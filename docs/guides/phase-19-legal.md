@@ -14,10 +14,18 @@ Written 2026-11-09. Everything Claude built is on the branch `feat/19-legal` (no
 ## B. Three secrets (do this BEFORE the merge, otherwise the new jobs fail with a clear message)
 All three are long random texts. Make them in PowerShell (it prints one text; copy it into your private notes file, never into the repository):
 ```
-[Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(36))
+$b = New-Object byte[] 36; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($b); [Convert]::ToBase64String($b)
 ```
-- [ ] **`Cleanup__Secret` on Render:** Render dashboard, your service, **Environment**, add `Cleanup__Secret` = a new random text. (Two underscores.)
-- [ ] **`CLEANUP_SECRET` on GitHub:** repository, **Settings**, **Secrets and variables**, **Actions**, **New repository secret**, name `CLEANUP_SECRET`, **the same text** as on Render.
+(The shorter `RandomNumberGenerator::GetBytes` form does not exist in Windows PowerShell 5.1.)
+**Done 2026-11-14 by Claude at Filip's request:** the three secrets exist (`Cleanup__Secret` on Render, `CLEANUP_SECRET` and `BACKUP_PASSPHRASE` on GitHub) and both values are saved in `Desktop\secrets\kvit-secrets.txt`.
+
+> **Changed 2026-11-14 (branch `fix/20-render-wake`): the two cleanup secrets are no longer used.** The asleep Render server cannot be woken at night any more, so the daily Cleanup job was removed and the cleanup now runs by itself the first time someone uses Kvit each day. After that branch is merged and live, you may delete both (nothing breaks if you leave them, they are simply unused):
+> 1. **Render:** dashboard, your service, **Environment**, find `Cleanup__Secret`, delete it, **Save changes** (Render restarts the server once, which is fine).
+> 2. **GitHub:** repository, **Settings**, **Secrets and variables**, **Actions**, find `CLEANUP_SECRET`, delete it.
+> 3. In `Desktop\secrets\kvit-secrets.txt`, mark the cleanup secret as "deleted 2026-..". Keep `BACKUP_PASSPHRASE`: the weekly backup still needs it.
+
+- [x] ~~**`Cleanup__Secret` on Render**~~ (not needed any more, see the box above)
+- [x] ~~**`CLEANUP_SECRET` on GitHub**~~ (not needed any more, see the box above)
 - [ ] **`BACKUP_PASSPHRASE` on GitHub:** a second new repository secret with a different random text of your own, **at least 30 characters, truly random (a password manager's generator, not a sentence you can remember)**: the repository is public, so anyone with a GitHub account can download the locked backup file, and only this text keeps it closed. **Write this one in your notes twice (two places). If you lose it, the backups are useless.**
 - [ ] On GitHub: repository **Settings**, **Code security**, turn on **Private vulnerability reporting** (so `SECURITY.md` is true).
 
@@ -26,7 +34,7 @@ All three are long random texts. Make them in PowerShell (it prints one text; co
 - [ ] After the merge, wait for Render to finish the deploy.
 
 ## D. First runs on the real site (15 minutes)
-- [ ] GitHub, **Actions**, **Cleanup**, **Run workflow**. Green tick = the secret matches. (It wakes the server and the database once; it will do the same every day at 03:17 UTC, which is 04:17 in Macedonia in winter and 05:17 in summer.) If it is red, open it: the message says which secret is missing or wrong.
+- [x] ~~GitHub, **Actions**, **Cleanup**, **Run workflow**~~ (changed 2026-11-14: the Cleanup workflow is gone. The cleanup runs by itself in the server the first time someone opens Kvit each day; there is nothing to run by hand.)
 - [ ] **Actions**, **Backup**, **Run workflow**. Green tick, then the run page shows a file under **Artifacts**.
 - [ ] Do the practice restore once: `docs/guides/restore-a-backup.md` ("Practice run"). Write the date in `docs/STATUS.md`.
 - [ ] Make your online account admin if it is not yet (`docs/guides/grant-admin.md`), then open **Settings, Owner tools** on your phone.

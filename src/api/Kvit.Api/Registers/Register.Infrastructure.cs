@@ -31,6 +31,7 @@ namespace Kvit.Api.Registers
             services.AddScoped<IAccountPurger, AccountPurger>();
             services.AddScoped<IAccountModeration, AccountModeration>();
             services.AddScoped<IDataCleanup, DataCleanup>();
+            services.AddSingleton<LazyDailyCleanup>();
             services.AddScoped<PasswordResetService>();
             services.AddScoped<AdminRoleService>();
             services.AddSingleton<IInviteTokenGenerator, InviteTokenGenerator>();

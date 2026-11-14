@@ -11,7 +11,7 @@ namespace Kvit.Api.Tests.Cleanup
     public class CleanupExpenseTests(CleanupApp app) : CleanupTestBase(app)
     {
         [Fact]
-        public async Task Post_ExpenseDeletedThirtyFourDaysAndTwentyThreeHoursAgo_Stays()
+        public async Task Run_ExpenseDeletedThirtyFourDaysAndTwentyThreeHoursAgo_Stays()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid expenseId = await CleanupSteps.AddExpenseDeletedAgoAsync(_app, group, CleanupSteps.SoftDeletedRowLimit - CleanupSteps.OneHour);
@@ -23,7 +23,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_ExpenseDeletedExactlyThirtyFiveDaysAgo_IsRemoved()
+        public async Task Run_ExpenseDeletedExactlyThirtyFiveDaysAgo_IsRemoved()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid expenseId = await CleanupSteps.AddExpenseDeletedAgoAsync(_app, group, CleanupSteps.SoftDeletedRowLimit);
@@ -35,7 +35,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_ExpenseDeletedFortyDaysAgo_IsRemoved()
+        public async Task Run_ExpenseDeletedFortyDaysAgo_IsRemoved()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid expenseId = await CleanupSteps.AddExpenseDeletedAgoAsync(_app, group, TimeSpan.FromDays(40));
@@ -47,7 +47,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_ExpenseDeletedTwoDaysAgo_StaysAndCanStillBeRestored()
+        public async Task Run_ExpenseDeletedTwoDaysAgo_StaysAndCanStillBeRestored()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid expenseId = await CleanupSteps.AddExpenseDeletedAgoAsync(_app, group, TimeSpan.FromDays(2));
@@ -59,7 +59,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_ExpenseThatWasNeverDeleted_StaysWhileOldOnesAreRemoved()
+        public async Task Run_ExpenseThatWasNeverDeleted_StaysWhileOldOnesAreRemoved()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid liveId = await CleanupSteps.AddExpenseAsync(_app, group);
@@ -72,7 +72,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedExpense_TakesItsSharesWithIt()
+        public async Task Run_RemovedExpense_TakesItsSharesWithIt()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid expenseId = await CleanupSteps.AddExpenseDeletedAgoAsync(_app, group, CleanupSteps.SoftDeletedRowLimit);
@@ -84,7 +84,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedExpense_LeavesTheSharesOfTheStayingExpenses()
+        public async Task Run_RemovedExpense_LeavesTheSharesOfTheStayingExpenses()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid liveId = await CleanupSteps.AddExpenseAsync(_app, group);
@@ -96,7 +96,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedExpenseOfAGroup_GetAnswers404()
+        public async Task Run_RemovedExpenseOfAGroup_GetAnswers404()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid expenseId = await CleanupSteps.AddExpenseDeletedAgoAsync(_app, group, CleanupSteps.SoftDeletedRowLimit);
@@ -107,7 +107,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_ExpensesRemovedFromTwoGroups_CountsAllOfThemAndNotTheStayingOne()
+        public async Task Run_ExpensesRemovedFromTwoGroups_CountsAllOfThemAndNotTheStayingOne()
         {
             ExpenseGroup first = await _app.CreateExpenseGroupAsync();
             ExpenseGroup second = await _app.CreateExpenseGroupAsync();
@@ -122,7 +122,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedExpense_ActivityFeedStillAnswers200WithTheSameEvents()
+        public async Task Run_RemovedExpense_ActivityFeedStillAnswers200WithTheSameEvents()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             await CleanupSteps.AddExpenseDeletedAgoAsync(_app, group, CleanupSteps.SoftDeletedRowLimit);
@@ -136,7 +136,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_RemovedExpense_BalancesOfTheGroupStayTheSame()
+        public async Task Run_RemovedExpense_BalancesOfTheGroupStayTheSame()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             await CleanupSteps.AddExpenseAsync(_app, group);
@@ -150,7 +150,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_DuplicateAnswerPointingAtARemovedExpense_IsRemovedAndTheEntryStays()
+        public async Task Run_DuplicateAnswerPointingAtARemovedExpense_IsRemovedAndTheEntryStays()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid expenseId = await CleanupSteps.AddExpenseDeletedAgoAsync(_app, group, CleanupSteps.SoftDeletedRowLimit);
@@ -165,7 +165,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_DuplicateAnswerPointingAtAStayingExpense_Stays()
+        public async Task Run_DuplicateAnswerPointingAtAStayingExpense_Stays()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid liveId = await CleanupSteps.AddExpenseAsync(_app, group);

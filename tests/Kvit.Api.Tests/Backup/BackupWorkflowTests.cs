@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
-using Kvit.Api.Tests.Cleanup;
 using Xunit;
 
 namespace Kvit.Api.Tests.Backup
@@ -53,16 +52,16 @@ namespace Kvit.Api.Tests.Backup
         [Fact]
         public void Triggers_AreOnlyScheduleAndManualRun()
         {
-            string triggers = CleanupWorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "on");
+            string triggers = WorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "on");
 
-            string[] names = [.. CleanupWorkflowFile.NamesAtIndentOfTwo(triggers).Order(StringComparer.Ordinal)];
+            string[] names = [.. WorkflowFile.NamesAtIndentOfTwo(triggers).Order(StringComparer.Ordinal)];
             Assert.Equal(["schedule", "workflow_dispatch"], names);
         }
 
         [Fact]
         public void Schedule_HasExactlyOneCron()
         {
-            string triggers = CleanupWorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "on");
+            string triggers = WorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "on");
 
             Assert.Single(Regex.Matches(triggers, @"-\s*cron\s*:"));
         }
@@ -70,7 +69,7 @@ namespace Kvit.Api.Tests.Backup
         [Fact]
         public void Schedule_RunsOncePerWeekAtAFixedTime()
         {
-            string triggers = CleanupWorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "on");
+            string triggers = WorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "on");
 
             Match cron = Regex.Match(
                 triggers,
@@ -85,17 +84,17 @@ namespace Kvit.Api.Tests.Backup
         [Fact]
         public void Triggers_CanBeStartedByHand()
         {
-            string triggers = CleanupWorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "on");
+            string triggers = WorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "on");
 
-            Assert.Contains("workflow_dispatch", CleanupWorkflowFile.NamesAtIndentOfTwo(triggers));
+            Assert.Contains("workflow_dispatch", WorkflowFile.NamesAtIndentOfTwo(triggers));
         }
 
         [Fact]
         public void Triggers_DoNotRunOnPush()
         {
-            string triggers = CleanupWorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "on");
+            string triggers = WorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "on");
 
-            Assert.DoesNotContain("push", CleanupWorkflowFile.NamesAtIndentOfTwo(triggers));
+            Assert.DoesNotContain("push", WorkflowFile.NamesAtIndentOfTwo(triggers));
         }
 
         [Fact]
@@ -109,7 +108,7 @@ namespace Kvit.Api.Tests.Backup
         [Fact]
         public void Permissions_AreContentsReadAndNothingElse()
         {
-            string permissions = CleanupWorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "permissions");
+            string permissions = WorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "permissions");
 
             string[] lines = [.. permissions.Split('\n').Select(line => line.Trim()).Where(line => line.Length > 0)];
             Assert.Equal(["contents: read"], lines);
@@ -118,15 +117,15 @@ namespace Kvit.Api.Tests.Backup
         [Fact]
         public void Jobs_AreExactlyOne()
         {
-            string jobs = CleanupWorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "jobs");
+            string jobs = WorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "jobs");
 
-            Assert.Single(CleanupWorkflowFile.NamesAtIndentOfTwo(jobs));
+            Assert.Single(WorkflowFile.NamesAtIndentOfTwo(jobs));
         }
 
         [Fact]
         public void Job_RunsOnUbuntuLatest()
         {
-            string jobs = CleanupWorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "jobs");
+            string jobs = WorkflowFile.BlockOf(BackupWorkflowFile.ReadWithoutCommentLines(), "jobs");
 
             Assert.Matches(@"(?m)^\s+runs-on\s*:\s*ubuntu-latest\s*$", jobs);
         }

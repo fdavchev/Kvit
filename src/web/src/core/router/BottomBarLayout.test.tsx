@@ -4,6 +4,7 @@ import type { RouteObject } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { endpoints } from '@/core/api/endpoints'
 import { checkRestoredMeWithServer } from '@/core/api/savedQueryCache'
+import { followServerAnswer, readOfferedWakeUrl } from '@/core/api/serverWake'
 import { meQueryKey } from '@/core/auth/useMe'
 import { languages, type Language } from '@/core/i18n/language'
 import type { Me } from '@/core/services/me/meService'
@@ -340,5 +341,31 @@ describe('BottomBarLayout Updating… note', () => {
     const note = await screen.findByRole('status')
     const classes = `${note.className} ${note.parentElement?.className ?? ''}`
     expect(classes).not.toMatch(/animate|transition/)
+  })
+})
+
+describe('BottomBarLayout Updating… note while the server is asleep', () => {
+  const wakeUrl = 'https://kvit-mk-api.onrender.com/wake'
+
+  afterEach(() => {
+    followServerAnswer('GET', endpoints.groups, new Response(null, { status: 204 }))
+    vi.unstubAllGlobals()
+  })
+
+  it('hides the Updating… note while the Wake the server bar is offered', async () => {
+    vi.stubGlobal('location', { pathname: routes.groups, search: '', assign: vi.fn() })
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) =>
+      String(input) === endpoints.me
+        ? new Promise<Response>(() => {})
+        : new Response('asleep', { status: 503, headers: { 'x-kvit-server-asleep': '1', 'x-kvit-wake-url': wakeUrl } }),
+    ))
+
+    await renderRoutesWithProviders(signedInRouteTable, routes.groups, { seedCache: restoredMe(testMe) })
+
+    await waitFor(() => {
+      expect(readOfferedWakeUrl()).toBe(wakeUrl)
+    })
+    expect(screen.getByText('groups page')).toBeTruthy()
+    expect(screen.queryByText(translated('en', 'common.updating'))).toBeNull()
   })
 })

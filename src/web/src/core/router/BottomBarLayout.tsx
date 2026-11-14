@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router'
 import { useIsRefreshingSavedData } from '@/core/api/useIsRefreshingSavedData'
+import { useOfferedWakeUrl } from '@/core/api/useOfferedWakeUrl'
 import { KvitTabBar } from '@/shared/components/KvitTabBar'
 import { KvitUpdatingNote } from '@/shared/components/KvitUpdatingNote'
 import { useIsDesktop } from '@/shared/hooks/useIsDesktop'
@@ -8,6 +9,7 @@ import { useMainNavItems } from './useMainNavItems'
 export function BottomBarLayout() {
   const items = useMainNavItems()
   const isRefreshingSavedData = useIsRefreshingSavedData()
+  const isWakeOffered = useOfferedWakeUrl() !== null
   const isDesktop = useIsDesktop()
 
   return (
@@ -16,7 +18,7 @@ export function BottomBarLayout() {
         data-updating-note-slot
         className="pointer-events-none absolute inset-x-0 top-[max(0.125rem,env(safe-area-inset-top))] z-10 flex justify-center"
       >
-        {isRefreshingSavedData && <KvitUpdatingNote />}
+        {isRefreshingSavedData && !isWakeOffered && <KvitUpdatingNote />}
       </div>
       <Outlet />
       {!isDesktop && (

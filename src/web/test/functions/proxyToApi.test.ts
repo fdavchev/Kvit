@@ -443,3 +443,116 @@ describe('onRequest', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 })
+
+describe('proxyToApi when the Render server is asleep', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  function forwardTo(upstream: Response, origin: string = apiOrigin): Promise<Response> {
+    stubUpstream(upstream)
+    return proxyToApi(visitorRequest('https://kvit-mk.pages.dev/api/me'), origin, proxySecret)
+  }
+
+  function renderHibernating(routing: string = 'hibernate-rate-limited'): Response {
+    return new Response('Too Many Requests', {
+      status: 429,
+      headers: { 'content-type': 'text/plain', 'x-render-routing': routing },
+    })
+  }
+
+  function cloudflareChallenge(): Response {
+    return new Response('<!DOCTYPE html><title>Just a moment...</title>', {
+      status: 429,
+      headers: { 'content-type': 'text/html; charset=UTF-8', 'cf-mitigated': 'challenge' },
+    })
+  }
+
+  it('answers 503 instead of Render\'s 429 with x-render-routing: hibernate-rate-limited', async () => {
+    const response = await forwardTo(renderHibernating())
+
+    expect(response.status).toBe(503)
+  })
+
+  it.each(['hibernate-rate-limited', 'hibernate-wake-error', 'HIBERNATE-rate-limited', 'hibernate'])(
+    'treats the x-render-routing value %s as asleep',
+    async (routing) => {
+      const response = await forwardTo(renderHibernating(routing))
+
+      expect(response.status).toBe(503)
+      expect(response.headers.get('x-kvit-server-asleep')).toBe('1')
+    },
+  )
+
+  it('answers 503 instead of the Cloudflare robot check (429 with cf-mitigated: challenge)', async () => {
+    const response = await forwardTo(cloudflareChallenge())
+
+    expect(response.status).toBe(503)
+    expect(response.headers.get('x-kvit-server-asleep')).toBe('1')
+  })
+
+  it('marks the 503 as the server being asleep and names the wake address on the API origin', async () => {
+    const response = await forwardTo(renderHibernating())
+
+    expect(response.headers.get('x-kvit-server-asleep')).toBe('1')
+    expect(response.headers.get('x-kvit-wake-url')).toBe('https://kvit-mk-api.onrender.com/wake')
+  })
+
+  it('builds the wake address from API_ORIGIN even when API_ORIGIN ends with a slash', async () => {
+    const response = await forwardTo(renderHibernating(), 'https://kvit-mk-api.onrender.com/')
+
+    expect(response.headers.get('x-kvit-wake-url')).toBe('https://kvit-mk-api.onrender.com/wake')
+  })
+
+  it('answers the asleep 503 as plain text that is never cached', async () => {
+    const response = await forwardTo(cloudflareChallenge())
+
+    expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8')
+    expect(response.headers.get('cache-control')).toBe('no-store')
+    expect(await response.text()).not.toContain('Just a moment')
+  })
+
+  it('does not pass on Render\'s own headers or the robot check page', async () => {
+    const response = await forwardTo(cloudflareChallenge())
+
+    expect(response.headers.get('cf-mitigated')).toBeNull()
+    expect(response.headers.get('x-render-routing')).toBeNull()
+  })
+
+  it('passes Kvit\'s own 429 rate-limit answer through untouched, with its body and Retry-After', async () => {
+    const problem = '{"title":"Too Many Requests","status":429,"errorCode":"RATE_LIMITED"}'
+    const upstream = new Response(problem, {
+      status: 429,
+      headers: { 'content-type': 'application/problem+json', 'retry-after': '42' },
+    })
+
+    const response = await forwardTo(upstream)
+
+    expect(response).toBe(upstream)
+    expect(response.status).toBe(429)
+    expect(response.headers.get('retry-after')).toBe('42')
+    expect(response.headers.get('x-kvit-server-asleep')).toBeNull()
+    expect(await response.text()).toBe(problem)
+  })
+
+  it.each([
+    ['an x-render-routing value that does not start with hibernate', { 'x-render-routing': 'dynamic-rate-limited' }],
+    ['a cf-mitigated value other than challenge', { 'cf-mitigated': 'block' }],
+  ])('passes a 429 with %s through untouched', async (_case, headers) => {
+    const upstream = new Response('Too Many Requests', { status: 429, headers })
+
+    const response = await forwardTo(upstream)
+
+    expect(response).toBe(upstream)
+    expect(response.status).toBe(429)
+  })
+
+  it.each([200, 403, 500, 503])('passes a %i answer with x-render-routing: hibernate-rate-limited through untouched', async (status) => {
+    const upstream = new Response(null, { status, headers: { 'x-render-routing': 'hibernate-rate-limited' } })
+
+    const response = await forwardTo(upstream)
+
+    expect(response).toBe(upstream)
+    expect(response.headers.get('x-kvit-server-asleep')).toBeNull()
+  })
+})

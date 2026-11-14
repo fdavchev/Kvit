@@ -6,7 +6,7 @@ namespace Kvit.Api.Tests.Cleanup
     public class CleanupIdempotenceTests(CleanupApp app) : CleanupTestBase(app)
     {
         [Fact]
-        public async Task Post_EveryKindDue_CountsExactlyOneOfEachKind()
+        public async Task Run_EveryKindDue_CountsExactlyOneOfEachKind()
         {
             await CleanupSteps.AddOneDueRowOfEveryKindAsync(_app);
 
@@ -16,7 +16,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_SecondCallRightAfterTheFirst_AnswersSixZeros()
+        public async Task Run_SecondCallRightAfterTheFirst_AnswersSixZeros()
         {
             await CleanupSteps.AddOneDueRowOfEveryKindAsync(_app);
             await _app.RunCleanupAsync();
@@ -27,7 +27,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_SecondCallRightAfterTheFirst_ChangesNothing()
+        public async Task Run_SecondCallRightAfterTheFirst_ChangesNothing()
         {
             await CleanupSteps.AddOneDueRowOfEveryKindAsync(_app);
             await _app.RunCleanupAsync();
@@ -39,7 +39,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_ThreeCallsInARow_OnlyTheFirstCountsAnything()
+        public async Task Run_ThreeCallsInARow_OnlyTheFirstCountsAnything()
         {
             await CleanupSteps.AddOneDueRowOfEveryKindAsync(_app);
 
@@ -53,7 +53,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_NothingDue_ChangesNothingAnywhere()
+        public async Task Run_NothingDue_ChangesNothingAnywhere()
         {
             await CleanupSteps.CreateFullGroupAsync(_app);
             await CleanupSteps.CreateAccountRequestingDeletionAsync(_app);
@@ -66,7 +66,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_LaterRunAfterMoreTimeHasPassed_RemovesWhatBecameDueInTheMeantime()
+        public async Task Run_LaterRunAfterMoreTimeHasPassed_RemovesWhatBecameDueInTheMeantime()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid expenseId = await CleanupSteps.AddExpenseDeletedAgoAsync(_app, group, TimeSpan.FromDays(30));

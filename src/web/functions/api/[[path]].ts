@@ -21,6 +21,15 @@ const headersDroppedFromVisitor: readonly string[] = [
   'x-real-ip',
 ]
 const localHostnames: readonly string[] = ['localhost', '127.0.0.1', '[::1]']
+const tooManyRequestsStatus = 429
+const serviceUnavailableStatus = 503
+const renderRoutingHeader = 'x-render-routing'
+const renderHibernatingRoutingPrefix = 'hibernate'
+const cloudflareMitigationHeader = 'cf-mitigated'
+const cloudflareChallenge = 'challenge'
+const serverAsleepHeader = 'x-kvit-server-asleep'
+const wakeUrlHeader = 'x-kvit-wake-url'
+const wakePath = '/wake'
 
 export const onRequest: PagesFunction<Env> = ({ request, env }) =>
   proxyToApi(request, env.API_ORIGIN, env.API_PROXY_SECRET)
@@ -72,8 +81,9 @@ export async function proxyToApi(
   const body: ArrayBuffer | null =
     request.body === null ? null : await request.arrayBuffer()
 
+  let upstreamResponse: Response
   try {
-    return await fetch(
+    upstreamResponse = await fetch(
       new Request(upstreamUrl.toString(), {
         method: request.method,
         headers,
@@ -88,6 +98,31 @@ export async function proxyToApi(
       'Kvit proxy could not reach the API: the request to the API server failed',
     )
   }
+  return isRenderAsleep(upstreamResponse) ? serverAsleepResponse(origin) : upstreamResponse
+}
+
+function isRenderAsleep(response: Response): boolean {
+  if (response.status !== tooManyRequestsStatus) {
+    return false
+  }
+  const routing = (response.headers.get(renderRoutingHeader) ?? '').toLowerCase()
+  const mitigation = (response.headers.get(cloudflareMitigationHeader) ?? '').toLowerCase()
+  return routing.startsWith(renderHibernatingRoutingPrefix) || mitigation === cloudflareChallenge
+}
+
+function serverAsleepResponse(apiOrigin: string): Response {
+  return new Response(
+    'Kvit proxy: the API server is asleep and only wakes for a page visit; open the address in x-kvit-wake-url',
+    {
+      status: serviceUnavailableStatus,
+      headers: {
+        'content-type': 'text/plain; charset=utf-8',
+        'cache-control': 'no-store',
+        [serverAsleepHeader]: '1',
+        [wakeUrlHeader]: `${apiOrigin}${wakePath}`,
+      },
+    },
+  )
 }
 
 function parseOrigin(value: string): string | null {

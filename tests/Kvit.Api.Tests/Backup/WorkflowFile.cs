@@ -1,17 +1,10 @@
 using System.Text.RegularExpressions;
 using Kvit.Api.Tests.Scripts;
 
-namespace Kvit.Api.Tests.Cleanup
+namespace Kvit.Api.Tests.Backup
 {
-    public static class CleanupWorkflowFile
+    public static class WorkflowFile
     {
-        public const string RelativePath = ".github/workflows/cleanup.yml";
-
-        public static string ReadWithoutCommentLines()
-        {
-            return ReadWithoutCommentLines(RelativePath);
-        }
-
         public static string ReadWithoutCommentLines(string relativePath)
         {
             string repositoryRoot = DotnetScript.FindRepositoryRoot();

@@ -6,6 +6,7 @@ using Kvit.Domain.Entities;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.UsageEvents;
 using Kvit.Domain.UsageEvents;
+using Kvit.Infrastructure.Cleanup;
 
 namespace Kvit.Application.Commands.Me
 {
@@ -13,6 +14,7 @@ namespace Kvit.Application.Commands.Me
         ICurrentUserProvider _currentUserProvider,
         RecordActive _recordActive,
         ActiveDayMemory _activeDayMemory,
+        LazyDailyCleanup _lazyDailyCleanup,
         IUnitOfWork _unitOfWork,
         TimeProvider _timeProvider) : ICommandHandler<RecordActiveCommand>
     {
@@ -44,6 +46,7 @@ namespace Kvit.Application.Commands.Me
             if (recorded.IsSuccess)
             {
                 _activeDayMemory.Remember(userId.Value, day);
+                _ = _lazyDailyCleanup.StartUnlessFinishedOn(now);
             }
 
             return recorded;

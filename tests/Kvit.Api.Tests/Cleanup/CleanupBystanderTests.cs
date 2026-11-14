@@ -8,7 +8,7 @@ namespace Kvit.Api.Tests.Cleanup
     public class CleanupBystanderTests(CleanupApp app) : CleanupTestBase(app)
     {
         [Fact]
-        public async Task Post_WithRowsDueElsewhere_TheGroupOfABystanderStaysByteForByteTheSame()
+        public async Task Run_WithRowsDueElsewhere_TheGroupOfABystanderStaysByteForByteTheSame()
         {
             FullGroup bystander = await CleanupSteps.CreateFullGroupAsync(_app);
             await CleanupSteps.AddOneDueRowOfEveryKindAsync(_app);
@@ -25,7 +25,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_WithRowsDueElsewhere_TheWholePersonalBudgetOfABystanderStaysTheSame()
+        public async Task Run_WithRowsDueElsewhere_TheWholePersonalBudgetOfABystanderStaysTheSame()
         {
             FullGroup bystander = await CleanupSteps.CreateFullGroupAsync(_app);
             await PersonalDataSteps.CreateFullSetAsync(_app, bystander.Group.Owner, bystander.OwnerExpenseId);
@@ -40,7 +40,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_WithRowsDueElsewhere_TablesTheCleanupHasNoBusinessWithStayTheSame()
+        public async Task Run_WithRowsDueElsewhere_TablesTheCleanupHasNoBusinessWithStayTheSame()
         {
             FullGroup bystander = await CleanupSteps.CreateFullGroupAsync(_app);
             await PersonalDataSteps.CreateFullSetAsync(_app, bystander.Group.Owner, bystander.OwnerExpenseId);
@@ -54,7 +54,7 @@ namespace Kvit.Api.Tests.Cleanup
         }
 
         [Fact]
-        public async Task Post_WithRowsDueElsewhere_ABystanderBalancesStayTheSame()
+        public async Task Run_WithRowsDueElsewhere_ABystanderBalancesStayTheSame()
         {
             FullGroup bystander = await CleanupSteps.CreateFullGroupAsync(_app);
             await CleanupSteps.AddOneDueRowOfEveryKindAsync(_app);
