@@ -295,6 +295,69 @@ namespace Kvit.Api.Tests.Export
             Assert.Null(ExportBody.StringOrNull(outcome.Membership, "removedAt"));
         }
 
+        [Fact]
+        public async Task Left_Activity_ListsEveryRowUpToTheMomentOfLeavingAndEndsWithTheLeaving()
+        {
+            ExportLeftOutcome outcome = await _app.CallerLeftAsync();
+
+            Assert.Equal(["ExpenseAdded", "MemberLeft", "SettlementConfirmed", "SettlementRecorded"], TypesOf(outcome.Activity).Order());
+            JsonElement last = outcome.Activity[^1];
+            Assert.Equal("MemberLeft", last.GetProperty("type").GetString());
+            Assert.Equal(ExportLeftSteps.EndedAt, last.GetProperty("createdAt").GetDateTimeOffset());
+        }
+
+        [Fact]
+        public async Task Left_Activity_RowsAfterLeaving_AreMissing()
+        {
+            ExportLeftOutcome outcome = await _app.CallerLeftAsync();
+
+            Assert.All(outcome.Activity, row => Assert.True(row.GetProperty("createdAt").GetDateTimeOffset() <= ExportLeftSteps.EndedAt, $"A row after leaving is listed: {row}"));
+            Assert.DoesNotContain(outcome.After.AfterExpenseId, ExpenseIdsOf(outcome.Activity));
+        }
+
+        [Fact]
+        public async Task Removed_Activity_RowsAfterBeingRemoved_AreMissingAndTheLastRowIsTheRemovalByTheOwner()
+        {
+            ExportLeftOutcome outcome = await _app.CallerRemovedAsync();
+
+            Assert.Equal(["ExpenseAdded", "MemberRemoved", "SettlementConfirmed", "SettlementRecorded"], TypesOf(outcome.Activity).Order());
+            JsonElement last = outcome.Activity[^1];
+            Assert.Equal("MemberRemoved", last.GetProperty("type").GetString());
+            Assert.Equal(outcome.Before.Owner.Form.DisplayName, last.GetProperty("actorName").GetString());
+            Assert.Equal(outcome.Before.Caller.Form.DisplayName, last.GetProperty("data").GetProperty("name").GetString());
+            Assert.DoesNotContain(outcome.After.AfterExpenseId, ExpenseIdsOf(outcome.Activity));
+        }
+
+        [Fact]
+        public async Task CameBack_Activity_RowsFromWhileAway_AreListed()
+        {
+            ExportLeftOutcome outcome = await _app.CallerCameBackAsync();
+
+            Assert.Contains(outcome.After.AfterExpenseId, ExpenseIdsOf(outcome.Activity));
+            Assert.Equal(2, TypesOf(outcome.Activity).Count(type => type == "SettlementRecorded"));
+        }
+
+        [Fact]
+        public async Task StillAMember_Activity_ListsEveryRow()
+        {
+            ExportLeftOutcome outcome = await _app.CallerNeverLeftAsync();
+
+            Assert.Equal(
+                ["ExpenseAdded", "ExpenseAdded", "SettlementConfirmed", "SettlementRecorded", "SettlementRecorded"],
+                TypesOf(outcome.Activity).Order());
+            Assert.Contains(outcome.After.AfterExpenseId, ExpenseIdsOf(outcome.Activity));
+        }
+
+        private static List<string?> TypesOf(List<JsonElement> activity)
+        {
+            return [.. activity.Select(row => row.GetProperty("type").GetString())];
+        }
+
+        private static List<Guid?> ExpenseIdsOf(List<JsonElement> activity)
+        {
+            return [.. activity.Select(row => ExportBody.GuidOrNull(row, "expenseId"))];
+        }
+
         private static List<Guid> MemberIdsOf(ExportLeftOutcome outcome)
         {
             return ExportBody.IdsOf(outcome.Members, "memberId");

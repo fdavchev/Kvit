@@ -14,8 +14,8 @@ const dataExportTexts: [string, string, string][] = [
   ['settings.downloadData', 'Download my data', 'Преземи ги моите податоци'],
   [
     'settings.downloadDataHint',
-    "Your profile, personal budget and groups, as a file. Other people's emails are not in it.",
-    'Твојот профил, личен буџет и групи, како датотека. Туѓи е-пошти нема во неа.',
+    "Your profile, personal budget and groups with their activity, as a file. Other people's emails are not in it.",
+    'Твојот профил, личен буџет и групи со нивните активности, како датотека. Туѓи е-пошти нема во неа.',
   ],
   ['settings.downloadDataDone', 'Your data was saved as a file', 'Твоите податоци се зачувани како датотека'],
 ]

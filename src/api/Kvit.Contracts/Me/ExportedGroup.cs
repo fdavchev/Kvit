@@ -14,5 +14,6 @@ namespace Kvit.Contracts.Me
         ExportedMembership Membership,
         IReadOnlyList<ExportedMember> Members,
         IReadOnlyList<ExportedExpense> Expenses,
-        IReadOnlyList<ExportedPayment> Payments);
+        IReadOnlyList<ExportedPayment> Payments,
+        IReadOnlyList<ExportedActivityEvent> Activity);
 }

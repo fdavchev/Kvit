@@ -1,4 +1,5 @@
 using Kvit.Application.Dispatching;
+using Kvit.Application.Queries.Activity;
 using Kvit.Application.Queries.PersonalEntries;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Me;
@@ -69,6 +70,11 @@ namespace Kvit.Application.Queries.Me
                 .ToLookup(row => row.GroupId, row => row.Item);
             ILookup<Guid, ExportedPayment> payments = (await ExportedPaymentsOf(groupIds, myMemberRows).ToListAsync(cancellationToken))
                 .ToLookup(row => row.GroupId, row => row.Item);
+            List<ActivityEventDto> newestActivityFirst = await _context
+                .NewestActivityEventDtosOf(VisibleActivityEventsOf(groupIds, myMemberRows))
+                .ToListAsync(cancellationToken);
+            ILookup<Guid, ExportedActivityEvent> activity = Enumerable.Reverse(newestActivityFirst)
+                .ToLookup(row => row.GroupId, ExportedActivityEventOf);
 
             return [.. memberships
                 .GroupBy(membership => membership.Member.GroupId)
@@ -84,7 +90,8 @@ namespace Kvit.Application.Queries.Me
                     new ExportedMembership(membership.Member.Id, membership.Member.JoinedAt, membership.Member.RemovedAt, membership.Member.EndKind),
                     [.. members[membership.Member.GroupId]],
                     [.. expenses[membership.Member.GroupId]],
-                    [.. payments[membership.Member.GroupId]]))];
+                    [.. payments[membership.Member.GroupId]],
+                    [.. activity[membership.Member.GroupId]]))];
         }
 
         private static MyGroupMembershipDto LatestMembershipOf(IEnumerable<MyGroupMembershipDto> rowsInOneGroup)
@@ -188,6 +195,26 @@ namespace Kvit.Application.Queries.Me
                         settlement.Status,
                         settlement.CreatedAt,
                         settlement.ResolvedAt)));
+        }
+
+        private IQueryable<ActivityEvent> VisibleActivityEventsOf(List<Guid> groupIds, IQueryable<GroupMember> myMemberRows)
+        {
+            return _context.ActivityEvents
+                .Where(activityEvent => groupIds.Contains(activityEvent.GroupId))
+                .Where(activityEvent => myMemberRows.Any(mine => mine.GroupId == activityEvent.GroupId && (mine.RemovedAt == null || mine.RemovedAt >= activityEvent.CreatedAt)));
+        }
+
+        private static ExportedActivityEvent ExportedActivityEventOf(ActivityEventDto activityEvent)
+        {
+            return new ExportedActivityEvent(
+                activityEvent.Id,
+                activityEvent.Type,
+                activityEvent.ActorName,
+                activityEvent.ExpenseId,
+                activityEvent.MemberId,
+                ActivityJson.Parse(activityEvent.Changes),
+                ActivityJson.Parse(activityEvent.Data),
+                activityEvent.CreatedAt);
         }
 
         private async Task<ExportedPersonalBudget> ExportedPersonalBudgetOfAsync(Guid userId, CancellationToken cancellationToken)

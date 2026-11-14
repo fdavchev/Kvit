@@ -23,9 +23,13 @@ namespace Kvit.Api.Tests.Export
 
         public required Guid DeletedGroupId { get; init; }
 
+        public required Guid DeletedGroupEventId { get; init; }
+
         public required Guid LeftGroupId { get; init; }
 
         public required Guid StrangersGroupId { get; init; }
+
+        public required Guid StrangersEventId { get; init; }
 
         public required string PreviousInviteToken { get; init; }
 

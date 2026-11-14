@@ -254,7 +254,7 @@
     "themeLight": "Light",
     "themeDark": "Dark",
     "downloadData": "Download my data",
-    "downloadDataHint": "Your profile, personal budget and groups, as a file. Other people's emails are not in it.",
+    "downloadDataHint": "Your profile, personal budget and groups with their activity, as a file. Other people's emails are not in it.",
     "downloadDataDone": "Your data was saved as a file",
     "deleteAccount": "Delete my account",
     "deleteAccountSheet": {
@@ -352,7 +352,7 @@
       },
       "13": {
         "heading": "Download your data",
-        "body": "In Settings, tap “Download my data”. You get a file with your profile, your personal budget and your groups with their expenses and payments. It does not contain other people's emails or private budgets."
+        "body": "In Settings, tap “Download my data”. You get a file with your profile, your personal budget and your groups with their expenses, payments and activity. It does not contain other people's emails or private budgets."
       },
       "14": {
         "heading": "Delete your account",

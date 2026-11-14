@@ -1,4 +1,6 @@
 using System.Net;
+using System.Text.Json;
+using Kvit.Api.Tests.AccountDeletion;
 using Kvit.Api.Tests.BudgetCurrency;
 using Kvit.Api.Tests.Expenses;
 using Kvit.Api.Tests.Groups;
@@ -75,8 +77,10 @@ namespace Kvit.Api.Tests.Export
             await SettlementSteps.DeleteAsync(exporter, group.GroupId, deletedPaymentId);
 
             Guid deletedGroupId = await CreateDeletedGroupAsync(app, exporter);
+            Guid deletedGroupEventId = await InsertGroupCreatedEventAsync(app, deletedGroupId, exporter.UserId, DeletedGroupName);
             Guid leftGroupId = await CreateLeftGroupAsync(app, exporter, other);
             Guid strangersGroupId = await GroupRows.InsertGroupWithOwnerAsync(app, other.UserId, name: StrangersGroupName);
+            Guid strangersEventId = await InsertGroupCreatedEventAsync(app, strangersGroupId, other.UserId, StrangersGroupName);
 
             Guid food = PersonalEntryRequests.BuiltInFoodId;
             Guid coffeeCategoryId = await PersonalCategorySteps.CreateAsync(exporter.Client, CoffeeCategoryName);
@@ -112,8 +116,10 @@ namespace Kvit.Api.Tests.Export
                 PendingPaymentId = pendingPaymentId,
                 DeletedPaymentId = deletedPaymentId,
                 DeletedGroupId = deletedGroupId,
+                DeletedGroupEventId = deletedGroupEventId,
                 LeftGroupId = leftGroupId,
                 StrangersGroupId = strangersGroupId,
+                StrangersEventId = strangersEventId,
                 PreviousInviteToken = previousInviteToken,
                 CoffeeCategoryId = coffeeCategoryId,
                 ArchivedCategoryId = archivedCategoryId,
@@ -175,6 +181,11 @@ namespace Kvit.Api.Tests.Export
             await GroupRows.SetDeletedAsync(app, groupId, exporter.UserId, 1);
 
             return groupId;
+        }
+
+        private static Task<Guid> InsertGroupCreatedEventAsync(ExpensesApp app, Guid groupId, Guid actorUserId, string groupName)
+        {
+            return DeletionRows.InsertEventAsync(app, groupId, actorUserId, "GroupCreated", null, JsonSerializer.Serialize(new { name = groupName }), null);
         }
 
         private static async Task<Guid> CreateLeftGroupAsync(ExpensesApp app, SignedInUser exporter, SignedInUser other)

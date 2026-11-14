@@ -63,6 +63,7 @@ namespace Kvit.Api.Tests.Export
         public static readonly string[] DuplicateAnswerFieldNames = Sorted("answer", "createdAt", "expenseId", "personalEntryId");
 
         public static readonly string[] GroupFieldNames = Sorted(
+            "activity",
             "countsInBudget",
             "defaultCurrency",
             "emoji",
@@ -103,6 +104,16 @@ namespace Kvit.Api.Tests.Export
             "resolvedAt",
             "status",
             "toMemberId");
+
+        public static readonly string[] ActivityEventFieldNames = Sorted(
+            "actorName",
+            "changes",
+            "createdAt",
+            "data",
+            "expenseId",
+            "id",
+            "memberId",
+            "type");
 
         public static string[] Sorted(params string[] names)
         {

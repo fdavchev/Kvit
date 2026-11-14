@@ -185,13 +185,19 @@ namespace Kvit.Api.Tests.Export
         }
 
         [Fact]
-        public async Task Export_DeletedExpense_IsNotMentionedAnywhere()
+        public async Task Export_DeletedExpense_IsNoExpenseRowAndAppearsOnlyInItsAddedAndDeletedActivityRows()
         {
             ExportScenario scenario = await _app.ScenarioAsync();
             ExportBody body = await _app.ExporterBodyAsync();
 
-            body.AssertDoesNotMention(scenario.DeletedExpenseId.ToString());
-            body.AssertDoesNotMention(ExportScenarioSteps.DeletedExpenseTitle);
+            JsonElement group = body.GroupWithId(scenario.GroupId);
+            List<JsonElement> deletedExpenseRows = [.. ExportBody.ListOf(group, "activity").Where(row => ExportBody.GuidOrNull(row, "expenseId") == scenario.DeletedExpenseId)];
+
+            Assert.DoesNotContain(scenario.DeletedExpenseId, ExportBody.IdsOf(ExportBody.ListOf(group, "expenses")));
+            Assert.Equal(["ExpenseAdded", "ExpenseDeleted"], deletedExpenseRows.Select(row => row.GetProperty("type").GetString()).Order());
+            Assert.All(deletedExpenseRows, row => Assert.Equal(ExportScenarioSteps.DeletedExpenseTitle, row.GetProperty("data").GetProperty("title").GetString()));
+            Assert.Equal(2, OccurrencesIn(body.Raw, scenario.DeletedExpenseId.ToString()));
+            Assert.Equal(2, OccurrencesIn(body.Raw, ExportScenarioSteps.DeletedExpenseTitle));
         }
 
         [Fact]
@@ -308,6 +314,7 @@ namespace Kvit.Api.Tests.Export
             body.AssertDoesNotMention(scenario.DeletedGroupId.ToString());
             body.AssertDoesNotMention(ExportScenarioSteps.DeletedGroupName);
             body.AssertDoesNotMention(ExportScenarioSteps.DeletedGroupExpenseTitle);
+            body.AssertDoesNotMention(scenario.DeletedGroupEventId.ToString());
         }
 
         [Fact]
@@ -390,6 +397,11 @@ namespace Kvit.Api.Tests.Export
         private static JsonElement PaymentOf(ExportBody body, ExportScenario scenario, Guid paymentId)
         {
             return ExportBody.WithId(ExportBody.ListOf(body.GroupWithId(scenario.GroupId), "payments"), paymentId);
+        }
+
+        private static int OccurrencesIn(string text, string value)
+        {
+            return text.Split(value, StringSplitOptions.None).Length - 1;
         }
 
         private static Dictionary<Guid, long> SharesOf(JsonElement expense)

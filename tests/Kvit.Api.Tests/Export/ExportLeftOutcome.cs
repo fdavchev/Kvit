@@ -12,6 +12,8 @@ namespace Kvit.Api.Tests.Export
 
         public List<JsonElement> Members => ExportBody.ListOf(Group, "members");
 
+        public List<JsonElement> Activity => ExportBody.ListOf(Group, "activity");
+
         public JsonElement Membership => Group.GetProperty("membership");
     }
 }

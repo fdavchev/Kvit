@@ -58,6 +58,14 @@ namespace Kvit.Api.Tests.Export
         }
 
         [Fact]
+        public async Task Export_ActivityEvents_HaveExactlyThePinnedFieldNames()
+        {
+            ExportBody body = await _app.ExporterBodyAsync();
+
+            AssertEveryItemHasExactly(ItemsOfEveryGroup(body, "activity"), ExportRequests.ActivityEventFieldNames);
+        }
+
+        [Fact]
         public async Task Export_Categories_HaveExactlyThePinnedFieldNames()
         {
             ExportBody body = await _app.ExporterBodyAsync();
