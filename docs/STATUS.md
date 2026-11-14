@@ -1,18 +1,18 @@
 # Status: Kvit
 
-_Last updated: 2026-11-09 (Phase 19 built and reviewed; waiting for Filip's commit, answers to the questions and the merge steps)_
+_Last updated: 2026-11-14 (Phase 19 built, reviewed and committed; Step 11 answered; waiting for Filip to push, check CI, add the secrets and merge)_
 
 ## Where we stopped
-- Branch: `feat/19-legal` (made from `main` = `ddf41f2`, the Phase 18 merge). Nothing is pushed; Filip pushes, opens the PR and merges.
-- Committed: Steps 0 to 8 (one commit each), `97db15b` (guide, interim report, Step 9 brief), `0023b3c` (browser-pass fixes).
-- **Uncommitted:** the code-review fixes (backend: `AccountPurger`, `AccountModeration`, `AdminAction`, `IAccountPurger`, `MeController`, tests, `backup.yml`) and docs (final report, ROADMAP, STATUS, BACKLOG, DECISIONS, PR text, the guide's passphrase line). Suggested commit subjects: "Fix the Phase 19 code-review findings." and then "Add the final Phase 19 report and update the roadmap, status and PR text."
+- Branch: `feat/19-legal` (made from `main` = `ddf41f2`, the Phase 18 merge). Pushed up to `f7e2478`; the PR exists. Filip pushes the rest and merges.
+- Committed: Steps 0 to 10, the browser-pass fixes (`0023b3c`), the code-review fixes and final report (`f7e2478`), the activity feed in Download my data (`2cb5b94`), and the fix for the one failing GitHub test plus the Render deploy script build (`c3eabe7`). The last two are NOT pushed yet.
+- CI on `f7e2478` failed on exactly one test, `CleanupGroupTests.Post_RemovedGroup_TakesTheDuplicateAnswers...` (Release build runs the tests of a class in a different order than Debug; an earlier test left an answer behind). Fixed in `c3eabe7` and reproduced and proven in a Release run. NOT VERIFIED on GitHub until the next push.
 - Phase 19 map: report `docs/reports/2026-11-09-phase-19-legal.md` (final; 8 questions for Filip at its end); browser pass `docs/reports/2026-11-09-phase-19-browser-pass.md`; Filip's step-by-step guide `docs/guides/phase-19-legal.md`; PR text `docs/guides/phase-19-pr-text.md`; decisions in `DECISIONS.md` ("Phase 19"); research `docs/reports/2026-11-04-phase-19-legal-research.md`.
 
 ## Next step
-Filip: commit the review fixes and docs, answer the 8 questions at the end of the Phase 19 report (Step 11), then push, open the PR with `docs/guides/phase-19-pr-text.md`, add three secrets before merging (`Cleanup__Secret` on Render, `CLEANUP_SECRET` and `BACKUP_PASSPHRASE` on GitHub; the passphrase at least 30 random characters, the repository is public), CI green, merge, run the Cleanup and Backup workflows once by hand, and do the outside-the-code list in `docs/guides/phase-19-legal.md`. After the merge: update ROADMAP and STATUS for Phase 20 (or whatever Filip picks next).
+Filip: push, check CI is green, add three secrets before merging (`Cleanup__Secret` on Render, `CLEANUP_SECRET` and `BACKUP_PASSPHRASE` on GitHub; the passphrase at least 30 random characters, the repository is public), CI green, merge, run the Cleanup and Backup workflows once by hand, and do the outside-the-code list in `docs/guides/phase-19-legal.md`. After the merge: update ROADMAP and STATUS for Phase 20 (or whatever Filip picks next).
 
 ## Blockers and open questions
-- Waiting for Filip: the 8 questions in the Phase 19 report (including `START-HERE-PROMPT.md` in the public repository); Phase 18 leftovers (light theme peach, Totals bars); the Macedonian legal drafts to read (list in the report).
+- Open from Step 11: old "active people" numbers drop after 12 months (Filip said that is not fine; options: a monthly summary table or keeping the tie longer; not decided, not built). Waiting for Filip: Phase 18 leftovers (light theme peach, Totals bars); the Macedonian legal drafts to read (list in the report).
 - Docker Desktop must be open for the backend tests (ask Filip, never work around it).
 - Local database has throwaway `p19*@example.com` accounts from the browser pass; `p19admin1794216234@example.com` has the Admin role (revoke command in the browser-pass report). Harmless.
 
