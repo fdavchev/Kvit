@@ -135,6 +135,13 @@ describe('PersonalCategoryGrid', () => {
       expect(newTile().querySelector('.size-11.border-dashed')).not.toBeNull()
     })
 
+    it('switches to 3 columns on a screen narrower than 346 px', async () => {
+      await renderGrid()
+      const tile = await findTile('en', coffeeCategory)
+
+      expect(Array.from(tile.parentElement?.classList ?? [])).toContain('max-[346px]:grid-cols-3')
+    })
+
     it('paints the own category tile in its colour token', async () => {
       await renderGrid()
       const tile = await findTile('en', coffeeCategory)

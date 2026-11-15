@@ -315,6 +315,19 @@ describe('BudgetScreen, the "From groups" block', () => {
       expect(classesOf(shareAmountOf(row))).toContain('whitespace-nowrap')
     })
 
+    it('puts the text column and the amount in one block that may wrap, so a huge amount drops under the text', async () => {
+      await renderBudget({ months: [octoberWithGroupShares] })
+
+      const [row] = shareRows(await findGroupSharesBlock())
+      const textColumn = shareTextColumnOf(row)
+      const amount = shareAmountOf(row)
+
+      expect(textColumn.parentElement).toBe(amount.parentElement)
+      expect(classesOf(textColumn.parentElement as HTMLElement)).toEqual(expect.arrayContaining(['flex', 'flex-wrap', 'min-w-0', 'flex-1']))
+      expect(classesOf(textColumn)).toEqual(expect.arrayContaining(['min-w-0', 'flex-1', 'basis-16']))
+      expect(classesOf(amount)).toEqual(expect.arrayContaining(['ml-auto', 'whitespace-nowrap']))
+    })
+
     it('keeps a very long one-word title inside the column: it breaks inside the word and is never wider than its column', async () => {
       await renderBudget({ months: [{ ...octoberWithGroupShares, groupShares: [longTitleShare] }] })
 

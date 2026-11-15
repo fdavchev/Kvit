@@ -35,22 +35,24 @@ export function GroupShareListItem({ share, category, today }: GroupShareListIte
         ) : (
           <KvitEmojiTile emoji={category.emoji} background={categoryColor(category)} />
         )}
-        <span data-share-text className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
-          <span data-share-title className="max-w-full font-semibold break-words">
-            {title}
+        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-0.5">
+          <span data-share-text className="flex min-w-0 flex-1 basis-16 flex-col items-start gap-0.5">
+            <span data-share-title className="max-w-full font-semibold break-words">
+              {title}
+            </span>
+            <span
+              data-share-group
+              className="max-w-full rounded-lg border border-field-border px-2 text-xs leading-5 font-semibold break-words"
+            >
+              {share.groupName}
+            </span>
+            <span data-share-details className="max-w-full text-[0.8125rem] break-words text-muted-foreground">
+              {share.title !== null && categoryName !== null ? `${categoryName} · ${dayText}` : dayText}
+            </span>
           </span>
-          <span
-            data-share-group
-            className="max-w-full rounded-lg border border-field-border px-2 text-xs leading-5 font-semibold break-words"
-          >
-            {share.groupName}
+          <span data-share-amount className="ml-auto text-right font-bold whitespace-nowrap">
+            <KvitAmount parts={moneyParts(share.shareMinor, share.currency, language)} />
           </span>
-          <span data-share-details className="max-w-full text-[0.8125rem] break-words text-muted-foreground">
-            {share.title !== null && categoryName !== null ? `${categoryName} · ${dayText}` : dayText}
-          </span>
-        </span>
-        <span data-share-amount className="text-right font-bold whitespace-nowrap">
-          <KvitAmount parts={moneyParts(share.shareMinor, share.currency, language)} />
         </span>
       </Link>
     </li>

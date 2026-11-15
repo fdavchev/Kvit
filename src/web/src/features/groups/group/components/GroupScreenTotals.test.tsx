@@ -611,7 +611,25 @@ describe('GroupScreen with the Totals tab: the totals by category', () => {
       }
     })
 
-    it('keeps at least 5 rem (80 px) for the name before the amount drops under it: min-w-0, flex-1 and basis-20', async () => {
+    it('puts the name and the amount in one block that may wrap, so a huge amount drops under a long name and keeps its own line', async () => {
+      await renderGroupApp(routes.groupTotals(groupId), { spending: bigDenarSpending })
+
+      const [row] = categoryRowsOf(await findCurrencyRegion('MKD'))
+      const name = nameElementIn(row, 'Stay')
+      const amount = amountElementIn(row, bigDenarAmountMinor, 'MKD')
+      const nowrapAmount = amount.closest('.whitespace-nowrap')
+      const block = name.parentElement
+
+      expect(block).not.toBeNull()
+      expect(block?.contains(amount)).toBe(true)
+      expect(Array.from(block?.classList ?? [])).toEqual(expect.arrayContaining(['flex', 'flex-wrap', 'min-w-0', 'flex-1']))
+      expect(Array.from(name.classList)).toEqual(expect.arrayContaining(['min-w-0', 'grow', 'break-words']))
+      expect(Array.from(name.classList)).not.toContain('wrap-anywhere')
+      expect(Array.from(nowrapAmount?.classList ?? [])).toEqual(expect.arrayContaining(['whitespace-nowrap', 'ml-auto']))
+      expect(block?.contains(nowrapAmount)).toBe(true)
+    })
+
+    it('gives the block of name and amount a base width of 5 rem (80 px) that can still shrink and grow: min-w-0, flex-1 and basis-20', async () => {
       await renderGroupApp(routes.groupTotals(groupId), { spending: bigDenarSpending })
 
       const [row] = categoryRowsOf(await findCurrencyRegion('MKD'))
@@ -621,7 +639,7 @@ describe('GroupScreen with the Totals tab: the totals by category', () => {
       expect(hasClassOnItselfOrAncestorsBelow(name, row, ['basis-32'])).toBe(false)
     })
 
-    it('gives the name of every row the basis-20 column', async () => {
+    it('gives the block of name and amount of every row the basis-20 width', async () => {
       await renderGroupApp(routes.groupTotals(groupId), { spending: mkdOnlySpending })
 
       const rows = categoryRowsOf(await findCurrencyRegion('MKD'))

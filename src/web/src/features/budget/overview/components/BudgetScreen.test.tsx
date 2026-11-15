@@ -343,6 +343,13 @@ describe('BudgetScreen', () => {
       expect(within(categoryTotalsRegion()).getByRole('list').className.split(/\s+/)).toContain('grid-cols-4')
     })
 
+    it('switches to three in a row on a screen narrower than 346 px', async () => {
+      await renderBudget({ months: [mkdOnlyMonth] })
+      await findTotalCard()
+
+      expect(within(categoryTotalsRegion()).getByRole('list').className.split(/\s+/)).toContain('max-[346px]:grid-cols-3')
+    })
+
     it.each(languages)('keeps a long amount whole, shrunk to fit the tile, with its currency (%s)', async (language) => {
       await renderBudget({ language, months: [longAmountsMonth] })
       await findTotalCard(language)
@@ -468,6 +475,19 @@ describe('BudgetScreen', () => {
 
       expect(textColumn?.className.split(/\s+/)).toEqual(expect.arrayContaining(['min-w-0', 'flex-1']))
       expect(amount?.className.split(/\s+/)).toContain('whitespace-nowrap')
+    })
+
+    it('puts the text column and the amount of an entry in one block that may wrap, so a huge amount drops under the text', async () => {
+      await renderBudget()
+
+      const button = within(await findEntryList()).getAllByRole('button')[1]
+      const textColumn = button?.querySelector('[data-entry-text]')
+      const amount = button?.querySelector('[data-entry-amount]')
+
+      expect(textColumn?.parentElement).toBe(amount?.parentElement)
+      expect(textColumn?.parentElement?.className.split(/\s+/)).toEqual(expect.arrayContaining(['flex', 'flex-wrap', 'min-w-0', 'flex-1']))
+      expect(textColumn?.className.split(/\s+/)).toEqual(expect.arrayContaining(['min-w-0', 'flex-1', 'basis-16']))
+      expect(amount?.className.split(/\s+/)).toEqual(expect.arrayContaining(['ml-auto', 'whitespace-nowrap']))
     })
   })
 })

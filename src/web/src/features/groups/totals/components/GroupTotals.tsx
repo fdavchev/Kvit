@@ -110,11 +110,13 @@ function CurrencyTotals({ spending, categories, language }: CurrencyTotalsProps)
               ) : (
                 <CategoryTile category={category} />
               )}
-              <span className="min-w-0 flex-1 basis-20 font-semibold break-words">
-                {category === null ? t('groupTotals.noCategory') : t(categoryNameKey(category))}
-              </span>
-              <span className="ml-auto font-bold whitespace-nowrap">
-                <KvitAmount parts={moneyParts(row.totalMinor, spending.currency, language)} />
+              <span className="flex min-w-0 flex-1 basis-20 flex-wrap items-center gap-x-3">
+                <span className="min-w-0 grow font-semibold break-words">
+                  {category === null ? t('groupTotals.noCategory') : t(categoryNameKey(category))}
+                </span>
+                <span className="ml-auto font-bold whitespace-nowrap">
+                  <KvitAmount parts={moneyParts(row.totalMinor, spending.currency, language)} />
+                </span>
               </span>
             </li>
           )

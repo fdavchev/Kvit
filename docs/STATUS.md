@@ -1,9 +1,9 @@
 # Status: Kvit
 
-_Last updated: 2026-11-14 (Fix 20 merged as PR #24; `fix/21-small-bugs` started: Step 1, the five bugs, is built and tested, not committed; Filip's live check of Fix 20 is still open)_
+_Last updated: 2026-11-14 (Fix 20 merged as PR #24; `fix/21-small-bugs` started: Steps 1 and 2 are built and tested, Step 1 is committed and pushed, Step 2 is not committed; Filip's live check of Fix 20 is still open)_
 
 ## Where we stopped
-- Branch: `fix/21-small-bugs` (made from `main` = `25c4a3d`, the Fix 20 merge). Nothing committed yet: Step 1 (code and tests) and the docs edits are in the working folder.
+- Branch: `fix/21-small-bugs` (made from `main` = `25c4a3d`, the Fix 20 merge). Step 1 is commit `d523031`, pushed. Step 2 (long words and narrow screens: code, tests, docs) is in the working folder, not committed.
 - The plan: `ROADMAP.md`, "Fix 21: empty the backlog" (Steps 0 to 10, then Release 4 for new features). Decisions: `DECISIONS.md`, "2026-11-14: Fix 21". Commit and PR texts: `docs/guides/fix-21-pr-text.md`. The prompt that started it: `docs/guides/fix-21-small-bugs-prompt.md`.
 - Step 0 is partly done: six already-built BACKLOG items are ticked; four small notes inside longer lines are still to mark (listed in `ROADMAP.md`).
 
@@ -14,11 +14,11 @@ Filip:
    - Leave a Kvit tab open for 20 minutes, then tap something. Expected: a bar "The server is asleep. · Wake the server" at the top; the button does the same trip.
    - Add an expense while the bar shows. Expected: it shows as waiting and is sent after the trip.
    - In the Render log after the first signed-in visit: a line "The daily cleanup of … finished".
-2. Commit Step 1 and push the branch with the texts in `docs/guides/fix-21-pr-text.md` (pushing is fine; merging waits).
+2. Commit Step 2 with the one-line subject under "Later pushes" in `docs/guides/fix-21-pr-text.md` and push (pushing is fine; merging waits). In the PR description tick "Step 2".
 3. Delete `Cleanup__Secret` on Render and `CLEANUP_SECRET` on GitHub (no longer used).
 4. Still open from Phase 19 (`docs/guides/phase-19-legal.md`): run the **Backup** workflow once, the practice restore, **Private vulnerability reporting** on GitHub (checked 2026-11-14: off), and Part E.
 
-Claude: finish Step 0, then Step 2 (long words and narrow screens): read the code, tell Filip the changes in plain words, ask about "Accommodation" and the Macedonian category words, wait for his go before the coder.
+Claude: finish Step 0, then Step 3 (tap sizes, contrast, dark mode): read the code, tell Filip the changes in plain words, ask about the lighter peach, wait for his go before the coder. Coder runs go on Opus 5.5 without browser measuring; the tester measures once at the end (Filip, 2026-11-15, to save usage).
 
 ## Blockers and open questions
 - Not known until the live check: whether every person passes Render's robot check without a tap, how an installed home-screen Kvit and iOS Safari behave on the trip, and whether Render changes this again.
@@ -33,7 +33,9 @@ Claude: finish Step 0, then Step 2 (long words and narrow screens): read the cod
 On `fix/21-small-bugs` (working folder, 2026-11-14, after Step 1):
 - VERIFIED by automated test (tester, after the last code change): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 7473/7473 (23 new); `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 15807/15807 (87 more than before Step 1).
 - VERIFIED by live run (headless Chromium, 360 px, English, local stack): a 60-letter name on the Members page and in Home's greeting gives no sideways scroll; Back after sign-up, after the in-app Back and after joining through an invite never shows Sign up or Log in while signed in; a member removed in a second session while Add expense is open: no crash, the typed amount stays, Paid by falls back to the signed-in person, the save goes through without the removed person.
-- NOT VERIFIED: that each new test fails without its fix (not tried); Macedonian, dark mode and widths other than 360 px for the Step 1 screens; a real Google sign-in through the new redirect; a real phone; anything on the live site.
+- Step 2, VERIFIED by automated test (tester, after the last code change, 2026-11-15): `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 15841 of 15842, the one failure the known flaky `JoinScreen.test.tsx` "goes straight to the group…" (73/73 alone); the run before it 15842/15842. No backend change in Step 2, `dotnet test` not run again.
+- Step 2, VERIFIED by live run (headless Chromium, 320, 360, 390 px, EN and MK, local stack): no sideways scroll on the measured screens; expense detail title, "Everyone" row, group Totals rows, Split list, Budget rows with 10-digit amounts, the Home card with a 10-digit amount, One bill names, the category grids (three columns under 346 px), the Waking up screen centred. Not fixed: waiting rows at 320 px (BACKLOG).
+- NOT VERIFIED: that each Step 1 test fails without its fix (not tried; done for Step 2); Macedonian, dark mode and widths other than 360 px for the Step 1 screens; a real Google sign-in through the new redirect; a real phone; anything on the live site.
 
 On `main` = `25c4a3d` (2026-11-14):
 - VERIFIED by live run: CI run 43614330770 green (frontend and backend jobs), which includes the Render deploy.

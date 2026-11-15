@@ -24,7 +24,7 @@ None so far. Step 8 will add migrations.
 ### Checklist
 - [ ] Step 0: backlog items that are already built are ticked
 - [x] Step 1: the five bugs
-- [ ] Step 2: long words and narrow screens
+- [x] Step 2: long words and narrow screens
 - [ ] Step 3: tap sizes, contrast, dark mode
 - [ ] Step 4: toasts, sheets, focus
 - [ ] Step 5: texts and one privacy-notice change
@@ -35,3 +35,4 @@ None so far. Step 8 will add migrations.
 - [ ] Step 10: full check, browser pass, code review, report
 
 ## Later pushes (one-line commit subjects)
+- Keep long names, titles and large amounts inside narrow screens.

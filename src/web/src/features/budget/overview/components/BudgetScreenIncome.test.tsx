@@ -119,6 +119,19 @@ describe('BudgetScreen with income', () => {
       expect(readableText(amountOf(row)).startsWith('+')).toBe(true)
     })
 
+    it('puts the text column and the amount of an income in one block that may wrap, so a huge amount drops under the text', async () => {
+      await renderBudget({ months: [octoberWithSalary] })
+
+      const row = rowAt(await findEntryList(), 2)
+      const textColumn = row.querySelector<HTMLElement>('[data-entry-text]')
+      const amount = amountOf(row)
+
+      expect(textColumn?.parentElement).toBe(amount.parentElement)
+      expect(Array.from(amount.parentElement?.classList ?? [])).toEqual(expect.arrayContaining(['flex', 'flex-wrap', 'min-w-0', 'flex-1']))
+      expect(Array.from(textColumn?.classList ?? [])).toEqual(expect.arrayContaining(['min-w-0', 'flex-1', 'basis-16']))
+      expect(Array.from(amount.classList)).toEqual(expect.arrayContaining(['ml-auto', 'whitespace-nowrap', 'text-positive']))
+    })
+
     it.each(languages)('uses the "Income" text as the title when the income has no note (%s)', async (language) => {
       await renderBudget({ language, months: [octoberWithTwoIncomes] })
 
