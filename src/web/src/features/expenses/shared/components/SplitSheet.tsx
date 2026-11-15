@@ -205,7 +205,7 @@ export function SplitSheet({
             role="tab"
             aria-selected={sheetDraft.splitType === splitType}
             onClick={() => switchTab(splitType)}
-            className="pressable min-h-11 flex-1 rounded-full font-bold text-muted-foreground aria-selected:bg-pill aria-selected:text-foreground aria-selected:shadow-[0_1px_3px_var(--track-shadow)]"
+            className="pressable min-h-11 flex-1 rounded-full font-bold text-muted-foreground aria-selected:bg-tab-active aria-selected:text-tab-active-foreground aria-selected:shadow-[0_1px_3px_var(--track-shadow)]"
           >
             {t(splitTabKeys[splitType])}
           </button>

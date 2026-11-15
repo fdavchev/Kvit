@@ -4,7 +4,7 @@ import type { ThemeChoice } from './theme'
 const colorSchemes: readonly ColorScheme[] = ['light', 'dark']
 
 const statusBarColors: Record<ColorScheme, string> = {
-  light: '#ffd9a8',
+  light: '#fff4e6',
   dark: '#1f1816',
 }
 

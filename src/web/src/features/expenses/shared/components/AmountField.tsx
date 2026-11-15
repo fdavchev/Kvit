@@ -63,7 +63,7 @@ export function AmountField({
           aria-describedby={shownMessage === undefined ? undefined : messageId}
           onChange={(event) => onAmountTextChange(event.target.value)}
           className={cn(
-            '-mx-0.5 w-full min-w-0 flex-1 rounded-[14px] border-2 border-transparent bg-transparent px-3 py-0.5 font-extrabold tracking-[-0.02em] text-foreground placeholder:text-muted-foreground focus-visible:outline-offset-0 aria-invalid:border-destructive',
+            '-mx-0.5 w-full min-w-0 flex-1 rounded-[14px] border-2 border-transparent bg-transparent px-3 py-0.5 font-extrabold tracking-[-0.02em] text-foreground placeholder:font-normal placeholder:text-muted-foreground focus-visible:outline-offset-0 aria-invalid:border-destructive',
             amountTextSize(amountText),
             onCurrencyChange === undefined ? 'text-left' : 'text-right',
           )}

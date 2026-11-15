@@ -201,7 +201,7 @@ export function SettingsScreen() {
           {t('settings.deleteAccount')}
         </KvitButton>
         <KvitButton
-          variant="secondary"
+          variant="link"
           disabled={logOut.isPending}
           onClick={pressLogOut}
         >

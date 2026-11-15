@@ -23,7 +23,9 @@
 
 @theme {
   --breakpoint-lg: 64rem;
+  --color-brand-25: #fff4e6;
   --color-brand-50: #fff1dc;
+  --color-brand-100: #ffe9cc;
   --color-brand-200: #ffd9a8;
   --color-brand-400: #ffa53a;
   --color-brand-700: #b54a00;
@@ -89,6 +91,7 @@
   --color-track-active: var(--track-active);
   --color-track-shadow: var(--track-shadow);
   --color-pill: var(--pill);
+  --color-card-tint: var(--card-tint);
   --color-skeleton: var(--skeleton);
   --color-avatar: var(--avatar);
   --color-avatar-foreground: var(--avatar-foreground);
@@ -117,21 +120,21 @@
 
 :root {
   color-scheme: light;
-  --background: var(--color-brand-200);
+  --background: var(--color-brand-25);
   --foreground: var(--color-brand-950);
-  --card: var(--color-brand-50);
+  --card: #ffffff;
   --card-foreground: var(--color-brand-950);
-  --popover: var(--color-brand-50);
+  --popover: #ffffff;
   --popover-foreground: var(--color-brand-950);
   --primary: var(--color-brand-700);
   --primary-hover: var(--color-brand-900);
   --primary-foreground: #ffffff;
-  --secondary: var(--color-brand-50);
-  --secondary-hover: #ffffff;
+  --secondary: #ffffff;
+  --secondary-hover: var(--color-brand-100);
   --secondary-foreground: var(--color-brand-900);
-  --muted: var(--color-brand-50);
+  --muted: #ffffff;
   --muted-foreground: var(--color-brand-900);
-  --accent: var(--color-brand-50);
+  --accent: #ffffff;
   --accent-foreground: var(--color-brand-900);
   --destructive: #a51d1d;
   --border: var(--color-brand-line);
@@ -145,11 +148,12 @@
   --field-border: var(--color-brand-line);
   --field-border-raised: var(--color-brand-line);
   --field-border-focus: var(--color-brand-950);
-  --track: var(--color-brand-50);
-  --track-active: #ffffff;
+  --track: #ffffff;
+  --track-active: var(--color-brand-100);
   --track-shadow: rgb(61 38 16 / 18%);
-  --pill: #ffffff;
-  --skeleton: var(--card);
+  --pill: var(--color-brand-100);
+  --card-tint: var(--color-brand-100);
+  --skeleton: var(--color-brand-200);
   --avatar: var(--color-brand-950);
   --avatar-foreground: var(--color-brand-50);
   --avatar-hover: var(--color-brand-900);
@@ -232,6 +236,7 @@
     --track-active: var(--color-night-raised);
     --track-shadow: transparent;
     --pill: var(--color-night);
+    --card-tint: var(--color-night);
     --skeleton: var(--color-night-skeleton);
     --avatar: var(--color-brand-200);
     --avatar-foreground: var(--color-night);

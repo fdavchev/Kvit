@@ -57,7 +57,7 @@ export function BudgetTotalSettings({ budgetTotalCurrency }: BudgetTotalSettings
         {options.map((option) => (
           <label
             key={option.textKey}
-            className="pressable -mx-2 flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl px-2 py-1.5 text-[0.9375rem] has-checked:bg-background has-checked:font-semibold"
+            className="pressable -mx-2 flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl px-2 py-1.5 text-[0.9375rem] has-checked:bg-card-tint has-checked:font-semibold"
           >
             <input
               type="radio"

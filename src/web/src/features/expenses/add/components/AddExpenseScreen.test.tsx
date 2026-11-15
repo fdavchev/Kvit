@@ -82,7 +82,7 @@ import {
   ownerViewMembers,
   petarMember,
 } from '@/test/memberTestData'
-import { colorTokenOfClasses, contrastBetween, type ThemeName } from '@/test/indexCssColors'
+import { colorOfToken, colorTokenOfClasses, contrastBetween, type ThemeName } from '@/test/indexCssColors'
 import { holdOutboxSender, readSavedOutbox } from '@/test/queuedSaveTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import {
@@ -1161,6 +1161,25 @@ describe('AddExpenseScreen', () => {
 
       expect(splitTab(sheet, 'splitShares').getAttribute('aria-selected')).toBe('true')
       expect(splitTab(sheet, 'splitEqual').getAttribute('aria-selected')).toBe('false')
+    })
+
+    it('gives the selected tab the tab-active pill and its text colour, the same as the bottom bar', async () => {
+      await renderReadyAdd()
+      const sheet = await openSheet('split')
+
+      const classes = splitTab(sheet, 'splitEqual').className
+
+      expect(classes).toContain('aria-selected:bg-tab-active')
+      expect(classes).toContain('aria-selected:text-tab-active-foreground')
+    })
+
+    it.each(['light', 'dark'] as const)('keeps the text of the selected and of the other tabs at 4.5:1 or better in %s mode', (theme) => {
+      expect(contrastBetween('tab-active-foreground', 'tab-active', theme)).toBeGreaterThanOrEqual(4.5)
+      expect(contrastBetween('muted-foreground', 'track', theme)).toBeGreaterThanOrEqual(4.5)
+    })
+
+    it.each(['light', 'dark'] as const)('shows the selected tab pill against its track in %s mode', (theme) => {
+      expect(colorOfToken('tab-active', theme)).not.toEqual(colorOfToken('track', theme))
     })
 
     it('lists every current member of the group in the joining order on the Equal tab, all ticked', async () => {

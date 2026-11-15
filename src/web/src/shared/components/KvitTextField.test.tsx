@@ -108,6 +108,15 @@ describe('KvitTextField', () => {
       expect(() => placeholderTokenOf(fieldLabelled(label), theme)).not.toThrow()
     })
 
+    it('is drawn in normal weight while the typed text is semibold, so the two never look alike', () => {
+      renderField({ placeholder: 'Marko' })
+
+      const classes = Array.from(fieldLabelled(label).classList)
+
+      expect(classes).toContain('placeholder:font-normal')
+      expect(classes).toContain('font-semibold')
+    })
+
     it('has at least 4.5:1 contrast on the field colour, in light and in dark mode', () => {
       renderField({ placeholder: 'Marko' })
 

@@ -8,7 +8,7 @@ import { translated } from './translated'
 export type ColorScheme = 'light' | 'dark'
 
 export const themeColors: Record<ColorScheme, string> = {
-  light: '#ffd9a8',
+  light: '#fff4e6',
   dark: '#1f1816',
 }
 
@@ -36,6 +36,40 @@ export function resetThemeDocument(): void {
 
 export function stubDeviceColorScheme(scheme: ColorScheme): void {
   vi.stubGlobal('matchMedia', fakeMatchMedia({ [darkSchemeQuery]: scheme === 'dark', [reducedMotionQuery]: true, [desktopQuery]: false }))
+}
+
+export interface ChangingDeviceColorScheme {
+  changeTo: (scheme: ColorScheme) => void
+  listenerCount: () => number
+}
+
+export function stubDeviceColorSchemeThatCanChange(schemeAtStart: ColorScheme): ChangingDeviceColorScheme {
+  let scheme = schemeAtStart
+  const listeners = new Set<EventListenerOrEventListenerObject>()
+  const otherAnswers = fakeMatchMedia({ [reducedMotionQuery]: true, [desktopQuery]: false })
+  vi.stubGlobal('matchMedia', (query: string): MediaQueryList => {
+    if (query !== darkSchemeQuery) {
+      return otherAnswers(query)
+    }
+    return {
+      ...otherAnswers(reducedMotionQuery),
+      matches: scheme === 'dark',
+      media: query,
+      addEventListener: (_type: string, listener: EventListenerOrEventListenerObject) => {
+        listeners.add(listener)
+      },
+      removeEventListener: (_type: string, listener: EventListenerOrEventListenerObject) => {
+        listeners.delete(listener)
+      },
+    }
+  })
+  return {
+    changeTo: (newScheme) => {
+      scheme = newScheme
+      listeners.forEach((listener) => (typeof listener === 'function' ? listener(new Event('change')) : listener.handleEvent(new Event('change'))))
+    },
+    listenerCount: () => listeners.size,
+  }
 }
 
 export function themeColorOf(scheme: ColorScheme): string | undefined {

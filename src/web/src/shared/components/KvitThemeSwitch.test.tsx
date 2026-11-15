@@ -69,7 +69,7 @@ describe('KvitThemeSwitch', () => {
     expect(buttonFor('dark').className).toContain('aria-pressed:text-tab-active-foreground')
   })
 
-  it('keeps the pressed button white with the usual text in light mode, as before', () => {
+  it('gives the pressed button the light peach pill of the other tabs with the usual text in light mode', () => {
     expect(colorOfToken('tab-active', 'light')).toEqual(colorOfToken('track-active', 'light'))
     expect(colorOfToken('tab-active-foreground', 'light')).toEqual(colorOfToken('foreground', 'light'))
   })

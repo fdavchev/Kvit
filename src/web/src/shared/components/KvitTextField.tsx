@@ -50,7 +50,7 @@ export function KvitTextField({
           aria-describedby={hint === undefined ? undefined : hintId}
           aria-invalid={invalid}
           className={cn(
-            'min-h-14 w-full rounded-[14px] border-2 border-field-border bg-field px-4 text-[1.0625rem] font-semibold text-field-foreground placeholder:text-muted-foreground focus:border-field-border-focus focus-visible:outline-offset-0 aria-invalid:border-destructive',
+            'min-h-14 w-full rounded-[14px] border-2 border-field-border bg-field px-4 text-[1.0625rem] font-semibold text-field-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-field-border-focus focus-visible:outline-offset-0 aria-invalid:border-destructive',
             hasTrailing && 'pr-14',
           )}
           {...inputAttributes}

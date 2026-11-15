@@ -25,7 +25,7 @@ None so far. Step 8 will add migrations.
 - [ ] Step 0: backlog items that are already built are ticked
 - [x] Step 1: the five bugs
 - [x] Step 2: long words and narrow screens
-- [ ] Step 3: tap sizes, contrast, dark mode
+- [x] Step 3: the lightest peach light theme, contrast and dark mode leftovers
 - [ ] Step 4: toasts, sheets, focus
 - [ ] Step 5: texts and one privacy-notice change
 - [ ] Step 6: behaviour bugs, website
@@ -36,3 +36,4 @@ None so far. Step 8 will add migrations.
 
 ## Later pushes (one-line commit subjects)
 - Keep long names, titles and large amounts inside narrow screens.
+- Switch the light theme to the lightest peach and fix the contrast leftovers, the Split sheet pill and the Home totals with large amounts.

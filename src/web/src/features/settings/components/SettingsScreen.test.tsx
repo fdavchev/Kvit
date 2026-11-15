@@ -6,7 +6,7 @@ import { meQueryKey } from '@/core/auth/useMe'
 import { languages, type Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import { themeChoices, type ThemeChoice } from '@/core/theme/theme'
-import { sentRequest, stubFetch } from '@/test/apiTestHelpers'
+import { sentRequest, stubFetch, stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { seedMe, testMe } from '@/test/testMe'
 import { appliedTheme, resetThemeDocument, themeButtonName } from '@/test/themeTestHelpers'
@@ -149,6 +149,42 @@ describe('SettingsScreen', () => {
       .filter((link) => !(link.compareDocumentPosition(logOut) & Node.DOCUMENT_POSITION_FOLLOWING))
 
     expect(linksAfterLogOut).toEqual([])
+  })
+
+  it('puts Log out after the Delete account button, as the last button of the screen', async () => {
+    await renderSettings()
+    const logOut = screen.getByRole('button', { name: translated('en', 'settings.logOut') })
+    const deleteAccount = screen.getByRole('button', { name: translated('en', 'settings.deleteAccount') })
+
+    const buttonsAfterLogOut = screen
+      .getAllByRole('button')
+      .filter((button) => button !== logOut && !(button.compareDocumentPosition(logOut) & Node.DOCUMENT_POSITION_FOLLOWING))
+
+    expect(deleteAccount.compareDocumentPosition(logOut) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(buttonsAfterLogOut).toEqual([])
+  })
+
+  it('draws Log out as a link without a filled box, at least 48 px tall', async () => {
+    await renderSettings()
+
+    const classes = Array.from(screen.getByRole('button', { name: translated('en', 'settings.logOut') }).classList)
+
+    expect(classes).toContain('text-link')
+    expect(classes).toContain('min-h-12')
+    expect(classes.filter((name) => name.startsWith('bg-') && name !== 'bg-clip-padding')).toEqual([])
+  })
+
+  it('keeps Log out enabled until it is pressed and disables it while the server has not answered', async () => {
+    stubFetchThatNeverAnswers()
+    await renderSettings()
+    const logOut = screen.getByRole('button', { name: translated('en', 'settings.logOut') })
+    expect(logOut.matches(':disabled')).toBe(false)
+
+    pressLogOut()
+
+    await waitFor(() => {
+      expect(logOut.matches(':disabled')).toBe(true)
+    })
   })
 
   it.each(languages)('shows the language of the screen as the pressed one (%s)', async (language) => {
