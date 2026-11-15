@@ -88,6 +88,7 @@ export function EditExpenseScreen() {
       <ExpenseForm
         initialValues={formValuesOf(expense, people)}
         people={people}
+        addsNewMembersToAnEveryoneSplit={false}
         categories={categoriesQuery.data}
         today={todayInTimeZone(me.timeZone, new Date())}
         isPending={updateExpense.isPending}

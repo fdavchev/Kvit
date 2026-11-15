@@ -69,7 +69,7 @@ namespace Kvit.Domain.Services.Expenses
             }
 
             GroupRoster roster = await _members.RosterOfAsync(groupId, cancellationToken);
-            Result<IReadOnlyList<SplitShare>> shares = Expense.SplitAmong(roster, fields.Value, input.PaidByMemberId, input.Shares);
+            Result<IReadOnlyList<SplitShare>> shares = expense.SplitAgainAmong(roster, fields.Value, input.PaidByMemberId, input.Shares);
             if (!shares.IsSuccess)
             {
                 return shares;

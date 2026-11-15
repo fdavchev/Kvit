@@ -72,6 +72,23 @@ export function withoutPerson(draft: SplitDraft, memberId: string): SplitDraft {
   return { ...draft, people: draft.people.filter((person) => person.memberId !== memberId) }
 }
 
+export function withOnlyPeopleAmong(draft: SplitDraft, memberIds: readonly string[]): SplitDraft {
+  return draft.people
+    .filter((person) => !memberIds.includes(person.memberId))
+    .reduce((kept, person) => withoutPerson(kept, person.memberId), draft)
+}
+
+export function withNewPeopleInEveryoneSplit(draft: SplitDraft, memberIds: readonly string[]): SplitDraft {
+  const isUntouchedEveryoneSplit: boolean =
+    draft.splitType === 'Equal' && draft.people.every((person) => person.isIn && !person.isTyped)
+  if (!isUntouchedEveryoneSplit) {
+    return draft
+  }
+  return memberIds
+    .filter((memberId) => !draft.people.some((person) => person.memberId === memberId))
+    .reduce((grown, memberId) => withPersonAdded(grown, memberId), draft)
+}
+
 export function withPersonIn(draft: SplitDraft, memberId: string, isIn: boolean): SplitDraft {
   return {
     ...draft,

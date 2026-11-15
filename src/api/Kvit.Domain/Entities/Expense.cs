@@ -107,6 +107,29 @@ namespace Kvit.Domain.Entities
             return Splitter.Calculate(fields.SplitType, fields.Amount, paidByMemberId, inJoiningOrder.Value);
         }
 
+        public Result<IReadOnlyList<SplitShare>> SplitAgainAmong(GroupRoster roster, ExpenseFields fields, Guid paidByMemberId, IReadOnlyList<SplitInput> inputs)
+        {
+            if (paidByMemberId != PaidByMemberId)
+            {
+                Result<NamedMember> payer = roster.FindCurrent(paidByMemberId);
+                if (!payer.IsSuccess)
+                {
+                    return payer.ToFailure<IReadOnlyList<SplitShare>>();
+                }
+            }
+
+            foreach (SplitInput input in inputs.Where(input => !KeepsItsShare(input, fields.SplitType)))
+            {
+                Result<NamedMember> row = roster.FindCurrent(input.MemberId);
+                if (!row.IsSuccess)
+                {
+                    return row.ToFailure<IReadOnlyList<SplitShare>>();
+                }
+            }
+
+            return Splitter.Calculate(fields.SplitType, fields.Amount, paidByMemberId, roster.InJoiningOrder(inputs, input => input.MemberId));
+        }
+
         public static DateTimeOffset RestorableUntil(DateTimeOffset deletedAt)
         {
             return deletedAt.AddDays(DeletedExpenseRestoreDays);
@@ -158,6 +181,11 @@ namespace Kvit.Domain.Entities
             DeletedByUserId = null;
 
             return Result.Ok();
+        }
+
+        private bool KeepsItsShare(SplitInput input, SplitType splitType)
+        {
+            return splitType == SplitType && _shares.Any(share => share.MemberId == input.MemberId && share.InputValue == input.InputValue);
         }
 
         private void ApplyFields(ExpenseFields fields, Guid paidByMemberId)

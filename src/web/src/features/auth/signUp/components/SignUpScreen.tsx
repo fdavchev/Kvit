@@ -39,7 +39,7 @@ export function SignUpScreen() {
 
   return (
     <KvitScreen>
-      <KvitBackButton to={pathBeforeSignIn(joinToken)} />
+      <KvitBackButton to={pathBeforeSignIn(joinToken)} replace />
       <KvitScreenTitle>{t('auth.signUp.title')}</KvitScreenTitle>
       <KvitForm
         submitLabel={t('auth.signUp.title')}
@@ -52,6 +52,7 @@ export function SignUpScreen() {
             <KvitLinkButton
               to={routes.logIn}
               state={joinTokenState(joinToken)}
+              replace
               variant="underlinedLink"
             >
               {t('welcome.haveAccount')}

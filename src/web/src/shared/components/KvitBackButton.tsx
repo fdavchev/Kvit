@@ -4,14 +4,16 @@ import { Link } from 'react-router'
 interface KvitBackButtonProps {
   to: string
   state?: unknown
+  replace?: boolean
 }
 
-export function KvitBackButton({ to, state }: KvitBackButtonProps) {
+export function KvitBackButton({ to, state, replace }: KvitBackButtonProps) {
   const { t } = useTranslation()
   return (
     <Link
       to={to}
       state={state}
+      replace={replace}
       className="pressable -ml-3 inline-flex min-h-12 items-center gap-1 self-start rounded-xl px-3 font-semibold text-link hover:underline"
     >
       <svg

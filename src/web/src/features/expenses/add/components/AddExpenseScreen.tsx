@@ -92,6 +92,7 @@ export function AddExpenseScreen() {
             note: '',
           }}
           people={expensePeople(members)}
+          addsNewMembersToAnEveryoneSplit
           categories={categoriesQuery.data}
           today={today}
           isPending={queuedSave.isPending}

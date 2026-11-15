@@ -41,7 +41,7 @@ export function MemberListItem({
     <li className="flex min-h-14 items-center gap-3 rounded-2xl bg-card px-3.5 py-3 text-card-foreground">
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-          <span className="font-semibold break-words">{member.displayName}</span>
+          <span className="min-w-0 font-semibold break-words">{member.displayName}</span>
           {member.isOwner && (
             <span className={`${badgeLook} bg-pill text-foreground`}>
               {t('members.owner')}

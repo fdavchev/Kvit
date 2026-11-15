@@ -291,7 +291,25 @@ Terms of Use, a complete privacy notice, and the features the law and the platfo
 ## Fix 20: Render wake round trip · `fix/20-render-wake`
 Found 2026-11-14: an asleep Render server no longer wakes for requests through Cloudflare (429), so the live app was down whenever the server slept. Decisions: `DECISIONS.md`, "2026-11-14: Render wake round trip".
 - [x] **Built 2026-11-14 (results in `STATUS.md`).** The forwarder turns Render's "asleep" 429 into a 503 with the wake address; the app goes through Render's wake page and back by itself when it is opened (`GET /wake` on the API), and shows a "Wake the server" bar later in a session; the cleanup runs after the first signed-in visit instead of on a schedule (workflow, endpoint and secret removed)
-- [ ] **Filip:** commit, push, PR, CI green, merge
+- [x] **Filip:** commit, push, PR, CI green, merge (PR #24 merged 2026-11-14; CI run 43614330770 on `main` green, VERIFIED by live run of `gh`)
 - [ ] **Filip:** the live check after the deploy (list in `STATUS.md`), then delete `Cleanup__Secret` on Render and `CLEANUP_SECRET` on GitHub
+
+## Fix 21: empty the backlog · `fix/21-small-bugs`
+Filip, 2026-11-14: the last branch; everything open in `BACKLOG.md` is either fixed here, named as a Release 4 phase below, or moved to "Skipped on purpose". One coder run and one tester run per step, Filip's go before each coder run. Nothing is merged into `main` until Filip's live check of Fix 20 is over.
+- [ ] Step 0: tick the BACKLOG items that are already built (each checked in the code first). Six ticked 2026-11-14; still to mark inside longer lines: the limit amount message, "near" in words, the Add expense closing warning, the duplicate JavaScript-size lines
+- [x] **Done 2026-11-14 (VERIFIED by automated test: backend 7473 of 7473, build 0 warnings; frontend 15807 of 15807, lint 0 warnings, build 0 type errors; VERIFIED by live run in headless Chromium at 360 px, English, local stack: long names, Back after sign-up and after joining, a member removed while Add expense is open; Macedonian, dark mode and other widths NOT VERIFIED).** Step 1: the five bugs (edit an old expense with a person who left, Add expense crash when a member is removed elsewhere, Back after joining, long names on Members and Home, cleanup retry)
+- [ ] Step 2: long words and narrow screens
+- [ ] Step 3: tap sizes, contrast, dark mode
+- [ ] Step 4: toasts, sheets, focus
+- [ ] Step 5: texts, EN + MK, and one privacy-notice change
+- [ ] Step 6: behaviour bugs, website
+- [ ] Step 7: behaviour bugs, server (no migration)
+- [ ] Step 8: same-moment problems (migrations)
+- [ ] Step 9: tidy-up and speed
+- [ ] Step 10: full check, browser pass, code review, report
+- [ ] **Filip:** commit, push, PR, CI green, merge (after the Fix 20 live check)
+
+# Release 4: new features (not started; each becomes its own phase when Filip picks it)
+Moved here from `BACKLOG.md` on 2026-11-14 so the backlog holds no hidden work: the rest of the animations (rolling amounts); Settings (change the name, time zone picker, theme kept on the account); forgot password by e-mail and linking Google to a password account; planned and future payments; repeating expenses; several payers for one expense; leaving one expense out of the budget; unspent budget at the end of the month; charts and Totals bars; CSV export; "Share balances"; shared pot for a trip; "people you've been in a group with"; reminders; install as an app with notifications; uploaded pictures; receipt QR codes; offline editing and deleting; a tile colour per group; the partial pending-payment rule; "second Marko" option B; old statistics after 12 months; desktop look changes; keeping the Render server awake.
 
 - **Phase 19 done when:** Terms and the full privacy notice are live in EN + MK and linked from Welcome, Settings and Google's console; every new person has an accepted terms version stored; Download my data and Delete my account work in a real browser; the cleanup (seen in the Render log) and the backup have run once on the real site; the questions in "What a lawyer should answer" are written down as accepted risks with the triggers for reconsidering (Filip chose no lawyer, 2026-11-04).

@@ -13,6 +13,8 @@ import {
   buildSplitRequest,
   splitProgress,
   withAutoFillRefreshed,
+  withNewPeopleInEveryoneSplit,
+  withOnlyPeopleAmong,
   withSplitType,
   type SplitDraft,
 } from '../splitDraft'
@@ -34,6 +36,7 @@ export interface ExpenseFormValues {
 interface ExpenseFormProps {
   initialValues: ExpenseFormValues
   people: readonly ExpensePerson[]
+  addsNewMembersToAnEveryoneSplit: boolean
   categories: readonly Category[]
   today: string
   isPending: boolean
@@ -44,6 +47,7 @@ interface ExpenseFormProps {
 export function ExpenseForm({
   initialValues,
   people,
+  addsNewMembersToAnEveryoneSplit,
   categories,
   today,
   isPending,
@@ -62,18 +66,26 @@ export function ExpenseForm({
   const [note, setNote] = useState<string>(initialValues.note)
   const [isNoteOpen, setIsNoteOpen] = useState<boolean>(initialValues.note !== '')
 
+  const draftOfStillListedPeople = withOnlyPeopleAmong(splitDraft, people.map((person) => person.memberId))
+  const draftOfPeople = addsNewMembersToAnEveryoneSplit
+    ? withNewPeopleInEveryoneSplit(
+        draftOfStillListedPeople,
+        people.filter((person) => person.isCurrentMember).map((person) => person.memberId),
+      )
+    : draftOfStillListedPeople
+  const payerMemberId = payerAmong(people, paidByMemberId)
   const amountMinor = parseMoneyInput(amountText, currency)
-  const progress = splitProgress(splitDraft, amountMinor ?? 0, currency)
+  const progress = splitProgress(draftOfPeople, amountMinor ?? 0, currency)
   const canSubmit: boolean = amountMinor !== null && progress.kind === 'ok'
 
   function changeCurrency(nextCurrency: Currency): void {
     setCurrency(nextCurrency)
-    setSplitDraft(withSplitType(splitDraft, splitDraft.splitType))
+    setSplitDraft(withSplitType(draftOfPeople, draftOfPeople.splitType))
   }
 
   function changeAmountText(nextAmountText: string): void {
     setAmountText(nextAmountText)
-    setSplitDraft(withAutoFillRefreshed(splitDraft, parseMoneyInput(nextAmountText, currency) ?? 0, currency))
+    setSplitDraft(withAutoFillRefreshed(draftOfPeople, parseMoneyInput(nextAmountText, currency) ?? 0, currency))
   }
 
   function submit(): void {
@@ -87,9 +99,9 @@ export function ExpenseForm({
       currency,
       expenseDate,
       categoryId,
-      paidByMemberId,
-      splitType: splitDraft.splitType,
-      shares: buildSplitRequest(splitDraft, currency),
+      paidByMemberId: payerMemberId,
+      splitType: draftOfPeople.splitType,
+      shares: buildSplitRequest(draftOfPeople, currency),
     })
   }
 
@@ -109,8 +121,8 @@ export function ExpenseForm({
       />
       <ExpenseRows
         people={people}
-        paidByMemberId={paidByMemberId}
-        splitDraft={splitDraft}
+        paidByMemberId={payerMemberId}
+        splitDraft={draftOfPeople}
         expenseDate={expenseDate}
         categoryId={categoryId}
         categories={categories}
@@ -132,4 +144,17 @@ export function ExpenseForm({
       )}
     </KvitForm>
   )
+}
+
+function payerAmong(people: readonly ExpensePerson[], paidByMemberId: string): string {
+  if (people.some((person) => person.memberId === paidByMemberId)) {
+    return paidByMemberId
+  }
+  const you = people.find((person) => person.isYou)
+  if (you === undefined) {
+    throw new Error(
+      `The payer ${paidByMemberId} is no longer among the people of the expense, and the signed-in person is not among them either`,
+    )
+  }
+  return you.memberId
 }

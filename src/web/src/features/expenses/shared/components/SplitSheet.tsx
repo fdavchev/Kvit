@@ -13,6 +13,7 @@ import { personOf, type ExpensePerson } from '../expensePeople'
 import {
   percentText,
   splitProgress,
+  withOnlyPeopleAmong,
   withPersonIn,
   withSplitType,
   withTypedValueAutoFilled,
@@ -58,7 +59,8 @@ export function SplitSheet({
 }: SplitSheetProps) {
   const { t } = useTranslation()
   const sheet = useKvitSheet()
-  const [sheetDraft, setSheetDraft] = useState<SplitDraft>(draft)
+  const [storedSheetDraft, setSheetDraft] = useState<SplitDraft>(draft)
+  const sheetDraft = withOnlyPeopleAmong(storedSheetDraft, people.map((person) => person.memberId))
   const [openedExtras, setOpenedExtras] = useState<readonly string[]>([])
   const progress = splitProgress(sheetDraft, amountMinor, currency)
   const moneyInputMode = currency === 'EUR' ? 'decimal' : 'numeric'

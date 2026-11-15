@@ -33,6 +33,7 @@ import { BottomBarLayout } from './BottomBarLayout'
 import { RequireAccount } from './RequireAccount'
 import { RequireAdmin } from './RequireAdmin'
 import { RequireAuth } from './RequireAuth'
+import { RequireSignedOut } from './RequireSignedOut'
 import { RouteError } from './RouteError'
 import { routes } from './routes'
 
@@ -44,9 +45,14 @@ export const routeObjects: RouteObject[] = [
   {
     errorElement: <RouteError />,
     children: [
-      { path: routes.welcome, element: <WelcomeScreen /> },
-      { path: routes.signUp, element: <SignUpScreen /> },
-      { path: routes.logIn, element: <LogInScreen /> },
+      {
+        element: <RequireSignedOut />,
+        children: [
+          { path: routes.welcome, element: <WelcomeScreen /> },
+          { path: routes.signUp, element: <SignUpScreen /> },
+          { path: routes.logIn, element: <LogInScreen /> },
+        ],
+      },
       { path: routes.googleSignUp, element: <GoogleSignUpScreen /> },
       { path: routes.privacy, element: <PrivacyScreen /> },
       { path: routes.terms, element: <TermsScreen /> },
