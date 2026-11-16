@@ -1,9 +1,9 @@
 # Status: Kvit
 
-_Last updated: 2026-11-14 (Fix 20 merged as PR #24; `fix/21-small-bugs` started: Steps 1 to 3 are built and tested, Steps 1 and 2 are committed, Step 3 is not committed; Filip's live check of Fix 20 is still open)_
+_Last updated: 2026-11-16 (Fix 20 merged as PR #24; on `fix/21-small-bugs` Steps 1 to 3 are committed and pushed, Step 4 is built, tested and committed by Claude but NOT pushed; Step 8 is next; Filip's live check of Fix 20 is still open)_
 
 ## Where we stopped
-- Branch: `fix/21-small-bugs` (made from `main` = `25c4a3d`, the Fix 20 merge). Step 1 is commit `d523031`, pushed. Step 2 is commit `d7ddc66`. Step 3 (the lightest peach light theme, contrast leftovers, Home totals: code, tests, docs) is in the working folder, not committed.
+- Branch: `fix/21-small-bugs` (made from `main` = `25c4a3d`, the Fix 20 merge). Step 1 is commit `d523031`, pushed. Step 2 is commit `d7ddc66`. Step 3 (the lightest peach light theme, contrast leftovers, Home totals) is commit `6801b09`, pushed. Step 4 (toasts, sheets, focus) is committed locally by Claude on 2026-11-16 while Filip was away (his instruction: "you commit, don't push"); Filip pushes it and ticks Step 4 in the PR description. To continue in a new session from any step: paste `docs/guides/fix-21-continue-prompt.md`.
 - The plan: `ROADMAP.md`, "Fix 21: empty the backlog" (Steps 0 to 10, then Release 4 for new features). Decisions: `DECISIONS.md`, "2026-11-14: Fix 21". Commit and PR texts: `docs/guides/fix-21-pr-text.md`. The prompt that started it: `docs/guides/fix-21-small-bugs-prompt.md`.
 - Step 0 is partly done: six already-built BACKLOG items are ticked; four small notes inside longer lines are still to mark (listed in `ROADMAP.md`).
 
@@ -14,11 +14,11 @@ Filip:
    - Leave a Kvit tab open for 20 minutes, then tap something. Expected: a bar "The server is asleep. · Wake the server" at the top; the button does the same trip.
    - Add an expense while the bar shows. Expected: it shows as waiting and is sent after the trip.
    - In the Render log after the first signed-in visit: a line "The daily cleanup of … finished".
-2. Commit Step 3 with the last one-line subject under "Later pushes" in `docs/guides/fix-21-pr-text.md` and push (pushing is fine; merging waits). In the PR description tick "Step 3".
+2. In the PR description on GitHub, tick Steps 2 and 3 if not done yet.
 3. Delete `Cleanup__Secret` on Render and `CLEANUP_SECRET` on GitHub (no longer used).
 4. Still open from Phase 19 (`docs/guides/phase-19-legal.md`): run the **Backup** workflow once, the practice restore, **Private vulnerability reporting** on GitHub (checked 2026-11-14: off), and Part E.
 
-Claude: finish Step 0, then Step 4 (toasts, sheets, focus): read the code first and drop what is already fixed, tell Filip the changes in plain words, ask what "Updating…" should watch and whether the closing bar as a popup is still wanted, wait for his go before the coder. Coder runs go on Opus 5.5 without browser measuring; the tester measures once at the end (Filip, 2026-11-15, to save usage).
+Claude: finish Step 0, then Step 8 on Fable before Steps 5 to 7 and 9 (Filip, 2026-11-15 and again 2026-11-16; reason and caveats in `ROADMAP.md`, "Fix 21"). Other coder runs go on Opus 5.5 without browser measuring; the tester measures once at the end (Filip, 2026-11-15, to save usage).
 
 ## Blockers and open questions
 - Not known until the live check: whether every person passes Render's robot check without a tap, how an installed home-screen Kvit and iOS Safari behave on the trip, and whether Render changes this again.
@@ -38,6 +38,9 @@ On `fix/21-small-bugs` (working folder, 2026-11-14, after Step 1):
 - Step 3, VERIFIED by automated test (tester, after the last code change, 2026-11-15): `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 15878/15878. No backend change, `dotnet test` not run again.
 - Step 3, VERIFIED by live run (headless Chromium, 360 px, English, local stack): every light screen and sheet has no text under 4.5:1 and no control border under 3:1, no sideways scroll; hover colours 4.59:1 or better; the dark theme is identical to `d7ddc66` element by element on Home, Budget, Settings and group Totals except the Log out look; the Home totals stay inside their boxes at 320, 360 and 390 px up to the largest amount (faked dashboard answer), EN and MK, and are unchanged at 1280 px; Log out 48 px, disabled while logging out, the guest warning opens; the Welcome theme icon and page flip with the device without a reload.
 - Step 3, NOT VERIFIED: Macedonian and the 1280 px layout for contrast on the new light theme, a full dark audit of every screen, a real phone, whether the API accepts the largest amounts.
+- Step 4, VERIFIED by automated test (tester, after the last code change, 2026-11-16): `npm run lint` 0 warnings; `npm run build` 0 type errors; `npm test` 16008/16008 (130 more than before Step 4). 62 of the new or changed tests fail against the old code (scratch copy); the rest are guards. No backend change, `dotnet test` not run again.
+- Step 4, VERIFIED by live run (headless Chromium, 360 and 1280 px, English, light theme, local stack): a toast sits 12 px above an open sheet and overlaps none of its buttons, also when fired from inside the sheet; two toasts both show in full and both Undo buttons work; at 1280 px the toast centre equals the content column centre (748.8 px), at 360 px the window centre; the toast area's label is "Notifications" without "alt+T"; a 61-character name marks the field and links it to the error; Sign up marks only the email for a used email and only the password for a weak one; "Wake the server" raises the browser's leave question with typed text and not without; "+ Add a name" sits 4 px under the list and never crosses a fading row; focus lands on the plan card after Set a plan and on the "Set a plan" row after Remove; the "Updating…" note (y 2 to 26) overlaps no title or button on Home, a group page, Add expense, expense detail, Budget and Settings; no sideways scroll.
+- Step 4, NOT VERIFIED: the dark theme, Macedonian, a real phone, a real screen reader; a toast over a dialog on a window 360 px high overlaps its Close button (BACKLOG).
 - NOT VERIFIED: that each Step 1 test fails without its fix (not tried; done for Step 2); Macedonian, dark mode and widths other than 360 px for the Step 1 screens; a real Google sign-in through the new redirect; a real phone; anything on the live site.
 
 On `main` = `25c4a3d` (2026-11-14):

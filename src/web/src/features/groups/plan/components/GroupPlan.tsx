@@ -46,6 +46,7 @@ export function GroupPlan({ group, plan }: GroupPlanProps) {
 
   function openSheet(): void {
     setSheetOpener(document.activeElement)
+    setFocusAfterSheet(null)
     setIsSheetOpen(true)
   }
 

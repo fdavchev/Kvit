@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useState } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { sheetBodyOf } from '@/test/sheetScrollTestHelpers'
+import { rectOfHeight } from '@/test/toastLiftTestHelpers'
 import { KvitForm } from './KvitForm'
 import { KvitSheet } from './KvitSheet'
 import { kvitGlassPanelLook } from './kvitGlassLooks'
@@ -365,5 +366,99 @@ describe('KvitSheet', () => {
       expect.arrayContaining(['in-data-kvit-sheet-body:min-h-0', 'in-data-kvit-sheet-body:overflow-y-auto']),
     )
     expect(fields?.contains(save)).toBe(false)
+  })
+})
+
+describe('KvitSheet and the toasts above it', () => {
+  const openSheetHeightProperty = '--open-sheet-height'
+
+  function openSheetHeightOnPage(): string {
+    return document.documentElement.style.getPropertyValue(openSheetHeightProperty)
+  }
+
+  function measureSheetsByTitle(heightOf: (text: string) => number): void {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      return rectOfHeight(this.getAttribute('role') === 'dialog' ? heightOf(this.textContent ?? '') : 0)
+    })
+  }
+
+  function SheetsStackedOnEachOther() {
+    const [isSecondOpen, setIsSecondOpen] = useState<boolean>(false)
+    return (
+      <KvitSheet title="First sheet" onClose={() => {}}>
+        <button type="button" onClick={() => setIsSecondOpen(true)}>
+          open second
+        </button>
+        {isSecondOpen && (
+          <KvitSheet title="Second sheet" onClose={() => setIsSecondOpen(false)}>
+            <button type="button" onClick={() => setIsSecondOpen(false)}>
+              close second
+            </button>
+          </KvitSheet>
+        )}
+      </KvitSheet>
+    )
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    document.documentElement.style.removeProperty(openSheetHeightProperty)
+  })
+
+  it('writes the height of the open sheet plus 12px to --open-sheet-height, so the toasts sit above it', () => {
+    measureSheetsByTitle(() => 420)
+
+    renderSheet()
+
+    expect(openSheetHeightOnPage()).toBe('432px')
+  })
+
+  it('removes --open-sheet-height when the sheet is gone', () => {
+    measureSheetsByTitle(() => 420)
+    const { unmount } = render(
+      <KvitSheet title={title} onClose={() => {}}>
+        <p>sheet content</p>
+      </KvitSheet>,
+    )
+
+    unmount()
+
+    expect(openSheetHeightOnPage()).toBe('')
+  })
+
+  it('removes --open-sheet-height after the sheet closes with Escape', async () => {
+    measureSheetsByTitle(() => 420)
+    function ClosableSheet() {
+      const [isOpen, setIsOpen] = useState<boolean>(true)
+      return isOpen ? (
+        <KvitSheet title={title} onClose={() => setIsOpen(false)}>
+          <p>sheet content</p>
+        </KvitSheet>
+      ) : null
+    }
+    render(<ClosableSheet />)
+
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull()
+    })
+    expect(openSheetHeightOnPage()).toBe('')
+  })
+
+  it('follows the sheet that opened last when a sheet opens from a sheet, and hands back to the first one when it closes', async () => {
+    measureSheetsByTitle((text) => (text.includes('Second sheet') ? 150 : 400))
+    render(<SheetsStackedOnEachOther />)
+    expect(openSheetHeightOnPage()).toBe('412px')
+
+    fireEvent.click(screen.getByRole('button', { name: 'open second', hidden: true }))
+    await waitFor(() => {
+      expect(openSheetHeightOnPage()).toBe('162px')
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'close second', hidden: true }))
+
+    await waitFor(() => {
+      expect(openSheetHeightOnPage()).toBe('412px')
+    })
   })
 })

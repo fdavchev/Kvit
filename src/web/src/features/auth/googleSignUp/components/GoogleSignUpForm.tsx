@@ -4,13 +4,17 @@ import { useNavigate } from 'react-router'
 import { errorMessageKey } from '@/core/api/errors'
 import { readGoogleProfile } from '@/core/google/readGoogleProfile'
 import { pathAfterSignIn, pathBeforeSignIn } from '@/core/invites/joinRoundTrip'
+import { displayNameRefusedCodes } from '@/features/auth/shared/accountFieldRefusals'
 import { AgreeLine } from '@/features/legal/components/AgreeLine'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitForm } from '@/shared/components/KvitForm'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 import { KvitTextField } from '@/shared/components/KvitTextField'
+import { useFieldRefusals } from '@/shared/hooks/useFieldRefusals'
 import { useGoogleSignUp } from '../hooks/useGoogleSignUp'
+
+const refusedCodesOf = { displayName: displayNameRefusedCodes }
 
 interface GoogleSignUpFormProps {
   idToken: string
@@ -24,8 +28,15 @@ export function GoogleSignUpForm({ idToken, joinToken }: GoogleSignUpFormProps) 
   const [displayName, setDisplayName] = useState<string>(
     () => readGoogleProfile(idToken).name,
   )
+  const refusals = useFieldRefusals(refusedCodesOf, signUp.error)
+
+  function changeDisplayName(nextDisplayName: string): void {
+    setDisplayName(nextDisplayName)
+    refusals.noteChange('displayName')
+  }
 
   function submit(): void {
+    refusals.noteSave()
     signUp.mutate(
       { idToken, displayName },
       { onSuccess: () => navigate(pathAfterSignIn(joinToken), { replace: true }) },
@@ -47,7 +58,8 @@ export function GoogleSignUpForm({ idToken, joinToken }: GoogleSignUpFormProps) 
           id="google-sign-up-name"
           label={t('auth.signUp.name')}
           value={displayName}
-          onChange={setDisplayName}
+          onChange={changeDisplayName}
+          invalid={refusals.isRefused('displayName')}
           autoComplete="name"
           autoCapitalize="words"
           enterKeyHint="done"

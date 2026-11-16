@@ -221,7 +221,7 @@ function meFetchedInThisPage(queryClient: QueryClient): void {
   void checkRestoredMeWithServer(queryClient)
 }
 
-describe('BottomBarLayout Updating… note', () => {
+describe('Updating… note of the signed-in screens (DesktopRailLayout, around BottomBarLayout)', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
   })
@@ -302,7 +302,7 @@ describe('BottomBarLayout Updating… note', () => {
       expect.arrayContaining([
         'absolute',
         'inset-x-0',
-        'top-[max(0.125rem,env(safe-area-inset-top))]',
+        'top-[calc(max(12px,env(safe-area-inset-top))-10px)]',
         'flex',
         'justify-center',
         'pointer-events-none',
@@ -311,7 +311,8 @@ describe('BottomBarLayout Updating… note', () => {
   })
 
   it('keeps the empty top slot when no note is shown, so the page keeps its place in the tree', async () => {
-    await renderLayoutAt(routes.groups)
+    stubFetchThatNeverAnswers()
+    await renderRoutesWithProviders(signedInRouteTable, routes.groups, { seedCache: seedMe(testMe) })
 
     const slot = document.querySelector('[data-updating-note-slot]')
     if (slot === null) {
@@ -319,6 +320,16 @@ describe('BottomBarLayout Updating… note', () => {
     }
     expect(slot.childElementCount).toBe(0)
     expect(slot.compareDocumentPosition(screen.getByText('groups page')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('shows the note on a signed-in screen without the bottom bar too', async () => {
+    stubFetchThatNeverAnswers()
+
+    await renderRoutesWithProviders(signedInRouteTable, routes.newGroup, { seedCache: restoredMe(testMe) })
+
+    expect(screen.getByText('new group page')).toBeTruthy()
+    expect((await screen.findByRole('status')).textContent).toBe(translated('en', 'common.updating'))
+    expect(document.querySelector('[data-bottom-bar]')).toBeNull()
   })
 
   it('shows the note at the top on a desktop-sized window too, where there is no bottom bar', async () => {
@@ -344,7 +355,7 @@ describe('BottomBarLayout Updating… note', () => {
   })
 })
 
-describe('BottomBarLayout Updating… note while the server is asleep', () => {
+describe('Updating… note of the signed-in screens while the server is asleep', () => {
   const wakeUrl = 'https://kvit-mk-api.onrender.com/wake'
 
   afterEach(() => {

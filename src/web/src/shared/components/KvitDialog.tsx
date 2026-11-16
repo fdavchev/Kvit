@@ -20,8 +20,8 @@ export function KvitDialog({ title, children, onClose }: KvitDialogProps) {
       }}
     >
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 bg-black/50" />
-        <Dialog.Viewport className="fixed inset-0 grid place-items-center p-6">
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/50" />
+        <Dialog.Viewport className="fixed inset-0 z-50 grid place-items-center p-6">
           <Dialog.Popup className={cn('flex w-full max-w-sm flex-col gap-3 rounded-[20px] p-6', kvitGlassPanelLook)}>
             <Dialog.Title className="text-xl leading-tight font-bold">{title}</Dialog.Title>
             {children}

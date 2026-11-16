@@ -288,9 +288,17 @@ html [data-sonner-toast][data-styled='true']:focus-visible {
     0 0 0 2px rgb(0 0 0 / 20%);
 }
 
+html:has([data-kvit-rail]) [data-sonner-toaster][data-x-position='center'] {
+  @variant lg {
+    left: calc(50% + var(--rail-width) / 2);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html [data-sonner-toaster] {
-    transition: transform 200ms ease;
+    transition:
+      transform 200ms ease,
+      bottom 200ms ease;
   }
   html [data-sonner-toast] {
     transition:
@@ -307,11 +315,6 @@ html [data-sonner-toast][data-styled='true']:focus-visible {
   }
   html [data-sonner-toast] > * {
     transition: opacity 200ms;
-  }
-  html [data-sonner-toast][data-removed='true'][data-front='false'][data-swipe-out='false'][data-expanded='false'] {
-    transition:
-      transform 200ms,
-      opacity 200ms;
   }
 }
 

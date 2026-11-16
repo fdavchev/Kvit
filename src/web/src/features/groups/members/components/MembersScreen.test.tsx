@@ -456,15 +456,15 @@ describe('MembersScreen', () => {
       expect(addNameLink()).toBeTruthy()
     })
 
-    it('keeps the + Add a name link as the last item of the member list, so it slides with the rows when one is removed', async () => {
+    it('keeps the + Add a name link right under the animated member list, not inside it, so it does not slide through a row that fades out', async () => {
       await renderMembers()
       await showsMembers()
 
-      const item = addNameLink().closest('li')
-      const list = item?.parentElement
+      const linkRow = addNameLink().parentElement
+      const list = linkRow?.previousElementSibling
 
+      expect(addNameLink().closest('li')).toBeNull()
       expect(list?.tagName).toBe('UL')
-      expect(list?.lastElementChild).toBe(item)
     })
 
     it('sends the typed name to the members endpoint of the group', async () => {

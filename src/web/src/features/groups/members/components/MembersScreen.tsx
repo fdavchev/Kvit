@@ -74,21 +74,23 @@ export function MembersScreen() {
     const canChange: boolean = canChangeGroup(group)
     return (
       <div className="flex flex-col gap-6">
-        <ul ref={membersListRef} className="flex flex-col gap-2.5">
-          {groupMembers.members.map((member) => (
-            <MemberListItem
-              key={member.id}
-              member={member}
-              showsTakenName={group.isOwner}
-              canClaim={canChange && groupMembers.canClaimNames && member.isNameOnly}
-              isClaimPending={claimName.isPending}
-              hasOptions={canChange && group.isOwner && !member.isOwner}
-              onClaim={() => claim(member)}
-              onOpenOptions={() => setOptionsMember(member)}
-            />
-          ))}
+        <div className="flex flex-col gap-1">
+          <ul ref={membersListRef} className="flex flex-col gap-2.5">
+            {groupMembers.members.map((member) => (
+              <MemberListItem
+                key={member.id}
+                member={member}
+                showsTakenName={group.isOwner}
+                canClaim={canChange && groupMembers.canClaimNames && member.isNameOnly}
+                isClaimPending={claimName.isPending}
+                hasOptions={canChange && group.isOwner && !member.isOwner}
+                onClaim={() => claim(member)}
+                onOpenOptions={() => setOptionsMember(member)}
+              />
+            ))}
+          </ul>
           {canChange && !isGuest && (
-            <li className="-mt-1.5 flex">
+            <div className="flex">
               <button
                 type="button"
                 onClick={() => setIsAddingName(true)}
@@ -96,9 +98,9 @@ export function MembersScreen() {
               >
                 {t('members.addNameLink')}
               </button>
-            </li>
+            </div>
           )}
-        </ul>
+        </div>
         <InviteLinkCard group={group} canResetLink={canChange && group.isOwner} />
         {canChange && group.isOwner && groupMembers.removed.length > 0 && (
           <RemovedMembers

@@ -154,9 +154,12 @@ export function BudgetScreen() {
   }
 
   function closeLimit(target: LimitTarget): void {
-    const monthUpdatedAt = queryClient.getQueryState(personalEntriesQueryKey(selectedMonth))?.dataUpdatedAt ?? 0
+    const monthState = queryClient.getQueryState(personalEntriesQueryKey(selectedMonth))
     setOpenedLimit(null)
-    setClosedLimitSheet({ target, opener: handOnOpener, monthUpdatedAt })
+    if (monthState?.status === 'error') {
+      return
+    }
+    setClosedLimitSheet({ target, opener: handOnOpener, monthUpdatedAt: monthState?.dataUpdatedAt ?? 0 })
   }
 
   function renderRepeatingRow(): ReactNode {

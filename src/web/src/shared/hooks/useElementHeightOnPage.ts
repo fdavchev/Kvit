@@ -1,6 +1,6 @@
 import { useEffect, type RefObject } from 'react'
 
-const ownerOfProperty = new Map<string, object>()
+const heightWritersOfProperty = new Map<string, Array<() => void>>()
 
 export function useElementHeightOnPage(ref: RefObject<HTMLElement | null>, property: string, gapPx: number): void {
   useEffect(() => {
@@ -9,18 +9,21 @@ export function useElementHeightOnPage(ref: RefObject<HTMLElement | null>, prope
       return
     }
 
-    const owner = {}
     const pageStyle = document.documentElement.style
 
     const writeHeight = (): void => {
       pageStyle.setProperty(property, `${element.getBoundingClientRect().height + gapPx}px`)
     }
 
-    ownerOfProperty.set(property, owner)
+    const writers = heightWritersOfProperty.get(property) ?? []
+    writers.push(writeHeight)
+    heightWritersOfProperty.set(property, writers)
     writeHeight()
 
+    const isLatestWriter = (): boolean => writers.at(-1) === writeHeight
+
     const observer = new ResizeObserver(() => {
-      if (ownerOfProperty.get(property) === owner) {
+      if (isLatestWriter()) {
         writeHeight()
       }
     })
@@ -28,9 +31,16 @@ export function useElementHeightOnPage(ref: RefObject<HTMLElement | null>, prope
 
     return () => {
       observer.disconnect()
-      if (ownerOfProperty.get(property) === owner) {
-        ownerOfProperty.delete(property)
+      const wasLatestWriter = isLatestWriter()
+      writers.splice(writers.indexOf(writeHeight), 1)
+      const previousWriter = writers.at(-1)
+      if (previousWriter === undefined) {
+        heightWritersOfProperty.delete(property)
         pageStyle.removeProperty(property)
+        return
+      }
+      if (wasLatestWriter) {
+        previousWriter()
       }
     }
   }, [ref, property, gapPx])

@@ -12,6 +12,7 @@ import {
   stubFetch,
   stubFetchThatNeverAnswers,
 } from '@/test/apiTestHelpers'
+import { isDescribedBy } from '@/test/describedByTestHelpers'
 import {
   descriptionOf,
   expectDisabledWhilePending,
@@ -241,5 +242,48 @@ describe('SetPasswordScreen', () => {
       expect(router.state.location.pathname).toBe(routes.changePassword)
     })
     expect(requestCountTo(fetchMock, endpoints.setPassword)).toBe(0)
+  })
+
+  describe('marking the refused field', () => {
+    it('marks no field before anything is sent', async () => {
+      await renderSetPassword()
+
+      expect(passwordField().getAttribute('aria-invalid')).not.toBe('true')
+    })
+
+    it('marks the password field for a weak password and links it to the error', async () => {
+      stubFetch(problemResponse(400, 'AUTH_PASSWORD_TOO_WEAK'))
+      await renderSetPassword()
+      fillForm()
+
+      pressSubmit()
+      await screen.findByRole('alert')
+
+      expect(passwordField().getAttribute('aria-invalid')).toBe('true')
+      expect(isDescribedBy(passwordField(), screen.getByRole('alert'))).toBe(true)
+    })
+
+    it('marks no field when the password was already set', async () => {
+      stubFetch(problemResponse(400, 'AUTH_PASSWORD_ALREADY_SET'))
+      await renderSetPassword()
+      fillForm()
+
+      pressSubmit()
+      await screen.findByRole('alert')
+
+      expect(passwordField().getAttribute('aria-invalid')).not.toBe('true')
+    })
+
+    it('takes the mark away when the password is edited', async () => {
+      stubFetch(problemResponse(400, 'AUTH_PASSWORD_TOO_WEAK'))
+      await renderSetPassword()
+      fillForm()
+      pressSubmit()
+      await screen.findByRole('alert')
+
+      typeInto(translated('en', 'auth.changePassword.new'), 'Sunce2027')
+
+      expect(passwordField().getAttribute('aria-invalid')).not.toBe('true')
+    })
   })
 })

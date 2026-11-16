@@ -103,4 +103,12 @@ describe('KvitDialog', () => {
 
     expect(screen.getByRole('dialog').className.split(/\s+/)).toEqual(expect.arrayContaining(kvitGlassPanelLook.split(' ')))
   })
+
+  it('draws its backdrop and its viewport at the same height as a sheet, above the page', () => {
+    renderDialog()
+    const viewport = backdropOf(screen.getByRole('dialog'))
+
+    expect(viewport.className.split(/\s+/)).toContain('z-50')
+    expect(viewport.previousElementSibling?.className.split(/\s+/)).toContain('z-50')
+  })
 })
