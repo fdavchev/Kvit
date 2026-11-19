@@ -575,7 +575,7 @@ describe('JoinScreen for a visitor without an account', () => {
   })
 
   describe('when the join is refused', () => {
-    it.each(languages)('shows MEMBER_NOT_FOUND and asks the invite again so the name someone just took disappears (%s)', async (language) => {
+    it.each(languages)('says someone just took the name and asks the invite again so the name someone just took disappears (%s)', async (language) => {
       let previews = 0
       const previewWithoutMarko: InvitePreview = { ...openInvitePreviewWithNames, unclaimedNames: [freeNames[1]] }
       const { fetchMock } = await renderGuestJoin({
@@ -590,8 +590,9 @@ describe('JoinScreen for a visitor without an account', () => {
       fireEvent.click(nameButton('Marko'))
 
       expect((await screen.findByRole('alert')).textContent).toContain(
-        translated(language, 'errors.MEMBER_NOT_FOUND'),
+        translated(language, 'members.nameJustTaken'),
       )
+      expect(screen.getByRole('alert').textContent).not.toContain(translated(language, 'errors.MEMBER_NOT_FOUND'))
       await waitFor(() => {
         expect(screen.queryByRole('button', { name: 'Marko' })).toBeNull()
       })

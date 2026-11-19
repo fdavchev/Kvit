@@ -132,12 +132,15 @@ function PlanCard({ plan, controlRef, onOpen }: PlanCardProps) {
         {stateLineOf(state, plan, language, t)}
       </span>
       {plan.includedOtherCurrencyMinor > 0 && (
-        <span className="text-[0.8125rem] text-muted-foreground">
-          {t('groupPlan.included', {
-            amount: formatMoney(plan.includedOtherCurrencyMinor, otherCurrency[plan.currency], language),
-            currency: currencyLabel(plan.currency, language),
-          })}
-        </span>
+        <>
+          <span className="text-[0.8125rem] text-muted-foreground">
+            {t('groupPlan.included', {
+              amount: formatMoney(plan.includedOtherCurrencyMinor, otherCurrency[plan.currency], language),
+              currency: currencyLabel(plan.currency, language),
+            })}
+          </span>
+          <span className="text-[0.8125rem] text-pretty text-muted-foreground">{t('legal.ratesSource')}</span>
+        </>
       )}
     </span>
   )
@@ -203,6 +206,9 @@ function stateLineOf(
 ): string {
   if (state === 'over') {
     return t('groupPlan.over', { amount: formatMoney(plan.overMinor, plan.currency, language) })
+  }
+  if (plan.spentMinor === plan.amountMinor) {
+    return t('groupPlan.reached')
   }
   if (state === 'near') {
     return t('groupPlan.near', { amount: formatMoney(plan.amountMinor - plan.spentMinor, plan.currency, language) })

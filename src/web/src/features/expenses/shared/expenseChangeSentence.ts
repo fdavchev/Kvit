@@ -5,7 +5,7 @@ import type { ExpenseChange } from '@/core/services/expenses/expensesService'
 import { groupCurrencies } from '@/core/services/groups/groupsService'
 import { categoryNameKey } from '@/shared/utils/categoryLooks'
 import { formatExpenseDay } from '@/shared/utils/formatDate'
-import { formatMoney, type Currency } from '@/shared/utils/formatMoney'
+import { currencyLabel, formatMoney, type Currency } from '@/shared/utils/formatMoney'
 import { noValueText } from './expenseTitle'
 
 export interface ChangeSentenceContext {
@@ -72,6 +72,8 @@ function valueText(
   switch (change.field) {
     case 'amount':
       return formatMoney(readMinorUnits(value), currency, context.language)
+    case 'currency':
+      return currencyLabel(readCurrency(value), context.language)
     case 'date':
       return formatExpenseDay(value, context.today, context.language)
     case 'category':
@@ -81,7 +83,7 @@ function valueText(
   }
 }
 
-function readCurrency(text: string): Currency {
+export function readCurrency(text: string): Currency {
   const currency = groupCurrencies.find((candidate) => candidate === text)
   if (currency === undefined) {
     throw new Error(`The history has a currency Kvit does not know: "${text}"`)

@@ -20,7 +20,7 @@ We are continuing Kvit on the branch `fix/21-small-bugs` ("Fix 21: empty the bac
 - Until I say the live check is over: nothing is merged into `main`, and nobody calls `kvit-mk.pages.dev` or the Render address. Local work and pushing the branch are fine.
 
 ## The steps
-State when this prompt was last updated (2026-11-19): Steps 1, 2 and 3 are committed and pushed (`d523031`, `d7ddc66`, `6801b09`); Steps 4 and 8 are committed by Claude (Step 4 is `686b6d2`) and may not be pushed yet. Step 0 is partly done. Next: Step 0, then Steps 5, 6, 7, 9, 10. The Fable allowance is used up: every coder run goes on Opus 5.5.
+State when this prompt was last updated (2026-11-19): Steps 1 to 4 and 8 are committed and pushed (Step 8 is `55dd25e`); Steps 0 and 5 are done and may not be committed yet. Next: Steps 6, 7, 9, 10. The Fable allowance is used up: every coder run goes on Opus 5.5.
 
 **Order (Filip, 2026-11-15): after Step 4 comes Step 8, before Steps 5, 6, 7 and 9.** Step 8 (same-moment problems, with migrations) is the one step where the strongest model is worth it for the coder, and Filip has a Fable allowance that resets on 2026-11-16, so its coder run goes on Fable (`model: fable`), not Opus. If allowance is left afterwards, the next best uses are Step 7, then Step 6. The steps do not depend on each other. Not known: whether that allowance also covers the tester, which runs on Sonnet and is what hit the 5-hour limit twice; Step 8's tester run is heavy (the full backend suite, Docker, new same-moment tests). A half-done database change must never be committed. If today is after 2026-11-16, ask me whether Fable is still available before choosing the model for Step 8.
 
@@ -39,7 +39,7 @@ State when this prompt was last updated (2026-11-19): Steps 1, 2 and 3 are commi
 - **Step 7, behaviour bugs on the server, no migration.** Starts with the global exception handler and `SERVER_ERROR`.
 - **Step 8, same-moment problems, with migrations.** Remind me to run `dotnet ef database update` locally. It comes right after Step 4 and its coder run goes on Fable (see "Order" above). Before the coder: read the code, tell me what would change, and ask me what a person should see when their save is refused because someone else changed the same expense or payment a moment earlier.
 - **Step 9, tidy-up and speed.** Change only what is clearly cheaper or clearly duplicated; measure locally.
-- **Step 10, full pass.** `.\scripts\start-local.ps1 -Check`, a browser pass from 320 to 1920 px in EN and MK, light and dark (the light theme is new since Step 3 and was contrast-measured only at 360 px in English), `/code-review high`, new README screenshots (they still show the old peach), the final report in `docs/reports/`.
+- **Step 10, full pass.** `.\scripts\start-local.ps1 -Check`, a browser pass from 320 to 1920 px in EN and MK, light and dark (the light theme is new since Step 3 and was contrast-measured only at 360 px in English), `/code-review high`, `README.md` brought up to date as a whole (what Kvit does now, the features since it was last written, commands, and new screenshots, which still show the old peach; Filip, 2026-11-19), the final report in `docs/reports/`.
 
 The lists in the plan came from the backlog, and the backlog is partly out of date: in Steps 2 and 3 about a third of the listed items were already fixed. So for every step: read the code for each item first, drop what is already fixed, and only then tell me the list.
 

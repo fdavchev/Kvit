@@ -20,6 +20,7 @@ const ownerToolsTexts: [string, string, string][] = [
   ['ownerTools.people.searchLabel', 'Find by email, name or number', 'Најди по е-пошта, име или број'],
   ['ownerTools.people.search', 'Search', 'Барај'],
   ['ownerTools.people.empty', 'Nobody found.', 'Никој не е пронајден.'],
+  ['ownerTools.people.tooShort', 'Type at least 2 letters.', 'Внеси барем 2 букви.'],
   ['ownerTools.people.groupCount_one', '{{count}} group', '{{count}} група'],
   ['ownerTools.people.groupCount_other', '{{count}} groups', '{{count}} групи'],
   ['ownerTools.badge.suspended', 'Suspended', 'Суспендиран'],
@@ -31,6 +32,7 @@ const ownerToolsTexts: [string, string, string][] = [
   ['ownerTools.unsuspend', 'Unsuspend', 'Отстрани суспензија'],
   ['ownerTools.eraseName', 'Erase name', 'Избриши го името'],
   ['ownerTools.reasonLabel', 'Reason (saved in the log)', 'Причина (се чува во дневникот)'],
+  ['ownerTools.reasonTooLong', 'At most 500 characters.', 'Најмногу 500 знаци.'],
   ['ownerTools.confirm', 'Confirm', 'Потврди'],
   ['ownerTools.sheet.suspend.title', 'Suspend {{name}}?', 'Да се суспендира {{name}}?'],
   [
@@ -65,6 +67,7 @@ const ownerToolsTexts: [string, string, string][] = [
     'Број на групата (од е-пошта за пријава)',
   ],
   ['ownerTools.groups.search', 'Find', 'Најди'],
+  ['ownerTools.groups.numberInvalid', "That's not a group number. Copy the whole number from the report email.", 'Ова не е број на група. Копирај го целиот број од е-поштата за пријава.'],
   ['ownerTools.groups.members_one', '{{count}} member', '{{count}} член'],
   ['ownerTools.groups.members_other', '{{count}} members', '{{count}} члена'],
   ['ownerTools.groups.owner', 'Owner: {{name}}', 'Сопственик: {{name}}'],

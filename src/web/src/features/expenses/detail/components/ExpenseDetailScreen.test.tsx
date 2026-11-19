@@ -6,7 +6,7 @@ import { languages } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import type { ExpenseDetail } from '@/core/services/expenses/expensesService'
 import type { GroupMembers } from '@/core/services/groups/membersService'
-import { formatMoney } from '@/shared/utils/formatMoney'
+import { currencyLabel, formatMoney } from '@/shared/utils/formatMoney'
 import {
   accommodationCategory,
   detailOf,
@@ -376,28 +376,28 @@ describe('ExpenseDetailScreen', () => {
       await renderDetail({ language: 'mk', detail: groceriesDetail })
       await showsDetail('Groceries')
 
-      expect(screen.getByText('Цена на еврото: 1 EUR = 61,5610 MKD · 24 сеп 2026')).toBeTruthy()
+      expect(screen.getByText('Цена на еврото: 1 EUR = 61,5610 ден. · 24 сеп 2026')).toBeTruthy()
     })
 
     it('writes the rate in Macedonian with four decimals even when the last ones are zeros', async () => {
       await renderDetail({ language: 'mk', detail: { ...groceriesDetail, mkdPerEur: 61.5 } })
       await showsDetail('Groceries')
 
-      expect(screen.getByText(/1 EUR = 61,5000 MKD/)).toBeTruthy()
+      expect(screen.getByText(/1 EUR = 61,5000 ден\. ·/)).toBeTruthy()
     })
 
     it('writes the rate in Macedonian with four decimals when the rate has more of them', async () => {
       await renderDetail({ language: 'mk', detail: { ...groceriesDetail, mkdPerEur: 61.56789 } })
       await showsDetail('Groceries')
 
-      expect(screen.getByText(/1 EUR = 61,5679 MKD/)).toBeTruthy()
+      expect(screen.getByText(/1 EUR = 61,5679 ден\. ·/)).toBeTruthy()
     })
 
     it('writes the date of the rate in Macedonian with the year and no dot, whatever the month', async () => {
       await renderDetail({ language: 'mk', detail: { ...groceriesDetail, rateDate: '2026-11-03' } })
       await showsDetail('Groceries')
 
-      expect(screen.getByText(/MKD · 3 ное 2026$/)).toBeTruthy()
+      expect(screen.getByText(/ден\. · 3 ное 2026$/)).toBeTruthy()
     })
 
     it('writes the rate with four decimals even when the last ones are zeros', async () => {
@@ -494,7 +494,7 @@ describe('ExpenseDetailScreen', () => {
           new: day('2026-10-03'),
         }),
         paidBy: translated(language, 'expense.historyChangedPaidBy', { name: 'Filip', old: 'Ana', new: 'Filip' }),
-        currency: translated(language, 'expense.historyChangedCurrency', { name: 'Filip', old: 'EUR', new: 'MKD' }),
+        currency: translated(language, 'expense.historyChangedCurrency', { name: 'Filip', old: 'EUR', new: currencyLabel('MKD', language) }),
         split: translated(language, 'expense.historyChangedSplit', { name: 'Filip' }),
         added: translated(language, 'expense.historyAdded', { name: 'Bojan' }),
         noSplitDetails: /Equal: Ana/,

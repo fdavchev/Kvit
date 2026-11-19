@@ -19,6 +19,7 @@ import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { AddNameSheet } from '../../group/components/AddNameSheet'
 import { useGroup } from '../../group/hooks/useGroup'
 import { LeaveGroupSection } from '../../settings/components/LeaveGroupSection'
+import { claimFailureMessageKey } from '../../shared/claimFailureMessageKey'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
 import { canChangeGroup, canLeaveGroup } from '../../shared/groupAccess'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
@@ -52,7 +53,10 @@ export function MembersScreen() {
       onSuccess: () => {
         toast.success(t('members.claimed', { name: member.displayName }))
       },
-      onError: showFailure,
+      onError: (error) => {
+        console.error('Claiming a name failed', error)
+        toast.error(t(claimFailureMessageKey(error)))
+      },
     })
   }
 

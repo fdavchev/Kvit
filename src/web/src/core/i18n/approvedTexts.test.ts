@@ -73,7 +73,7 @@ const approvedPhase7Texts: [string, string, string][] = [
   ['errors.GROUP_NOT_OWNER', "Only the group's owner can do this.", 'Ова може да го направи само сопственикот на групата.'],
   ['errors.GROUP_NAME_INVALID', 'Enter a name (up to 60 characters).', 'Внеси име (најмногу 60 знаци).'],
   ['errors.GROUP_EMOJI_INVALID', 'Pick an emoji.', 'Избери емоџи.'],
-  ['errors.GROUP_CURRENCY_INVALID', 'Pick MKD or EUR.', 'Избери MKD или EUR.'],
+  ['errors.GROUP_CURRENCY_INVALID', 'Pick MKD or EUR.', 'Избери денари или евра.'],
   ['errors.GROUP_NOT_DELETED', 'This group is not deleted.', 'Оваа група не е избришана.'],
   ['errors.GROUP_RESTORE_EXPIRED', "This group was deleted more than 30 days ago and can't be restored.", 'Оваа група е избришана пред повеќе од 30 дена и не може да се врати.'],
   ['errors.MEMBER_NAME_INVALID', 'Enter a name (up to 60 characters).', 'Внеси име (најмногу 60 знаци).'],
@@ -147,7 +147,7 @@ const approvedPhase8Step2Texts: [string, string, string][] = [
   ['errors.EXPENSE_TITLE_INVALID', 'The title can have up to 80 characters.', 'Насловот може да има најмногу 80 знаци.'],
   ['errors.EXPENSE_NOTE_INVALID', 'The note can have up to 500 characters.', 'Белешката може да има најмногу 500 знаци.'],
   ['errors.EXPENSE_DATE_INVALID', 'Pick a date between 2000 and one year from now.', 'Избери датум од 2000 до една година однапред.'],
-  ['errors.EXPENSE_CURRENCY_INVALID', 'Pick MKD or EUR.', 'Избери MKD или EUR.'],
+  ['errors.EXPENSE_CURRENCY_INVALID', 'Pick MKD or EUR.', 'Избери денари или евра.'],
   ['errors.EXPENSE_SPLIT_TYPE_INVALID', 'Pick how to split: equally, exact amounts, percentages or shares.', 'Избери како да се подели: поеднакво, точни износи, проценти или делови.'],
   ['errors.EXPENSE_CATEGORY_INVALID', 'Pick a category from the list.', 'Избери категорија од листата.'],
   ['errors.EXPENSE_AMOUNT_TOO_LARGE', 'This amount is too large.', 'Овој износ е премногу голем.'],
@@ -187,7 +187,7 @@ const approvedPhase8Step4Texts: [string, string, string][] = [
   ['expense.pickDate', 'Pick a date', 'Избери датум'],
   ['expense.dateHint', 'Any date, up to one year ahead.', 'Било кој датум, до една година однапред.'],
   ['expense.history', 'History', 'Историја'],
-  ['expense.rate', 'Rate: 1 EUR = {{rate}} MKD · {{date}}', 'Цена на еврото: 1 EUR = {{rate}} MKD · {{date}}'],
+  ['expense.rate', 'Rate: 1 EUR = {{rate}} MKD · {{date}}', 'Цена на еврото: 1 EUR = {{rate}} ден. · {{date}}'],
   ['expense.edit', 'Edit', 'Измени'],
   ['expense.delete', 'Delete', 'Избриши'],
   ['expense.currencyToggle', 'Currency: {{currency}}. Tap to change.', 'Валута: {{currency}}. Допри за промена.'],
@@ -276,6 +276,7 @@ const phase9DraftActivityKeys = /^activity\.settlement/
 const phase10DraftActivityKeys = /^activity\.(closing|groupFinished|groupReopened)/
 const phase12bDraftActivityKeys = /^activity\.guestLetInAgain$/
 const phase16DraftActivityKeys = /^activity\.groupPlan(Set|Removed)$/
+const fix21Step5DraftKeys = /^(activity\.expenseRestoredWithTitle|oneBill\.ownName)$/
 const phase7NewGroupKeys: string[] = approvedPhase7Texts
   .map(([key]) => key)
   .filter((key) => key.startsWith('newGroup.'))
@@ -413,7 +414,7 @@ describe('the approved Phase 8 Step 4 texts', () => {
       'Rate: 1 EUR = 61.5610 MKD · 24 Sep 2026',
     )
     expect(translated('mk', 'expense.rate', { rate: '61,5610', date: '24 сеп 2026' })).toBe(
-      'Цена на еврото: 1 EUR = 61,5610 MKD · 24 сеп 2026',
+      'Цена на еврото: 1 EUR = 61,5610 ден. · 24 сеп 2026',
     )
   })
 
@@ -474,6 +475,7 @@ describe('the approved Phase 8 Step 5 texts', () => {
       .filter((path) => !phase10DraftActivityKeys.test(path))
       .filter((path) => !phase12bDraftActivityKeys.test(path))
       .filter((path) => !phase16DraftActivityKeys.test(path))
+      .filter((path) => !fix21Step5DraftKeys.test(path))
       .sort()
     const keysListedAbove = [
       ...phase7NewGroupKeys,

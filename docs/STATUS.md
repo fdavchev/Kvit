@@ -1,30 +1,31 @@
 # Status: Kvit
 
-_Last updated: 2026-11-19 (Fix 20 merged as PR #24; on `fix/21-small-bugs` Steps 1 to 3 are pushed, Steps 4 and 8 are committed by Claude and NOT pushed; Step 0, then Steps 5, 6, 7, 9 and 10 are next; Filip's live check of Fix 20 is not done)_
+_Last updated: 2026-11-19 (Fix 20 merged as PR #24; on `fix/21-small-bugs` Steps 1 to 4 and 8 are pushed; Steps 0 and 5 are done and wait for Filip's commit; Steps 6, 7, 9 and 10 are next; Filip's live check of Fix 20 is partly done)_
 
 ## Where we stopped
 - Branch: `fix/21-small-bugs` (made from `main` = `25c4a3d`, the Fix 20 merge). Step 1 is commit `d523031`, pushed. Step 2 is commit `d7ddc66`. Step 3 (the lightest peach light theme, contrast leftovers, Home totals) is commit `6801b09`, pushed. Step 4 (toasts, sheets, focus) is committed locally by Claude on 2026-11-16 while Filip was away (his instruction: "you commit, don't push"); Step 8 (same-moment problems, migration `SameMomentSafety`) is committed locally by Claude on 2026-11-19 on Filip's earlier "you commit, don't push". Filip pushes both and ticks Steps 4 and 8 in the PR description. To continue in a new session from any step: paste `docs/guides/fix-21-continue-prompt.md`.
 - The plan: `ROADMAP.md`, "Fix 21: empty the backlog" (Steps 0 to 10, then Release 4 for new features). Decisions: `DECISIONS.md`, "2026-11-14: Fix 21". Commit and PR texts: `docs/guides/fix-21-pr-text.md`. The prompt that started it: `docs/guides/fix-21-small-bugs-prompt.md`.
-- Step 0 is partly done: six already-built BACKLOG items are ticked; four small notes inside longer lines are still to mark (listed in `ROADMAP.md`).
+- Step 0 is done (2026-11-19): every already-built BACKLOG item found is ticked; the three JavaScript-size lines are one item for Step 9.
+- Step 5 is done (2026-11-19), not committed: texts and the privacy notice version 2026-11-19 (DECISIONS "Step 5"). Filip commits Steps 0 and 5 together with the subject in `docs/guides/fix-21-pr-text.md` (last line). The Macedonian to read: `docs/guides/fix-21-macedonian-to-read.md`. Screenshots: `docs/design/2026-11-19-fix-21-step-5/`.
 
 ## Next step
 Filip:
 1. The live check of Fix 20 (only the real site can prove it). Until it is over, nothing is merged into `main` and nobody calls the live site or the Render address:
+   - Partly done 2026-11-19 on Filip's phone, not signed in (VERIFIED by live run, Filip): the bar "The server is asleep. · Wake the server" showed; the button went to Render's page, the "verify you are human" box ticked itself, and Kvit came back on the same page. It was the installed home-screen app, and it showed the bar instead of going by itself; not known yet whether the phone only resumed the app from memory (then it counts as an open tab) or really started it fresh (then it is a bug). Still open: the same signed in (still signed in after the trip, an expense added while the bar shows goes through), and the Render log line.
    - Leave Kvit alone for 20 minutes, then open `https://kvit-mk.pages.dev` on the phone and on the PC. Expected: Render's black "waking up" page for about 30 seconds, then back on the same Kvit screen.
    - Leave a Kvit tab open for 20 minutes, then tap something. Expected: a bar "The server is asleep. · Wake the server" at the top; the button does the same trip.
    - Add an expense while the bar shows. Expected: it shows as waiting and is sent after the trip.
    - In the Render log after the first signed-in visit: a line "The daily cleanup of … finished".
-2. Push the two local commits (Steps 4 and 8) and tick Steps 2, 3, 4 and 8 in the PR description on GitHub.
-2b. Apply the Step 8 migration to the local database: Docker Desktop open, the API stopped, from the repository root `dotnet ef database update --project src/api/Kvit.Infrastructure --startup-project src/api/Kvit.Api`. Expected: "Applying migration '20261116095455_SameMomentSafety'", then "Done."
+2. Commit Steps 0 and 5 (one commit, subject in `docs/guides/fix-21-pr-text.md`), push, and tick Steps 0 to 5 and 8 in the PR description on GitHub (Steps 4 and 8 pushed and the migration applied locally by Filip, 2026-11-19).
+2b. Read `docs/guides/fix-21-macedonian-to-read.md` and send the row numbers that read wrong.
 3. Delete `Cleanup__Secret` on Render and `CLEANUP_SECRET` on GitHub (no longer used).
 4. Still open from Phase 19 (`docs/guides/phase-19-legal.md`): run the **Backup** workflow once, the practice restore, **Private vulnerability reporting** on GitHub (checked 2026-11-14: off), and Part E.
 
-Claude: finish Step 0, then Steps 5, 6, 7 and 9, then Step 10 (its browser pass also covers Step 8, never run in a browser). Coder runs go on Opus 5.5 without browser measuring, the tester on Sonnet measures once at the end (Filip, 2026-11-15 and 2026-11-19; the Fable allowance is used up).
+Claude: Steps 0 and 5 are done (2026-11-19, uncommitted). Next Steps 6, 7 and 9 (each: read the code, propose, Filip's go before the coder), then Step 10 (its browser pass also covers Step 8, never run in a browser). Coder runs go on Opus 5.5 without browser measuring, the tester on Sonnet measures once at the end (Filip, 2026-11-15 and 2026-11-19; the Fable allowance is used up).
 
 ## Blockers and open questions
 - Not known until the live check: whether every person passes Render's robot check without a tap, how an installed home-screen Kvit and iOS Safari behave on the trip, and whether Render changes this again.
 - For Filip to confirm (built as described in `DECISIONS.md`): a person who joins while a form is open is added only on Add expense, not on Edit; a signed-in person is sent away from Welcome, Sign up and Log in using only the saved copy of "me"; a signed-in guest is sent away too.
-- The privacy page and the delete sheet say "after 30 days"; the cleanup runs on the first signed-in visit after that day. Rewording is planned in Step 5, together with every other notice change, so the "Terms changed" pill shows once.
 - Open from Phase 19 Step 11: old "active people" numbers drop after 12 months (not decided, not built; first cut about 2027-10).
 - Waiting for Filip: the Macedonian drafts, including «Серверот спие.» and «Разбуди го серверот».
 - Docker Desktop must be open for the backend tests (ask Filip, never work around it).
@@ -44,6 +45,9 @@ On `fix/21-small-bugs` (working folder, 2026-11-14, after Step 1):
 - Step 4, NOT VERIFIED: the dark theme, Macedonian, a real phone, a real screen reader; a toast over a dialog on a window 360 px high overlaps its Close button (BACKLOG).
 - Step 8, VERIFIED by automated test (Claude's own full run after the last code change, 2026-11-19): `dotnet build Kvit.slnx` 0 warnings; `dotnet test Kvit.slnx` 7531 of 7532, the one failure `BackupEnvScriptTests` "password with quotes…" ("The pipe is being closed", untouched by Step 8, 43/43 alone; the coder's full run 7532/7532); `has-pending-model-changes` clean; `npm run lint` 0 warnings, `tsc -b` 0 errors, `npm test` 16043/16043. Every race test holds both requests with a real gate; 42 of 85 backend tests in the changed classes fail on the old code (tester's scratch copy), the log-in and Balances tests fail with the fix switched off (coder).
 - Step 8, NOT VERIFIED: a browser check (the local database has no migration yet); the expense refusal when the currency changes between two reads and the deadlock path (no test); set password, account deletion and the admin scripts at the same moment (still 500, BACKLOG); the migration on the real Neon data.
+- Step 5, VERIFIED by automated test (tester, `start-local.ps1 -Check` after the last code change, 2026-11-19): build 0 warnings; backend 7533/7533; lint 0 warnings; type check 0 errors; frontend 16178/16178. 52 new tests fail on the old code (coder).
+- Step 5, VERIFIED by live run (headless Chromium, 360 px, light, EN and MK, local stack): the new privacy sections and the 2026-11-19 line on /privacy and /terms; an account on 2026-11-04 sees the thin pill once, not after OK and reload, a new sign-up sees nothing; «1 EUR = … ден.» and «EUR → ден.» in the history; "Plan reached" and the rates line on the plan and the monthly summary; "You're already in this bill." (also with other letter case and spaces); "Ana Step restored “Dinner out”"; the three owner-tools messages; no sideways scroll.
+- Step 5, NOT VERIFIED: dark theme and widths other than 360 px; "someone just took this name" in a browser (unit tests only); the pill on the real site.
 - NOT VERIFIED: that each Step 1 test fails without its fix (not tried; done for Step 2); Macedonian, dark mode and widths other than 360 px for the Step 1 screens; a real Google sign-in through the new redirect; a real phone; anything on the live site.
 
 On `main` = `25c4a3d` (2026-11-14):

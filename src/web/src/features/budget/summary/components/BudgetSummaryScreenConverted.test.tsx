@@ -188,6 +188,53 @@ describe('the monthly summary screen, the converted total', () => {
     })
   })
 
+  describe('the source of the exchange rates', () => {
+    it.each(languages)('is on the converted MKD card after the line "includes converted amounts" (%s)', async (language) => {
+      await renderSummaryScreen({ language, budgetTotalCurrency: 'MKD', summaries: [octoberSummaryConvertedToMkd] })
+      const converted = await findConvertedCard('MKD', language)
+
+      const includesLine = within(converted).getByText(translated(language, 'budget.card.includesConvertedEuro'))
+      const source = within(converted).getByText(translated(language, 'legal.ratesSource'))
+
+      expect(isBefore(includesLine, source)).toBe(true)
+    })
+
+    it('is on the converted EUR card that includes converted denars', async () => {
+      await renderSummaryScreen({ budgetTotalCurrency: 'EUR', summaries: [octoberSummaryConvertedToEur] })
+      const converted = await findConvertedCard('EUR')
+
+      expect(within(converted).getByText(translated('en', 'budget.card.includesConvertedDenars'))).toBeTruthy()
+      expect(within(converted).getByText(translated('en', 'legal.ratesSource'))).toBeTruthy()
+    })
+
+    it('is shown once on the screen, in grey', async () => {
+      await renderSummaryScreen({ budgetTotalCurrency: 'MKD', summaries: [octoberSummaryConvertedToMkd] })
+      await findConvertedCard('MKD')
+
+      const sources = screen.getAllByText(translated('en', 'legal.ratesSource'))
+
+      expect(sources).toHaveLength(1)
+      expect(Array.from(sources[0].classList)).toContain('text-muted-foreground')
+    })
+
+    it('is left out when every amount of the month is already in the currency of the total', async () => {
+      await renderSummaryScreen({
+        budgetTotalCurrency: 'MKD',
+        summaries: [summaryOf('2026-10', '2026-09', [mkdSummary], convertedToMkdSummary)],
+      })
+      await findConvertedCard('MKD')
+
+      expect(screen.queryByText(translated('en', 'legal.ratesSource'))).toBeNull()
+    })
+
+    it('is left out when the setting is off', async () => {
+      await renderSummaryScreen({ budgetTotalCurrency: null, summaries: [octoberSummaryConvertedToMkd] })
+      await findCurrencyCard('MKD')
+
+      expect(screen.queryByText(translated('en', 'legal.ratesSource'))).toBeNull()
+    })
+  })
+
   describe('when the saved setting and the answer do not fit', () => {
     it('shows no converted card when the setting is off, even if the answer has converted totals', async () => {
       await renderSummaryScreen({ budgetTotalCurrency: null, summaries: [octoberSummaryConvertedToMkd] })

@@ -763,7 +763,7 @@ describe('OneBillScreen', () => {
         expect(avatarsInOrder()).toHaveLength(2)
       })
 
-      it.each(languages)('refuses the account name of the person who is making the bill, in any letter case, with the MEMBER_NAME_TAKEN text (%s)', async (language) => {
+      it.each(languages)('refuses the account name of the person who is making the bill, in any letter case, saying the person is already in the bill (%s)', async (language) => {
         await renderReadyBill({ language })
         await openNameSheet(language)
         typeName('FILIP', language)
@@ -771,9 +771,22 @@ describe('OneBillScreen', () => {
         fireEvent.click(sheetAddButton(language))
 
         expect((await within(nameDialog(language)).findByRole('alert')).textContent).toBe(
-          translated(language, 'errors.MEMBER_NAME_TAKEN', { name: 'FILIP' }),
+          translated(language, 'oneBill.ownName'),
         )
         expect(avatarsInOrder()).toHaveLength(1)
+      })
+
+      it.each([
+        ['en', "You're already in this bill."],
+        ['mk', 'Ти веќе си во сметката.'],
+      ] as const)('words the own-name message without the word group, since no group exists yet (%s)', async (language, message) => {
+        await renderReadyBill({ language })
+        await openNameSheet(language)
+        typeName('  filip ', language)
+
+        fireEvent.click(sheetAddButton(language))
+
+        expect((await within(nameDialog(language)).findByRole('alert')).textContent).toBe(message)
       })
 
       it('words the name-taken message exactly with the typed name between the quotes', async () => {

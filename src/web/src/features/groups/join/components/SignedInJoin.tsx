@@ -8,6 +8,7 @@ import type { InvitePreview } from '@/core/services/invites/invitesService'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitInlineError } from '@/shared/components/KvitInlineError'
 import { kvitChipLook } from '@/shared/components/kvitChipLook'
+import { claimFailureMessageKey } from '../../shared/claimFailureMessageKey'
 import { useJoinGroup } from '../hooks/useJoinGroup'
 import { JoinMessage } from './JoinMessage'
 
@@ -41,6 +42,10 @@ export function SignedInJoin({ token, preview }: SignedInJoinProps) {
     )
   }
 
+  function joinFailureMessageKey(error: Error): string {
+    return joinGroup.variables?.claimMemberId === undefined ? errorMessageKey(error) : claimFailureMessageKey(error)
+  }
+
   function pressJoin(): void {
     if (preview.unclaimedNames.length === 0) {
       joinNow()
@@ -54,7 +59,7 @@ export function SignedInJoin({ token, preview }: SignedInJoinProps) {
   }
   return (
     <div className={isAskingName ? 'flex flex-col gap-3 pt-5' : 'mt-auto flex flex-col gap-3 pt-8'}>
-      {joinGroup.isError && <KvitInlineError message={t(errorMessageKey(joinGroup.error))} />}
+      {joinGroup.isError && <KvitInlineError message={t(joinFailureMessageKey(joinGroup.error))} />}
       {isAskingName ? (
         <section
           ref={claimCardRef}

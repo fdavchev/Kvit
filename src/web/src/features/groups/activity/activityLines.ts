@@ -13,10 +13,11 @@ import {
   currencyAfterOf,
   currencyBeforeOf,
   expenseChangeSentence,
+  readCurrency,
   type ChangeSentenceContext,
 } from '@/features/expenses/shared/expenseChangeSentence'
 import { expenseTitle } from '@/features/expenses/shared/expenseTitle'
-import { formatMoney, type Currency } from '@/shared/utils/formatMoney'
+import { currencyLabel, formatMoney, type Currency } from '@/shared/utils/formatMoney'
 
 export interface ActivityContext extends ChangeSentenceContext {
   expenses: readonly ExpenseListRow[]
@@ -56,6 +57,13 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
     return title === null
       ? t(withoutTitleKey, { name: event.actorName, amount })
       : t(withTitleKey, { name: event.actorName, title, amount })
+  }
+
+  function expenseRestoredSentence(event: ActivityEvent): string {
+    const title = expenseRowOf(event)?.title ?? null
+    return title === null
+      ? t('activity.expenseRestored', { name: event.actorName })
+      : t('activity.expenseRestoredWithTitle', { name: event.actorName, title })
   }
 
   function memberName(event: ActivityEvent, field: string): string {
@@ -99,12 +107,16 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
   }
 
   function groupSettingsSentence(event: ActivityEvent, change: ExpenseChange): string {
-    const values = { name: event.actorName, old: change.old, new: change.new }
+    const name = event.actorName
     switch (change.field) {
       case 'emoji':
-        return t('activity.groupEmojiChanged', values)
+        return t('activity.groupEmojiChanged', { name, old: change.old, new: change.new })
       case 'defaultCurrency':
-        return t('activity.groupCurrencyChanged', values)
+        return t('activity.groupCurrencyChanged', {
+          name,
+          old: currencyLabel(readCurrency(change.old), context.language),
+          new: currencyLabel(readCurrency(change.new), context.language),
+        })
       default:
         throw new Error(`The ${event.type} event changes a group field Kvit does not know: "${change.field}"`)
     }
@@ -181,7 +193,7 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
       case 'ExpenseDeleted':
         return [expenseFactsSentence(event, 'activity.expenseDeleted', 'activity.expenseDeletedNoTitle')]
       case 'ExpenseRestored':
-        return [t('activity.expenseRestored', { name })]
+        return [expenseRestoredSentence(event)]
       case 'ExpenseEdited':
         return editSentences(event)
       case 'SettlementRecorded':

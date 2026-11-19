@@ -1513,6 +1513,29 @@ describe('MembersScreen', () => {
       })
       expect(shownToastTexts()).toEqual([])
     })
+
+    it.each(languages)('says someone just took the name, or it was removed, when the server answers MEMBER_NOT_FOUND (%s)', async (language) => {
+      consoleErrorSilenced()
+      await renderMembers({
+        language,
+        group: memberGroup,
+        members: anaViewMembers,
+        answers: {
+          [`POST ${memberPath(markoMember)}/claim`]: problemAnswer(404, 'MEMBER_NOT_FOUND'),
+        },
+      })
+      await showsMembers(language)
+
+      fireEvent.click(
+        within(rowOf('Marko')).getByRole('button', { name: translated(language, 'members.thatsMe') }),
+      )
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(translated(language, 'members.nameJustTaken'))
+      })
+      expect(toast.error).not.toHaveBeenCalledWith(translated(language, 'errors.MEMBER_NOT_FOUND'))
+      expect(shownToastTexts()).toEqual([])
+    })
   })
 
   describe('as a member who is not the owner', () => {

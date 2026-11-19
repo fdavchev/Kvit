@@ -26,7 +26,8 @@ export function OwnerToolsReasonSheet({ title, body, doneMessage, targetId, acti
   const sheet = useKvitSheet()
   const [reason, setReason] = useState<string>('')
   const trimmedReason = reason.trim()
-  const isReasonValid = trimmedReason.length > 0 && trimmedReason.length <= reasonMaxLength
+  const isReasonTooLong = trimmedReason.length > reasonMaxLength
+  const isReasonValid = trimmedReason.length > 0 && !isReasonTooLong
 
   function confirm(): void {
     action.mutate(
@@ -50,7 +51,7 @@ export function OwnerToolsReasonSheet({ title, body, doneMessage, targetId, acti
         submitLabel={t('ownerTools.confirm')}
         isPending={action.isPending}
         canSubmit={isReasonValid}
-        errorMessage={null}
+        errorMessage={isReasonTooLong ? t('ownerTools.reasonTooLong') : null}
         onSubmit={confirm}
         footer={
           <KvitButton type="button" variant="link" onClick={sheet.close}>
@@ -65,6 +66,7 @@ export function OwnerToolsReasonSheet({ title, body, doneMessage, targetId, acti
           onChange={setReason}
           autoComplete="off"
           enterKeyHint="send"
+          invalid={isReasonTooLong}
         />
       </KvitForm>
     </KvitSheet>

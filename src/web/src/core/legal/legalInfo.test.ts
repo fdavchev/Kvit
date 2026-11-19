@@ -9,7 +9,7 @@ describe('legalInfo', () => {
   })
 
   it('has the version of the legal texts as a date', () => {
-    expect(legalVersion).toBe('2026-11-04')
+    expect(legalVersion).toBe('2026-11-19')
   })
 
   it.each(['terms', 'privacy'])('writes the version of the legal texts in the last-updated line of %s', (document) => {

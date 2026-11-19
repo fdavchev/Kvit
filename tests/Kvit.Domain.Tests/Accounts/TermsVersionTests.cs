@@ -10,11 +10,11 @@ namespace Kvit.Domain.Tests.Accounts
         [Fact]
         public void Current_IsTheDateOfTheTermsInForce()
         {
-            Assert.Equal("2026-11-04", TermsVersion.Current);
+            Assert.Equal("2026-11-19", TermsVersion.Current);
         }
 
         [Fact]
-        public void CurrentIsMaterial_IsFalseForTheFirstVersion()
+        public void CurrentIsMaterial_IsFalseBecauseTheCurrentVersionIsASmallChange()
         {
             Assert.False(TermsVersion.CurrentIsMaterial);
         }
@@ -33,11 +33,12 @@ namespace Kvit.Domain.Tests.Accounts
 
         [Theory]
         [InlineData(Older)]
-        [InlineData("2026-11-03")]
-        [InlineData("2026-11-05")]
+        [InlineData("2026-11-04")]
+        [InlineData("2026-11-18")]
+        [InlineData("2026-11-20")]
         [InlineData("")]
-        [InlineData(" 2026-11-04")]
-        [InlineData("2026-11-04 ")]
+        [InlineData(" 2026-11-19")]
+        [InlineData("2026-11-19 ")]
         public void IsCurrent_AnyOtherText_IsFalse(string acceptedVersion)
         {
             Assert.False(TermsVersion.IsCurrent(acceptedVersion));

@@ -2,7 +2,7 @@ namespace Kvit.Domain.Accounts
 {
     public static class TermsVersion
     {
-        public const string Current = "2026-11-04";
+        public const string Current = "2026-11-19";
         public const bool CurrentIsMaterial = false;
 
         public static bool IsCurrent(string? acceptedVersion)

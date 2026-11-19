@@ -16,6 +16,8 @@ interface OpenGroupAction {
   group: OwnerToolsGroup
 }
 
+const groupNumberFormat = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[0-9a-f]{32})$/i
+
 export function OwnerToolsGroups() {
   const { t } = useTranslation()
   const [groupId, setGroupId] = useState<string | null>(null)
@@ -24,10 +26,13 @@ export function OwnerToolsGroups() {
   const reopenGroup = useReopenGroup()
   const actions = { closeGroup, reopenGroup }
   const [openAction, setOpenAction] = useState<OpenGroupAction | null>(null)
+  const [isNumberInvalid, setIsNumberInvalid] = useState<boolean>(false)
 
   function find(text: string): void {
     const groupNumber = text.trim()
-    if (groupNumber === '') {
+    const isInvalid = groupNumber !== '' && !groupNumberFormat.test(groupNumber)
+    setIsNumberInvalid(isInvalid)
+    if (groupNumber === '' || isInvalid) {
       return
     }
     if (groupNumber === groupId) {
@@ -57,6 +62,7 @@ export function OwnerToolsGroups() {
         id="owner-tools-group-search"
         label={t('ownerTools.groups.searchLabel')}
         buttonLabel={t('ownerTools.groups.search')}
+        errorMessage={isNumberInvalid ? t('ownerTools.groups.numberInvalid') : null}
         onSearch={find}
       />
       {renderResult()}

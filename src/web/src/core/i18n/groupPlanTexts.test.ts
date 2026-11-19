@@ -26,6 +26,7 @@ const planTexts: PlanText[] = [
   { key: 'groupPlan.each_other', en: '{{amount}} each · {{count}} people', mk: '{{amount}} по човек · {{count}} лица' },
   { key: 'groupPlan.onTrack', en: 'On track', mk: 'Во рамки' },
   { key: 'groupPlan.near', en: 'Near the plan · {{amount}} left', mk: 'Близу до планот · уште {{amount}}' },
+  { key: 'groupPlan.reached', en: 'Plan reached', mk: 'Планот е достигнат' },
   { key: 'groupPlan.over', en: '{{amount}} over', mk: '{{amount}} над планот' },
   {
     key: 'groupPlan.included',
