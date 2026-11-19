@@ -44,6 +44,57 @@ namespace Kvit.Api.Tests.Auth
             Assert.Equal(winner.UserId, Assert.Single(await _app.GoogleLoginUserIdsAsync(identity.Subject)));
         }
 
+        [Fact]
+        public async Task UpgradeGuest_TheSameGuestTwiceAtTheSameMoment_OneAnswers200AndTheOtherAnswers409NotGuest()
+        {
+            (GuestMember guest, _) = await CreateTwoGuestsAsync();
+            string email = RegistrationForm.UniqueEmail();
+
+            HttpResponseMessage[] responses = await UpgradeTheSameGuestTwiceAtOnceAsync(
+                () => AuthRequests.UpgradeGuestAsync(guest.Client, email, NewPassword),
+                () => AuthRequests.UpgradeGuestAsync(guest.Client, email, NewPassword));
+
+            await AssertUpgradedOnceAndTheOtherAnswersNotGuestAsync(responses, guest);
+            Assert.Equal(1, await _app.CountUsersWithEmailAsync(email));
+        }
+
+        [Fact]
+        public async Task GoogleUpgradeGuest_TheSameGuestTwiceAtTheSameMoment_OneAnswers200AndTheOtherAnswers409NotGuest()
+        {
+            (GuestMember guest, _) = await CreateTwoGuestsAsync();
+            GoogleIdentity identity = GoogleIdentities.Verified();
+            string firstToken = _app.AddGoogleToken(identity);
+            string secondToken = _app.AddGoogleToken(identity);
+
+            HttpResponseMessage[] responses = await UpgradeTheSameGuestTwiceAtOnceAsync(
+                () => AuthRequests.GoogleUpgradeGuestAsync(guest.Client, firstToken),
+                () => AuthRequests.GoogleUpgradeGuestAsync(guest.Client, secondToken));
+
+            await AssertUpgradedOnceAndTheOtherAnswersNotGuestAsync(responses, guest);
+            Assert.Equal(guest.UserId, Assert.Single(await _app.GoogleLoginUserIdsAsync(identity.Subject)));
+        }
+
+        private async Task<HttpResponseMessage[]> UpgradeTheSameGuestTwiceAtOnceAsync(Func<Task<HttpResponseMessage>> firstUpgrade, Func<Task<HttpResponseMessage>> secondUpgrade)
+        {
+            await using InsertGate gate = await InsertGate.CloseUpdatesAsync(_app, "users", GuestBecomingAnAccount);
+
+            Task<HttpResponseMessage> first = firstUpgrade();
+            await gate.WaitUntilRequestsAreHeldAsync(1);
+            Task<HttpResponseMessage> second = secondUpgrade();
+            await gate.WaitUntilRequestsWaitForTheHeldRowAsync(1);
+            await gate.OpenAsync();
+
+            return await Task.WhenAll(first, second);
+        }
+
+        private async Task AssertUpgradedOnceAndTheOtherAnswersNotGuestAsync(HttpResponseMessage[] responses, GuestMember guest)
+        {
+            Assert.Equal(HttpStatusCode.OK, responses[0].StatusCode);
+            await ProblemResponse.AssertAsync(responses[1], HttpStatusCode.Conflict, ResultCodes.AUTH_NOT_GUEST);
+            Assert.Equal("false", await GuestUpgradeChecks.UserValueAsync(_app, guest.UserId, "is_guest"));
+            Assert.Equal(1, await GroupRows.CountUsageEventsAsync(_app, guest.UserId, "GuestUpgraded"));
+        }
+
         private async Task<(GuestMember First, GuestMember Second)> CreateTwoGuestsAsync()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync("Marko", "Petre");

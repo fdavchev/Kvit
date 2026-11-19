@@ -19,7 +19,12 @@ namespace Kvit.Application.Commands.Expenses
                 return userId;
             }
 
-            return await _groupWrite.RunAsync(command.GroupId, userId.Value, () => _deleteExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, cancellationToken), cancellationToken);
+            return await _groupWrite.RunOrAnswerIfExpenseChangedMeanwhileAsync(
+                command.GroupId,
+                userId.Value,
+                () => _deleteExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, cancellationToken),
+                () => _deleteExpense.AnswerAfterChangeMeanwhile(command.GroupId, userId.Value, command.ExpenseId, cancellationToken),
+                cancellationToken);
         }
     }
 }

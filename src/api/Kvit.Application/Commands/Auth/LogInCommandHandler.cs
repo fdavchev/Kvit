@@ -1,4 +1,5 @@
 using Kvit.Application.Dispatching;
+using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Me;
 using Kvit.Contracts.Persistence;
@@ -19,9 +20,9 @@ namespace Kvit.Application.Commands.Auth
                 return Result.Failure<MeResponse>(timeZone.Error, timeZone.ErrorCode);
             }
 
-            await _unitOfWork.OpenTransactionAsync(cancellationToken);
-            Result<MeResponse> checkedLogIn = await _accountService.CheckLogInAsync(command.Email, command.Password, command.TimeZone, cancellationToken);
-            await _unitOfWork.CommitAsync(cancellationToken);
+            Result<MeResponse> checkedLogIn = await _unitOfWork.RunInTransactionKeepingRefusalsOnceMoreIfAccountChangedMeanwhileAsync(
+                () => _accountService.CheckLogInAsync(command.Email, command.Password, command.TimeZone, cancellationToken),
+                cancellationToken);
 
             if (checkedLogIn.IsSuccess)
             {

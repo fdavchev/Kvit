@@ -86,12 +86,16 @@ namespace Kvit.Domain.Services.Expenses
 
             if (fields.Value.Amount.Currency != expense.Currency)
             {
-                ExchangeRateSnapshot rate = currentRate
-                    ?? throw new InvalidOperationException($"Expense {expenseId} changes its currency from {expense.Currency} to {fields.Value.Amount.Currency}, but no current exchange rate was read before the change. Its currency was changed by another request in the meantime.");
-                expense.SaveRate(rate);
+                if (currentRate is null)
+                {
+                    return Expense.ChangedMeanwhile(expenseId);
+                }
+
+                expense.SaveRate(currentRate);
             }
 
             expense.Update(fields.Value, input.PaidByMemberId, shares.Value, roster, userId, now);
+            _expenses.MarkChanged(expense);
             _activityEvents.Add(ActivityEvent.ExpenseEdited(groupId, userId, expenseId, changes, fields.Value.Amount.Currency, now));
             await _finishPaidOneBill.Execute(group, userId, cancellationToken);
 

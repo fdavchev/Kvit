@@ -48,5 +48,22 @@ namespace Kvit.Domain.Services.Expenses
 
             return Result.Ok();
         }
+
+        public async Task<Result> AnswerAfterChangeMeanwhile(Guid groupId, Guid userId, Guid expenseId, CancellationToken cancellationToken)
+        {
+            Result<Group> found = await _groups.FindForMemberAsync(groupId, userId, cancellationToken);
+            if (!found.IsSuccess)
+            {
+                return found;
+            }
+
+            Result<Expense> stillThere = await _expenses.FindInGroupAsync(groupId, expenseId, cancellationToken);
+            if (!stillThere.IsSuccess)
+            {
+                return stillThere;
+            }
+
+            return Expense.ChangedMeanwhile(expenseId);
+        }
     }
 }

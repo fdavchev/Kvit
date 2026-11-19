@@ -294,7 +294,7 @@ describe('answering and cancelling payments on the Balances tab', () => {
       [404, 'SETTLEMENT_NOT_FOUND'],
     ])('shows the translated text for %i %s on that card, and the card stays with its buttons enabled', async (status, code) => {
       vi.spyOn(console, 'error').mockImplementation(() => {})
-      const { fetchMock, queryClient } = await renderBalances({
+      await renderBalances({
         settlements: twoPendingToFilip,
         answers: { [`POST ${confirmPathOf(settlementIds.markoToFilip)}`]: problemAnswer(status, code) },
       })
@@ -307,7 +307,73 @@ describe('answering and cancelling payments on the Balances tab', () => {
       expect(isDisabled(buttonNamedIn(card, 'Confirm'))).toBe(false)
       expect(isDisabled(buttonNamedIn(card, 'Reject'))).toBe(false)
       expect(within(needsYouCard(anaSentence)).queryByRole('alert')).toBeNull()
+    })
+
+    it('does not ask for the group again after 403 SETTLEMENT_NOT_ALLOWED', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock, queryClient } = await renderBalances({
+        settlements: twoPendingToFilip,
+        answers: { [`POST ${confirmPathOf(settlementIds.markoToFilip)}`]: problemAnswer(403, 'SETTLEMENT_NOT_ALLOWED') },
+      })
+      const card = needsYouCard(markoSentence)
+
+      fireEvent.click(buttonNamedIn(card, 'Confirm'))
+      await within(card).findByRole('alert')
+
       expectGroupNotAskedAgain(fetchMock, queryClient)
+    })
+
+    it('does not ask for the group again when the server cannot be reached', async () => {
+      const { fetchMock, queryClient } = await renderBalances({
+        settlements: twoPendingToFilip,
+        answers: { [`POST ${confirmPathOf(settlementIds.markoToFilip)}`]: networkFailureAnswer() },
+      })
+      const card = needsYouCard(markoSentence)
+
+      fireEvent.click(buttonNamedIn(card, 'Confirm'))
+      await within(card).findByRole('alert')
+
+      expectGroupNotAskedAgain(fetchMock, queryClient)
+    })
+
+    it.each([
+      [400, 'SETTLEMENT_NOT_PENDING'],
+      [404, 'SETTLEMENT_NOT_FOUND'],
+    ])('asks for the group again after %i %s, as Home does, and keeps the message on the card', async (status, code) => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock, queryClient } = await renderBalances({
+        settlements: twoPendingToFilip,
+        answers: { [`POST ${confirmPathOf(settlementIds.markoToFilip)}`]: problemAnswer(status, code) },
+      })
+
+      fireEvent.click(buttonNamedIn(needsYouCard(markoSentence), 'Confirm'))
+
+      await expectGroupAskedAgain(fetchMock, queryClient)
+      expect(within(needsYouCard(markoSentence)).getByRole('alert').textContent).toContain(translated('en', `errors.${code}`))
+    })
+
+    it('removes the card and shows the payment in the list of payments, when it was confirmed meanwhile', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const confirmed = { ...markoPaidFilipPending, status: 'Confirmed' as const, resolvedAt: '2026-10-06T09:00:00Z' }
+      const live: LiveGroup = { balances: greeceTripBalances, settlements: twoPendingToFilip }
+      await renderBalances({
+        answers: {
+          ...liveAnswers(live),
+          [`POST ${confirmPathOf(settlementIds.markoToFilip)}`]: () => {
+            live.balances = onePaymentBalances(anaMember, filipMember, 70000)
+            live.settlements = [confirmed, anaPaidFilipPending]
+            return problemAnswer(400, 'SETTLEMENT_NOT_PENDING')()
+          },
+        },
+      })
+
+      fireEvent.click(buttonNamedIn(needsYouCard(markoSentence), 'Confirm'))
+
+      await waitFor(() => {
+        expect(queryTextIn(sectionNamed('Needs you'), markoSentence)).toBeNull()
+      })
+      expect(textIn(sectionNamed('Needs you'), anaSentence)).toBeTruthy()
+      expect(textIn(sectionNamed('Payments'), 'Marko paid Filip')).toBeTruthy()
     })
 
     it('shows the network message on that card when the server cannot be reached', async () => {
@@ -440,7 +506,7 @@ describe('answering and cancelling payments on the Balances tab', () => {
       [403, 'SETTLEMENT_NOT_ALLOWED'],
     ])('shows the translated text for %i %s on that card, and the card stays', async (status, code) => {
       vi.spyOn(console, 'error').mockImplementation(() => {})
-      const { fetchMock, queryClient } = await renderBalances({
+      await renderBalances({
         settlements: [markoPaidFilipPending],
         answers: { [`POST ${rejectPathOf(settlementIds.markoToFilip)}`]: problemAnswer(status, code) },
       })
@@ -450,7 +516,36 @@ describe('answering and cancelling payments on the Balances tab', () => {
 
       expect((await within(card).findByRole('alert')).textContent).toContain(translated('en', `errors.${code}`))
       expect(isDisabled(buttonNamedIn(card, 'Reject'))).toBe(false)
+    })
+
+    it('does not ask for the group again after 403 SETTLEMENT_NOT_ALLOWED', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock, queryClient } = await renderBalances({
+        settlements: [markoPaidFilipPending],
+        answers: { [`POST ${rejectPathOf(settlementIds.markoToFilip)}`]: problemAnswer(403, 'SETTLEMENT_NOT_ALLOWED') },
+      })
+      const card = needsYouCard(markoSentence)
+
+      fireEvent.click(buttonNamedIn(card, 'Reject'))
+      await within(card).findByRole('alert')
+
       expectGroupNotAskedAgain(fetchMock, queryClient)
+    })
+
+    it.each([
+      [400, 'SETTLEMENT_NOT_PENDING'],
+      [404, 'SETTLEMENT_NOT_FOUND'],
+    ])('asks for the group again after %i %s, as Home does, and keeps the message on the card', async (status, code) => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock, queryClient } = await renderBalances({
+        settlements: [markoPaidFilipPending],
+        answers: { [`POST ${rejectPathOf(settlementIds.markoToFilip)}`]: problemAnswer(status, code) },
+      })
+
+      fireEvent.click(buttonNamedIn(needsYouCard(markoSentence), 'Reject'))
+
+      await expectGroupAskedAgain(fetchMock, queryClient)
+      expect(within(needsYouCard(markoSentence)).getByRole('alert').textContent).toContain(translated('en', `errors.${code}`))
     })
   })
 
@@ -600,7 +695,7 @@ describe('answering and cancelling payments on the Balances tab', () => {
       [404, 'SETTLEMENT_NOT_FOUND'],
     ])('shows the translated text for %i %s on that row, and the row stays with its button enabled', async (status, code) => {
       vi.spyOn(console, 'error').mockImplementation(() => {})
-      const { fetchMock, queryClient } = await renderBalances({
+      await renderBalances({
         settlements: [anaPaidFilipThreeHundred, anaPaidFilipSecond],
         ...anaSignedIn({
           answers: { [`POST ${cancelPathOf(settlementIds.anaToFilip)}`]: problemAnswer(status, code) },
@@ -614,7 +709,42 @@ describe('answering and cancelling payments on the Balances tab', () => {
       expect(isDisabled(buttonNamedIn(first, 'Cancel'))).toBe(false)
       expect(within(second).queryByRole('alert')).toBeNull()
       expect(textIn(first, 'You paid Filip 300 MKD')).toBeTruthy()
+    })
+
+    it('does not ask for the group again after 403 SETTLEMENT_NOT_ALLOWED', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock, queryClient } = await renderBalances({
+        settlements: [anaPaidFilipThreeHundred, anaPaidFilipSecond],
+        ...anaSignedIn({
+          answers: { [`POST ${cancelPathOf(settlementIds.anaToFilip)}`]: problemAnswer(403, 'SETTLEMENT_NOT_ALLOWED') },
+        }),
+      })
+      const [first] = rowsOf(await findOnlyBalanceCard())
+
+      fireEvent.click(buttonNamedIn(first, 'Cancel'))
+      await within(first).findByRole('alert')
+
       expectGroupNotAskedAgain(fetchMock, queryClient)
+    })
+
+    it.each([
+      [400, 'SETTLEMENT_NOT_PENDING'],
+      [404, 'SETTLEMENT_NOT_FOUND'],
+    ])('asks for the group again after %i %s, as Home does, and keeps the message on the row', async (status, code) => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock, queryClient } = await renderBalances({
+        settlements: [anaPaidFilipThreeHundred, anaPaidFilipSecond],
+        ...anaSignedIn({
+          answers: { [`POST ${cancelPathOf(settlementIds.anaToFilip)}`]: problemAnswer(status, code) },
+        }),
+      })
+      const [first] = rowsOf(await findOnlyBalanceCard())
+
+      fireEvent.click(buttonNamedIn(first, 'Cancel'))
+
+      await expectGroupAskedAgain(fetchMock, queryClient)
+      const [firstAfter] = rowsOf(await findOnlyBalanceCard())
+      expect(within(firstAfter).getByRole('alert').textContent).toContain(translated('en', `errors.${code}`))
     })
 
     it('shows the network message on that row when the server cannot be reached', async () => {

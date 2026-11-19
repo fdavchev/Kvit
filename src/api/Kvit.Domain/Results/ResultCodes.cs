@@ -23,6 +23,7 @@ namespace Kvit.Domain.Results
         public const string EXPENSE_CATEGORY_INVALID = "EXPENSE_CATEGORY_INVALID";
         public const string EXPENSE_AMOUNT_TOO_LARGE = "EXPENSE_AMOUNT_TOO_LARGE";
         public const string EXPENSE_CLIENT_REQUEST_ID_USED = "EXPENSE_CLIENT_REQUEST_ID_USED";
+        public const string EXPENSE_CHANGED_MEANWHILE = "EXPENSE_CHANGED_MEANWHILE";
         public const string CATEGORY_NOT_FOUND = "CATEGORY_NOT_FOUND";
         public const string CATEGORY_NAME_INVALID = "CATEGORY_NAME_INVALID";
         public const string CATEGORY_NAME_TAKEN = "CATEGORY_NAME_TAKEN";

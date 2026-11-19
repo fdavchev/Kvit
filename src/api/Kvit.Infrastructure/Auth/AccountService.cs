@@ -8,6 +8,7 @@ using Kvit.Infrastructure.Persistence;
 using Kvit.Infrastructure.Persistence.Configurations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using Npgsql;
 
 namespace Kvit.Infrastructure.Auth
@@ -130,6 +131,7 @@ namespace Kvit.Infrastructure.Auth
                 return EmailTaken;
             }
 
+            await ThrowIfAccountChangedMeanwhileAsync(upgraded, cancellationToken);
             if (!upgraded.Succeeded)
             {
                 return RegistrationFailure(upgraded, EmailTaken);
@@ -167,6 +169,7 @@ namespace Kvit.Infrastructure.Auth
                 return GoogleEmailTaken;
             }
 
+            await ThrowIfAccountChangedMeanwhileAsync(upgraded, cancellationToken);
             if (!upgraded.Succeeded)
             {
                 return RegistrationFailure(upgraded, GoogleEmailTaken);
@@ -203,16 +206,13 @@ namespace Kvit.Infrastructure.Auth
                 return Result.Unauthorized<MeResponse>(InvalidCredentialsMessage, ResultCodes.AUTH_INVALID_CREDENTIALS);
             }
 
-            user.LockoutCount = 0;
-            if (!user.IsTimeZoneManual)
+            List<Action<UpdateSettersBuilder<AppUser>>> changes = [];
+            if (user.LockoutCount != 0)
             {
-                user.TimeZone = timeZone;
+                changes.Add(setters => setters.SetProperty(stored => stored.LockoutCount, 0));
             }
 
-            bool deletionCancelled = user.CancelPendingDeletion();
-            await UpdateAsync(user);
-
-            return Result.Ok(await MeResponseOfAsync(user) with { DeletionCancelled = deletionCancelled });
+            return Result.Ok(await SaveLogInAsync(user, timeZone, changes, cancellationToken));
         }
 
         public async Task<Result<MeResponse>> CheckGoogleLogInAsync(GoogleIdentity identity, string timeZone, CancellationToken cancellationToken)
@@ -229,16 +229,13 @@ namespace Kvit.Infrastructure.Auth
                 return Result.NotFound<MeResponse>(GoogleNoAccountMessage, ResultCodes.AUTH_GOOGLE_NO_ACCOUNT);
             }
 
-            if (!user.IsTimeZoneManual)
+            List<Action<UpdateSettersBuilder<AppUser>>> changes = [];
+            if (user.GooglePictureUrl != identity.PictureUrl)
             {
-                user.TimeZone = timeZone;
+                changes.Add(setters => setters.SetProperty(stored => stored.GooglePictureUrl, identity.PictureUrl));
             }
 
-            user.GooglePictureUrl = identity.PictureUrl;
-            bool deletionCancelled = user.CancelPendingDeletion();
-            await UpdateAsync(user);
-
-            return Result.Ok(await MeResponseOfAsync(user) with { DeletionCancelled = deletionCancelled });
+            return Result.Ok(await SaveLogInAsync(user, timeZone, changes, cancellationToken));
         }
 
         public async Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken)
@@ -267,7 +264,9 @@ namespace Kvit.Infrastructure.Auth
 
             user.LockoutCount = 0;
             user.MustChangePassword = false;
-            IdentityResultChecks.ThrowIfFailed(await _userManager.ChangePasswordAsync(user, currentPassword, newPassword), $"change the password of user {user.Id}");
+            IdentityResult changed = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            await ThrowIfAccountChangedMeanwhileAsync(changed, cancellationToken);
+            IdentityResultChecks.ThrowIfFailed(changed, $"change the password of user {user.Id}");
 
             return Result.Ok();
         }
@@ -454,6 +453,40 @@ namespace Kvit.Infrastructure.Auth
         private async Task UpdateAsync(AppUser user)
         {
             IdentityResultChecks.ThrowIfFailed(await _userManager.UpdateAsync(user), $"update user {user.Id}");
+        }
+
+        private async Task<MeResponse> SaveLogInAsync(AppUser user, string timeZone, List<Action<UpdateSettersBuilder<AppUser>>> changes, CancellationToken cancellationToken)
+        {
+            if (!user.IsTimeZoneManual && user.TimeZone != timeZone)
+            {
+                changes.Add(setters => setters.SetProperty(stored => stored.TimeZone, timeZone));
+            }
+
+            bool cancelsDeletion = user.HasPendingDeletion();
+            if (cancelsDeletion)
+            {
+                changes.Add(setters => setters
+                    .SetProperty(stored => stored.DeletionRequestedAt, (DateTimeOffset?)null)
+                    .SetProperty(stored => stored.DeletionNameChoice, (DeletionNameChoice?)null));
+            }
+
+            if (changes.Count > 0)
+            {
+                await _context.Users
+                    .Where(stored => stored.Id == user.Id)
+                    .ExecuteUpdateAsync(setters => changes.ForEach(change => change(setters)), cancellationToken);
+                await _context.Entry(user).ReloadAsync(cancellationToken);
+            }
+
+            return await MeResponseOfAsync(user) with { DeletionCancelled = cancelsDeletion };
+        }
+
+        private async Task ThrowIfAccountChangedMeanwhileAsync(IdentityResult saved, CancellationToken cancellationToken)
+        {
+            if (saved.Errors.Any(error => error.Code == nameof(IdentityErrorDescriber.ConcurrencyFailure)))
+            {
+                throw await _context.DiscardBecauseAccountChangedMeanwhileAsync(IdentityResultChecks.Describe(saved), cancellationToken);
+            }
         }
 
         private static bool IsEmailUniqueViolation(DbUpdateException exception)

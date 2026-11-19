@@ -31,6 +31,11 @@ namespace Kvit.Infrastructure.Repositories
             return SingleOrNotFoundAsync(_context.Expenses, groupId, expenseId, cancellationToken);
         }
 
+        public void MarkChanged(Expense expense)
+        {
+            _context.Entry(expense).Property(changed => changed.UpdatedAt).IsModified = true;
+        }
+
         public Task<Currency?> FindCurrencyAsync(Guid groupId, Guid expenseId, CancellationToken cancellationToken)
         {
             return _context.Expenses

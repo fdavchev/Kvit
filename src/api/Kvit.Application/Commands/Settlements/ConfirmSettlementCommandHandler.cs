@@ -19,7 +19,7 @@ namespace Kvit.Application.Commands.Settlements
                 return userId;
             }
 
-            return await _groupWrite.RunAsync(command.GroupId, userId.Value, () => _confirmSettlement.Execute(command.GroupId, userId.Value, command.SettlementId, cancellationToken), cancellationToken);
+            return await _groupWrite.RunOnceMoreIfSettlementChangedMeanwhileAsync(command.GroupId, userId.Value, () => _confirmSettlement.Execute(command.GroupId, userId.Value, command.SettlementId, cancellationToken), cancellationToken);
         }
     }
 }

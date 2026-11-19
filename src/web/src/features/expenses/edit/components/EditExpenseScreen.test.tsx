@@ -773,6 +773,39 @@ describe('EditExpenseScreen', () => {
       expect(titleField().value).toBe('Hotel by the sea')
     })
 
+    it('shows the text for 409 EXPENSE_CHANGED_MEANWHILE, keeps the typed values and asks for the expense again', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock, router } = await renderReadyEdit({
+        answers: { [`PUT ${detailPath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE') },
+      })
+      typeAmount('3500')
+      typeTitle('Hotel by the sea')
+
+      fireEvent.click(saveButton())
+
+      expect((await screen.findByRole('alert')).textContent).toContain(
+        'Someone else just changed this expense. Check the new version and try again.',
+      )
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'GET', detailPath)).toBe(2)
+      })
+      expect(router.state.location.pathname).toBe(editRoute)
+      expect(amountField().value).toBe('3500')
+      expect(titleField().value).toBe('Hotel by the sea')
+    })
+
+    it('does not ask for the expense again after another refusal', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock } = await renderReadyEdit({
+        answers: { [`PUT ${detailPath}`]: problemAnswer(400, 'EXPENSE_AMOUNT_TOO_LARGE') },
+      })
+
+      fireEvent.click(saveButton())
+
+      await screen.findByRole('alert')
+      expect(requestCount(fetchMock, 'GET', detailPath)).toBe(1)
+    })
+
     it('shows the network message when the server cannot be reached', async () => {
       await renderReadyEdit({ answers: { [`PUT ${detailPath}`]: networkFailureAnswer() } })
 

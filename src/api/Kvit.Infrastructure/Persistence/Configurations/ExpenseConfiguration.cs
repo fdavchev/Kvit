@@ -24,6 +24,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
             builder.Property(expense => expense.Currency).HasConversion<string>();
             builder.Property(expense => expense.SplitType).HasConversion<string>();
             builder.Property(expense => expense.MkdPerEur).HasPrecision(ExchangeRate.MkdPerEurPrecision, ExchangeRate.MkdPerEurDecimals);
+            builder.Property<uint>("RowVersion").IsRowVersion();
 
             builder.HasIndex(expense => expense.ClientRequestId).HasDatabaseName(ClientRequestIdIndexName).IsUnique();
 

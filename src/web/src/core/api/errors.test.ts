@@ -89,6 +89,7 @@ const mappedErrorCodes = [
   'OWNER_PERSON_NOT_FOUND',
   'OWNER_GROUP_NOT_FOUND',
   'OWNER_CANNOT_ACT_ON_ADMIN',
+  'EXPENSE_CHANGED_MEANWHILE',
 ]
 
 const errorTexts: Record<'en' | 'mk', Record<string, unknown>> = {

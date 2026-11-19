@@ -8,6 +8,7 @@ namespace Kvit.Api.Tests.GroupPlan
     public class GroupPlanSameMomentTests(ExpensesApp _app) : IClassFixture<ExpensesApp>
     {
         private const int Repetitions = 20;
+        private const long ThreeThousandMkd = 300_000;
         private const string InMkd = "200000:MKD";
         private const string InEur = "60000:EUR";
 
@@ -25,6 +26,60 @@ namespace Kvit.Api.Tests.GroupPlan
                 Assert.All(responses, response => Assert.Equal(HttpStatusCode.NoContent, response.StatusCode));
                 Assert.Contains(await GroupPlanRows.PlanOfAsync(_app, group.GroupId), new[] { InMkd, InEur });
             }
+        }
+
+        [Fact]
+        public async Task Put_OnlyANewAmountAndOnlyANewCurrencyAtTheSameMoment_BothAnswer204AndThePlanIsOneOfTheTwoNeverAMix()
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            await GroupPlanSteps.SetAsync(group.Owner, group.GroupId, GroupPlanSteps.TwoThousandMkd, GroupPlanRequests.Mkd);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "activity_events", $"NEW.type = '{GroupPlanSteps.SetEventType}'");
+
+            Task<HttpResponseMessage> newAmount = GroupPlanRequests.SetAsync(group.Owner.Client, group.GroupId, ThreeThousandMkd, GroupPlanRequests.Mkd);
+            Task<HttpResponseMessage> newCurrency = GroupPlanRequests.SetAsync(group.Owner.Client, group.GroupId, GroupPlanSteps.TwoThousandMkd, GroupPlanRequests.Eur);
+            await gate.WaitUntilRequestsAreHeldAsync(2);
+            await gate.OpenAsync();
+            HttpResponseMessage[] responses = await Task.WhenAll(newAmount, newCurrency);
+
+            Assert.All(responses, response => Assert.Equal(HttpStatusCode.NoContent, response.StatusCode));
+            string[] wholePlans = [GroupPlanRows.TextOf(ThreeThousandMkd, GroupPlanRequests.Mkd), GroupPlanRows.TextOf(GroupPlanSteps.TwoThousandMkd, GroupPlanRequests.Eur)];
+            Assert.Contains(await GroupPlanRows.PlanOfAsync(_app, group.GroupId), wholePlans);
+        }
+
+        [Fact]
+        public async Task Put_OnlyANewAmountWhileThePlanIsRemovedMeanwhile_Answers204AndSavesTheWholePlan()
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            await GroupPlanSteps.SetAsync(group.Owner, group.GroupId, GroupPlanSteps.TwoThousandMkd, GroupPlanRequests.Mkd);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "activity_events", $"NEW.type = '{GroupPlanSteps.SetEventType}'");
+
+            Task<HttpResponseMessage> newAmount = GroupPlanRequests.SetAsync(group.Owner.Client, group.GroupId, ThreeThousandMkd, GroupPlanRequests.Mkd);
+            await gate.WaitUntilRequestsAreHeldAsync(1);
+            HttpResponseMessage removed = await GroupPlanRequests.DeleteAsync(group.Owner.Client, group.GroupId);
+            await gate.OpenAsync();
+            HttpResponseMessage set = await newAmount;
+
+            Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
+            Assert.Equal(HttpStatusCode.NoContent, set.StatusCode);
+            Assert.Equal(GroupPlanRows.TextOf(ThreeThousandMkd, GroupPlanRequests.Mkd), await GroupPlanRows.PlanOfAsync(_app, group.GroupId));
+        }
+
+        [Fact]
+        public async Task Delete_WhileANewPlanIsSetMeanwhile_Answers204AndLeavesNoPlan()
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            await GroupPlanSteps.SetAsync(group.Owner, group.GroupId, GroupPlanSteps.TwoThousandMkd, GroupPlanRequests.Mkd);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, "activity_events", $"NEW.type = '{GroupPlanSteps.RemovedEventType}'");
+
+            Task<HttpResponseMessage> removal = GroupPlanRequests.DeleteAsync(group.Owner.Client, group.GroupId);
+            await gate.WaitUntilRequestsAreHeldAsync(1);
+            HttpResponseMessage set = await GroupPlanRequests.SetAsync(group.Owner.Client, group.GroupId, ThreeThousandMkd, GroupPlanRequests.Eur);
+            await gate.OpenAsync();
+            HttpResponseMessage removed = await removal;
+
+            Assert.Equal(HttpStatusCode.NoContent, set.StatusCode);
+            Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
+            Assert.Equal(GroupPlanRows.NoPlan, await GroupPlanRows.PlanOfAsync(_app, group.GroupId));
         }
 
         [Fact]

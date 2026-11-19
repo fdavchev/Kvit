@@ -54,6 +54,7 @@ import {
   buttonNamedIn,
   buttonsNamedIn,
   expectGroupAskedAgain,
+  expectGroupNotAskedAgain,
   findCardsInLanguage,
   neverAnsweringFetch,
 } from '@/test/settlementActionsTestHelpers'
@@ -375,7 +376,7 @@ describe('the Payments list on the Balances tab', () => {
       [400, 'SETTLEMENT_NOT_CONFIRMED'],
     ])('shows the translated text for %i %s, keeps the row, enables Delete again and shows no Payment deleted toast', async (status, code) => {
       vi.spyOn(console, 'error').mockImplementation(() => {})
-      const { fetchMock } = await renderBalances({
+      await renderBalances({
         settlements: [markoPaidFilip],
         answers: { [`DELETE ${settlementPathOf(paymentIds.first)}`]: problemAnswer(status, code) },
       })
@@ -386,7 +387,45 @@ describe('the Payments list on the Balances tab', () => {
       expect(paymentRows()).toHaveLength(1)
       expect(isDisabled(buttonNamedIn(paymentRows()[0], 'Delete'))).toBe(false)
       expect(shownToastTexts()).not.toContain(paymentDeleted)
-      expect(requestCount(fetchMock, 'GET', settlementsPath)).toBe(1)
+    })
+
+    it.each([
+      [403, 'SETTLEMENT_NOT_ALLOWED'],
+      [400, 'SETTLEMENT_NOT_CONFIRMED'],
+    ])('does not ask for the group again after %i %s', async (status, code) => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock, queryClient } = await renderBalances({
+        settlements: [markoPaidFilip],
+        answers: { [`DELETE ${settlementPathOf(paymentIds.first)}`]: problemAnswer(status, code) },
+      })
+
+      fireEvent.click(buttonNamedIn(paymentRows()[0], 'Delete'))
+      await findErrorText(translated('en', `errors.${code}`))
+
+      expectGroupNotAskedAgain(fetchMock, queryClient)
+    })
+
+    it('asks for the group again after 404 SETTLEMENT_NOT_FOUND, so a payment deleted meanwhile goes away', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const live: LiveGroup = { balances: greeceTripBalances, settlements: [markoPaidFilip, anaPaidFilip] }
+      const { fetchMock, queryClient } = await renderBalances({
+        answers: {
+          ...liveAnswers(live),
+          [`DELETE ${settlementPathOf(paymentIds.first)}`]: () => {
+            live.settlements = [anaPaidFilip]
+            return problemAnswer(404, 'SETTLEMENT_NOT_FOUND')()
+          },
+        },
+      })
+
+      fireEvent.click(buttonNamedIn(paymentRowWith('Marko paid Filip'), 'Delete'))
+
+      await findErrorText(translated('en', 'errors.SETTLEMENT_NOT_FOUND'))
+      await expectGroupAskedAgain(fetchMock, queryClient)
+      await waitFor(() => {
+        expect(paymentRows()).toHaveLength(1)
+      })
+      expect(rowTextOf(paymentRows()[0])).toContain('Ana paid Filip')
     })
 
     it('shows the network message when the server cannot be reached', async () => {
@@ -531,6 +570,38 @@ describe('the Payments list on the Balances tab', () => {
       pressToastAction(shown)
 
       await findErrorText(translated('en', 'errors.SETTLEMENT_NOT_DELETED'))
+    })
+
+    it('asks for the group again after the restore is refused with 400 SETTLEMENT_NOT_DELETED, so a payment restored meanwhile comes back', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const live: LiveGroup = { balances: greeceTripBalances, settlements: [markoPaidFilip] }
+      const { fetchMock } = await renderBalances({
+        answers: {
+          ...liveAnswers(live),
+          [`DELETE ${settlementPathOf(paymentIds.first)}`]: () => {
+            live.settlements = []
+            return new Response(null, { status: 204 })
+          },
+          [`POST ${settlementPathOf(paymentIds.first)}/restore`]: () => {
+            live.settlements = [markoPaidFilip]
+            return problemAnswer(400, 'SETTLEMENT_NOT_DELETED')()
+          },
+        },
+      })
+      fireEvent.click(buttonNamedIn(paymentRows()[0], 'Delete'))
+      const shown = await waitFor(() => toastShownWithText(paymentDeleted))
+      await waitFor(() => {
+        expect(queryAllSectionsNamed('Payments')).toEqual([])
+      })
+
+      pressToastAction(shown)
+
+      await findErrorText(translated('en', 'errors.SETTLEMENT_NOT_DELETED'))
+      await waitFor(() => {
+        expect(paymentRows()).toHaveLength(1)
+      })
+      expect(requestCount(fetchMock, 'GET', settlementsPath)).toBe(3)
+      expect(requestCount(fetchMock, 'GET', balancesPath)).toBe(3)
     })
 
     it('does not show an error for the delete when only asking again fails', async () => {

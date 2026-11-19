@@ -1038,6 +1038,90 @@ describe('ExpenseDetailScreen', () => {
       expect(toastsShownWithOptions()).toEqual([])
     })
 
+    it.each(languages)('shows the translated text for 409 EXPENSE_CHANGED_MEANWHILE (%s), stays on the screen and shows no Expense deleted toast', async (language) => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { router } = await renderDetail({
+        language,
+        answers: { [`DELETE ${detailPath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE') },
+      })
+      await showsDetail()
+
+      fireEvent.click(deleteButton(language))
+
+      await findErrorText(translated(language, 'errors.EXPENSE_CHANGED_MEANWHILE'))
+      expect(router.state.location.pathname).toBe(routes.groupExpense(testGroupId, hotelExpenseId))
+      expect(toastsShownWithOptions()).toEqual([])
+    })
+
+    it('asks again for the expense after a delete refused with 409 EXPENSE_CHANGED_MEANWHILE', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock } = await renderDetail({
+        answers: { [`DELETE ${detailPath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE') },
+      })
+      await showsDetail()
+      expect(requestCount(fetchMock, 'GET', detailPath)).toBe(1)
+
+      fireEvent.click(deleteButton())
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'GET', detailPath)).toBe(2)
+      })
+    })
+
+    it('marks the list, the activity, the balances and the spending of the group as out of date after a delete refused with 409 EXPENSE_CHANGED_MEANWHILE', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const keys = [
+        ['groups', testGroupId, 'expenses'],
+        ['groups', testGroupId, 'activity'],
+        ['groups', testGroupId, 'balances'],
+        ['groups', testGroupId, 'spending'],
+      ]
+      const { queryClient } = await renderDetail({
+        answers: { [`DELETE ${detailPath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE') },
+        seedCache: (cache) => {
+          for (const key of keys) {
+            cache.setQueryData(key, [])
+          }
+        },
+      })
+      await showsDetail()
+
+      fireEvent.click(deleteButton())
+
+      await waitFor(() => {
+        for (const key of keys) {
+          expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true)
+        }
+      })
+    })
+
+    it('does not ask again for the expense after a delete refused for another reason', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock } = await renderDetail({
+        answers: { [`DELETE ${detailPath}`]: problemAnswer(403, 'EXPENSE_NOT_ALLOWED') },
+      })
+      await showsDetail()
+
+      fireEvent.click(deleteButton())
+
+      await findErrorText(translated('en', 'errors.EXPENSE_NOT_ALLOWED'))
+      expect(requestCount(fetchMock, 'GET', detailPath)).toBe(1)
+    })
+
+    it('shows the translated text when the restore after Undo is refused with 409 EXPENSE_CHANGED_MEANWHILE', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      await renderDetail({
+        answers: { [`POST ${restorePath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE') },
+      })
+      await showsDetail()
+      fireEvent.click(deleteButton())
+      const shown = await waitFor(() => toastShownWithText(translated('en', 'expenses.deleted')))
+
+      pressToastAction(shown)
+
+      await findErrorText(translated('en', 'errors.EXPENSE_CHANGED_MEANWHILE'))
+    })
+
     it('shows the network message when the delete cannot reach the server', async () => {
       vi.spyOn(console, 'error').mockImplementation(() => {})
       await renderDetail({ answers: { [`DELETE ${detailPath}`]: networkFailureAnswer() } })

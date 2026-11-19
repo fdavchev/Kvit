@@ -48,7 +48,7 @@ namespace Kvit.Application.Commands.Auth
             }
 
             Guid userId = me.Value.Id;
-            Result<MeResponse> upgraded = await _unitOfWork.RunInTransactionAsync(() => _accountService.UpgradeGuestWithGoogleAsync(userId, email.Value, identity.Value.Subject, identity.Value.PictureUrl, cancellationToken), cancellationToken);
+            Result<MeResponse> upgraded = await _unitOfWork.RunInTransactionOnceMoreIfAccountChangedMeanwhileAsync(() => _accountService.UpgradeGuestWithGoogleAsync(userId, email.Value, identity.Value.Subject, identity.Value.PictureUrl, cancellationToken), cancellationToken);
             if (!upgraded.IsSuccess)
             {
                 return upgraded;

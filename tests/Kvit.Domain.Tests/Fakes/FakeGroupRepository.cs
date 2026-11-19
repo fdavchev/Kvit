@@ -11,6 +11,8 @@ namespace Kvit.Domain.Tests.Fakes
 
         public List<Group> Added { get; } = [];
 
+        public List<Group> MarkedPlanChanged { get; } = [];
+
         public void Seed(Group group, params Guid[] currentMemberUserIds)
         {
             _groups[group.Id] = group;
@@ -23,6 +25,11 @@ namespace Kvit.Domain.Tests.Fakes
         public void Add(Group group)
         {
             Added.Add(group);
+        }
+
+        public void MarkPlanChanged(Group group)
+        {
+            MarkedPlanChanged.Add(group);
         }
 
         public Task<Result<Group>> FindForMemberAsync(Guid groupId, Guid userId, CancellationToken cancellationToken)

@@ -69,17 +69,9 @@ namespace Kvit.Infrastructure.Auth
             DeletionNameChoice = nameChoice;
         }
 
-        public bool CancelPendingDeletion()
+        public bool HasPendingDeletion()
         {
-            if (DeletionRequestedAt is null || PurgedAt is not null)
-            {
-                return false;
-            }
-
-            DeletionRequestedAt = null;
-            DeletionNameChoice = null;
-
-            return true;
+            return DeletionRequestedAt is not null && PurgedAt is null;
         }
 
         public bool Suspend(DateTimeOffset suspendedAt)

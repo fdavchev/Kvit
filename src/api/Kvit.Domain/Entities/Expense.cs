@@ -90,6 +90,11 @@ namespace Kvit.Domain.Entities
             return Result.Failure<T>($"The request id {clientRequestId} was already used for another group or by another person.", ResultCodes.EXPENSE_CLIENT_REQUEST_ID_USED);
         }
 
+        public static Result ChangedMeanwhile(Guid expenseId)
+        {
+            return Result.Conflict($"Someone else changed expense {expenseId} at the same moment; nothing of this change was saved.", ResultCodes.EXPENSE_CHANGED_MEANWHILE);
+        }
+
         public static Result<IReadOnlyList<SplitShare>> SplitAmong(GroupRoster roster, ExpenseFields fields, Guid paidByMemberId, IReadOnlyList<SplitInput> inputs)
         {
             Result<NamedMember> payer = roster.FindCurrent(paidByMemberId);

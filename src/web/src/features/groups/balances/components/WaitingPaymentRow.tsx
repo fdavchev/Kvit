@@ -1,7 +1,9 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { errorMessageKey } from '@/core/api/errors'
 import type { ExpensePerson } from '@/features/expenses/shared/expensePeople'
 import { useCancelSettlement } from '@/features/settlements/pending/hooks/useCancelSettlement'
+import { refreshWhenSettlementChangedMeanwhile } from '@/features/settlements/shared/settlementCache'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitInlineError } from '@/shared/components/KvitInlineError'
@@ -26,6 +28,7 @@ export function WaitingPaymentRow({
   canCancel,
 }: WaitingPaymentRowProps) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const cancelSettlement = useCancelSettlement(groupId, settlementId)
 
   return (
@@ -41,7 +44,11 @@ export function WaitingPaymentRow({
             variant="underlinedLink"
             className={balancesTextButtonLook}
             disabled={cancelSettlement.isPending}
-            onClick={() => cancelSettlement.mutate()}
+            onClick={() =>
+              cancelSettlement.mutate(undefined, {
+                onError: (error) => refreshWhenSettlementChangedMeanwhile(queryClient, groupId, error),
+              })
+            }
           >
             {t('settlements.cancel')}
           </KvitButton>

@@ -10,6 +10,8 @@ namespace Kvit.Domain.Interfaces
 
         Task RemoveSameAnswersOfEntryAsync(Guid userId, Guid personalEntryId, CancellationToken cancellationToken);
 
+        Task RemoveEndedMergesOfEitherAsync(Guid userId, Guid personalEntryId, Guid expenseId, CancellationToken cancellationToken);
+
         Task<bool> IsEitherMergedWithAnotherAsync(Guid userId, Guid personalEntryId, Guid expenseId, CancellationToken cancellationToken);
     }
 }

@@ -408,6 +408,77 @@ describe('RecentlyDeletedExpensesScreen', () => {
       expect(shownToastTexts()).not.toContain(translated(language, 'expenses.restored'))
     })
 
+    it.each(languages)('shows the translated text for 409 EXPENSE_CHANGED_MEANWHILE (%s), keeps the expense on the list and shows no Expense restored toast', async (language) => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      await renderDeleted({
+        language,
+        answers: { [`POST ${museumRestorePath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE') },
+      })
+      await screen.findByText('Museum tickets', { exact: false })
+
+      fireEvent.click(restoreButtons(language)[0])
+
+      await findErrorText(translated(language, 'errors.EXPENSE_CHANGED_MEANWHILE'))
+      expect(screen.getByText('Museum tickets', { exact: false })).toBeTruthy()
+      expect(shownToastTexts()).not.toContain(translated(language, 'expenses.restored'))
+    })
+
+    it('asks again for the deleted expenses after a restore refused with 409 EXPENSE_CHANGED_MEANWHILE', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock } = await renderDeleted({
+        answers: { [`POST ${museumRestorePath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE') },
+      })
+      await screen.findByText('Museum tickets', { exact: false })
+      expect(requestCount(fetchMock, 'GET', deletedExpensesPath)).toBe(1)
+
+      fireEvent.click(restoreButtons()[0])
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'GET', deletedExpensesPath)).toBe(2)
+      })
+    })
+
+    it('marks the list, the detail, the activity, the balances and the spending as out of date after a restore refused with 409 EXPENSE_CHANGED_MEANWHILE', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const keys = [
+        ['groups', testGroupId, 'expenses'],
+        ['groups', testGroupId, 'expenses', museumExpenseId],
+        ['groups', testGroupId, 'activity'],
+        ['groups', testGroupId, 'balances'],
+        ['groups', testGroupId, 'spending'],
+      ]
+      const { queryClient } = await renderDeleted({
+        answers: { [`POST ${museumRestorePath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE') },
+        seedCache: (cache) => {
+          for (const key of keys) {
+            cache.setQueryData(key, [])
+          }
+        },
+      })
+      await showsRows()
+
+      fireEvent.click(restoreButtons()[0])
+
+      await waitFor(() => {
+        for (const key of keys) {
+          expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true)
+        }
+      })
+    })
+
+    it('does not ask again for the deleted expenses after a restore refused for another reason', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock } = await renderDeleted({
+        answers: { [`POST ${museumRestorePath}`]: problemAnswer(400, 'EXPENSE_NOT_DELETED') },
+      })
+      await screen.findByText('Museum tickets', { exact: false })
+
+      fireEvent.click(restoreButtons()[0])
+
+      await findErrorText(translated('en', 'errors.EXPENSE_NOT_DELETED'))
+      expect(requestCount(fetchMock, 'GET', deletedExpensesPath)).toBe(1)
+    })
+
     it('shows the network message when the restore cannot reach the server', async () => {
       vi.spyOn(console, 'error').mockImplementation(() => {})
       await renderDeleted({ answers: { [`POST ${museumRestorePath}`]: networkFailureAnswer() } })
