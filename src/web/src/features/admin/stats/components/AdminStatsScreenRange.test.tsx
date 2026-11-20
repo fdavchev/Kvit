@@ -117,6 +117,56 @@ describe('the statistics screen, the range and the grouping', () => {
     })
   })
 
+  describe('when the page is left open past midnight in Skopje', () => {
+    function showPageAgain(): void {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' })
+      fireEvent(document, new Event('visibilitychange'))
+    }
+
+    afterEach(() => {
+      Reflect.deleteProperty(document, 'visibilityState')
+    })
+
+    it('asks for the range up to the new day when the page is shown again', async () => {
+      vi.setSystemTime(new Date('2026-11-04T22:30:00Z'))
+      const { fetchMock } = await openStats()
+
+      vi.setSystemTime(new Date('2026-11-04T23:10:00Z'))
+      showPageAgain()
+
+      await expectRequested(fetchMock, statsUrl({ from: '2026-11-01', to: '2026-11-05' }, 'day'))
+    })
+
+    it('asks for the range up to the new day when the window gets the focus again', async () => {
+      vi.setSystemTime(new Date('2026-11-04T22:30:00Z'))
+      const { fetchMock } = await openStats()
+
+      vi.setSystemTime(new Date('2026-11-04T23:10:00Z'))
+      fireEvent.focus(window)
+
+      await expectRequested(fetchMock, statsUrl({ from: '2026-11-01', to: '2026-11-05' }, 'day'))
+    })
+
+    it('starts this month again on the 1st when the month changed', async () => {
+      vi.setSystemTime(new Date('2026-11-30T22:30:00Z'))
+      const { fetchMock } = await openStats()
+
+      vi.setSystemTime(new Date('2026-11-30T23:10:00Z'))
+      showPageAgain()
+
+      await expectRequested(fetchMock, statsUrl({ from: '2026-12-01', to: '2026-12-01' }, 'day'))
+    })
+
+    it('asks for nothing new when the page is shown again on the same day', async () => {
+      const { fetchMock } = await openStats()
+
+      vi.setSystemTime(new Date('2026-11-04T18:00:00Z'))
+      showPageAgain()
+
+      expect(statsRequests(fetchMock)).toEqual([defaultStatsUrl])
+    })
+  })
+
   describe('the range chips', () => {
     it.each([
       ['7 days', '2026-10-29', '2026-11-04', 'day', 'Day'],

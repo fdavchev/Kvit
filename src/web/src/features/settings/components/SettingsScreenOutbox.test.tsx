@@ -10,7 +10,7 @@ import type { Me } from '@/core/services/me/meService'
 import { sentRequest, stubFetch } from '@/test/apiTestHelpers'
 import { queuedExpense, queuedOneBill, queuedPersonalEntry } from '@/test/outboxScreenTestData'
 import { outboxText } from '@/test/outboxTextsTestData'
-import { fakeIdbKeyval, seedOutbox, storedIds } from '@/test/outboxTestHelpers'
+import { fakeIdbKeyval, seedOutbox, storedIds, storedOutbox } from '@/test/outboxTestHelpers'
 import { readSavedOutbox } from '@/test/queuedSaveTestHelpers'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { seedMe, testGuestMe, testMe } from '@/test/testMe'
@@ -168,7 +168,7 @@ describe('SettingsScreen log out for a person with an account and changes not se
       })
     })
 
-    it('deletes the saved changes of this person once the log out worked', async () => {
+    it('deletes the saved changes of this person once the log out worked, and then the empty outbox of this person', async () => {
       stubFetch(new Response(null, { status: 204 }))
       await renderSettings(testMe, twoWaiting())
       fireEvent.click(logOutButton())
@@ -176,9 +176,9 @@ describe('SettingsScreen log out for a person with an account and changes not se
       fireEvent.click(buttonIn(warningSheet(), outboxText('en', 'outbox.logOutAnyway')))
 
       await waitFor(() => {
-        expect(readSavedOutbox(testMe.id)).toEqual([])
+        expect(storedOutbox.has(testMe.id)).toBe(false)
       })
-      expect(fakeIdbKeyval.del).not.toHaveBeenCalled()
+      expect(fakeIdbKeyval.del.mock.calls.map(([personId]) => personId)).toEqual([testMe.id])
     })
 
     it('does not delete the saved changes of another person', async () => {
@@ -242,7 +242,7 @@ describe('SettingsScreen log out for a person with an account and changes not se
 })
 
 describe('SettingsScreen log out for a person with an account and nothing saved in the outbox', () => {
-  it('logs out at once with one tap, no sheet, and deletes nothing', async () => {
+  it('logs out at once with one tap, no sheet, and removes only the empty outbox of this person', async () => {
     const fetchMock = stubFetch(new Response(null, { status: 204 }))
     await renderSettings(testMe, [])
 
@@ -253,7 +253,10 @@ describe('SettingsScreen log out for a person with an account and nothing saved 
       expect(fetchMock).toHaveBeenCalledOnce()
     })
     expect(sentRequest(fetchMock)).toMatchObject({ url: endpoints.logOut, method: 'POST' })
-    expect(fakeIdbKeyval.del).not.toHaveBeenCalled()
+    await waitFor(() => {
+      expect(storedOutbox.has(testMe.id)).toBe(false)
+    })
+    expect(fakeIdbKeyval.del.mock.calls.map(([personId]) => personId)).toEqual([testMe.id])
   })
 
   it('logs out at once also when only another person has saved changes in this browser', async () => {
@@ -318,9 +321,9 @@ describe('SettingsScreen log out for a guest', () => {
     })
     expect(sentRequest(fetchMock)).toMatchObject({ url: endpoints.logOut, method: 'POST' })
     await waitFor(() => {
-      expect(readSavedOutbox(testGuestMe.id)).toEqual([])
+      expect(storedOutbox.has(testGuestMe.id)).toBe(false)
     })
-    expect(fakeIdbKeyval.del).not.toHaveBeenCalled()
+    expect(fakeIdbKeyval.del.mock.calls.map(([personId]) => personId)).toEqual([testGuestMe.id])
   })
 
   it('keeps the saved changes of the guest when the log out fails', async () => {

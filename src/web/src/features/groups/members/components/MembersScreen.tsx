@@ -21,7 +21,7 @@ import { useGroup } from '../../group/hooks/useGroup'
 import { LeaveGroupSection } from '../../settings/components/LeaveGroupSection'
 import { claimFailureMessageKey } from '../../shared/claimFailureMessageKey'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
-import { canChangeGroup, canLeaveGroup } from '../../shared/groupAccess'
+import { canChangeGroup, canInviteToGroup, canLeaveGroup } from '../../shared/groupAccess'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
 import { useClaimName } from '../hooks/useClaimName'
 import { useLetBackIn } from '../hooks/useLetBackIn'
@@ -105,7 +105,9 @@ export function MembersScreen() {
             </div>
           )}
         </div>
-        <InviteLinkCard group={group} canResetLink={canChange && group.isOwner} />
+        {(canInviteToGroup(group) || (canChange && group.isOwner)) && (
+          <InviteLinkCard group={group} canResetLink={canChange && group.isOwner} />
+        )}
         {canChange && group.isOwner && groupMembers.removed.length > 0 && (
           <RemovedMembers
             removed={groupMembers.removed}

@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { copyInviteLink, shareInviteLink } from './shareInviteLink'
 
 interface InviteLinkActions {
-  share: (inviteToken: string) => Promise<void>
+  share: (inviteToken: string, groupName: string) => Promise<void>
   copy: (inviteToken: string) => Promise<void>
 }
 
@@ -15,9 +15,9 @@ export function useInviteLinkActions(): InviteLinkActions {
     toast.error(t('errors.generic'))
   }
 
-  async function share(inviteToken: string): Promise<void> {
+  async function share(inviteToken: string, groupName: string): Promise<void> {
     try {
-      const outcome = await shareInviteLink(inviteToken)
+      const outcome = await shareInviteLink({ inviteToken, groupName, text: t('group.shareText', { name: groupName }) })
       if (outcome === 'copied') {
         toast.success(t('group.linkCopied'))
       }

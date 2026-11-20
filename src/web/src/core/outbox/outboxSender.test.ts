@@ -117,6 +117,30 @@ describe('loading the queue', () => {
     expect(snapshotItem(sender, 'a')).toMatchObject({ state: 'failed', failure })
   })
 
+  it('treats an item that an older version marked failed because the person was suspended as waiting again', async () => {
+    seedOutbox(personId, [
+      testOutboxItem('a', { state: 'failed', failure: { errorCode: 'ACCOUNT_SUSPENDED', httpStatus: 403 } }),
+    ])
+
+    const { sender } = newSender()
+    await settle()
+
+    expect(snapshotItem(sender, 'a')).toMatchObject({ state: 'waiting', failure: null })
+  })
+
+  it('sends an item that was held by a suspension once a new queue is loaded for the person', async () => {
+    seedOutbox(personId, [
+      testOutboxItem('a', { state: 'failed', failure: { errorCode: 'ACCOUNT_SUSPENDED', httpStatus: 403 } }),
+      testOutboxItem('b', { state: 'failed', failure: { errorCode: 'GROUP_FINISHED', httpStatus: 400 } }),
+    ])
+    const { sender, sendItem } = newSender()
+
+    await sender.run()
+
+    expect(sentIds(sendItem)).toEqual(['a'])
+    expect(storedIds(personId)).toEqual(['b'])
+  })
+
   it('shows and sends only the items of its own person', async () => {
     seedWaiting('mine')
     seedOutbox(otherPersonId, [testOutboxItem('theirs')])
@@ -801,6 +825,7 @@ describe('pausing when the person must sign in', () => {
   const pausingFailures: [string, number, string | null][] = [
     ['401', 401, null],
     ['403 AUTH_MUST_CHANGE_PASSWORD', 403, 'AUTH_MUST_CHANGE_PASSWORD'],
+    ['403 ACCOUNT_SUSPENDED', 403, 'ACCOUNT_SUSPENDED'],
   ]
 
   it.each(pausingFailures)('pauses the queue on %s', async (_name, httpStatus, errorCode) => {

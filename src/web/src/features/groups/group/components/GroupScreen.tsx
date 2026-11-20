@@ -81,6 +81,7 @@ function GroupContent({ group, tab }: GroupContentProps) {
     setHasSwitchedTab(true)
   }
   const canChange: boolean = canChangeGroup(group)
+  const canInvite: boolean = canInviteToGroup(group)
   const isOneBill: boolean = group.kind === 'OneBill'
   const showsAddPeopleButtons: boolean = group.memberCount === 1 && !isOneBill && canChange
   const showsAddExpense: boolean = tab === 'expenses' && canChange
@@ -94,10 +95,11 @@ function GroupContent({ group, tab }: GroupContentProps) {
         showsAddPeopleButtons ? (
           <AddPeopleButtons
             onAddName={() => setIsAddingName(true)}
-            onShareLink={() => void inviteLinkActions.share(group.inviteToken)}
+            onShareLink={canInvite ? () => void inviteLinkActions.share(group.inviteToken, group.name) : null}
           />
         ) : null
       }
+      showsRecentlyDeletedLink={canChange}
     />
   )
   const balances = (
@@ -129,11 +131,11 @@ function GroupContent({ group, tab }: GroupContentProps) {
         <Link to={routes.groupSettings(group.id)} className={kvitChipLook}>
           {t('group.settings')}
         </Link>
-        {isOneBill && canInviteToGroup(group) && (
+        {isOneBill && canInvite && (
           <button
             type="button"
             className={kvitChipLook}
-            onClick={() => void inviteLinkActions.share(group.inviteToken)}
+            onClick={() => void inviteLinkActions.share(group.inviteToken, group.name)}
           >
             {t('group.shareLink')}
           </button>

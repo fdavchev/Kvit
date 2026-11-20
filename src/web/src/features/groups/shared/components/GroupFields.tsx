@@ -1,9 +1,11 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import { groupCurrencies } from '@/core/services/groups/groupsService'
 import { KvitChoiceChips } from '@/shared/components/KvitChoiceChips'
 import { KvitInlineError } from '@/shared/components/KvitInlineError'
 import { KvitTextField } from '@/shared/components/KvitTextField'
+import { KvitFormErrorIdContext } from '@/shared/components/kvitFormErrorId'
 import { currencyLabel, type Currency } from '@/shared/utils/formatMoney'
 import { groupEmojis } from '../groupEmojis'
 
@@ -31,22 +33,25 @@ export function GroupFields({
   const { t } = useTranslation()
   const { language } = useLanguage()
   const hasNameError = typeof nameInvalid === 'string'
+  const nameErrorId = useId()
   const currencyOptions = groupCurrencies.map((code) => ({ value: code, label: currencyLabel(code, language) }))
 
   return (
     <>
       <div className="flex flex-col gap-2">
-        <KvitTextField
-          id="group-name"
-          label={t('groupFields.name')}
-          value={name}
-          onChange={onNameChange}
-          placeholder={t('groupFields.namePlaceholder')}
-          autoComplete="off"
-          enterKeyHint="done"
-          invalid={hasNameError}
-        />
-        {hasNameError && <KvitInlineError message={nameInvalid} />}
+        <KvitFormErrorIdContext value={hasNameError ? nameErrorId : null}>
+          <KvitTextField
+            id="group-name"
+            label={t('groupFields.name')}
+            value={name}
+            onChange={onNameChange}
+            placeholder={t('groupFields.namePlaceholder')}
+            autoComplete="off"
+            enterKeyHint="done"
+            invalid={hasNameError}
+          />
+        </KvitFormErrorIdContext>
+        {hasNameError && <KvitInlineError id={nameErrorId} message={nameInvalid} />}
       </div>
       <KvitChoiceChips
         label={t('groupFields.emoji')}

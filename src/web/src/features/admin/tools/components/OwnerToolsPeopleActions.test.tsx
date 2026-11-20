@@ -134,6 +134,16 @@ describe.each(actionCases)('the $name sheet of the owner tools', (testCase) => {
   })
 
   describe('when it opens', () => {
+    const isRed = testCase.action === 'erase-name'
+
+    it(`gives the Confirm button the red danger look: ${String(isRed)}, because only erasing a name cannot be undone`, async () => {
+      const { sheet } = await openSheet(testCase)
+
+      const classes = confirmButtonIn(sheet).className.split(/\s+/)
+      expect(classes.includes('text-destructive')).toBe(isRed)
+      expect(classes.includes('border-negative')).toBe(isRed)
+    })
+
     it('is titled with the name of the person and explains what happens', async () => {
       const { sheet } = await openSheet(testCase)
 

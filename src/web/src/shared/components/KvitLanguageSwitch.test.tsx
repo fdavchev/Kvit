@@ -59,6 +59,14 @@ describe('KvitLanguageSwitch', () => {
     expect(buttonFor(language).classList.contains('transition-[scale]')).toBe(true)
   })
 
+  it.each(languages)('makes the %s button itself 44 px high, the size of the other tap targets', async (language) => {
+    await renderSwitch('en')
+
+    const classes = buttonFor(language).className.split(/\s+/)
+    expect(classes).toContain('h-11')
+    expect(classes.filter((name) => /^h-\[/.test(name))).toEqual([])
+  })
+
   it('does not change the language of the screen or the pressed button by itself', async () => {
     const { i18n } = await renderSwitch('en')
 

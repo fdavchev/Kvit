@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { cn } from '@/shared/utils/cn'
+import { hasPictureFailed, rememberFailedPicture } from './failedPictureUrls'
 
 type KvitAvatarSize = 'small' | 'large' | 'fill'
 
@@ -39,7 +40,12 @@ export function KvitAvatar({ name, pictureUrl, colorIndex, size = 'small' }: Kvi
     sizeLooks[size],
   )
 
-  if (pictureUrl !== null && pictureUrl !== failedPictureUrl) {
+  function showFallback(failedUrl: string): void {
+    rememberFailedPicture(failedUrl)
+    setFailedPictureUrl(failedUrl)
+  }
+
+  if (pictureUrl !== null && pictureUrl !== failedPictureUrl && !hasPictureFailed(pictureUrl)) {
     return (
       <span aria-hidden="true" className={look}>
         <img
@@ -47,7 +53,7 @@ export function KvitAvatar({ name, pictureUrl, colorIndex, size = 'small' }: Kvi
           alt=""
           referrerPolicy="no-referrer"
           className="size-full object-cover"
-          onError={() => setFailedPictureUrl(pictureUrl)}
+          onError={() => showFallback(pictureUrl)}
         />
       </span>
     )

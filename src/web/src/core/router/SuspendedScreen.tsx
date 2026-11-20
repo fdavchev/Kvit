@@ -1,23 +1,30 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { errorMessageKey } from '@/core/api/errors'
 import { TextWithEmailLinks } from '@/features/legal/components/TextWithEmailLinks'
-import { useLogOut } from '@/features/settings/hooks/useLogOut'
+import { UnsentChangesLogOutSheet } from '@/features/settings/components/UnsentChangesLogOutSheet'
+import { useLogOutAndForgetCountedChanges } from '@/features/settings/hooks/useLogOutAndForgetCountedChanges'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 
 export function SuspendedScreen() {
   const { t } = useTranslation()
-  const logOut = useLogOut()
+  const logOut = useLogOutAndForgetCountedChanges(showFailure)
+  const [isUnsentWarningOpen, setIsUnsentWarningOpen] = useState<boolean>(false)
 
-  function logOutNow(): void {
-    logOut.mutate(undefined, {
-      onError: (error) => {
-        console.error('Logging out from the suspended screen failed', error)
-        toast.error(t(errorMessageKey(error)))
-      },
-    })
+  function showFailure(error: Error): void {
+    console.error('Logging out from the suspended screen failed', error)
+    toast.error(t(errorMessageKey(error)))
+  }
+
+  function pressLogOut(): void {
+    if (logOut.unsentCount > 0) {
+      setIsUnsentWarningOpen(true)
+      return
+    }
+    logOut.logOutNow()
   }
 
   return (
@@ -27,10 +34,18 @@ export function SuspendedScreen() {
         <TextWithEmailLinks text={t('suspended.body')} />
       </p>
       <div className="flex flex-col pt-8">
-        <KvitButton variant="secondary" disabled={logOut.isPending} onClick={logOutNow}>
+        <KvitButton variant="secondary" disabled={logOut.isLoggingOut} onClick={pressLogOut}>
           {t('settings.logOut')}
         </KvitButton>
       </div>
+      {isUnsentWarningOpen && (
+        <UnsentChangesLogOutSheet
+          unsentCount={logOut.unsentCount}
+          isLoggingOut={logOut.isLoggingOut}
+          onLogOut={logOut.logOutNow}
+          onClose={() => setIsUnsentWarningOpen(false)}
+        />
+      )}
     </KvitScreen>
   )
 }

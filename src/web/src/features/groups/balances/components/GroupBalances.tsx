@@ -50,6 +50,7 @@ export function GroupBalances({ groupId, defaultCurrency, canChangePayments }: G
       defaultCurrency={defaultCurrency}
       timeZone={me.timeZone}
       canChangePayments={canChangePayments}
+      arePaymentsRefreshing={settlementsQuery.isFetching}
     />
   )
 }

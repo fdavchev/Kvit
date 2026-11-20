@@ -1,13 +1,14 @@
 # Status: Kvit
 
-_Last updated: 2026-11-20 (Fix 20 merged as PR #24; on `fix/21-small-bugs` Steps 0 to 5 and 8 are committed; the wake fixes (manifest, calm wait) are done and wait for Filip's commit; Steps 6, 7, 9 and 10 are next; Filip's live check of Fix 20 is partly done)_
+_Last updated: 2026-11-20 (on `fix/21-small-bugs` Steps 0 to 6 and 8 and the wake fixes are committed; Claude works through Steps 7, 9 and 10 while Filip is away, committing locally without pushing; Filip's live check of Fix 20 is partly done)_
 
 ## Where we stopped
 - Branch: `fix/21-small-bugs` (made from `main` = `25c4a3d`, the Fix 20 merge). Step 1 is commit `d523031`, pushed. Step 2 is commit `d7ddc66`. Step 3 (the lightest peach light theme, contrast leftovers, Home totals) is commit `6801b09`, pushed. Step 4 (toasts, sheets, focus) is committed locally by Claude on 2026-11-16 while Filip was away (his instruction: "you commit, don't push"); Step 8 (same-moment problems, migration `SameMomentSafety`) is committed locally by Claude on 2026-11-19 on Filip's earlier "you commit, don't push". Filip pushes both and ticks Steps 4 and 8 in the PR description. To continue in a new session from any step: paste `docs/guides/fix-21-continue-prompt.md`.
 - The plan: `ROADMAP.md`, "Fix 21: empty the backlog" (Steps 0 to 10, then Release 4 for new features). Decisions: `DECISIONS.md`, "2026-11-14: Fix 21". Commit and PR texts: `docs/guides/fix-21-pr-text.md`. The prompt that started it: `docs/guides/fix-21-small-bugs-prompt.md`.
+- Step 6 is committed locally by Claude on 2026-11-20 (Filip: "you commit everything, just don't push"): website behaviour bugs, two coder runs (DECISIONS "Step 6"; four choices for Filip to confirm in BACKLOG "Fix 21 Step 6 leftovers" (f)). Screenshots: `docs/design/2026-11-20-fix-21-step-6/`.
 - Step 0 is done (2026-11-19): every already-built BACKLOG item found is ticked; the three JavaScript-size lines are one item for Step 9.
 - Step 5 is done and committed by Filip (`db810d8`): texts and the privacy notice version 2026-11-19 (DECISIONS "Step 5"). The Macedonian to read: `docs/guides/fix-21-macedonian-to-read.md`. Screenshots: `docs/design/2026-11-19-fix-21-step-5/`.
-- Wake fixes are done (2026-11-20), not committed: a web app manifest so the installed app opens "/" and wakes the server by itself, and a calm 2-minute wait after the trip (DECISIONS "Wake fixes"). Filip commits with the last subject in `docs/guides/fix-21-pr-text.md`. Screenshots: `docs/design/2026-11-20-fix-21-wake-calm/`. Hosting research (stay on Render): `docs/reports/2026-11-19-free-hosting-research.md`.
+- Wake fixes are committed and pushed (`29207a9`): a web app manifest so the installed app opens "/" and wakes the server by itself, and a calm 2-minute wait after the trip (DECISIONS "Wake fixes"). Screenshots: `docs/design/2026-11-20-fix-21-wake-calm/`. Hosting research (stay on Render): `docs/reports/2026-11-19-free-hosting-research.md`.
 
 ## Next step
 Filip:
@@ -17,12 +18,12 @@ Filip:
    - Leave a Kvit tab open for 20 minutes, then tap something. Expected: a bar "The server is asleep. · Wake the server" at the top; the button does the same trip.
    - Add an expense while the bar shows. Expected: it shows as waiting and is sent after the trip.
    - In the Render log after the first signed-in visit: a line "The daily cleanup of … finished".
-2. Commit the wake fixes (subject: last line of `docs/guides/fix-21-pr-text.md`), push, and tick "Wake fixes" in the PR description. Once it is live: delete the Kvit icon from the phone's home screen and add it again from Chrome (menu → Add to Home screen / Install app), then open it signed in after 20 minutes away.
+2. Push the local commits (Step 6 onwards) and tick the steps in the PR description. Once the branch is live: delete the Kvit icon from the phone's home screen and add it again from Chrome (menu → Add to Home screen / Install app), then open it signed in after 20 minutes away.
 2b. Read `docs/guides/fix-21-macedonian-to-read.md` and send the row numbers that read wrong.
 3. Delete `Cleanup__Secret` on Render and `CLEANUP_SECRET` on GitHub (no longer used).
 4. Still open from Phase 19 (`docs/guides/phase-19-legal.md`): run the **Backup** workflow once, the practice restore, **Private vulnerability reporting** on GitHub (checked 2026-11-14: off), and Part E.
 
-Claude: Steps 0 and 5 are committed; the wake fixes are done (2026-11-20, uncommitted). Next Steps 6, 7 and 9 (each: read the code, propose, Filip's go before the coder), then Step 10 (its browser pass also covers Step 8, never run in a browser). Coder runs go on Opus 5.5 without browser measuring, the tester on Sonnet measures once at the end (Filip, 2026-11-15 and 2026-11-19; the Fable allowance is used up).
+Claude: Step 6 is committed (2026-11-20). Next Steps 7 and 9 (each: read the code, propose, Filip's go before the coder), then Step 10 (its browser pass also covers Step 8, never run in a browser). Coder runs go on Opus 5.5 without browser measuring, the tester on Sonnet measures once at the end (Filip, 2026-11-15 and 2026-11-19; the Fable allowance is used up).
 
 ## Blockers and open questions
 - Not known until the live check: whether every person passes Render's robot check without a tap, how an installed home-screen Kvit and iOS Safari behave on the trip, and whether Render changes this again.
@@ -52,6 +53,9 @@ On `fix/21-small-bugs` (working folder, 2026-11-14, after Step 1):
 - Wake fixes, VERIFIED by automated test (tester, `start-local.ps1 -Check` after the last code change, 2026-11-20): build 0 warnings; backend 7533/7533; lint 0 warnings; type check 0 errors; frontend 16208/16208. The new tests fail with the change taken out (coder).
 - Wake fixes, VERIFIED by live run (headless Chromium, 360 px, English, light, local stack, asleep server faked with a 503): the manifest is served as `application/manifest+json` with `start_url "/"`, all four icons load; "/" signed in shows Home, signed out goes to /welcome; asleep at "/" makes exactly one trip with `returnTo=/`; after the trip no bar and no "Try again", Waking up shows, `/api/me` repeats every 1 to 4 s and Home loads about 1 s after the server answers; when the 2 minutes end still asleep, the bar and "Try again" show with no new trip; no sideways scroll.
 - Wake fixes, NOT VERIFIED: a real phone, "Add to Home screen" offering the manifest, the live Cloudflare and Render, Macedonian, dark theme.
+- Step 6, VERIFIED by automated test (tester, `start-local.ps1 -Check` after the last code change, 2026-11-20): build 0 warnings; backend 7533/7533; lint 0 warnings; type check 0 errors; frontend 16356/16356. 108 new or changed tests of part 2 fail on the part-1 code (coder's scratch copy); part 1's waiting-row tests fail on the old code.
+- Step 6, VERIFIED by live run (headless Chromium, 360 and 1280 px, English, light, local stack): One bill duplicate wording; a Closing group for owner and member (badge, no Recently deleted / Share for the member, the closing note on Edit); the only other person pre-selected; a non-GUID expense address sends no request; a dead invite link sends one 404 and stops; `/admin` and `/admin/tools` identical to an unknown address for a non-admin; Settings buttons 44 px, language at once with one save, one budget-currency save after four arrow keys; Google iframe title follows the language (blank for about 0.3 s); a dialog's buttons stay clear of toasts at 360x360 (mocked answers); the desktop menu lists groups on a direct group load; no sideways scroll on 67 loads.
+- Step 6, NOT VERIFIED: a Finished group in a browser, dark theme, most screens in Macedonian, a real phone, the live API sending every strict field (read from the backend code).
 - NOT VERIFIED: that each Step 1 test fails without its fix (not tried; done for Step 2); Macedonian, dark mode and widths other than 360 px for the Step 1 screens; a real Google sign-in through the new redirect; a real phone; anything on the live site.
 
 On `main` = `25c4a3d` (2026-11-14):

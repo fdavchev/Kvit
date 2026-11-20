@@ -1,7 +1,8 @@
-import { screen, waitFor } from '@testing-library/react'
+import { cleanup, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
 import { stubGoogleSignIn } from '@/test/googleTestHelpers'
+import { stubDesktopScreen } from '@/test/matchMediaTestHelpers'
 import { findToolsTitle, renderOwnerTools, toolsRequests } from '@/test/ownerToolsTestHelpers'
 import { neverAnswer, problemAnswer } from '@/test/requestTestHelpers'
 import { seedMe, testAdminMe, testGuestMe, testMe } from '@/test/testMe'
@@ -67,6 +68,23 @@ describe('the owner tools route followed through the real route table', () => {
     expect(router.state.historyAction).toBe('POP')
     expect(screen.queryByRole('heading', { name: translated('en', 'ownerTools.title') })).toBeNull()
     expect(toolsRequests(fetchMock)).toEqual([])
+  })
+
+  it.each(['phone', 'desktop'] as const)('shows a non-admin the same not-found page as any other unknown address, with no bottom bar and no left menu (%s)', async (screenSize) => {
+    if (screenSize === 'desktop') {
+      stubDesktopScreen()
+    }
+    await renderOwnerTools({ me: testMe })
+    await screen.findByRole('heading', { name: translated('en', 'notFound.title') })
+    const pageAtAdminAddress = document.body.innerHTML
+    cleanup()
+
+    await renderOwnerTools({ me: testMe, path: '/no-such-page' })
+    await screen.findByRole('heading', { name: translated('en', 'notFound.title') })
+
+    expect(screen.queryByRole('navigation')).toBeNull()
+    expect(document.querySelector('[data-bottom-bar]')).toBeNull()
+    expect(pageAtAdminAddress).toBe(document.body.innerHTML)
   })
 
   it('shows not-found at once, with no Owner tools screen first, when me is already known to be a non-admin', async () => {

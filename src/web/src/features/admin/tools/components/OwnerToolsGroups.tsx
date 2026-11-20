@@ -73,6 +73,7 @@ export function OwnerToolsGroups() {
           doneMessage={t(`ownerTools.done.${openAction.kind}`)}
           targetId={openAction.group.id}
           action={actions[openAction.kind]}
+          cannotBeUndone={false}
           onClose={() => setOpenAction(null)}
         />
       )}

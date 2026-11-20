@@ -71,6 +71,25 @@ describe('KvitAvatar', () => {
       expect(colorIndexOf(container)).toBe('4')
     })
 
+    it('shows the initial straight away, without asking for the picture again, on another avatar with a picture that failed before', () => {
+      const first = render(<KvitAvatar name="Filip" pictureUrl={pictureUrl} colorIndex={4} />)
+      fireEvent.error(pictureOf(first.container))
+
+      const second = render(<KvitAvatar name="Filip" pictureUrl={pictureUrl} colorIndex={4} />)
+
+      expect(second.container.querySelector('img')).toBeNull()
+      expect(second.container.textContent).toBe('F')
+    })
+
+    it('still asks for another picture after one picture failed', () => {
+      const first = render(<KvitAvatar name="Filip" pictureUrl={pictureUrl} colorIndex={4} />)
+      fireEvent.error(pictureOf(first.container))
+
+      const second = render(<KvitAvatar name="Ana" pictureUrl={`${pictureUrl}-ana`} colorIndex={1} />)
+
+      expect(pictureOf(second.container).getAttribute('src')).toBe(`${pictureUrl}-ana`)
+    })
+
     it('keeps showing the picture when it loads fine', () => {
       const { container } = render(
         <KvitAvatar name="Filip" pictureUrl={pictureUrl} colorIndex={0} />,

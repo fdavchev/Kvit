@@ -10,6 +10,7 @@ interface AmountFieldProps {
   currency: Currency
   onAmountTextChange: (amountText: string) => void
   onCurrencyChange?: (currency: Currency) => void
+  isCurrencyShownByChips?: boolean
   invalid?: boolean
   invalidMessage?: string
 }
@@ -34,6 +35,7 @@ export function AmountField({
   currency,
   onAmountTextChange,
   onCurrencyChange,
+  isCurrencyShownByChips = false,
   invalid = false,
   invalidMessage,
 }: AmountFieldProps) {
@@ -69,7 +71,9 @@ export function AmountField({
           )}
         />
         {onCurrencyChange === undefined ? (
-          <span className="flex-none px-1 text-lg font-bold text-muted-foreground">{shownCurrency}</span>
+          !isCurrencyShownByChips && (
+            <span className="flex-none px-1 text-lg font-bold text-muted-foreground">{shownCurrency}</span>
+          )
         ) : (
           <button
             type="button"

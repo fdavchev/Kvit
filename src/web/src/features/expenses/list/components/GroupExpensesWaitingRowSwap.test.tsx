@@ -85,7 +85,7 @@ async function renderExpensesWithOneWaitingExpense() {
         createdSender = sender
       }}
     >
-      <GroupExpenses groupId={testGroupId} actionsWhenEmpty={null} />
+      <GroupExpenses groupId={testGroupId} actionsWhenEmpty={null} showsRecentlyDeletedLink />
     </WithSlowRefreshSender>,
     '/expenses',
     { seedCache: seedMe(testMe) },

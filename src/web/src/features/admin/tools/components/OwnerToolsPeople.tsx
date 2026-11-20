@@ -92,6 +92,7 @@ export function OwnerToolsPeople() {
           doneMessage={t(`ownerTools.done.${openAction.kind}`, { name: openAction.person.displayName })}
           targetId={openAction.person.id}
           action={actions[openAction.kind]}
+          cannotBeUndone={openAction.kind === 'eraseName'}
           onClose={() => setOpenAction(null)}
         />
       )}

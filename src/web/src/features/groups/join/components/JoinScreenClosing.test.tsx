@@ -140,3 +140,47 @@ describe('JoinScreen when the group is being closed or is finished', () => {
     expect(requestCount(fetchMock, 'POST', endpoints.inviteJoin)).toBe(1)
   })
 })
+
+describe('JoinScreen when the invite link stopped working after the screen opened', () => {
+  async function renderDeadLinkJoin(language: Language = 'en') {
+    stubGoogleSignIn()
+    const fetchMock = stubFetchByRequest({
+      [previewRequest]: jsonAnswer(openInvitePreview),
+      [joinRequest]: problemAnswer(404, 'INVITE_NOT_FOUND'),
+    })
+    await renderRoutesWithProviders(
+      [
+        { path: routes.join(':token'), element: <JoinScreen /> },
+        { path: routes.dashboard, element: <p>home page</p> },
+      ],
+      routes.join(testInviteToken),
+      { language, seedCache: seedMe({ ...testMe, language }) },
+    )
+    await screen.findByText(translated(language, 'join.invitedTo', { name: testInviteGroupName }))
+    return fetchMock
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it.each(languages)('shows the dead-link message with a Home link and no Join button any more (%s)', async (language) => {
+    await renderDeadLinkJoin(language)
+
+    await pressJoin(language)
+
+    expect((await screen.findByRole('alert')).textContent).toContain(translated(language, 'errors.INVITE_NOT_FOUND'))
+    expect(screen.getByRole('link', { name: translated(language, 'nav.home') })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: translated(language, 'join.join') })).toBeNull()
+  })
+
+  it('sends the join request only once, because Join cannot be pressed again', async () => {
+    const fetchMock = await renderDeadLinkJoin()
+
+    await pressJoin('en')
+    await screen.findByRole('alert')
+
+    expect(requestCount(fetchMock, 'POST', endpoints.inviteJoin)).toBe(1)
+  })
+})

@@ -632,6 +632,22 @@ describe('MembersScreen', () => {
         )
       })
 
+      it.each(languages)('sends the name of the group as the title and a short invitation with that name as the text (%s)', async (language) => {
+        const share = stubShare(async () => {})
+        await renderMembers({ language })
+        await showsMembers(language)
+
+        fireEvent.click(shareButton(language))
+
+        await waitFor(() => {
+          expect(share).toHaveBeenCalledWith({
+            title: ownerGroup.name,
+            text: translated(language, 'group.shareText', { name: ownerGroup.name }),
+            url: inviteUrl(testInviteToken),
+          })
+        })
+      })
+
       it('uses the invite token of the group that is open', async () => {
         const share = stubShare(async () => {})
         await renderMembers({ group: groupOf({ memberCount: 5, inviteToken: 'another-token_42' }) })

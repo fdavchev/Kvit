@@ -45,6 +45,7 @@ export interface BetweenOthersView {
   currency: Currency
   isWaiting: boolean
   canMarkPaid: boolean
+  cancellableSettlementId: string | null
 }
 
 export interface ConfirmedPaymentView {
@@ -167,6 +168,14 @@ export function balancesView(
       .filter((payment) => payment.fromMemberId !== me.id && payment.toMemberId !== me.id)
       .map((payment): BetweenOthersView => {
         const isWaiting: boolean = pendingPairs.has(pairKey(payment.fromMemberId, payment.toMemberId, entry.currency))
+        const cancellable = me.isOwner && isNameOnly(payment.fromMemberId)
+          ? pending.find(
+              (settlement) =>
+                settlement.fromMemberId === payment.fromMemberId &&
+                settlement.toMemberId === payment.toMemberId &&
+                settlement.currency === entry.currency,
+            )
+          : undefined
         return {
           key: `${entry.currency}-${payment.fromMemberId}-${payment.toMemberId}`,
           payer: personOf(people, payment.fromMemberId),
@@ -176,6 +185,7 @@ export function balancesView(
           isWaiting,
           canMarkPaid:
             me.isOwner && !isWaiting && (isNameOnly(payment.fromMemberId) || isNameOnly(payment.toMemberId)),
+          cancellableSettlementId: cancellable?.id ?? null,
         }
       }),
   )

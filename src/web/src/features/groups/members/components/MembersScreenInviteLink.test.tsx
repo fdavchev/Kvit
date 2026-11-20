@@ -44,6 +44,10 @@ function inviteButtons(language: Language = 'en'): { share: number; copy: number
   return { share: count('members.invite.share'), copy: count('members.invite.copy') }
 }
 
+function shownInviteLink(group: Group): string {
+  return `${window.location.host}${routes.join(group.inviteToken)}`
+}
+
 const noInviteButtons = { share: 0, copy: 0 }
 const bothInviteButtons = { share: 1, copy: 1 }
 
@@ -89,6 +93,36 @@ describe('the invite link on the Members screen', () => {
     for (const member of ownerViewMembers.members) {
       expect(screen.getByText(member.displayName)).toBeTruthy()
     }
+  })
+
+  it.each([
+    ['the owner of an open group', openOwnerGroup, ownerViewMembers],
+    ['a member of an open group', openMemberGroup, anaViewMembers],
+  ])('shows the text of the invite link to %s', async (_name, group, members) => {
+    await renderMembers(group, members)
+
+    expect(screen.getByText(shownInviteLink(group))).toBeTruthy()
+  })
+
+  it.each([
+    ['the owner of a group that is being closed', closingGroup, ownerViewMembers],
+    ['a member of a group that is being closed', asMemberOf(closingGroup), anaViewMembers],
+    ['the owner of a finished group', finishedGroup, ownerViewMembers],
+    ['a member of a finished group', asMemberOf(finishedGroup), anaViewMembers],
+  ])('hides the text of the invite link from %s, because nobody can join with it', async (_name, group, members) => {
+    await renderMembers(group, members)
+
+    expect(screen.queryByText(shownInviteLink(group))).toBeNull()
+  })
+
+  it.each([
+    ['a member of a group that is being closed', asMemberOf(closingGroup), anaViewMembers],
+    ['the owner of a finished group', finishedGroup, ownerViewMembers],
+    ['a member of a finished group', asMemberOf(finishedGroup), anaViewMembers],
+  ])('hides the whole Invite link card from %s, who can neither share nor reset it', async (_name, group, members) => {
+    await renderMembers(group, members)
+
+    expect(screen.queryByRole('heading', { name: translated('en', 'members.invite.title') })).toBeNull()
   })
 
   it('keeps Reset link for the owner of a group that is being closed, because the server allows it', async () => {

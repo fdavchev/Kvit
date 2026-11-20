@@ -103,6 +103,18 @@ describe('the Payments list with changes waiting in the outbox', () => {
       expect(waitingRowText(row)).toContain(outboxText(language, 'outbox.notSynced'))
     })
 
+    it('is not shown once the server saved it and the payments have been loaded, so it never sits beside its real row', async () => {
+      const savedPayment: OutboxItem = {
+        ...queuedSettlement('saved', { display: { payerName: 'Petar', receiverName: 'Filip', amountMinor: 30000, currency: 'MKD' } }),
+        isSaved: true,
+      }
+      await renderPayments({ waiting: [anaPaysFilip('waiting'), savedPayment] })
+
+      await findWaitingRowWith(fromPaidTo('Ana', 'Filip'))
+
+      expect(waitingRowTexts().filter((text) => text.includes(fromPaidTo('Petar', 'Filip')))).toEqual([])
+    })
+
     it('is shown while it is being sent', async () => {
       const { outboxSender } = await renderPayments()
 

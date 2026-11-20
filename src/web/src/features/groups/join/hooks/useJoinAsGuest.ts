@@ -52,7 +52,6 @@ export function useJoinAsGuest(
         return
       }
       if (hasErrorCode(error, 'GUEST_JOIN_SIGNED_IN')) {
-        console.error('This browser is already signed in, so no guest was made', error)
         toast.error(t(errorMessageKey(error)))
         void queryClient.invalidateQueries({ queryKey: meQueryKey })
         void queryClient.invalidateQueries({ queryKey: invitePreviewQueryKey(token) })

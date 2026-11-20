@@ -1,4 +1,4 @@
-import { apiRequest, jsonRequest } from '@/core/api/apiClient'
+import { ApiError, apiRequest, jsonRequest, notFoundStatus } from '@/core/api/apiClient'
 import { endpoints } from '@/core/api/endpoints'
 import { groupCurrencies } from '@/core/services/groups/groupsService'
 import {
@@ -16,6 +16,7 @@ import {
   type Fields,
 } from '@/core/services/readFields'
 import type { Currency } from '@/shared/utils/formatMoney'
+import { isGuid } from '@/shared/utils/isGuid'
 
 export const splitTypes = ['Equal', 'Exact', 'Percentage', 'Shares'] as const
 const historyEntryTypes = ['ExpenseAdded', 'ExpenseEdited', 'ExpenseDeleted', 'ExpenseRestored'] as const
@@ -145,6 +146,12 @@ export async function getExpenses(groupId: string): Promise<ExpenseListRow[]> {
 }
 
 export async function getExpense(groupId: string, expenseId: string): Promise<ExpenseDetail> {
+  if (!isGuid(expenseId)) {
+    throw new ApiError(`The expense id "${expenseId}" is not a GUID, so no expense has it and the server is not asked`, {
+      httpStatus: notFoundStatus,
+      errorCode: 'EXPENSE_NOT_FOUND',
+    })
+  }
   return parseExpenseDetail(await apiRequest(endpoints.groupExpense(groupId, expenseId)))
 }
 

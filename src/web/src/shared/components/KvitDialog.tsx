@@ -1,6 +1,7 @@
 import { Dialog } from '@base-ui/react/dialog'
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode, type RefObject } from 'react'
 import { kvitGlassPanelLook } from '@/shared/components/kvitGlassLooks'
+import { useToastsAboveDialog } from '@/shared/hooks/useToastsAboveElement'
 import { cn } from '@/shared/utils/cn'
 
 interface KvitDialogProps {
@@ -10,6 +11,8 @@ interface KvitDialogProps {
 }
 
 export function KvitDialog({ title, children, onClose }: KvitDialogProps) {
+  const popupRef = useRef<HTMLDivElement>(null)
+
   return (
     <Dialog.Root
       open
@@ -22,12 +25,28 @@ export function KvitDialog({ title, children, onClose }: KvitDialogProps) {
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/50" />
         <Dialog.Viewport className="fixed inset-0 z-50 grid place-items-center p-6">
-          <Dialog.Popup className={cn('flex w-full max-w-sm flex-col gap-3 rounded-[20px] p-6', kvitGlassPanelLook)}>
-            <Dialog.Title className="text-xl leading-tight font-bold">{title}</Dialog.Title>
+          <KvitDialogPopup popupRef={popupRef} title={title}>
             {children}
-          </Dialog.Popup>
+          </KvitDialogPopup>
         </Dialog.Viewport>
       </Dialog.Portal>
     </Dialog.Root>
+  )
+}
+
+interface KvitDialogPopupProps {
+  popupRef: RefObject<HTMLDivElement | null>
+  title: string
+  children: ReactNode
+}
+
+function KvitDialogPopup({ popupRef, title, children }: KvitDialogPopupProps) {
+  useToastsAboveDialog(popupRef)
+
+  return (
+    <Dialog.Popup ref={popupRef} className={cn('flex w-full max-w-sm flex-col gap-3 rounded-[20px] p-6', kvitGlassPanelLook)}>
+      <Dialog.Title className="text-xl leading-tight font-bold">{title}</Dialog.Title>
+      {children}
+    </Dialog.Popup>
   )
 }

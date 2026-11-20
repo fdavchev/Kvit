@@ -29,9 +29,9 @@ import { NotFoundScreen } from '@/features/notFound/components/NotFoundScreen'
 import { PrivacyScreen } from '@/features/privacy/components/PrivacyScreen'
 import { SettingsScreen } from '@/features/settings/components/SettingsScreen'
 import { TermsScreen } from '@/features/terms/components/TermsScreen'
+import { adminOnlyHandle } from './adminOnlyRoutes'
 import { BottomBarLayout } from './BottomBarLayout'
 import { RequireAccount } from './RequireAccount'
-import { RequireAdmin } from './RequireAdmin'
 import { RequireAuth } from './RequireAuth'
 import { RequireSignedOut } from './RequireSignedOut'
 import { RouteError } from './RouteError'
@@ -76,7 +76,7 @@ export const routeObjects: RouteObject[] = [
               },
               { path: routes.settings, element: <SettingsScreen /> },
               {
-                element: <RequireAdmin />,
+                handle: adminOnlyHandle,
                 children: [
                   { path: routes.admin, element: <AdminStatsScreen /> },
                   { path: routes.adminTools, element: <OwnerToolsScreen /> },

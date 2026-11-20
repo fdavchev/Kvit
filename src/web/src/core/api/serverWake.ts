@@ -4,6 +4,7 @@ export const serverAsleepHeader = 'x-kvit-server-asleep'
 export const wakeUrlHeader = 'x-kvit-wake-url'
 export const lastWakeVisitKey = 'kvit.lastWakeVisitAt'
 export const automaticWakeRepeatGuardMilliseconds = 2 * 60 * 1000
+export const retryWhileServerWakesMilliseconds = 3000
 
 const returnToParameter = 'returnTo'
 const firstServerErrorStatus = 500

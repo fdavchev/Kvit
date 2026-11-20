@@ -512,6 +512,7 @@
     "nameLabel": "name",
     "removeName": "Remove {{name}}",
     "ownName": "You're already in this bill.",
+    "nameTaken": "Someone called “{{name}}” is already in this bill.",
     "save": "Save bill",
     "titleTooLong": "The title can have up to 60 characters.",
     "groupName": "Bill · {{date}}"
@@ -521,6 +522,7 @@
     "addPeopleHasKvit": "Have Kvit? Share the link and they join with their own account.",
     "addName": "Add a name",
     "shareLink": "Share invite link",
+    "shareText": "Join “{{name}}” on Kvit.",
     "linkCopied": "Link copied",
     "settings": "Group settings",
     "closedByAdmin": "🔒 Closed by the owner of Kvit · read-only"

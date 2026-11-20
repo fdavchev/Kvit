@@ -5,9 +5,11 @@ import { useIsWaitingAfterWakeVisit } from '@/core/api/useIsWaitingAfterWakeVisi
 import { useMe } from '@/core/auth/useMe'
 import { useRecordActive } from '@/features/home/hooks/useRecordActive'
 import { TermsNotice } from '@/features/legal/components/TermsNotice'
-import { SignedInOutbox } from '@/features/outbox/components/SignedInOutbox'
+import { NotFoundScreen } from '@/features/notFound/components/NotFoundScreen'
+import { PausedOutbox, SignedInOutbox } from '@/features/outbox/components/SignedInOutbox'
 import { KvitError } from '@/shared/components/KvitError'
 import { KvitScreen } from '@/shared/components/KvitScreen'
+import { useIsAdminOnlyAddress } from './adminOnlyRoutes'
 import { DesktopRailLayout } from './DesktopRailLayout'
 import { routes } from './routes'
 import { SuspendedScreen } from './SuspendedScreen'
@@ -18,6 +20,7 @@ export function RequireAuth() {
   const location = useLocation()
   const meQuery = useMe()
   const isWaitingAfterWakeVisit = useIsWaitingAfterWakeVisit()
+  const isAdminOnlyAddress = useIsAdminOnlyAddress()
 
   const me = meQuery.data
   if (me === undefined) {
@@ -37,13 +40,20 @@ export function RequireAuth() {
     return <Navigate to={routes.welcome} replace />
   }
   if (me.isSuspended) {
-    return <SuspendedScreen />
+    return (
+      <PausedOutbox>
+        <SuspendedScreen />
+      </PausedOutbox>
+    )
   }
   if (me.mustChangePassword && location.pathname !== routes.changePassword) {
     return <Navigate to={routes.changePassword} replace />
   }
   if (me.mustChangePassword) {
     return <Outlet />
+  }
+  if (isAdminOnlyAddress && !me.isAdmin) {
+    return <NotFoundScreen />
   }
   return <SignedInOutlet />
 }

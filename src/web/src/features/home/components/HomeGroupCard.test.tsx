@@ -1,9 +1,10 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import type { Language } from '@/core/i18n/language'
 import type { DashboardGroup } from '@/core/services/dashboard/dashboardService'
 import { formatSignedMoney } from '@/shared/utils/formatSignedMoney'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
+import { translated } from '@/test/translated'
 import { HomeGroupCard } from './HomeGroupCard'
 
 type Balance = DashboardGroup['balances'][number]
@@ -76,5 +77,35 @@ describe('the balance on a group card of Home', () => {
     for (const amount of amounts) {
       expect(Array.from(amount.classList)).toContain('break-words')
     }
+  })
+})
+
+describe('the status of a group card on Home', () => {
+  it.each<[Language, string]>([
+    ['en', translated('en', 'closing.badgeClosing')],
+    ['mk', translated('mk', 'closing.badgeClosing')],
+  ])('shows the Closing badge on a group that is being closed (%s)', async (language, badge) => {
+    await renderElementWithProviders(
+      <ul>
+        <HomeGroupCard group={{ ...groupWith([]), status: 'Closing' }} />
+      </ul>,
+      '/home',
+      { language },
+    )
+
+    expect(within(screen.getByRole('link')).getByText(badge)).toBeTruthy()
+  })
+
+  it('shows no status badge on an open group', async () => {
+    await renderElementWithProviders(
+      <ul>
+        <HomeGroupCard group={groupWith([])} />
+      </ul>,
+      '/home',
+      { language: 'en' },
+    )
+
+    expect(screen.queryByText(translated('en', 'closing.badgeClosing'))).toBeNull()
+    expect(screen.queryByText(translated('en', 'closing.badgeFinished'))).toBeNull()
   })
 })

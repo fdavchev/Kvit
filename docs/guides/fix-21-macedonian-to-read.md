@@ -101,3 +101,9 @@ The five currency errors (expense, group, personal entry, repeating income, paym
 | 74 | Left this month | Остануваат овој месец |
 | 75 | Income | Приход |
 | 76 | Spent | Потрошено |
+
+## 5. New in Fix 21 Step 6 (2026-11-20)
+| # | English | Macedonian |
+|---|---|---|
+| 77 | Someone called “Marko” is already in this bill. | Некој по име „Marko“ е веќе во сметката. |
+| 78 | Join “Trip” on Kvit. (the text sent with the invite link) | Придружи се на групата „Trip“ во Kvit. |

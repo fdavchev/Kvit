@@ -933,6 +933,22 @@ describe('GroupScreen', () => {
       expect(share).toHaveBeenCalledWith(expect.objectContaining({ url: inviteUrl }))
     })
 
+    it.each(languages)('sends the name of the group as the title and a short invitation with that name as the text (%s)', async (language) => {
+      const share = stubShare(async () => {})
+      await renderGroup({ language })
+      await showsAddPeopleButtons(language)
+
+      fireEvent.click(screen.getByRole('button', { name: translated(language, 'group.shareLink') }))
+
+      await waitFor(() => {
+        expect(share).toHaveBeenCalledWith({
+          title: testGroup.name,
+          text: translated(language, 'group.shareText', { name: testGroup.name }),
+          url: inviteUrl,
+        })
+      })
+    })
+
     it('uses the invite token of the group that is open', async () => {
       const share = stubShare(async () => {})
       await renderGroup({ group: groupOf({ inviteToken: 'another-token_42' }) })

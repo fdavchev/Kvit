@@ -13,6 +13,7 @@ import { kvitIconAttributes } from '@/shared/components/kvitIconAttributes'
 import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { claimFailureMessageKey } from '../../shared/claimFailureMessageKey'
 import { useJoinAsGuest } from '../hooks/useJoinAsGuest'
+import { isJoinDeadEnd } from '../joinDeadEnd'
 import { JoinLogInSheet } from './JoinLogInSheet'
 import { JoinMessage } from './JoinMessage'
 
@@ -37,7 +38,7 @@ export function SignedOutJoin({ token, preview, onGoogleCredential }: SignedOutJ
   const [isLogInOpen, setIsLogInOpen] = useState<boolean>(false)
   const { error, variables, isPending } = joinAsGuest
 
-  if (hasErrorCode(error, 'GROUP_CLOSING') || hasErrorCode(error, 'GROUP_FINISHED')) {
+  if (error !== null && isJoinDeadEnd(error)) {
     return <JoinMessage message={t(errorMessageKey(error))} />
   }
 

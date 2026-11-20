@@ -1,8 +1,7 @@
 import { useQueryClient, type Query } from '@tanstack/react-query'
 import { useEffect } from 'react'
+import { retryWhileServerWakesMilliseconds } from '@/core/api/serverWake'
 import { useIsWaitingAfterWakeVisit } from '@/core/api/useIsWaitingAfterWakeVisit'
-
-const retryWhileServerWakesMilliseconds = 3000
 
 export function RetryWhileServerWakes(): null {
   const queryClient = useQueryClient()

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const formsWithUnsavedTyping = new Set<object>()
 
@@ -9,9 +9,10 @@ export interface UnsavedTyping {
 
 export function useUnsavedTyping(errorMessage: string | null): UnsavedTyping {
   const [form] = useState<object>(() => ({}))
+  const hasTyped = useRef<boolean>(false)
 
   useEffect(() => {
-    if (errorMessage !== null) {
+    if (errorMessage !== null && hasTyped.current) {
       formsWithUnsavedTyping.add(form)
     }
   }, [errorMessage, form])
@@ -19,7 +20,10 @@ export function useUnsavedTyping(errorMessage: string | null): UnsavedTyping {
   useEffect(() => () => void formsWithUnsavedTyping.delete(form), [form])
 
   return {
-    noteTyping: () => formsWithUnsavedTyping.add(form),
+    noteTyping: () => {
+      hasTyped.current = true
+      formsWithUnsavedTyping.add(form)
+    },
     noteSaveStarted: () => formsWithUnsavedTyping.delete(form),
   }
 }

@@ -16,6 +16,7 @@ import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { todayInTimeZone } from '@/shared/utils/formatDate'
 import { moneyInputText } from '@/shared/utils/parseMoneyInput'
+import { ClosingCancelsNote } from '../../shared/components/ClosingCancelsNote'
 import { ExpenseForm, type ExpenseFormValues } from '../../shared/components/ExpenseForm'
 import { ExpenseFormTitle } from '../../shared/components/ExpenseFormTitle'
 import { ExpenseLoadError } from '../../shared/components/ExpenseLoadError'
@@ -85,16 +86,19 @@ export function EditExpenseScreen() {
     }
     const people = peopleOf(expense, membersQuery.data.members)
     return (
-      <ExpenseForm
-        initialValues={formValuesOf(expense, people)}
-        people={people}
-        addsNewMembersToAnEveryoneSplit={false}
-        categories={categoriesQuery.data}
-        today={todayInTimeZone(me.timeZone, new Date())}
-        isPending={updateExpense.isPending}
-        errorMessage={updateExpense.isError ? t(errorMessageKey(updateExpense.error)) : null}
-        onSubmit={save}
-      />
+      <>
+        {groupQuery.data.status === 'Closing' && <ClosingCancelsNote />}
+        <ExpenseForm
+          initialValues={formValuesOf(expense, people)}
+          people={people}
+          addsNewMembersToAnEveryoneSplit={false}
+          categories={categoriesQuery.data}
+          today={todayInTimeZone(me.timeZone, new Date())}
+          isPending={updateExpense.isPending}
+          errorMessage={updateExpense.isError ? t(errorMessageKey(updateExpense.error)) : null}
+          onSubmit={save}
+        />
+      </>
     )
   }
 

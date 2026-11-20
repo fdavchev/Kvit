@@ -3,7 +3,7 @@ import { KvitButton } from '@/shared/components/KvitButton'
 
 interface AddPeopleButtonsProps {
   onAddName: () => void
-  onShareLink: () => void
+  onShareLink: (() => void) | null
 }
 
 const buttonLook = 'min-h-12 flex-1 rounded-full px-2 text-[0.9375rem] font-bold'
@@ -20,13 +20,15 @@ export function AddPeopleButtons({ onAddName, onShareLink }: AddPeopleButtonsPro
         >
           {t('group.addName')}
         </KvitButton>
-        <KvitButton className={buttonLook} onClick={onShareLink}>
-          {t('group.shareLink')}
-        </KvitButton>
+        {onShareLink !== null && (
+          <KvitButton className={buttonLook} onClick={onShareLink}>
+            {t('group.shareLink')}
+          </KvitButton>
+        )}
       </div>
       <div className="text-center text-[0.8125rem] text-pretty text-muted-foreground">
         <p>{t('group.addPeopleNoKvit')}</p>
-        <p>{t('group.addPeopleHasKvit')}</p>
+        {onShareLink !== null && <p>{t('group.addPeopleHasKvit')}</p>}
       </div>
     </div>
   )

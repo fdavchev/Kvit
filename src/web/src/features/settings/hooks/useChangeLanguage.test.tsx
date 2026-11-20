@@ -22,34 +22,17 @@ describe('useChangeLanguage', () => {
     vi.unstubAllGlobals()
   })
 
-  it('asks the server before it changes the screen language', async () => {
+  it('saves the language to the account and leaves the screen language and the saved choice on the phone to the screen', async () => {
+    const fetchMock = stubFetch(new Response(null, { status: 204 }))
     const { result, i18n } = await renderHookWithProviders(() => useChangeLanguage(), {
       seedCache: seedSignedInPerson,
     })
-    let screenLanguageWhenAsked = ''
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>(async () => {
-        screenLanguageWhenAsked = i18n.language
-        return new Response(null, { status: 204 })
-      }),
-    )
 
     await act(() => result.current.mutateAsync('mk'))
 
-    expect(screenLanguageWhenAsked).toBe('en')
-    expect(i18n.language).toBe('mk')
-  })
-
-  it('remembers the new language on the phone once the server accepted it', async () => {
-    stubFetch(new Response(null, { status: 204 }))
-    const { result } = await renderHookWithProviders(() => useChangeLanguage(), {
-      seedCache: seedSignedInPerson,
-    })
-
-    await act(() => result.current.mutateAsync('mk'))
-
-    expect(window.localStorage.getItem('kvit.language')).toBe('mk')
+    expect(fetchMock).toHaveBeenCalledOnce()
+    expect(i18n.language).toBe('en')
+    expect(window.localStorage.getItem('kvit.language')).toBeNull()
   })
 
   it('updates the language of the person in the me cache once the server accepted it', async () => {
@@ -63,7 +46,7 @@ describe('useChangeLanguage', () => {
     expect(queryClient.getQueryData(meQueryKey)).toEqual({ ...testMe, language: 'mk' })
   })
 
-  it('keeps the screen language, the cache and the saved choice and exposes the ApiError when the server refuses', async () => {
+  it('keeps the me cache and exposes the ApiError when the server refuses', async () => {
     stubFetch(problemResponse(400, 'LANGUAGE_INVALID'))
     const { result, queryClient, i18n } = await renderHookWithProviders(
       () => useChangeLanguage(),

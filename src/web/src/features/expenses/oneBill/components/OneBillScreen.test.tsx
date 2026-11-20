@@ -749,7 +749,7 @@ describe('OneBillScreen', () => {
         expect(avatarsInOrder()).toHaveLength(2)
       })
 
-      it.each(languages)('refuses a name that repeats another one in other letter case with the MEMBER_NAME_TAKEN text and the typed name (%s)', async (language) => {
+      it.each(languages)('refuses a name that repeats another one in other letter case with the name-taken text of a bill and the typed name (%s)', async (language) => {
         await renderReadyBill({ language })
         await addName('Marko', language)
         await openNameSheet(language)
@@ -758,7 +758,7 @@ describe('OneBillScreen', () => {
         fireEvent.click(sheetAddButton(language))
 
         expect((await within(nameDialog(language)).findByRole('alert')).textContent).toBe(
-          translated(language, 'errors.MEMBER_NAME_TAKEN', { name: 'marko' }),
+          translated(language, 'oneBill.nameTaken', { name: 'marko' }),
         )
         expect(avatarsInOrder()).toHaveLength(2)
       })
@@ -789,17 +789,18 @@ describe('OneBillScreen', () => {
         expect((await within(nameDialog(language)).findByRole('alert')).textContent).toBe(message)
       })
 
-      it('words the name-taken message exactly with the typed name between the quotes', async () => {
-        await renderReadyBill()
-        await addName('Marko')
-        await openNameSheet()
-        typeName('MARKO')
+      it.each([
+        ['en', 'Someone called “MARKO” is already in this bill.'],
+        ['mk', 'Некој по име „MARKO“ е веќе во сметката.'],
+      ] as const)('words the name-taken message for a bill, not a group, with the typed name between the quotes (%s)', async (language, message) => {
+        await renderReadyBill({ language })
+        await addName('Marko', language)
+        await openNameSheet(language)
+        typeName('MARKO', language)
 
-        fireEvent.click(sheetAddButton())
+        fireEvent.click(sheetAddButton(language))
 
-        expect((await within(nameDialog()).findByRole('alert')).textContent).toBe(
-          'Someone called “MARKO” is already in this group.',
-        )
+        expect((await within(nameDialog(language)).findByRole('alert')).textContent).toBe(message)
       })
 
       it.each(languages)('does not mark the name field as invalid before a name was refused (%s)', async (language) => {

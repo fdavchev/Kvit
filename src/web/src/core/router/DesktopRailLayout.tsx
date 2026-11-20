@@ -2,12 +2,15 @@ import { useTranslation } from 'react-i18next'
 import { Outlet } from 'react-router'
 import { useIsRefreshingSavedData } from '@/core/api/useIsRefreshingSavedData'
 import { useOfferedWakeUrl } from '@/core/api/useOfferedWakeUrl'
-import { useLoadedDashboardGroups } from '@/features/home/hooks/useLoadedDashboardGroups'
+import type { DashboardGroup } from '@/core/services/dashboard/dashboardService'
+import { useDashboard } from '@/features/home/hooks/useDashboard'
 import { KvitRail, type KvitRailItem } from '@/shared/components/KvitRail'
 import { KvitUpdatingNote } from '@/shared/components/KvitUpdatingNote'
 import { useIsDesktop } from '@/shared/hooks/useIsDesktop'
 import { routes } from './routes'
 import { useMainNavItems } from './useMainNavItems'
+
+const noGroups: readonly DashboardGroup[] = []
 
 export function DesktopRailLayout() {
   const isDesktop = useIsDesktop()
@@ -40,7 +43,7 @@ function UpdatingNoteSlot() {
 function SignedInRail() {
   const { t } = useTranslation()
   const mainItems = useMainNavItems()
-  const groups = useLoadedDashboardGroups()
+  const groups = useDashboard().data?.groups ?? noGroups
   const items: KvitRailItem[] = mainItems.map((item) =>
     item.to === routes.groups
       ? {

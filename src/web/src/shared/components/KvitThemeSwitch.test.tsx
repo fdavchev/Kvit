@@ -62,6 +62,14 @@ describe('KvitThemeSwitch', () => {
     expect(onChange).toHaveBeenCalledExactlyOnceWith(clicked)
   })
 
+  it.each(themeChoices)('makes the %s button itself 44 px high, the size of the other tap targets', async (choice) => {
+    await renderSwitch('system')
+
+    const classes = buttonFor(choice).className.split(/\s+/)
+    expect(classes).toContain('h-11')
+    expect(classes.filter((name) => /^h-\[/.test(name))).toEqual([])
+  })
+
   it('gives the pressed button the selected-tab pill and its text colour, the same as the bottom bar', async () => {
     await renderSwitch('dark')
 

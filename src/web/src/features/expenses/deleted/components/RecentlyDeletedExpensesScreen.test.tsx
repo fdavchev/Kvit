@@ -30,6 +30,7 @@ import {
   unfreezeTime,
   restoreRealRetryPolicy,
 } from '@/test/expenseTestHelpers'
+import { asMemberOf, closingGroup, finishedGroup } from '@/test/closingTestData'
 import { expectDisabledWhilePending } from '@/test/formTestHelpers'
 import { groupOf, testGroupId } from '@/test/groupTestData'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
@@ -579,5 +580,25 @@ describe('RecentlyDeletedExpensesScreen', () => {
 
     expect(requestCount(fetchMock, 'GET', deletedExpensesPath)).toBe(1)
     expect(requestCount(fetchMock, 'GET', expensesPath)).toBe(0)
+  })
+
+  describe('a group that cannot be changed', () => {
+    it.each([
+      ['a member of a group that is being closed', asMemberOf(closingGroup)],
+      ['the owner of a finished group', finishedGroup],
+      ['a member of a finished group', asMemberOf(finishedGroup)],
+    ])('sends %s to the group screen without any Restore button, because the server refuses to restore', async (_name, group) => {
+      await renderDeleted({ answers: { [`GET ${groupPath}`]: jsonAnswer(group) } })
+
+      expect(await screen.findByText('group page')).toBeTruthy()
+      expect(restoreButtons()).toEqual([])
+    })
+
+    it('shows the rows and their Restore buttons to the owner of a group that is being closed', async () => {
+      await renderDeleted({ answers: { [`GET ${groupPath}`]: jsonAnswer(closingGroup) } })
+      await showsRows()
+
+      expect(restoreButtons().length).toBeGreaterThan(0)
+    })
   })
 })

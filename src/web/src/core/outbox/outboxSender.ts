@@ -38,6 +38,8 @@ type SendOutcome = 'sent' | 'failed' | 'retryLater' | 'paused'
 export const outboxSendTimeoutMilliseconds = 30_000
 
 const mustChangePasswordCode = 'AUTH_MUST_CHANGE_PASSWORD'
+const suspendedCode = 'ACCOUNT_SUSPENDED'
+const codesThatHoldTheQueue: readonly string[] = [mustChangePasswordCode, suspendedCode]
 const requestTimeoutStatus = 408
 const tooEarlyStatus = 425
 const tooManyRequestsStatus = 429
@@ -80,7 +82,7 @@ export function createOutboxSender({ personId, sendItem, afterSent }: OutboxSend
   async function loadSavedItems(): Promise<void> {
     try {
       const savedItems = await readOutbox(personId)
-      publish({ items: savedItems.map(asWaitingIfLeftSending) })
+      publish({ items: savedItems.map(asWaitingIfLeftSendingOrHeldBySuspension) })
     } catch (error) {
       loading = undefined
       throw new Error(
@@ -229,7 +231,7 @@ export function createOutboxSender({ personId, sendItem, afterSent }: OutboxSend
       changeItem(item.id, { state: 'waiting', failure: null })
       return 'retryLater'
     }
-    if (needsSignIn(error)) {
+    if (holdsTheQueue(error)) {
       paused = true
       changeItem(item.id, { state: 'waiting', failure: null })
       return 'paused'
@@ -328,8 +330,14 @@ export function createOutboxSender({ personId, sendItem, afterSent }: OutboxSend
   }
 }
 
-function asWaitingIfLeftSending(item: OutboxItem): OutboxItem {
-  return item.state === 'sending' ? { ...item, state: 'waiting' } : item
+function asWaitingIfLeftSendingOrHeldBySuspension(item: OutboxItem): OutboxItem {
+  if (item.state === 'sending') {
+    return { ...item, state: 'waiting' }
+  }
+  if (item.state === 'failed' && item.failure?.errorCode === suspendedCode) {
+    return { ...item, state: 'waiting', failure: null }
+  }
+  return item
 }
 
 function shouldRetryLater(error: ApiError): boolean {
@@ -339,10 +347,10 @@ function shouldRetryLater(error: ApiError): boolean {
   )
 }
 
-function needsSignIn(error: ApiError): boolean {
+function holdsTheQueue(error: ApiError): boolean {
   return (
     error.httpStatus === unauthorizedStatus ||
-    (error.httpStatus === forbiddenStatus && error.errorCode === mustChangePasswordCode)
+    (error.httpStatus === forbiddenStatus && error.errorCode !== null && codesThatHoldTheQueue.includes(error.errorCode))
   )
 }
 

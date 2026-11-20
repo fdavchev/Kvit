@@ -5,6 +5,7 @@ import { useLanguage } from '@/core/i18n/useLanguage'
 import { routes } from '@/core/router/routes'
 import type { DashboardGroup } from '@/core/services/dashboard/dashboardService'
 import { amountLookOf } from '@/features/groups/balances/balancesLooks'
+import { GroupStatusBadge } from '@/features/groups/closing/components/GroupStatusBadge'
 import { KvitEmojiTile } from '@/shared/components/KvitEmojiTile'
 import { cn } from '@/shared/utils/cn'
 import { moneyNumberPieces } from '@/shared/utils/formatMoney'
@@ -26,6 +27,7 @@ export function HomeGroupCard({ group }: HomeGroupCardProps) {
       >
         <KvitEmojiTile emoji={group.emoji} />
         <span className="leading-tight font-bold wrap-anywhere">{group.name}</span>
+        <GroupStatusBadge status={group.status} />
         {group.balances.length === 0 ? (
           <span className="rounded-full bg-pill px-2.5 py-0.5 text-xs font-bold text-foreground">{t('home.kvit')}</span>
         ) : (

@@ -48,6 +48,28 @@ describe('useUnsavedTyping', () => {
     expect(hasUnsavedTyping()).toBe(true)
   })
 
+  it('has no unsaved typing when the form opens already showing an error and nobody typed', () => {
+    mountedForm('This email is already taken.')
+
+    expect(hasUnsavedTyping()).toBe(false)
+  })
+
+  it('has no unsaved typing when an error appears in a form where nobody typed', () => {
+    const { rerender } = mountedForm()
+
+    rerender({ errorMessage: 'This email is already taken.' })
+
+    expect(hasUnsavedTyping()).toBe(false)
+  })
+
+  it('has unsaved typing once somebody types in a form that opened showing an error', () => {
+    const { result } = mountedForm('This email is already taken.')
+
+    result.current.noteTyping()
+
+    expect(hasUnsavedTyping()).toBe(true)
+  })
+
   it('has no unsaved typing when the error goes away and a new save starts', () => {
     const { result, rerender } = mountedForm('This email is already taken.')
 
@@ -146,6 +168,14 @@ describe('askBeforeLeavingWhenTyping', () => {
     askBeforeLeavingWhenTyping()
 
     expect(leavingThePage().defaultPrevented).toBe(true)
+  })
+
+  it('does not ask for a form that opened showing an error when nobody typed', () => {
+    mountedForm('This email is already taken.')
+
+    askBeforeLeavingWhenTyping()
+
+    expect(leavingThePage().defaultPrevented).toBe(false)
   })
 
   it('does not hold the page back when the question was never asked for', () => {

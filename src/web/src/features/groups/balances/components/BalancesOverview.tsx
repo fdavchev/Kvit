@@ -26,6 +26,7 @@ interface BalancesOverviewProps {
   defaultCurrency: Currency
   timeZone: string
   canChangePayments: boolean
+  arePaymentsRefreshing: boolean
 }
 
 type OpenSheet = { kind: 'markPaid'; payment: PaymentToRecord } | { kind: 'recordAnother' } | null
@@ -37,6 +38,7 @@ export function BalancesOverview({
   defaultCurrency,
   timeZone,
   canChangePayments,
+  arePaymentsRefreshing,
 }: BalancesOverviewProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
@@ -44,6 +46,7 @@ export function BalancesOverview({
   const now = new Date()
   const waitingPayments = useWaitingItems((item) => item.kind === 'settlement' && item.groupId === groupId)
   const waitingSheet = useOpenedWaitingItem(waitingPayments)
+  const shownWaitingPayments = waitingPayments.filter((item) => item.isSaved !== true || arePaymentsRefreshing)
 
   function markPaid(payment: PaymentToRecord): void {
     setOpenSheet({ kind: 'markPaid', payment })
@@ -55,11 +58,11 @@ export function BalancesOverview({
 
   const paymentsAndRecordButton = (
     <>
-      {(view.payments.length > 0 || waitingPayments.length > 0) && (
+      {(view.payments.length > 0 || shownWaitingPayments.length > 0) && (
         <PaymentsSection
           groupId={groupId}
           payments={view.payments}
-          waitingPayments={waitingPayments}
+          waitingPayments={shownWaitingPayments}
           language={language}
           timeZone={timeZone}
           now={now}
@@ -97,9 +100,10 @@ export function BalancesOverview({
       <>
         {view.betweenOthers.length > 0 && (
           <BetweenOthersSection
+            groupId={groupId}
             items={view.betweenOthers}
             language={language}
-            canMarkPaid={canChangePayments}
+            canChangePayments={canChangePayments}
             onMarkPaid={markPaid}
           />
         )}

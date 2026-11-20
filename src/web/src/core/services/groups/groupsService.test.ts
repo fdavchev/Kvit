@@ -214,13 +214,10 @@ describe('getGroup', () => {
     expect(group).toMatchObject({ planAmountMinor: null, planCurrency: null })
   })
 
-  it('reads closedByAdmin as false when an older answer does not carry it, and changes no other field', async () => {
-    const olderAnswer = withoutField(testGroup, 'closedByAdmin')
-    stubFetch(Response.json(olderAnswer))
+  it('throws an error naming closedByAdmin when the answer lacks it, instead of reading it as false', async () => {
+    stubFetch(Response.json(withoutField(testGroup, 'closedByAdmin')))
 
-    const group = await getGroup(testGroupId)
-
-    expect(group).toEqual({ ...olderAnswer, closedByAdmin: false })
+    await expect(getGroup(testGroupId)).rejects.toThrow('"closedByAdmin"')
   })
 
   it('rethrows the ApiError unchanged when the group is not found', async () => {

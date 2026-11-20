@@ -6,7 +6,14 @@ import { dashboardKey } from '@/features/home/shared/dashboardCache'
 import { dashboardPath, fullDashboard, greeceGroupId } from '@/test/dashboardTestData'
 import { stubDesktopScreen } from '@/test/matchMediaTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
-import { jsonAnswer, noContentAnswer, requestCount, stubFetchByRequest } from '@/test/requestTestHelpers'
+import {
+  jsonAnswer,
+  neverAnswer,
+  noContentAnswer,
+  requestCount,
+  stubFetchByRequest,
+  type AnswerFactory,
+} from '@/test/requestTestHelpers'
 import { seedMe, testGuestMe, testMe } from '@/test/testMe'
 import { translated } from '@/test/translated'
 import { BottomBarLayout } from './BottomBarLayout'
@@ -32,10 +39,11 @@ const routeTable: RouteObject[] = [
   },
 ]
 
-function stubSignedInServer() {
+function stubSignedInServer(dashboardAnswer: AnswerFactory) {
   return stubFetchByRequest({
     'GET /api/me': jsonAnswer(testMe),
     'POST /api/me/active': noContentAnswer(),
+    [`GET ${dashboardPath}`]: dashboardAnswer,
   })
 }
 
@@ -44,8 +52,12 @@ function seedDashboard(queryClient: QueryClient): void {
   queryClient.setQueryData(dashboardKey, fullDashboard)
 }
 
-async function renderAt(path: string, seedCache: (queryClient: QueryClient) => void = seedMe(testMe)) {
-  const fetchMock = stubSignedInServer()
+async function renderAt(
+  path: string,
+  seedCache: (queryClient: QueryClient) => void = seedMe(testMe),
+  dashboardAnswer: AnswerFactory = neverAnswer(),
+) {
+  const fetchMock = stubSignedInServer(dashboardAnswer)
   const rendered = await renderRoutesWithProviders(routeTable, path, { seedCache })
   return { fetchMock, ...rendered }
 }
@@ -136,26 +148,36 @@ describe('DesktopRailLayout on a desktop-sized window', () => {
     expect(rail()).toBeTruthy()
   })
 
-  it('lists the groups of the saved dashboard under Groups without asking the server for the dashboard', async () => {
+  it('lists the groups of the saved dashboard under Groups at once, before the server answers', async () => {
     stubDesktopScreen()
 
-    const { fetchMock } = await renderAt(routes.groups, seedDashboard)
+    await renderAt(routes.groups, seedDashboard)
 
     await screen.findByText('groups page')
     const greece = within(rail()).getByRole('link', { name: 'Greece trip' })
     expect(greece.getAttribute('href')).toBe(routes.group(greeceGroupId))
     expect(railLinkNames()).toHaveLength(4 + fullDashboard.groups.length)
-    expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(0)
   })
 
-  it('lists no groups and asks for nothing when the dashboard has not been loaded yet', async () => {
+  it('asks for the dashboard itself, once, and lists its groups when Home was never opened', async () => {
     stubDesktopScreen()
 
-    const { fetchMock } = await renderAt(routes.groups)
+    const { fetchMock } = await renderAt(routes.groups, seedMe(testMe), jsonAnswer(fullDashboard))
 
     await screen.findByText('groups page')
+    expect(await within(rail()).findByRole('link', { name: 'Greece trip' })).toBeTruthy()
+    expect(railLinkNames()).toHaveLength(4 + fullDashboard.groups.length)
+    expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(1)
+  })
+
+  it('lists no groups while its own dashboard request has not been answered', async () => {
+    stubDesktopScreen()
+
+    const { fetchMock } = await renderAt(routes.settings)
+
+    await screen.findByText('settings page')
     expect(railLinkNames()).toHaveLength(4)
-    expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(0)
+    expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(1)
   })
 
   it('lays the menu and the page out as two columns from the lg breakpoint', async () => {
@@ -176,6 +198,13 @@ describe('DesktopRailLayout on a desktop-sized window', () => {
 describe('DesktopRailLayout on a phone-sized window', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
+  })
+
+  it('asks for no dashboard, because there is no left menu to fill', async () => {
+    const { fetchMock } = await renderAt(routes.groups, seedMe(testMe), jsonAnswer(fullDashboard))
+
+    await screen.findByText('groups page')
+    expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(0)
   })
 
   it('shows the bottom tab bar and no left menu', async () => {

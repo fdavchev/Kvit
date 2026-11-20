@@ -7,6 +7,7 @@ import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitForm } from '@/shared/components/KvitForm'
 import { KvitSheet } from '@/shared/components/KvitSheet'
 import { KvitTextField } from '@/shared/components/KvitTextField'
+import { kvitGlassDangerButtonLook } from '@/shared/components/kvitGlassLooks'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
 import type { OwnerToolsAction } from '../types'
 
@@ -16,12 +17,21 @@ interface OwnerToolsReasonSheetProps {
   doneMessage: string
   targetId: string
   action: UseMutationResult<void, Error, OwnerToolsAction>
+  cannotBeUndone: boolean
   onClose: () => void
 }
 
 const reasonMaxLength = 500
 
-export function OwnerToolsReasonSheet({ title, body, doneMessage, targetId, action, onClose }: OwnerToolsReasonSheetProps) {
+export function OwnerToolsReasonSheet({
+  title,
+  body,
+  doneMessage,
+  targetId,
+  action,
+  cannotBeUndone,
+  onClose,
+}: OwnerToolsReasonSheetProps) {
   const { t } = useTranslation()
   const sheet = useKvitSheet()
   const [reason, setReason] = useState<string>('')
@@ -49,6 +59,7 @@ export function OwnerToolsReasonSheet({ title, body, doneMessage, targetId, acti
       <p className="text-[0.9375rem] text-pretty text-muted-foreground">{body}</p>
       <KvitForm
         submitLabel={t('ownerTools.confirm')}
+        submitClassName={cannotBeUndone ? kvitGlassDangerButtonLook : undefined}
         isPending={action.isPending}
         canSubmit={isReasonValid}
         errorMessage={isReasonTooLong ? t('ownerTools.reasonTooLong') : null}

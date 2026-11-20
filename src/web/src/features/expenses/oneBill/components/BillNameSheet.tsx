@@ -51,7 +51,7 @@ export function BillNameSheet({ ownName, addedNames, onAdd, onClose }: BillNameS
       case 'own':
         return t('oneBill.ownName')
       case 'taken':
-        return t('errors.MEMBER_NAME_TAKEN', { name: refusal.name })
+        return t('oneBill.nameTaken', { name: refusal.name })
     }
   }
 
