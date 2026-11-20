@@ -280,9 +280,21 @@ describe('restoring the saved data when the app starts', () => {
     expect(removeClient).toHaveBeenCalled()
   })
 
-  it('keeps a copy saved at version 7', async () => {
+  it('throws away a copy saved at version 7, which has expense answers without the version', async () => {
     stubFetchThatNeverAnswers()
     const { persister, removeClient } = await persisterHolding(savedCopy(testMe, '7'))
+
+    const queryClient = await startApp(persister)
+
+    expect(await screen.findByRole('status')).toBeTruthy()
+    expect(screen.queryByText('Greece trip')).toBeNull()
+    expect(queryClient.getQueryData(groupsKey)).toBeUndefined()
+    expect(removeClient).toHaveBeenCalled()
+  })
+
+  it('keeps a copy saved at version 8', async () => {
+    stubFetchThatNeverAnswers()
+    const { persister, removeClient } = await persisterHolding(savedCopy(testMe, '8'))
 
     await startApp(persister)
 

@@ -24,10 +24,10 @@ The last branch before new features: every open bug, glitch, wrong text, rare sa
 - Step 6: website behaviour bugs. Closing and Finished groups hide what the server refuses (Recently deleted, Share, invite text) and Edit expense warns that saving cancels the closing; Home shows the Closing badge; the owner can cancel a plain name's waiting payment; the only other person is pre-selected when recording a payment; dialogs keep toasts off their buttons; no error box during the calm wait; dead invite links stop after one try; Share sends the group name; the Google button follows the page language and the window size; admin addresses look like any unknown page to others; Settings saves only the final budget currency, changes the language at once and has 44 px buttons; the app fails clearly when the API leaves out a field; a suspended person's waiting changes are kept and their Log out warns about unsent changes.
 - Step 7: server behaviour bugs. An unexpected crash answers a clear `SERVER_ERROR` (and a same-moment clash `CHANGED_MEANWHILE`, an oversized request 413) instead of a bare 500; password and deletion clashes are tried once more; Home names a restored expense; Edit expense asks NBRM only after every check, NBRM gives up after 3 s and looks back over holidays; a guest's Change password gets a clear refusal; a repeated Record after delete is a quiet success; statistics pick a grouping by range; an expired login-key certificate stops start-up with a clear message; guests left with nothing are cleaned up after 30 days.
 - Step 9: tidy-up and speed. Screens load on demand, so the first screen downloads less (1,030 → 836 kB) and an open app still has every screen while the server sleeps; an unused endpoint and test-only code are gone and duplicated rules live in one place; the licence file lists only shipped packages (39); development packages are updated; four flaky tests are fixed at their cause; `start-local.ps1 -Check` stops promptly with a short summary.
-- Step 10: full check, browser pass, code review, report, and an up-to-date README.
+- Step 10: full check and browser pass (320 to 1920 px, EN and MK, light and dark); code-review fixes (every deadlock answers "changed at the same moment", Edit expense no longer holds a transaction while asking NBRM, caught clashes are logged, a failed language save switches back, failed pictures get another try, a failing cleanup waits 15 minutes); a smoke check of the built website in CI; Edit expense refuses a save from a form opened before someone else's change (the typing stays, the next Save goes through on purpose) and always opens on fresh data; the README is rewritten with new screenshots.
 
 ### Database changes
-One migration, `SameMomentSafety` (Step 8): two partial unique indexes on `duplicate_answers`, after removing "Same" answers that already broke the one-merge rule (a live merge is kept first, then the oldest). Row versions use Postgres's own `xmin`, so no table gets a new column.
+One migration, `SameMomentSafety` (Step 8): two partial unique indexes on `duplicate_answers`, after removing "Same" answers that already broke the one-merge rule (a live merge is kept first, then the oldest). Row versions use Postgres's own `xmin`, so no table gets a new column; the expense answer now carries it as `version`.
 
 ### Checklist
 - [x] Step 0: backlog items that are already built are ticked
@@ -41,7 +41,7 @@ One migration, `SameMomentSafety` (Step 8): two partial unique indexes on `dupli
 - [x] Step 7: behaviour bugs, server
 - [x] Step 8: same-moment problems (migrations)
 - [x] Step 9: tidy-up and speed
-- [ ] Step 10: full check, browser pass, code review, report, README brought up to date
+- [x] Step 10: full check, browser pass, code review, report, README brought up to date
 
 ## Later pushes (one-line commit subjects)
 - Keep long names, titles and large amounts inside narrow screens.
@@ -53,3 +53,5 @@ One migration, `SameMomentSafety` (Step 8): two partial unique indexes on `dupli
 - Hide what Closing groups refuse, let the owner cancel a plain name's payment, keep toasts off dialogs, stop dead invite links, follow the page language on the Google button and fix the Settings, admin and suspended screens.
 - Answer crashes with SERVER_ERROR and same-moment clashes with CHANGED_MEANWHILE, retry account clashes, name restored expenses, look back for the NBRM rate and clean up left-behind guests.
 - Load screens on demand, remove unused and duplicated code, list only shipped packages in the licence file, fix four flaky tests and make the local check stop with a short summary.
+- Answer every deadlock as a same-moment clash, ask NBRM before the edit transaction, log caught clashes, switch the language back after a failed save, retry failed pictures, pace a failed cleanup, smoke-check the built site and bring the README up to date.
+- Refuse an expense save from a form opened before someone else's change, keep the typing for an informed second save, open Edit only on fresh data, and add the Fix 21 report.

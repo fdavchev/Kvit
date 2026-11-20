@@ -5,6 +5,7 @@ using Kvit.Contracts.Expenses;
 using Kvit.Domain.Entities;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
+using Kvit.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kvit.Application.Queries.Expenses
@@ -55,6 +56,7 @@ namespace Kvit.Application.Queries.Expenses
                 expense.CreatedAt,
                 expense.UpdatedAt,
                 expense.CanEdit,
+                expense.Version,
                 shares,
                 [.. history.Select(entry => new ExpenseHistoryRow(entry.Type, entry.ActorName, entry.CreatedAt, ActivityJson.Parse(entry.Changes)))]));
         }
@@ -83,7 +85,8 @@ namespace Kvit.Application.Queries.Expenses
                     user.DisplayName,
                     row.Expense.CreatedAt,
                     row.Expense.UpdatedAt,
-                    row.Expense.CreatedByUserId == userId || ownerUserId == userId));
+                    row.Expense.CreatedByUserId == userId || ownerUserId == userId,
+                    EF.Property<uint>(row.Expense, ExpenseConfiguration.RowVersionProperty)));
         }
 
         private IQueryable<ExpenseShareRow> ExpenseShareRowsOf(Guid groupId, Guid expenseId)

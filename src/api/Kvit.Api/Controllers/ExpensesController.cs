@@ -65,7 +65,7 @@ namespace Kvit.Api.Controllers
                 request.PaidByMemberId,
                 request.SplitType,
                 SplitInputsOf(request.Shares));
-            Result result = await _dispatcher.Send(new EditExpenseCommand(groupId, expenseId, input), cancellationToken);
+            Result result = await _dispatcher.Send(new EditExpenseCommand(groupId, expenseId, input, request.Version), cancellationToken);
             return Result(result);
         }
 

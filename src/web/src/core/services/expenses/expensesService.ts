@@ -9,6 +9,7 @@ import {
   readList,
   readObject,
   readOneOf,
+  readOrNullWhenMissing,
   readPositiveNumber,
   readText,
   readTextOrNull,
@@ -76,6 +77,7 @@ export interface ExpenseDetail {
   createdAt: string
   updatedAt: string | null
   canEdit: boolean
+  version: number | null
   shares: ExpenseShare[]
   history: ExpenseHistoryEntry[]
 }
@@ -108,6 +110,10 @@ export interface ExpenseChanges {
   paidByMemberId: string
   splitType: SplitType
   shares: SplitShareInput[]
+}
+
+export interface ExpenseEdit extends ExpenseChanges {
+  version: number | null
 }
 
 export interface ExpenseInput extends ExpenseChanges {
@@ -164,9 +170,9 @@ export async function createExpense(groupId: string, input: ExpenseInput): Promi
 export async function updateExpense(
   groupId: string,
   expenseId: string,
-  changes: ExpenseChanges,
+  edit: ExpenseEdit,
 ): Promise<void> {
-  await apiRequest(endpoints.groupExpense(groupId, expenseId), jsonRequest('PUT', changes))
+  await apiRequest(endpoints.groupExpense(groupId, expenseId), jsonRequest('PUT', edit))
 }
 
 export async function deleteExpense(groupId: string, expenseId: string): Promise<void> {
@@ -238,6 +244,7 @@ function parseExpenseDetail(body: unknown): ExpenseDetail {
     createdAt: readDate(fields, 'createdAt', what),
     updatedAt: readDateOrNull(fields, 'updatedAt', what),
     canEdit: readYesNo(fields, 'canEdit', what),
+    version: readOrNullWhenMissing(fields, 'version', what, readCount),
     shares: readList(fields, 'shares', what).map(parseExpenseShare),
     history: readList(fields, 'history', what).map(parseHistoryEntry),
   }

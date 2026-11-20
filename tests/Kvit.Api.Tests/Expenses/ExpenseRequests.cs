@@ -47,6 +47,24 @@ namespace Kvit.Api.Tests.Expenses
             return client.PutAsJsonAsync(ExpensePathOf(groupId, expenseId), input, TestContext.Current.CancellationToken);
         }
 
+        public static Task<HttpResponseMessage> EditFromVersionAsync(HttpClient client, Guid groupId, Guid expenseId, ExpenseInput input, uint version)
+        {
+            object body = new
+            {
+                input.Title,
+                input.Note,
+                input.AmountMinor,
+                input.Currency,
+                input.ExpenseDate,
+                input.CategoryId,
+                input.PaidByMemberId,
+                input.SplitType,
+                input.Shares,
+                version,
+            };
+            return client.PutAsJsonAsync(ExpensePathOf(groupId, expenseId), body, TestContext.Current.CancellationToken);
+        }
+
         public static Task<HttpResponseMessage> DeleteAsync(HttpClient client, Guid groupId, Guid expenseId)
         {
             return client.DeleteAsync(ExpensePathOf(groupId, expenseId), TestContext.Current.CancellationToken);

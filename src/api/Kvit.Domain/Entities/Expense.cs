@@ -95,6 +95,11 @@ namespace Kvit.Domain.Entities
             return Result.Conflict($"Someone else changed expense {expenseId} at the same moment; nothing of this change was saved.", ResultCodes.EXPENSE_CHANGED_MEANWHILE);
         }
 
+        public static Result<T> ChangedSinceOpened<T>(Guid expenseId, uint openedVersion, uint currentVersion)
+        {
+            return Result.Conflict<T>($"Expense {expenseId} was changed after this edit was opened (opened at version {openedVersion}, now at version {currentVersion}); nothing of this change was saved.", ResultCodes.EXPENSE_CHANGED_MEANWHILE);
+        }
+
         public static Result<IReadOnlyList<SplitShare>> SplitAmong(GroupRoster roster, ExpenseFields fields, Guid paidByMemberId, IReadOnlyList<SplitInput> inputs)
         {
             Result<NamedMember> payer = roster.FindCurrent(paidByMemberId);

@@ -20,9 +20,9 @@ namespace Kvit.Domain.Services.Expenses
         GetCurrentExchangeRate _getCurrentExchangeRate,
         TimeProvider _timeProvider)
     {
-        public async Task<Result<ExchangeRateSnapshot?>> FetchRateIfCurrencyChangesAsync(Guid groupId, Guid userId, Guid expenseId, ExpenseInput input, CancellationToken cancellationToken)
+        public async Task<Result<ExchangeRateSnapshot?>> FetchRateIfCurrencyChangesAsync(Guid groupId, Guid userId, Guid expenseId, ExpenseInput input, uint? openedVersion, CancellationToken cancellationToken)
         {
-            Result<CheckedExpenseEdit> checkedEdit = await CheckAsync(groupId, userId, expenseId, input, cancellationToken);
+            Result<CheckedExpenseEdit> checkedEdit = await CheckAsync(groupId, userId, expenseId, input, openedVersion, cancellationToken);
             if (!checkedEdit.IsSuccess)
             {
                 return checkedEdit.ToFailure<ExchangeRateSnapshot?>();
@@ -42,9 +42,9 @@ namespace Kvit.Domain.Services.Expenses
             return Result.Ok<ExchangeRateSnapshot?>(rate.Value);
         }
 
-        public async Task<Result> Execute(Guid groupId, Guid userId, Guid expenseId, ExpenseInput input, ExchangeRateSnapshot? newRate, CancellationToken cancellationToken)
+        public async Task<Result> Execute(Guid groupId, Guid userId, Guid expenseId, ExpenseInput input, uint? openedVersion, ExchangeRateSnapshot? newRate, CancellationToken cancellationToken)
         {
-            Result<CheckedExpenseEdit> checkedEdit = await CheckAsync(groupId, userId, expenseId, input, cancellationToken);
+            Result<CheckedExpenseEdit> checkedEdit = await CheckAsync(groupId, userId, expenseId, input, openedVersion, cancellationToken);
             if (!checkedEdit.IsSuccess)
             {
                 return checkedEdit;
@@ -81,7 +81,7 @@ namespace Kvit.Domain.Services.Expenses
             return Result.Ok();
         }
 
-        private async Task<Result<CheckedExpenseEdit>> CheckAsync(Guid groupId, Guid userId, Guid expenseId, ExpenseInput input, CancellationToken cancellationToken)
+        private async Task<Result<CheckedExpenseEdit>> CheckAsync(Guid groupId, Guid userId, Guid expenseId, ExpenseInput input, uint? openedVersion, CancellationToken cancellationToken)
         {
             Result<Group> found = await _groups.FindForMemberAsync(groupId, userId, cancellationToken);
             if (!found.IsSuccess)
@@ -108,6 +108,12 @@ namespace Kvit.Domain.Services.Expenses
             if (!changeable.IsSuccess)
             {
                 return changeable.ToFailure<CheckedExpenseEdit>();
+            }
+
+            uint currentVersion = _expenses.VersionOf(expense);
+            if (openedVersion is uint opened && opened != currentVersion)
+            {
+                return Expense.ChangedSinceOpened<CheckedExpenseEdit>(expenseId, opened, currentVersion);
             }
 
             Result<ExpenseFields> fields = ExpenseFields.Create(

@@ -2,6 +2,7 @@ using Kvit.Domain.Entities;
 using Kvit.Domain.Interfaces;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
+using Kvit.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kvit.Infrastructure.Repositories
@@ -33,6 +34,11 @@ namespace Kvit.Infrastructure.Repositories
         public void MarkChanged(Expense expense)
         {
             _context.Entry(expense).Property(changed => changed.UpdatedAt).IsModified = true;
+        }
+
+        public uint VersionOf(Expense expense)
+        {
+            return _context.Entry(expense).Property<uint>(ExpenseConfiguration.RowVersionProperty).OriginalValue;
         }
 
         public Task<bool> BringsCountedShareToAsync(Guid userId, Guid expenseId, CancellationToken cancellationToken)

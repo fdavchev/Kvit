@@ -33,9 +33,9 @@ export async function refreshAfterExpenseChange(queryClient: QueryClient, groupI
   ])
 }
 
-export function refreshWhenExpenseChangedMeanwhile(queryClient: QueryClient, groupId: string, error: unknown): void {
+export async function refreshWhenExpenseChangedMeanwhile(queryClient: QueryClient, groupId: string, error: unknown): Promise<void> {
   if (hasErrorCode(error, 'EXPENSE_CHANGED_MEANWHILE')) {
-    void refreshAfterExpenseChange(queryClient, groupId)
+    await refreshAfterExpenseChange(queryClient, groupId)
   }
 }
 

@@ -15,6 +15,8 @@ namespace Kvit.Domain.Interfaces
 
         void MarkChanged(Expense expense);
 
+        uint VersionOf(Expense expense);
+
         Task<bool> BringsCountedShareToAsync(Guid userId, Guid expenseId, CancellationToken cancellationToken);
     }
 }

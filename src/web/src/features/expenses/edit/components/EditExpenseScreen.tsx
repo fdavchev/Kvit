@@ -1,10 +1,13 @@
+import { useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate } from 'react-router'
 import { toast } from 'sonner'
-import { errorMessageKey } from '@/core/api/errors'
+import { errorMessageKey, hasErrorCode } from '@/core/api/errors'
 import { useSignedInMe } from '@/core/auth/useSignedInMe'
 import { routes } from '@/core/router/routes'
-import type { ExpenseChanges, ExpenseDetail } from '@/core/services/expenses/expensesService'
+import type { Category } from '@/core/services/categories/categoriesService'
+import type { ExpenseChanges, ExpenseDetail, ExpenseEdit } from '@/core/services/expenses/expensesService'
 import type { GroupMember } from '@/core/services/groups/membersService'
 import { useGroup } from '@/features/groups/group/hooks/useGroup'
 import { useMembers } from '@/features/groups/members/hooks/useMembers'
@@ -20,6 +23,7 @@ import { ClosingCancelsNote } from '../../shared/components/ClosingCancelsNote'
 import { ExpenseForm, type ExpenseFormValues } from '../../shared/components/ExpenseForm'
 import { ExpenseFormTitle } from '../../shared/components/ExpenseFormTitle'
 import { ExpenseLoadError } from '../../shared/components/ExpenseLoadError'
+import { expenseQueryKey } from '../../shared/expenseCache'
 import { expensePeople, type ExpensePerson } from '../../shared/expensePeople'
 import { useCategories } from '../../shared/hooks/useCategories'
 import { useExpense } from '../../shared/hooks/useExpense'
@@ -39,14 +43,29 @@ export function EditExpenseScreen() {
   const categoriesQuery = useCategories()
   const updateExpense = useUpdateExpense(groupId, expenseId)
   const detailRoute = routes.groupExpense(groupId, expenseId)
+  const queryClient = useQueryClient()
+  const [expenseAfterRefusal, setExpenseAfterRefusal] = useState<ExpenseDetail | null>(null)
 
-  function save(changes: ExpenseChanges): void {
-    updateExpense.mutate(changes, {
+  function save(edit: ExpenseEdit): void {
+    updateExpense.mutate(edit, {
       onSuccess: () => {
         toast.success(t('expenses.saved'))
         navigate(detailRoute, { replace: true })
       },
+      onError: (error) => {
+        if (hasErrorCode(error, 'EXPENSE_CHANGED_MEANWHILE')) {
+          setExpenseAfterRefusal(freshExpenseAfterRefusal())
+        }
+      },
     })
+  }
+
+  function freshExpenseAfterRefusal(): ExpenseDetail {
+    const fresh = queryClient.getQueryData<ExpenseDetail>(expenseQueryKey(groupId, expenseId))
+    if (fresh === undefined) {
+      throw new Error(`The expense ${expenseId} of group ${groupId} is not in the query cache after its save was refused as changed meanwhile`)
+    }
+    return fresh
   }
 
   function renderContent() {
@@ -74,6 +93,7 @@ export function EditExpenseScreen() {
     }
     if (
       expenseQuery.isPending ||
+      !expenseQuery.isFetchedAfterMount ||
       groupQuery.isPending ||
       membersQuery.isPending ||
       categoriesQuery.isPending
@@ -88,15 +108,15 @@ export function EditExpenseScreen() {
     return (
       <>
         {groupQuery.data.status === 'Closing' && <ClosingCancelsNote />}
-        <ExpenseForm
-          initialValues={formValuesOf(expense, people)}
+        <EditExpenseForm
+          expense={expense}
+          expenseAfterRefusal={expenseAfterRefusal}
           people={people}
-          addsNewMembersToAnEveryoneSplit={false}
           categories={categoriesQuery.data}
           today={todayInTimeZone(me.timeZone, new Date())}
           isPending={updateExpense.isPending}
           errorMessage={updateExpense.isError ? t(errorMessageKey(updateExpense.error)) : null}
-          onSubmit={save}
+          onSave={save}
         />
       </>
     )
@@ -110,6 +130,38 @@ export function EditExpenseScreen() {
       <ExpenseFormTitle>{t('expense.editTitle')}</ExpenseFormTitle>
       {renderContent()}
     </KvitScreen>
+  )
+}
+
+interface EditExpenseFormProps {
+  expense: ExpenseDetail
+  expenseAfterRefusal: ExpenseDetail | null
+  people: readonly ExpensePerson[]
+  categories: readonly Category[]
+  today: string
+  isPending: boolean
+  errorMessage: string | null
+  onSave: (edit: ExpenseEdit) => void
+}
+
+function EditExpenseForm({ expense, expenseAfterRefusal, people, categories, today, isPending, errorMessage, onSave }: EditExpenseFormProps) {
+  const [openedFrom] = useState(() => ({ values: formValuesOf(expense, people), version: expense.version }))
+
+  function submit(changes: ExpenseChanges): void {
+    onSave({ ...changes, version: expenseAfterRefusal === null ? openedFrom.version : expenseAfterRefusal.version })
+  }
+
+  return (
+    <ExpenseForm
+      initialValues={openedFrom.values}
+      people={people}
+      addsNewMembersToAnEveryoneSplit={false}
+      categories={categories}
+      today={today}
+      isPending={isPending}
+      errorMessage={errorMessage}
+      onSubmit={submit}
+    />
   )
 }
 

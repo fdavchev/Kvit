@@ -24,8 +24,8 @@ namespace Kvit.Application.Commands.Expenses
             return await _groupWrite.PrepareThenRunOrAnswerIfExpenseChangedMeanwhileAsync<ExchangeRateSnapshot?>(
                 command.GroupId,
                 userId.Value,
-                () => _editExpense.FetchRateIfCurrencyChangesAsync(command.GroupId, userId.Value, command.ExpenseId, command.Input, cancellationToken),
-                newRate => _editExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, command.Input, newRate, cancellationToken),
+                () => _editExpense.FetchRateIfCurrencyChangesAsync(command.GroupId, userId.Value, command.ExpenseId, command.Input, command.OpenedVersion, cancellationToken),
+                newRate => _editExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, command.Input, command.OpenedVersion, newRate, cancellationToken),
                 () => Task.FromResult(Expense.ChangedMeanwhile(command.ExpenseId)),
                 cancellationToken);
         }
