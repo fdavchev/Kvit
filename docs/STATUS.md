@@ -1,6 +1,6 @@
 # Status: Kvit
 
-_Last updated: 2026-11-21 (Fix 21 is done: Steps 0 to 10 and the wake fixes are committed on `fix/21-small-bugs`; Steps 6 to 10 are local commits by Claude, not pushed; Filip pushes, checks CI and merges after his Fix 20 live check)_
+_Last updated: 2026-11-21 (Fix 21 is done: Steps 0 to 10 and the wake fixes are committed on `fix/21-small-bugs`; Step 10's two commits (`8c74b3e`, `ed61e91`) are local, not pushed; Filip pushes, checks CI and merges after his Fix 20 live check)_
 
 ## Where we stopped
 - Branch: `fix/21-small-bugs` (made from `main` = `25c4a3d`, the Fix 20 merge). Step 1 is commit `d523031`, pushed. Step 2 is commit `d7ddc66`. Step 3 (the lightest peach light theme, contrast leftovers, Home totals) is commit `6801b09`, pushed. Step 4 (toasts, sheets, focus) is committed locally by Claude on 2026-11-16 while Filip was away (his instruction: "you commit, don't push"); Step 8 (same-moment problems, migration `SameMomentSafety`) is committed locally by Claude on 2026-11-19 on Filip's earlier "you commit, don't push". Filip pushes both and ticks Steps 4 and 8 in the PR description. To continue in a new session from any step: paste `docs/guides/fix-21-continue-prompt.md`.

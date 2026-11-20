@@ -32,7 +32,7 @@ Every open item in `BACKLOG.md` was fixed here, moved to Release 4 (new features
 - Edit expense could quietly undo another person's change (a form opened earlier, or opened on a saved copy); fixed with Filip's decision.
 
 ## For Filip
-- **Push the local commits** (Steps 6, 7, 9, 10) and tick the steps in the PR description (`docs/guides/fix-21-pr-text.md`). The CI frontend job now installs Chromium for the smoke check.
+- **Push the two local Step 10 commits** and tick the steps in the PR description (`docs/guides/fix-21-pr-text.md`). The CI frontend job now installs Chromium for the smoke check.
 - **Confirm Claude's choices** (each in the BACKLOG "Fix 21 Step N leftovers" entries and in the log below): an expired login certificate stops start-up; guests left with nothing are purged 30 days after creation; the desktop menu lists Closing groups; the Google button is blank for about 0.3 s on a language switch; the date limit counts from UTC today.
 - **Read the Macedonian texts**, rows 77 to 83 of `docs/guides/fix-21-macedonian-to-read.md` (and the older rows).
 - **Still yours:** the Fix 20 live check; re-adding the home-screen icon after the merge; deleting `Cleanup__Secret` on Render and `CLEANUP_SECRET` on GitHub; the Backup workflow and the practice restore; GitHub private vulnerability reporting; Part E of `docs/guides/phase-19-legal.md`.
