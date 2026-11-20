@@ -532,6 +532,14 @@ function Invoke-WebBuild {
     "PASS  {0,-24} 0 type errors, {1} modules built" -f $title, $modules
 }
 
+function Invoke-WebSmoke {
+    $null = Invoke-CheckCommand -Title 'npx playwright install chromium' -FilePath 'npx.cmd' -ArgumentList @('playwright', 'install', 'chromium') -WorkingDirectory $WebFolder
+    $title = 'npm run smoke'
+    $output = Invoke-CheckCommand -Title $title -FilePath 'npm.cmd' -ArgumentList @('run', 'smoke') -WorkingDirectory $WebFolder
+    $pages = Read-LastNumber -Output $output -Pattern 'drew (\d+) pages' -Title $title -What 'page count'
+    "PASS  {0,-24} {1} built pages drawn in Chromium, no page errors" -f $title, $pages
+}
+
 function Invoke-WebTests {
     $title = 'npm test'
     $output = Invoke-CheckCommand -Title $title -FilePath 'npm.cmd' -ArgumentList @('test') -WorkingDirectory $WebFolder
@@ -549,6 +557,7 @@ function Invoke-Checks {
     $summary += Invoke-BackendTests
     $summary += Invoke-WebLint
     $summary += Invoke-WebBuild
+    $summary += Invoke-WebSmoke
     $summary += Invoke-WebTests
     Write-Host ''
     $summary | ForEach-Object { Write-Host $_ -ForegroundColor Green }

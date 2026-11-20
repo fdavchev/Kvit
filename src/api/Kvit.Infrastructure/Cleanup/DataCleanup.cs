@@ -13,7 +13,7 @@ namespace Kvit.Infrastructure.Cleanup
         public async Task<CleanupResponse> RunAsync(DateTimeOffset now, CancellationToken cancellationToken)
         {
             int accountsPurged = await _accountPurger.PurgeDueAccountsAsync(now, cancellationToken);
-            int guestsPurged = await _accountPurger.PurgeLeftBehindGuestsAsync(now, cancellationToken);
+            LeftBehindGuestsPurge guests = await _accountPurger.PurgeLeftBehindGuestsAsync(now, cancellationToken);
 
             DateTimeOffset latestRowDeletion = CleanupRules.LatestRemovableRowDeletion(now);
             int expensesRemoved = await RemoveDeletedExpensesAsync(latestRowDeletion, cancellationToken);
@@ -29,14 +29,21 @@ namespace Kvit.Infrastructure.Cleanup
                 .Where(usageEvent => usageEvent.UserId != null && usageEvent.OccurredAt < oldestLinkedEvent)
                 .ExecuteUpdateAsync(setters => setters.SetProperty(usageEvent => usageEvent.UserId, (Guid?)null), cancellationToken);
 
-            return new CleanupResponse(
+            CleanupResponse removed = new(
                 accountsPurged,
                 removedGroups.Groups,
                 expensesRemoved + removedGroups.Expenses,
                 settlementsRemoved + removedGroups.Settlements,
                 personalEntriesRemoved,
                 usageEventsDetached,
-                guestsPurged);
+                guests.PurgedCount);
+            if (guests.FailedUserIds.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    $"The cleanup finished its other steps ({removed}), but {guests.FailedUserIds.Count} left-behind guest(s) could not be purged: {string.Join(", ", guests.FailedUserIds)}. Each guest's cause is logged as its own error.");
+            }
+
+            return removed;
         }
 
         private async Task<int> RemoveDeletedExpensesAsync(DateTimeOffset latestDeletion, CancellationToken cancellationToken)

@@ -227,7 +227,7 @@ describe('SettingsScreen', () => {
     expect(toast.error).not.toHaveBeenCalled()
   })
 
-  it('switches the screen language when the server cannot be reached', async () => {
+  it('switches the screen back to the previous language and shows the network error in it when the server cannot be reached', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     stubFetch(new TypeError('Failed to fetch'))
     const { i18n } = await renderSettings()
@@ -235,9 +235,9 @@ describe('SettingsScreen', () => {
     pressLanguage('mk')
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(translated('mk', 'errors.network'))
+      expect(toast.error).toHaveBeenCalledWith(translated('en', 'errors.network'))
     })
-    expect(i18n.language).toBe('mk')
+    expect(i18n.language).toBe('en')
   })
 
   it('puts the new language in the me cache once the server has saved it', async () => {
@@ -252,7 +252,7 @@ describe('SettingsScreen', () => {
     expect(toast.error).not.toHaveBeenCalled()
   })
 
-  it('shows the generic error toast in the new language when the server does not save the language', async () => {
+  it('shows the generic error toast in the previous language when the server does not save the language', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     stubFetch(new Response(null, { status: 500 }))
     await renderSettings()
@@ -260,11 +260,12 @@ describe('SettingsScreen', () => {
     pressLanguage('mk')
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(translated('mk', 'errors.generic'))
+      expect(toast.error).toHaveBeenCalledWith(translated('en', 'errors.generic'))
     })
+    expect(toast.error).toHaveBeenCalledOnce()
   })
 
-  it('keeps the new screen language on this device and the old language in the me cache when the server does not save it', async () => {
+  it('switches the screen and the saved choice on this device back to the account language when the server does not save it', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     stubFetch(new Response(null, { status: 500 }))
     const { i18n, queryClient } = await renderSettings()
@@ -274,9 +275,24 @@ describe('SettingsScreen', () => {
       expect(toast.error).toHaveBeenCalled()
     })
 
+    expect(i18n.language).toBe('en')
+    expect(window.localStorage.getItem('kvit.language')).toBe('en')
+    expect(screen.getByRole('button', { name: translated('en', 'language.en') }).getAttribute('aria-pressed')).toBe('true')
+    expect(queryClient.getQueryData(meQueryKey)).toMatchObject({ language: 'en' })
+  })
+
+  it('switches a Macedonian screen back to Macedonian when saving English fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    stubFetch(new Response(null, { status: 500 }))
+    const { i18n } = await renderSettings('mk')
+
+    pressLanguage('en')
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(translated('mk', 'errors.generic'))
+    })
     expect(i18n.language).toBe('mk')
     expect(window.localStorage.getItem('kvit.language')).toBe('mk')
-    expect(queryClient.getQueryData(meQueryKey)).toMatchObject({ language: 'en' })
   })
 
   it('logs the failed language save with console.error', async () => {

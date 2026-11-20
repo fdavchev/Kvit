@@ -25,7 +25,7 @@ Filip:
 3. Delete `Cleanup__Secret` on Render and `CLEANUP_SECRET` on GitHub (no longer used).
 4. Still open from Phase 19 (`docs/guides/phase-19-legal.md`): run the **Backup** workflow once, the practice restore, **Private vulnerability reporting** on GitHub (checked 2026-11-14: off), and Part E.
 
-Claude: Steps 6, 7 and 9 are committed (2026-11-20). Next Step 10 (each: read the code, propose, Filip's go before the coder), then Step 10 (its browser pass also covers Step 8, never run in a browser). Coder runs go on Opus 5.5 without browser measuring, the tester on Sonnet measures once at the end (Filip, 2026-11-15 and 2026-11-19; the Fable allowance is used up).
+Claude: Steps 6, 7 and 9 are committed (2026-11-20). Step 10 is in progress: `/code-review high` found 7 points (the payer fallback skipped, decided in Step 1); the coder run fixing the other 6 plus a smoke check of the built site stopped on the 5-hour limit (resets 19:50 Berlin) with half-done changes in the working folder (not committed); Filip says "continue" to resume it. Then the tester's full check and browser pass, README and the final report (each: read the code, propose, Filip's go before the coder), then Step 10 (its browser pass also covers Step 8, never run in a browser). Coder runs go on Opus 5.5 without browser measuring, the tester on Sonnet measures once at the end (Filip, 2026-11-15 and 2026-11-19; the Fable allowance is used up).
 
 ## Blockers and open questions
 - Not known until the live check: whether every person passes Render's robot check without a tap, how an installed home-screen Kvit and iOS Safari behave on the trip, and whether Render changes this again.

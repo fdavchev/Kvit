@@ -16,7 +16,7 @@ namespace Kvit.Infrastructure.Auth
 
         public Task<string?> ResetAsync(string email, CancellationToken cancellationToken)
         {
-            return AccountWriteRetry.OnceMoreIfAccountChangedMeanwhileAsync(() => ResetOnceAsync(email, cancellationToken));
+            return AccountWriteRetry.OnceMoreIfAccountChangedMeanwhileAsync(_unitOfWork, () => ResetOnceAsync(email, cancellationToken));
         }
 
         private async Task<string?> ResetOnceAsync(string email, CancellationToken cancellationToken)

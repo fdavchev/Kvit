@@ -1,5 +1,6 @@
 using Kvit.Contracts.Persistence;
 using Kvit.Domain.Results;
+using Kvit.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
@@ -47,7 +48,8 @@ namespace Kvit.Api.Problems
                 or DeadlockDetectedException
                 or ClientRequestIdAlreadySavedException
                 or MergeAlreadySavedException
-                or RecurringIncomeEntryAlreadySavedException;
+                or RecurringIncomeEntryAlreadySavedException
+                || DuplicateSaving.IsDeadlock(exception);
         }
     }
 }

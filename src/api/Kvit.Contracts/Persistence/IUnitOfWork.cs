@@ -7,5 +7,7 @@ namespace Kvit.Contracts.Persistence
         Task CommitAsync(CancellationToken cancellationToken);
 
         Task RollbackAsync(CancellationToken cancellationToken);
+
+        void LogCaughtClash(Exception clash, string nextStep);
     }
 }

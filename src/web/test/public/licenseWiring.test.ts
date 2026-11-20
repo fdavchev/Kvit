@@ -103,6 +103,25 @@ describe('.github/workflows/ci.yml, frontend job', () => {
     expect(indexOfStep(steps, 'npm test')).toBeGreaterThanOrEqual(0)
   })
 
+  it('smoke checks the built website in Chromium after the build, with only Chromium installed before it', () => {
+    const steps = frontendSteps()
+
+    const buildAt = indexOfStep(steps, 'npm run build')
+    const installAt = indexOfStep(steps, 'npx playwright install --with-deps chromium')
+    const smokeAt = indexOfStep(steps, 'npm run smoke')
+
+    expect(buildAt).toBeGreaterThanOrEqual(0)
+    expect(installAt).toBeGreaterThan(buildAt)
+    expect(smokeAt).toBeGreaterThan(installAt)
+    expect(steps[smokeAt]).not.toMatch(/^\s+if:/m)
+    expect(steps[smokeAt]).not.toMatch(/continue-on-error/)
+  })
+
+  it('keeps Playwright a development package, so it never reaches the licence file of the site', () => {
+    expect(manifest.devDependencies.playwright).toBeDefined()
+    expect(manifest.dependencies.playwright).toBeUndefined()
+  })
+
   it('does not put the licence check in the backend job', () => {
     const backendJob = workflow.slice(0, workflow.search(/^ {2}frontend:/m))
 

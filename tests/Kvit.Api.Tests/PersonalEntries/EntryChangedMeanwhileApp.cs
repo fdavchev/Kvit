@@ -17,7 +17,7 @@ namespace Kvit.Api.Tests.PersonalEntries
             {
                 expenseServices?.Invoke(services);
                 services.RemoveAll<IUnitOfWork>();
-                services.AddScoped<IUnitOfWork>(provider => new ChangingUnitOfWork(new UnitOfWork(provider.GetRequiredService<AppDbContext>()), ChangeAfterNextTransactionOpens));
+                services.AddScoped<IUnitOfWork>(provider => new ChangingUnitOfWork(ActivatorUtilities.CreateInstance<UnitOfWork>(provider), ChangeAfterNextTransactionOpens));
             };
         }
 

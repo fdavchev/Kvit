@@ -97,9 +97,17 @@ namespace Kvit.Infrastructure.Persistence
             return new AccountChangedMeanwhileException(identityFailure);
         }
 
-        private static bool IsDeadlock(InvalidOperationException exception)
+        public static bool IsDeadlock(Exception exception)
         {
-            return exception.InnerException is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.DeadlockDetected } };
+            for (Exception? cause = exception; cause is not null; cause = cause.InnerException)
+            {
+                if (cause is PostgresException { SqlState: PostgresErrorCodes.DeadlockDetected })
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool IsUniqueViolationOf(DbUpdateException exception, params string[] indexNames)

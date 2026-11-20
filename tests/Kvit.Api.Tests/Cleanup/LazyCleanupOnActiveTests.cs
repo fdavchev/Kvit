@@ -75,6 +75,7 @@ namespace Kvit.Api.Tests.Cleanup
             Assert.NotNull(error.Exception);
             Assert.Equal(FullGroup.ExpectedCounts, await CleanupRows.CountRowsOfGroupAsync(_app, full.Group.GroupId));
 
+            _app.Clock.Advance(LazyDailyCleanup.WaitAfterFailure);
             Assert.Equal(HttpStatusCode.NoContent, (await DashboardRequests.ActiveAsync(full.Group.Member.Client)).StatusCode);
             await _app.WaitUntilLazyRunsEndedAsync(runsBefore + 2);
 
@@ -104,6 +105,7 @@ namespace Kvit.Api.Tests.Cleanup
             Assert.Equal(1, CountLazyErrors() - errorsBefore);
             Assert.Equal(FullGroup.ExpectedCounts, await CleanupRows.CountRowsOfGroupAsync(_app, full.Group.GroupId));
 
+            _app.Clock.Advance(LazyDailyCleanup.WaitAfterFailure);
             Assert.Equal(HttpStatusCode.NoContent, (await DashboardRequests.ActiveAsync(full.Group.Owner.Client)).StatusCode);
             await _app.WaitUntilLazyRunsEndedAsync(runsBefore + 2);
 

@@ -8,10 +8,11 @@ using Kvit.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 
 namespace Kvit.Infrastructure.Auth
 {
-    public sealed class AccountPurger(AppDbContext _context, ILookupNormalizer _normalizer) : IAccountPurger
+    public sealed class AccountPurger(AppDbContext _context, ILookupNormalizer _normalizer, ILogger<AccountPurger> _logger) : IAccountPurger
     {
         private const string PostgresRegexSpecialCharacters = @"\^$.|?*+()[]{}";
 
@@ -93,7 +94,7 @@ namespace Kvit.Infrastructure.Auth
             return purgedCount;
         }
 
-        public async Task<int> PurgeLeftBehindGuestsAsync(DateTimeOffset now, CancellationToken cancellationToken)
+        public async Task<LeftBehindGuestsPurge> PurgeLeftBehindGuestsAsync(DateTimeOffset now, CancellationToken cancellationToken)
         {
             DateTimeOffset latestCreation = CleanupRules.LatestRemovableGuestCreation(now);
             List<Guid> leftBehindGuestIds = await LeftBehindGuests(latestCreation)
@@ -102,22 +103,40 @@ namespace Kvit.Infrastructure.Auth
                 .ToListAsync(cancellationToken);
 
             int purgedCount = 0;
+            List<Guid> failedUserIds = [];
             foreach (Guid userId in leftBehindGuestIds)
             {
-                _context.ChangeTracker.Clear();
-                await using IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-                AppUser? user = await LockUserAsync(userId, cancellationToken);
-                if (user is null || !await LeftBehindGuests(latestCreation).AnyAsync(guest => guest.Id == userId, cancellationToken))
+                try
                 {
-                    continue;
+                    if (await PurgeLeftBehindGuestAsync(userId, latestCreation, now, cancellationToken))
+                    {
+                        purgedCount++;
+                    }
                 }
-
-                await PurgeLockedUserAsync(user, DeletionNameChoice.KeepName, now, cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                purgedCount++;
+                catch (Exception exception) when (exception is not OperationCanceledException)
+                {
+                    _logger.LogError(exception, "Left-behind guest {UserId} could not be purged; the cleanup goes on with the other guests and steps and counts as failed.", userId);
+                    failedUserIds.Add(userId);
+                }
             }
 
-            return purgedCount;
+            return new LeftBehindGuestsPurge(purgedCount, failedUserIds);
+        }
+
+        private async Task<bool> PurgeLeftBehindGuestAsync(Guid userId, DateTimeOffset latestCreation, DateTimeOffset now, CancellationToken cancellationToken)
+        {
+            _context.ChangeTracker.Clear();
+            await using IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            AppUser? user = await LockUserAsync(userId, cancellationToken);
+            if (user is null || !await LeftBehindGuests(latestCreation).AnyAsync(guest => guest.Id == userId, cancellationToken))
+            {
+                return false;
+            }
+
+            await PurgeLockedUserAsync(user, DeletionNameChoice.KeepName, now, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return true;
         }
 
         private IQueryable<AppUser> LeftBehindGuests(DateTimeOffset latestCreation)

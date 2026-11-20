@@ -50,6 +50,9 @@ namespace Kvit.Api.Tests.Problems
         [Theory]
         [InlineData("/test-exceptions/concurrency")]
         [InlineData("/test-exceptions/member-changed-twice")]
+        [InlineData("/test-exceptions/raw-sql-deadlock")]
+        [InlineData("/test-exceptions/bare-deadlock")]
+        [InlineData("/test-exceptions/saving-deadlock")]
         public async Task SameMomentClashThatEscapesTheHandlers_Answers409ChangedMeanwhileWithoutTheExceptionText(string path)
         {
             HttpResponseMessage response = await CreateClient().PostAsync(path, null, TestContext.Current.CancellationToken);
@@ -60,6 +63,16 @@ namespace Kvit.Api.Tests.Problems
             RecordedLogEntry entry = Assert.Single(_logs.EntriesOf<UnexpectedExceptionHandler>());
             Assert.Equal(LogLevel.Warning, entry.Level);
             Assert.NotNull(entry.Exception);
+        }
+
+        [Fact]
+        public async Task PostgresFailureThatIsNotADeadlock_StillAnswers500ServerError()
+        {
+            HttpResponseMessage response = await CreateClient().PostAsync("/test-exceptions/other-postgres-failure", null, TestContext.Current.CancellationToken);
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.InternalServerError, ResultCodes.SERVER_ERROR);
+            RecordedLogEntry entry = Assert.Single(_logs.EntriesOf<UnexpectedExceptionHandler>());
+            Assert.Equal(LogLevel.Error, entry.Level);
         }
 
         [Theory]

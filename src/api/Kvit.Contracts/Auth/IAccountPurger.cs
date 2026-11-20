@@ -8,6 +8,6 @@ namespace Kvit.Contracts.Auth
 
         Task<int> PurgeDueAccountsAsync(DateTimeOffset now, CancellationToken cancellationToken);
 
-        Task<int> PurgeLeftBehindGuestsAsync(DateTimeOffset now, CancellationToken cancellationToken);
+        Task<LeftBehindGuestsPurge> PurgeLeftBehindGuestsAsync(DateTimeOffset now, CancellationToken cancellationToken);
     }
 }

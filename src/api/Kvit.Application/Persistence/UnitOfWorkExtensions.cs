@@ -41,8 +41,9 @@ namespace Kvit.Application.Persistence
             {
                 return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
             }
-            catch (CategoryNameAlreadySavedException)
+            catch (CategoryNameAlreadySavedException exception)
             {
+                unitOfWork.LogCaughtClash(exception, "the request answers that the category name was taken meanwhile");
                 return refusal(Category.NameTakenMeanwhile());
             }
         }
@@ -80,18 +81,27 @@ namespace Kvit.Application.Persistence
         public static Task<TResult> RunInTransactionKeepingRefusalsOnceMoreIfAccountChangedMeanwhileAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
             where TResult : Result
         {
-            return OnceMoreIfAsync(() => unitOfWork.RunInTransactionKeepingRefusalsAsync(work, cancellationToken), exception => exception is AccountChangedMeanwhileException);
+            return unitOfWork.OnceMoreIfAsync(() => unitOfWork.RunInTransactionKeepingRefusalsAsync(work, cancellationToken), exception => exception is AccountChangedMeanwhileException);
         }
 
-        public static async Task<TResult> RunInTransactionOrAnswerIfExpenseChangedMeanwhileAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, Func<Task<TResult>> answerAfterChange, CancellationToken cancellationToken)
+        public static Task<TResult> RunInTransactionOrAnswerIfExpenseChangedMeanwhileAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, Func<Task<TResult>> answerAfterChange, CancellationToken cancellationToken)
+            where TResult : Result
+        {
+            return unitOfWork.OnceMoreIfAsync(
+                () => unitOfWork.RunInTransactionOrAnswerAfterExpenseChangeAsync(work, answerAfterChange, cancellationToken),
+                exception => exception is DeadlockDetectedException);
+        }
+
+        private static async Task<TResult> RunInTransactionOrAnswerAfterExpenseChangeAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, Func<Task<TResult>> answerAfterChange, CancellationToken cancellationToken)
             where TResult : Result
         {
             try
             {
                 return await unitOfWork.RunInTransactionAsync(work, cancellationToken);
             }
-            catch (Exception exception) when (exception is ExpenseChangedMeanwhileException or DeadlockDetectedException)
+            catch (ExpenseChangedMeanwhileException exception)
             {
+                unitOfWork.LogCaughtClash(exception, "the request answers from the expense as it is now");
                 return await unitOfWork.RunInTransactionAsync(answerAfterChange, cancellationToken);
             }
         }
@@ -99,7 +109,7 @@ namespace Kvit.Application.Persistence
         private static Task<TResult> RunInTransactionOnceMoreIfAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, Func<Exception, bool> isWorthOneMoreRun, CancellationToken cancellationToken)
             where TResult : Result
         {
-            return OnceMoreIfAsync(() => unitOfWork.RunInTransactionAsync(work, cancellationToken), isWorthOneMoreRun);
+            return unitOfWork.OnceMoreIfAsync(() => unitOfWork.RunInTransactionAsync(work, cancellationToken), isWorthOneMoreRun);
         }
 
         private static async Task<TResult> RunInTransactionKeepingRefusalsAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> work, CancellationToken cancellationToken)
@@ -112,7 +122,7 @@ namespace Kvit.Application.Persistence
             return result;
         }
 
-        private static async Task<TResult> OnceMoreIfAsync<TResult>(Func<Task<TResult>> run, Func<Exception, bool> isWorthOneMoreRun)
+        private static async Task<TResult> OnceMoreIfAsync<TResult>(this IUnitOfWork unitOfWork, Func<Task<TResult>> run, Func<Exception, bool> isWorthOneMoreRun)
         {
             try
             {
@@ -120,6 +130,7 @@ namespace Kvit.Application.Persistence
             }
             catch (Exception exception) when (isWorthOneMoreRun(exception))
             {
+                unitOfWork.LogCaughtClash(exception, "the transaction runs once more");
                 return await run();
             }
         }

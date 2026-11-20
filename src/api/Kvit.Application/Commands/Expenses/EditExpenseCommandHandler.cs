@@ -2,6 +2,7 @@ using Kvit.Application.Dispatching;
 using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
 using Kvit.Domain.Entities;
+using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Expenses;
 
@@ -20,10 +21,11 @@ namespace Kvit.Application.Commands.Expenses
                 return userId;
             }
 
-            return await _groupWrite.RunOrAnswerIfExpenseChangedMeanwhileAsync(
+            return await _groupWrite.PrepareThenRunOrAnswerIfExpenseChangedMeanwhileAsync<ExchangeRateSnapshot?>(
                 command.GroupId,
                 userId.Value,
-                () => _editExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, command.Input, cancellationToken),
+                () => _editExpense.FetchRateIfCurrencyChangesAsync(command.GroupId, userId.Value, command.ExpenseId, command.Input, cancellationToken),
+                newRate => _editExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, command.Input, newRate, cancellationToken),
                 () => Task.FromResult(Expense.ChangedMeanwhile(command.ExpenseId)),
                 cancellationToken);
         }

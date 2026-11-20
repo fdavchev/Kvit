@@ -13,12 +13,12 @@ namespace Kvit.Infrastructure.Auth
     {
         public Task<bool> GrantAsync(string email, CancellationToken cancellationToken)
         {
-            return AccountWriteRetry.OnceMoreIfAccountChangedMeanwhileAsync(() => GrantOnceAsync(email, cancellationToken));
+            return AccountWriteRetry.OnceMoreIfAccountChangedMeanwhileAsync(_unitOfWork, () => GrantOnceAsync(email, cancellationToken));
         }
 
         public Task<bool> RevokeAsync(string email, CancellationToken cancellationToken)
         {
-            return AccountWriteRetry.OnceMoreIfAccountChangedMeanwhileAsync(() => RevokeOnceAsync(email, cancellationToken));
+            return AccountWriteRetry.OnceMoreIfAccountChangedMeanwhileAsync(_unitOfWork, () => RevokeOnceAsync(email, cancellationToken));
         }
 
         private async Task<bool> GrantOnceAsync(string email, CancellationToken cancellationToken)

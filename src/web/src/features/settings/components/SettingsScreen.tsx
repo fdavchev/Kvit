@@ -62,9 +62,23 @@ export function SettingsScreen() {
   }
 
   function switchLanguage(newLanguage: Language): void {
+    const previousLanguage = language
     changeScreenLanguage(newLanguage).then(() => {
-      changeLanguage.mutate(newLanguage, { onError: showFailure })
+      changeLanguage.mutate(newLanguage, {
+        onError: (error) => {
+          switchBackAfterFailedSave(previousLanguage, error)
+        },
+      })
     }, showFailure)
+  }
+
+  function switchBackAfterFailedSave(previousLanguage: Language, saveError: Error): void {
+    changeScreenLanguage(previousLanguage).then(() => {
+      showFailure(saveError)
+    }, (switchBackError: unknown) => {
+      console.error(`The language save failed and the screen could not switch back to "${previousLanguage}"`, switchBackError)
+      showFailure(saveError)
+    })
   }
 
   function downloadData(): void {
