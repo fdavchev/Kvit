@@ -4,6 +4,7 @@ using Kvit.Domain.Expenses;
 using Kvit.Domain.Interfaces;
 using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
+using Kvit.Domain.Services.ExchangeRates;
 using Kvit.Domain.Services.Groups;
 
 namespace Kvit.Domain.Services.Expenses
@@ -16,9 +17,10 @@ namespace Kvit.Domain.Services.Expenses
         IActivityEventRepository _activityEvents,
         CancelClosingOnChange _cancelClosingOnChange,
         FinishPaidOneBill _finishPaidOneBill,
+        GetCurrentExchangeRate _getCurrentExchangeRate,
         TimeProvider _timeProvider)
     {
-        public async Task<Result> Execute(Guid groupId, Guid userId, Guid expenseId, ExpenseInput input, ExchangeRateSnapshot? currentRate, CancellationToken cancellationToken)
+        public async Task<Result> Execute(Guid groupId, Guid userId, Guid expenseId, ExpenseInput input, CancellationToken cancellationToken)
         {
             Result<Group> found = await _groups.FindForMemberAsync(groupId, userId, cancellationToken);
             if (!found.IsSuccess)
@@ -62,7 +64,10 @@ namespace Kvit.Domain.Services.Expenses
                 return fields;
             }
 
-            Result<string> categoryKey = await _categories.GroupExpenseKeyAsync(fields.Value.CategoryId, cancellationToken);
+            string storedCategoryKey = await _categories.StoredKeyAsync(expense.CategoryId, cancellationToken);
+            Result<string> categoryKey = fields.Value.CategoryId == expense.CategoryId
+                ? Result.Ok(storedCategoryKey)
+                : await _categories.GroupExpenseKeyAsync(fields.Value.CategoryId, cancellationToken);
             if (!categoryKey.IsSuccess)
             {
                 return categoryKey;
@@ -75,7 +80,6 @@ namespace Kvit.Domain.Services.Expenses
                 return shares;
             }
 
-            string storedCategoryKey = await _categories.StoredKeyAsync(expense.CategoryId, cancellationToken);
             ExpenseState before = StateBefore(expense, storedCategoryKey, roster);
             ExpenseState after = StateAfter(fields.Value, categoryKey.Value, input.PaidByMemberId, shares.Value, roster);
             IReadOnlyList<FieldChange> changes = ExpenseChanges.Between(before, after);
@@ -86,12 +90,13 @@ namespace Kvit.Domain.Services.Expenses
 
             if (fields.Value.Amount.Currency != expense.Currency)
             {
-                if (currentRate is null)
+                Result<ExchangeRateSnapshot> rate = await _getCurrentExchangeRate.Execute(cancellationToken);
+                if (!rate.IsSuccess)
                 {
-                    return Expense.ChangedMeanwhile(expenseId);
+                    return rate;
                 }
 
-                expense.SaveRate(currentRate);
+                expense.SaveRate(rate.Value);
             }
 
             expense.Update(fields.Value, input.PaidByMemberId, shares.Value, roster, userId, now);

@@ -13,6 +13,7 @@ namespace Kvit.Infrastructure.Cleanup
         public async Task<CleanupResponse> RunAsync(DateTimeOffset now, CancellationToken cancellationToken)
         {
             int accountsPurged = await _accountPurger.PurgeDueAccountsAsync(now, cancellationToken);
+            int guestsPurged = await _accountPurger.PurgeLeftBehindGuestsAsync(now, cancellationToken);
 
             DateTimeOffset latestRowDeletion = CleanupRules.LatestRemovableRowDeletion(now);
             int expensesRemoved = await RemoveDeletedExpensesAsync(latestRowDeletion, cancellationToken);
@@ -34,7 +35,8 @@ namespace Kvit.Infrastructure.Cleanup
                 expensesRemoved + removedGroups.Expenses,
                 settlementsRemoved + removedGroups.Settlements,
                 personalEntriesRemoved,
-                usageEventsDetached);
+                usageEventsDetached,
+                guestsPurged);
         }
 
         private async Task<int> RemoveDeletedExpensesAsync(DateTimeOffset latestDeletion, CancellationToken cancellationToken)

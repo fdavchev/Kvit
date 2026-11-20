@@ -1,5 +1,7 @@
 using Kvit.Application.Dispatching;
+using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
+using Kvit.Contracts.Persistence;
 using Kvit.Domain.Accounts;
 using Kvit.Domain.Results;
 
@@ -7,7 +9,8 @@ namespace Kvit.Application.Commands.Me
 {
     public sealed class DeleteAccountCommandHandler(
         ICurrentUserProvider _currentUserProvider,
-        IAccountService _accountService) : ICommandHandler<DeleteAccountCommand>
+        IAccountService _accountService,
+        IUnitOfWork _unitOfWork) : ICommandHandler<DeleteAccountCommand>
     {
         public async Task<Result> Handle(DeleteAccountCommand command, CancellationToken cancellationToken)
         {
@@ -23,7 +26,9 @@ namespace Kvit.Application.Commands.Me
                 return nameChoice;
             }
 
-            return await _accountService.RequestDeletionAsync(userId.Value, nameChoice.Value, cancellationToken);
+            return await _unitOfWork.RunInTransactionOnceMoreIfAccountChangedMeanwhileAsync(
+                () => _accountService.RequestDeletionAsync(userId.Value, nameChoice.Value, cancellationToken),
+                cancellationToken);
         }
     }
 }

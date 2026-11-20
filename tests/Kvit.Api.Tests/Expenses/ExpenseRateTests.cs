@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Kvit.Api.Tests.Auth;
+using Kvit.Api.Tests.Groups;
 using Kvit.Api.Tests.Persistence;
 using Xunit;
 
@@ -194,6 +195,39 @@ namespace Kvit.Api.Tests.Expenses
 
             Assert.Equal("62.9000", await ExpenseRows.ExpenseValueAsync(_app, expenseId, "mkd_per_eur"));
             Assert.Equal("2026-10-04", await ExpenseRows.ExpenseValueAsync(_app, expenseId, "rate_date"));
+        }
+
+        [Fact]
+        public async Task Edit_WithTheCurrencyChangedBySomeoneOutsideTheGroupWhileTheRateIsStale_Answers404AndDoesNotAskTheSource()
+        {
+            await _app.PrepareRatesAsync(FreshRateDate, FreshRate, TimeSpan.FromHours(1));
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            ExpenseInput input = ExpenseInputs.Equal(100_000, "MKD", group.OwnerRowId, group.OwnerRowId);
+            Guid expenseId = await _app.AddExpenseAsync(group.Owner, group.GroupId, input);
+            await _app.PrepareRatesAsync(FreshRateDate, FreshRate, TimeSpan.FromHours(20));
+            SignedInUser outsider = await _app.SignUpAsync();
+
+            HttpResponseMessage response = await ExpenseRequests.EditAsync(outsider.Client, group.GroupId, expenseId, input with { Currency = "EUR" });
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Empty(_app.RateSource.RequestedDates);
+            Assert.Equal("MKD", await ExpenseRows.ExpenseValueAsync(_app, expenseId, "currency"));
+        }
+
+        [Fact]
+        public async Task Edit_WithTheCurrencyChangedAndAnInvalidAmountWhileTheRateIsStale_Answers400AndDoesNotAskTheSource()
+        {
+            await _app.PrepareRatesAsync(FreshRateDate, FreshRate, TimeSpan.FromHours(1));
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            ExpenseInput input = ExpenseInputs.Equal(100_000, "MKD", group.OwnerRowId, group.OwnerRowId);
+            Guid expenseId = await _app.AddExpenseAsync(group.Owner, group.GroupId, input);
+            await _app.PrepareRatesAsync(FreshRateDate, FreshRate, TimeSpan.FromHours(20));
+
+            HttpResponseMessage response = await ExpenseRequests.EditAsync(group.Owner.Client, group.GroupId, expenseId, input with { Currency = "EUR", AmountMinor = 0 });
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Empty(_app.RateSource.RequestedDates);
+            Assert.Equal("MKD", await ExpenseRows.ExpenseValueAsync(_app, expenseId, "currency"));
         }
     }
 }

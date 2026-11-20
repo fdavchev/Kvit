@@ -35,7 +35,7 @@ namespace Kvit.Application.Commands.Auth
             }
 
             Guid userId = me.Value.Id;
-            Result set = await _unitOfWork.RunInTransactionAsync(() => _accountService.SetPasswordAsync(userId, command.NewPassword, cancellationToken), cancellationToken);
+            Result set = await _unitOfWork.RunInTransactionOnceMoreIfAccountChangedMeanwhileAsync(() => _accountService.SetPasswordAsync(userId, command.NewPassword, cancellationToken), cancellationToken);
             if (!set.IsSuccess)
             {
                 return set;

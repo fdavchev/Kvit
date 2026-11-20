@@ -1,18 +1,25 @@
 using System.Security.Cryptography;
 using Kvit.Contracts.Persistence;
 using Kvit.Domain.Accounts;
+using Kvit.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 
 namespace Kvit.Infrastructure.Auth
 {
     public sealed class PasswordResetService(
         UserManager<AppUser> _userManager,
+        AppDbContext _context,
         IUnitOfWork _unitOfWork)
     {
         private const int TemporaryPasswordLength = 12;
         private const string TemporaryPasswordCharacters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 
-        public async Task<string?> ResetAsync(string email, CancellationToken cancellationToken)
+        public Task<string?> ResetAsync(string email, CancellationToken cancellationToken)
+        {
+            return AccountWriteRetry.OnceMoreIfAccountChangedMeanwhileAsync(() => ResetOnceAsync(email, cancellationToken));
+        }
+
+        private async Task<string?> ResetOnceAsync(string email, CancellationToken cancellationToken)
         {
             AppUser? user = await _userManager.FindByEmailAsync(email.Trim());
             if (user is null)
@@ -27,8 +34,12 @@ namespace Kvit.Infrastructure.Auth
             user.LockoutEnd = null;
 
             await _unitOfWork.OpenTransactionAsync(cancellationToken);
-            IdentityResultChecks.ThrowIfFailed(await _userManager.RemovePasswordAsync(user), $"remove the password of user {user.Id}");
-            IdentityResultChecks.ThrowIfFailed(await _userManager.AddPasswordAsync(user, temporaryPassword), $"set the temporary password of user {user.Id}");
+            IdentityResult removed = await _userManager.RemovePasswordAsync(user);
+            await _context.ThrowIfAccountChangedMeanwhileAsync(removed, cancellationToken);
+            IdentityResultChecks.ThrowIfFailed(removed, $"remove the password of user {user.Id}");
+            IdentityResult added = await _userManager.AddPasswordAsync(user, temporaryPassword);
+            await _context.ThrowIfAccountChangedMeanwhileAsync(added, cancellationToken);
+            IdentityResultChecks.ThrowIfFailed(added, $"set the temporary password of user {user.Id}");
             await _unitOfWork.CommitAsync(cancellationToken);
 
             return temporaryPassword;

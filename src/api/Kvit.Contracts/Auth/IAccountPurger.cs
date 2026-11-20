@@ -7,5 +7,7 @@ namespace Kvit.Contracts.Auth
         Task<bool> PurgeAccountAsync(Guid userId, DeletionNameChoice nameChoice, DateTimeOffset now, CancellationToken cancellationToken);
 
         Task<int> PurgeDueAccountsAsync(DateTimeOffset now, CancellationToken cancellationToken);
+
+        Task<int> PurgeLeftBehindGuestsAsync(DateTimeOffset now, CancellationToken cancellationToken);
     }
 }

@@ -143,6 +143,10 @@ const translatedErrorCodes = [
   'OWNER_PERSON_NOT_FOUND',
   'OWNER_GROUP_NOT_FOUND',
   'OWNER_CANNOT_ACT_ON_ADMIN',
+  'SERVER_ERROR',
+  'CHANGED_MEANWHILE',
+  'REQUEST_TOO_LARGE',
+  'REQUEST_INVALID',
 ]
 const errorCodeMessageKeys = new Map<string, string>(
   translatedErrorCodes.map((code) => [code, `errors.${code}`]),

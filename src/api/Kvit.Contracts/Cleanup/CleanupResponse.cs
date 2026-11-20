@@ -6,5 +6,6 @@ namespace Kvit.Contracts.Cleanup
         int ExpensesRemoved,
         int SettlementsRemoved,
         int PersonalEntriesRemoved,
-        int UsageEventsDetached);
+        int UsageEventsDetached,
+        int GuestsPurged);
 }

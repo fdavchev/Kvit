@@ -5,13 +5,13 @@ import { useLanguage } from '@/core/i18n/useLanguage'
 import type { DashboardPaymentItem } from '@/core/services/dashboard/dashboardService'
 import { balancesActionButtonLook } from '@/features/groups/balances/balancesLooks'
 import { useAnswerSettlement, type SettlementAnswer } from '@/features/settlements/pending/hooks/useAnswerSettlement'
+import { refreshWhenSettlementChangedMeanwhile } from '@/features/settlements/shared/settlementCache'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitInlineError } from '@/shared/components/KvitInlineError'
 import { kvitGlassButtonLook, kvitGlassDangerButtonLook } from '@/shared/components/kvitGlassLooks'
 import { cn } from '@/shared/utils/cn'
 import { formatMoney } from '@/shared/utils/formatMoney'
 import { needsYouCardLook } from '../homeLooks'
-import { invalidateDashboard } from '../shared/dashboardCache'
 import { NeedsYouCardText } from './NeedsYouCardText'
 
 interface HomePaymentCardProps {
@@ -29,7 +29,9 @@ export function HomePaymentCard({ item }: HomePaymentCardProps) {
   })
 
   function answer(choice: SettlementAnswer) {
-    answerSettlement.mutate(choice, { onError: () => void invalidateDashboard(queryClient) })
+    answerSettlement.mutate(choice, {
+      onError: (error) => refreshWhenSettlementChangedMeanwhile(queryClient, item.groupId, error),
+    })
   }
 
   return (

@@ -92,7 +92,7 @@ namespace Kvit.Domain.Tests.Statistics
         [Fact]
         public void Create_DayGroupingOf93Days_FailsWithDayRangeTooLong()
         {
-            Result<StatsPeriod> result = StatsPeriod.Create(DateOf("2026-08-04"), Today, null, Today, null);
+            Result<StatsPeriod> result = StatsPeriod.Create(DateOf("2026-08-04"), Today, "day", Today, null);
 
             Assert.Equal(ResultCodes.ADMIN_STATS_DAY_RANGE_TOO_LONG, result.ErrorCode);
         }
@@ -106,11 +106,39 @@ namespace Kvit.Domain.Tests.Statistics
         }
 
         [Fact]
-        public void Create_FromOmittedAndTheFirstEventMoreThan92DaysAgo_FailsWithDayRangeTooLong()
+        public void Create_FromOmittedAndTheFirstEventMoreThan92DaysAgo_GroupsByWeekFromTheFirstEventDay()
         {
             Result<StatsPeriod> result = StatsPeriod.Create(null, null, null, Today, DateOf("2026-01-01"));
 
-            Assert.Equal(ResultCodes.ADMIN_STATS_DAY_RANGE_TOO_LONG, result.ErrorCode);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(StatsGrouping.Week, result.Value.Grouping);
+            Assert.Equal(RangeOf("2026-01-01", "2026-11-04"), result.Value.Range);
+        }
+
+        [Theory]
+        [InlineData("2026-08-05", StatsGrouping.Day)]
+        [InlineData("2026-08-04", StatsGrouping.Week)]
+        [InlineData("2026-01-01", StatsGrouping.Week)]
+        public void Create_NoGroupingAsked_GroupsByDayUpTo92DaysAndByWeekBeyond(string from, StatsGrouping expected)
+        {
+            Result<StatsPeriod> result = StatsPeriod.Create(DateOf(from), Today, null, Today, null);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(expected, result.Value.Grouping);
+        }
+
+        [Theory]
+        [InlineData("2027-01-01", "2027-12-31", StatsGrouping.Week)]
+        [InlineData("2026-12-31", "2027-12-31", StatsGrouping.Week)]
+        [InlineData("2026-12-30", "2027-12-31", StatsGrouping.Month)]
+        public void Create_NoGroupingAsked_GroupsByWeekUpTo366DaysAndByMonthBeyond(string from, string to, StatsGrouping expected)
+        {
+            DateOnly later = DateOf("2028-01-01");
+
+            Result<StatsPeriod> result = StatsPeriod.Create(DateOf(from), DateOf(to), null, later, null);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(expected, result.Value.Grouping);
         }
 
         [Fact]

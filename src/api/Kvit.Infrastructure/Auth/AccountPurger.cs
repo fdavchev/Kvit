@@ -1,6 +1,7 @@
 using System.Text;
 using Kvit.Contracts.Auth;
 using Kvit.Domain.Accounts;
+using Kvit.Domain.Cleanup;
 using Kvit.Domain.Entities;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
@@ -90,6 +91,43 @@ namespace Kvit.Infrastructure.Auth
             }
 
             return purgedCount;
+        }
+
+        public async Task<int> PurgeLeftBehindGuestsAsync(DateTimeOffset now, CancellationToken cancellationToken)
+        {
+            DateTimeOffset latestCreation = CleanupRules.LatestRemovableGuestCreation(now);
+            List<Guid> leftBehindGuestIds = await LeftBehindGuests(latestCreation)
+                .OrderBy(user => user.Id)
+                .Select(user => user.Id)
+                .ToListAsync(cancellationToken);
+
+            int purgedCount = 0;
+            foreach (Guid userId in leftBehindGuestIds)
+            {
+                _context.ChangeTracker.Clear();
+                await using IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+                AppUser? user = await LockUserAsync(userId, cancellationToken);
+                if (user is null || !await LeftBehindGuests(latestCreation).AnyAsync(guest => guest.Id == userId, cancellationToken))
+                {
+                    continue;
+                }
+
+                await PurgeLockedUserAsync(user, DeletionNameChoice.KeepName, now, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                purgedCount++;
+            }
+
+            return purgedCount;
+        }
+
+        private IQueryable<AppUser> LeftBehindGuests(DateTimeOffset latestCreation)
+        {
+            return _context.Users.Where(user =>
+                user.IsGuest
+                && user.PurgedAt == null
+                && user.CreatedAt <= latestCreation
+                && !_context.GroupMembers.Any(member => member.UserId == user.Id)
+                && !_context.PersonalEntries.Any(entry => entry.UserId == user.Id));
         }
 
         private async Task<AppUser?> LockUserAsync(Guid userId, CancellationToken cancellationToken)

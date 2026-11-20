@@ -82,7 +82,7 @@ namespace Kvit.Domain.Services.Groups
             GroupMember member = target.Value.Member;
             member.Claim(userId, now);
             _activityEvents.Add(ActivityEvent.MemberJoined(groupId, userId, member.Id, accountName, now));
-            if (writesClaimEvent)
+            if (writesClaimEvent && !string.Equals(accountName, member.Name, StringComparison.Ordinal))
             {
                 _activityEvents.Add(ActivityEvent.MemberClaimed(groupId, userId, member.Id, accountName, member.Name, now));
             }

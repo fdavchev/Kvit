@@ -143,5 +143,9 @@ namespace Kvit.Domain.Results
         public const string OWNER_PERSON_NOT_FOUND = "OWNER_PERSON_NOT_FOUND";
         public const string OWNER_GROUP_NOT_FOUND = "OWNER_GROUP_NOT_FOUND";
         public const string OWNER_CANNOT_ACT_ON_ADMIN = "OWNER_CANNOT_ACT_ON_ADMIN";
+        public const string SERVER_ERROR = "SERVER_ERROR";
+        public const string CHANGED_MEANWHILE = "CHANGED_MEANWHILE";
+        public const string REQUEST_TOO_LARGE = "REQUEST_TOO_LARGE";
+        public const string REQUEST_INVALID = "REQUEST_INVALID";
     }
 }

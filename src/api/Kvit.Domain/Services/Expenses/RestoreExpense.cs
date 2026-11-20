@@ -48,7 +48,7 @@ namespace Kvit.Domain.Services.Expenses
                 return restored;
             }
 
-            _activityEvents.Add(ActivityEvent.ExpenseRestored(groupId, userId, expenseId, now));
+            _activityEvents.Add(ActivityEvent.ExpenseRestored(groupId, userId, expenseId, expense.Title, expense.AmountMinor, expense.Currency, now));
             await _finishPaidOneBill.Execute(group, userId, cancellationToken);
 
             return Result.Ok();

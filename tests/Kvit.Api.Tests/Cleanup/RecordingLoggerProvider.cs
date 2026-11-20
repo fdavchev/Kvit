@@ -7,6 +7,8 @@ namespace Kvit.Api.Tests.Cleanup
     {
         private readonly ConcurrentQueue<RecordedLogEntry> _entries = new();
 
+        public IReadOnlyList<RecordedLogEntry> AllEntries => [.. _entries];
+
         public IReadOnlyList<RecordedLogEntry> EntriesOf<T>()
         {
             string category = typeof(T).FullName ?? typeof(T).Name;

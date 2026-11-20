@@ -210,8 +210,14 @@ namespace Kvit.Api.Tests.Settlements
 
         private static async Task AssertBalancesAsync(SettlementGroup group, bool settlementCounts)
         {
-            List<long> expected = settlementCounts ? [-30_000L, 0L, 0L, 0L, 30_000L] : [0L, 0L, 0L, 0L, 0L];
-            Assert.Equal(expected, [.. (await SettlementSteps.BalanceMinorsAsync(group.Owner, group.GroupId, "MKD")).Order()]);
+            if (!settlementCounts)
+            {
+                await SettlementSteps.AssertAllBalancesZeroAsync(group.Owner, group.GroupId);
+                return;
+            }
+
+            List<long> balances = [.. (await SettlementSteps.BalanceMinorsAsync(group.Owner, group.GroupId, "MKD")).Order()];
+            Assert.Equal([-30_000L, 0L, 0L, 0L, 30_000L], balances);
         }
 
         private Task<InsertGate> HoldAtByAsync(string eventType, Guid actorUserId)

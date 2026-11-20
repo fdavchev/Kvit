@@ -3,7 +3,7 @@ import { createI18n } from '@/core/i18n/i18n'
 import { languages, type Language } from '@/core/i18n/language'
 import type { ActivityEvent } from '@/core/services/activity/activityService'
 import type { ExpenseListRow } from '@/core/services/expenses/expensesService'
-import { activityEventOf } from '@/test/activityTestData'
+import { activityEventOf, type ActivityEventJson } from '@/test/activityTestData'
 import { taxiRow, untitledRow } from '@/test/expenseTestData'
 import { cvetaGuestMember, petarMember } from '@/test/memberTestData'
 import { translated } from '@/test/translated'
@@ -137,6 +137,27 @@ describe('activityLines for a restored expense', () => {
 
   it.each(languages)('keeps "restored an expense" when the expense is not in the list (%s)', async (language) => {
     expect(await restoredSentences([], language)).toEqual([
+      translated(language, 'activity.expenseRestored', { name: 'Ana' }),
+    ])
+  })
+
+  async function restoredSentencesWithData(data: ActivityEventJson['data'], language: Language): Promise<string[]> {
+    const i18n = await createI18n(language)
+    const event = activityEventOf({ type: 'ExpenseRestored', expenseId: taxiRow.id, data })
+    return activityLines([event], { t: i18n.t, language, today: '2026-10-16', categories: [], expenses: [] }).map(
+      (line) => line.sentence,
+    )
+  }
+
+  it.each([
+    ['en', 'Ana restored “Taxi”'],
+    ['mk', 'Ana го врати „Taxi“'],
+  ] as const)('names the expense by the title the event carries, also when the expense is deleted again and not in the list (%s)', async (language, sentence) => {
+    expect(await restoredSentencesWithData({ title: 'Taxi', amountMinor: 90000, currency: 'MKD' }, language)).toEqual([sentence])
+  })
+
+  it.each(languages)('keeps "restored an expense" when the event carries no title (%s)', async (language) => {
+    expect(await restoredSentencesWithData({ title: null, amountMinor: 90000, currency: 'MKD' }, language)).toEqual([
       translated(language, 'activity.expenseRestored', { name: 'Ana' }),
     ])
   })

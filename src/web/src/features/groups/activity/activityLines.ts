@@ -60,7 +60,10 @@ export function activityLines(events: readonly ActivityEvent[], context: Activit
   }
 
   function expenseRestoredSentence(event: ActivityEvent): string {
-    const title = expenseRowOf(event)?.title ?? null
+    const title =
+      event.data === null
+        ? (expenseRowOf(event)?.title ?? null)
+        : readTextOrNull(event.data, 'title', `the data of the ${event.type} event ${event.id}`)
     return title === null
       ? t('activity.expenseRestored', { name: event.actorName })
       : t('activity.expenseRestoredWithTitle', { name: event.actorName, title })

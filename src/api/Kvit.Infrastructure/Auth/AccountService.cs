@@ -131,7 +131,7 @@ namespace Kvit.Infrastructure.Auth
                 return EmailTaken;
             }
 
-            await ThrowIfAccountChangedMeanwhileAsync(upgraded, cancellationToken);
+            await _context.ThrowIfAccountChangedMeanwhileAsync(upgraded, cancellationToken);
             if (!upgraded.Succeeded)
             {
                 return RegistrationFailure(upgraded, EmailTaken);
@@ -169,7 +169,7 @@ namespace Kvit.Infrastructure.Auth
                 return GoogleEmailTaken;
             }
 
-            await ThrowIfAccountChangedMeanwhileAsync(upgraded, cancellationToken);
+            await _context.ThrowIfAccountChangedMeanwhileAsync(upgraded, cancellationToken);
             if (!upgraded.Succeeded)
             {
                 return RegistrationFailure(upgraded, GoogleEmailTaken);
@@ -246,6 +246,12 @@ namespace Kvit.Infrastructure.Auth
                 return Result.Unauthorized(NotSignedInMessage, ResultCodes.AUTH_NOT_SIGNED_IN);
             }
 
+            Result notGuest = AccountRules.CheckIsNotGuest(user.IsGuest);
+            if (!notGuest.IsSuccess)
+            {
+                return notGuest;
+            }
+
             if (user.PasswordHash is null)
             {
                 return Result.Failure(UsesGoogleMessage, ResultCodes.AUTH_USES_GOOGLE);
@@ -265,7 +271,7 @@ namespace Kvit.Infrastructure.Auth
             user.LockoutCount = 0;
             user.MustChangePassword = false;
             IdentityResult changed = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
-            await ThrowIfAccountChangedMeanwhileAsync(changed, cancellationToken);
+            await _context.ThrowIfAccountChangedMeanwhileAsync(changed, cancellationToken);
             IdentityResultChecks.ThrowIfFailed(changed, $"change the password of user {user.Id}");
 
             return Result.Ok();
@@ -284,7 +290,9 @@ namespace Kvit.Infrastructure.Auth
                 return Result.Failure(PasswordAlreadySetMessage, ResultCodes.AUTH_PASSWORD_ALREADY_SET);
             }
 
-            IdentityResultChecks.ThrowIfFailed(await _userManager.AddPasswordAsync(user, newPassword), $"set the first password of user {user.Id}");
+            IdentityResult added = await _userManager.AddPasswordAsync(user, newPassword);
+            await _context.ThrowIfAccountChangedMeanwhileAsync(added, cancellationToken);
+            IdentityResultChecks.ThrowIfFailed(added, $"set the first password of user {user.Id}");
 
             return Result.Ok();
         }
@@ -358,7 +366,9 @@ namespace Kvit.Infrastructure.Auth
             }
 
             user.RequestDeletion(nameChoice, _timeProvider.GetUtcNow());
-            IdentityResultChecks.ThrowIfFailed(await _userManager.UpdateSecurityStampAsync(user), $"save the deletion request of user {user.Id}");
+            IdentityResult saved = await _userManager.UpdateSecurityStampAsync(user);
+            await _context.ThrowIfAccountChangedMeanwhileAsync(saved, cancellationToken);
+            IdentityResultChecks.ThrowIfFailed(saved, $"save the deletion request of user {user.Id}");
             await _signInManager.SignOutAsync();
 
             return Result.Ok();
@@ -479,14 +489,6 @@ namespace Kvit.Infrastructure.Auth
             }
 
             return await MeResponseOfAsync(user) with { DeletionCancelled = cancelsDeletion };
-        }
-
-        private async Task ThrowIfAccountChangedMeanwhileAsync(IdentityResult saved, CancellationToken cancellationToken)
-        {
-            if (saved.Errors.Any(error => error.Code == nameof(IdentityErrorDescriber.ConcurrencyFailure)))
-            {
-                throw await _context.DiscardBecauseAccountChangedMeanwhileAsync(IdentityResultChecks.Describe(saved), cancellationToken);
-            }
         }
 
         private static bool IsEmailUniqueViolation(DbUpdateException exception)

@@ -37,7 +37,7 @@ namespace Kvit.Application.Queries.Settlements
 
         private IQueryable<SettlementResponse> SettlementResponseOf(Guid groupId, Guid settlementId)
         {
-            return _context.NamedSettlements(groupId)
+            return _context.NamedSettlementsIncludingDeleted(groupId)
                 .AsNoTracking()
                 .Where(named => named.Settlement.Id == settlementId)
                 .Select(named => new SettlementResponse(

@@ -165,7 +165,11 @@
     "OWNER_REASON_INVALID": "Write a reason (up to 500 characters).",
     "OWNER_PERSON_NOT_FOUND": "This person doesn't exist.",
     "OWNER_GROUP_NOT_FOUND": "This group doesn't exist.",
-    "OWNER_CANNOT_ACT_ON_ADMIN": "You can't do this to an owner of Kvit."
+    "OWNER_CANNOT_ACT_ON_ADMIN": "You can't do this to an owner of Kvit.",
+    "SERVER_ERROR": "Something went wrong on our side. Try again in a moment.",
+    "CHANGED_MEANWHILE": "Someone changed this at the same moment. Try again.",
+    "REQUEST_TOO_LARGE": "This is too large to send. Make it shorter and try again.",
+    "REQUEST_INVALID": "The server could not read what the app sent. Reload the page and try again."
   },
   "language": {
     "label": "Language",

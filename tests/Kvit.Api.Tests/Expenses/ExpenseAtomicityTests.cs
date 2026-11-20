@@ -1,6 +1,8 @@
 using System.Net;
+using Kvit.Api.Tests.Auth;
 using Kvit.Api.Tests.Groups;
 using Kvit.Api.Tests.Persistence;
+using Kvit.Domain.Results;
 using Xunit;
 
 namespace Kvit.Api.Tests.Expenses
@@ -64,9 +66,9 @@ namespace Kvit.Api.Tests.Expenses
 
         private static async Task AssertFailedBecauseTheSharesAreBlockedAsync(HttpResponseMessage response)
         {
-            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.InternalServerError, ResultCodes.SERVER_ERROR);
             string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-            Assert.Contains(BlockedMessage, body);
+            Assert.DoesNotContain(BlockedMessage, body, StringComparison.Ordinal);
         }
     }
 }

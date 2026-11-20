@@ -90,6 +90,10 @@ const mappedErrorCodes = [
   'OWNER_GROUP_NOT_FOUND',
   'OWNER_CANNOT_ACT_ON_ADMIN',
   'EXPENSE_CHANGED_MEANWHILE',
+  'SERVER_ERROR',
+  'CHANGED_MEANWHILE',
+  'REQUEST_TOO_LARGE',
+  'REQUEST_INVALID',
 ]
 
 const errorTexts: Record<'en' | 'mk', Record<string, unknown>> = {
@@ -140,6 +144,24 @@ describe('errorMessageKey', () => {
       'No translation key is mapped for API error code "ANOTHER_UNKNOWN_CODE"',
       error,
     )
+  })
+
+  it('uses the server-error text for a 500 that carries SERVER_ERROR, not the generic text', () => {
+    const error = new ApiError('GET /api/groups failed with status 500', {
+      httpStatus: 500,
+      errorCode: 'SERVER_ERROR',
+    })
+
+    expect(errorMessageKey(error)).toBe('errors.SERVER_ERROR')
+  })
+
+  it('uses the same-moment text for a 409 that carries CHANGED_MEANWHILE', () => {
+    const error = new ApiError('POST /api/groups/1/members/2/claim failed with status 409', {
+      httpStatus: 409,
+      errorCode: 'CHANGED_MEANWHILE',
+    })
+
+    expect(errorMessageKey(error)).toBe('errors.CHANGED_MEANWHILE')
   })
 
   it('does not log when the answer carries no error code', () => {

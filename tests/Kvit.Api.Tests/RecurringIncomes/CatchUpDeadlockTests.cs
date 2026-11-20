@@ -5,6 +5,7 @@ using Kvit.Api.Tests.Expenses;
 using Kvit.Api.Tests.Groups;
 using Kvit.Api.Tests.Persistence;
 using Kvit.Api.Tests.PersonalEntries;
+using Kvit.Domain.Results;
 using Xunit;
 
 namespace Kvit.Api.Tests.RecurringIncomes
@@ -40,7 +41,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
         }
 
         [Fact]
-        public async Task CatchUp_DeadlockedAgainWhenRunOnceMore_AnswersAnErrorAndSavesNothing()
+        public async Task CatchUp_DeadlockedAgainWhenRunOnceMore_Answers409ChangedMeanwhileAndSavesNothing()
         {
             CatchUpSteps.SetNow(_app, CatchUpSteps.NoonOnOctober20);
             SignedInUser user = await CatchUpSteps.SignUpAsync(_app);
@@ -59,7 +60,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
             await partner.RollBackAsync();
             HttpResponseMessage response = await catchUp;
 
-            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.Conflict, ResultCodes.CHANGED_MEANWHILE);
             Assert.Empty(await CatchUpSteps.EntryDatesAsync(_app, recurringIncomeId));
             Assert.Equal(0, await PersonalEntrySteps.CountOfUserAsync(_app, user.UserId));
         }

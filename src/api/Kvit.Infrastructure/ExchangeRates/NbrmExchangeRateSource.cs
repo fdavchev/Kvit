@@ -68,7 +68,7 @@ namespace Kvit.Infrastructure.ExchangeRates
                 }
             }
 
-            return Failed(date, $"the answer has no {EuroCode} entry");
+            return Failed(date, $"the answer has no {EuroCode} entry", ExchangeRateFailureCodes.EXCHANGE_RATE_NOT_PUBLISHED);
         }
 
         private static Result<FetchedExchangeRate> RateOf(JsonElement euro, DateOnly date)
@@ -106,11 +106,11 @@ namespace Kvit.Infrastructure.ExchangeRates
                 && property.TryGetDecimal(out value);
         }
 
-        private static Result<FetchedExchangeRate> Failed(DateOnly date, string reason)
+        private static Result<FetchedExchangeRate> Failed(DateOnly date, string reason, string errorCode = ExchangeRateFailureCodes.EXCHANGE_RATE_FETCH_FAILED)
         {
             return Result.Failure<FetchedExchangeRate>(
                 $"The NBRM euro rate for {date.ToString(NbrmDateFormat, CultureInfo.InvariantCulture)} could not be read: {reason}.",
-                ExchangeRateFailureCodes.EXCHANGE_RATE_FETCH_FAILED);
+                errorCode);
         }
     }
 }

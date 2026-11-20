@@ -1,3 +1,4 @@
+using System.Globalization;
 using Kvit.Contracts.Cleanup;
 using Kvit.Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,11 +39,11 @@ namespace Kvit.Infrastructure.Cleanup
                     _lastFinishedDay = day;
                 }
 
-                _logger.LogInformation("The daily cleanup of {Day} (UTC) finished: {Removed}", day, removed);
+                _logger.LogInformation("The daily cleanup of {Day} (UTC) finished: {Removed}", day.ToString("O", CultureInfo.InvariantCulture), removed);
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "The daily cleanup of {Day} (UTC), started at {Now}, failed; the next Active usage event tries it again.", day, now);
+                _logger.LogError(exception, "The daily cleanup of {Day} (UTC), started at {Now}, failed; the next Active usage event tries it again.", day.ToString("O", CultureInfo.InvariantCulture), now.ToString("O", CultureInfo.InvariantCulture));
             }
         }
     }

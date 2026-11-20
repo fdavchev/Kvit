@@ -22,7 +22,8 @@ The last branch before new features: every open bug, glitch, wrong text, rare sa
 - Step 5: texts. The privacy notice (version 2026-11-19, a small change with the one-tap notice) says a deleted account is removed after 30 days at the first use of Kvit after that day, and what the data download leaves out; Macedonian shows «ден.» instead of MKD in errors, the rate line and the currency history lines; "Plan reached" at exactly 100 %; clearer messages when a name was just taken, for your own name on One bill and in the owner tools; Activity names a restored expense; the exchange-rate source line on the monthly summary and the group plan.
 - Wake fixes (found on Filip's phone): Kvit has a web app manifest, so the installed app opens Kvit's start page and wakes the server by itself instead of opening on Welcome; for 2 minutes after the wake trip it shows "Waking up…" and quietly tries again instead of the bar and "Try again".
 - Step 6: website behaviour bugs. Closing and Finished groups hide what the server refuses (Recently deleted, Share, invite text) and Edit expense warns that saving cancels the closing; Home shows the Closing badge; the owner can cancel a plain name's waiting payment; the only other person is pre-selected when recording a payment; dialogs keep toasts off their buttons; no error box during the calm wait; dead invite links stop after one try; Share sends the group name; the Google button follows the page language and the window size; admin addresses look like any unknown page to others; Settings saves only the final budget currency, changes the language at once and has 44 px buttons; the app fails clearly when the API leaves out a field; a suspended person's waiting changes are kept and their Log out warns about unsent changes.
-- Steps 7 and 9: behaviour bugs on the server; tidy-up and speed.
+- Step 7: server behaviour bugs. An unexpected crash answers a clear `SERVER_ERROR` (and a same-moment clash `CHANGED_MEANWHILE`, an oversized request 413) instead of a bare 500; password and deletion clashes are tried once more; Home names a restored expense; Edit expense asks NBRM only after every check, NBRM gives up after 3 s and looks back over holidays; a guest's Change password gets a clear refusal; a repeated Record after delete is a quiet success; statistics pick a grouping by range; an expired login-key certificate stops start-up with a clear message; guests left with nothing are cleaned up after 30 days.
+- Step 9: tidy-up and speed.
 - Step 10: full check, browser pass, code review, report, and an up-to-date README.
 
 ### Database changes
@@ -37,7 +38,7 @@ One migration, `SameMomentSafety` (Step 8): two partial unique indexes on `dupli
 - [x] Step 5: texts and one privacy-notice change
 - [x] Wake fixes: installed app opens the start page, calm wait after the wake trip
 - [x] Step 6: behaviour bugs, website
-- [ ] Step 7: behaviour bugs, server
+- [x] Step 7: behaviour bugs, server
 - [x] Step 8: same-moment problems (migrations)
 - [ ] Step 9: tidy-up and speed
 - [ ] Step 10: full check, browser pass, code review, report, README brought up to date
@@ -50,3 +51,4 @@ One migration, `SameMomentSafety` (Step 8): two partial unique indexes on `dupli
 - Reword the privacy notice on removals and the download, show ден. in Macedonian and clearer messages for plans, names, One bill, owner tools and restored expenses.
 - Open the installed app on Kvit's start page and wait calmly after the wake trip instead of showing the bar and Try again.
 - Hide what Closing groups refuse, let the owner cancel a plain name's payment, keep toasts off dialogs, stop dead invite links, follow the page language on the Google button and fix the Settings, admin and suspended screens.
+- Answer crashes with SERVER_ERROR and same-moment clashes with CHANGED_MEANWHILE, retry account clashes, name restored expenses, look back for the NBRM rate and clean up left-behind guests.
