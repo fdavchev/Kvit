@@ -20,6 +20,7 @@ The last branch before new features: every open bug, glitch, wrong text, rare sa
 - Step 4: toasts sit above an open sheet instead of covering its buttons, two or three toasts show in full, and on desktop they are centred on the content column; a refused field is marked and linked to its error for a screen reader (Sign up too); "Wake the server" asks first when a form has unsaved typing; the "Updating…" note shows on every signed-in screen; "+ Add a name" no longer slides through a fading row; focus after the plan and limit sheets.
 - Step 8: same-moment changes: the second of two edits of one expense is refused with a clear message instead of silently overwriting the first; two answers to one payment, two group plan changes, two "Same" answers, a free name removed while someone taps it, two log-ins, two password changes and two guest upgrades all end in one clean result instead of a mix or a server error. The Balances tab refreshes after a refused payment answer.
 - Step 5: texts. The privacy notice (version 2026-11-19, a small change with the one-tap notice) says a deleted account is removed after 30 days at the first use of Kvit after that day, and what the data download leaves out; Macedonian shows «ден.» instead of MKD in errors, the rate line and the currency history lines; "Plan reached" at exactly 100 %; clearer messages when a name was just taken, for your own name on One bill and in the owner tools; Activity names a restored expense; the exchange-rate source line on the monthly summary and the group plan.
+- Wake fixes (found on Filip's phone): Kvit has a web app manifest, so the installed app opens Kvit's start page and wakes the server by itself instead of opening on Welcome; for 2 minutes after the wake trip it shows "Waking up…" and quietly tries again instead of the bar and "Try again".
 - Steps 6, 7 and 9: behaviour bugs on the website and on the server; tidy-up and speed.
 - Step 10: full check, browser pass, code review, report, and an up-to-date README.
 
@@ -33,6 +34,7 @@ One migration, `SameMomentSafety` (Step 8): two partial unique indexes on `dupli
 - [x] Step 3: the lightest peach light theme, contrast and dark mode leftovers
 - [x] Step 4: toasts, sheets, focus
 - [x] Step 5: texts and one privacy-notice change
+- [x] Wake fixes: installed app opens the start page, calm wait after the wake trip
 - [ ] Step 6: behaviour bugs, website
 - [ ] Step 7: behaviour bugs, server
 - [x] Step 8: same-moment problems (migrations)
@@ -45,3 +47,4 @@ One migration, `SameMomentSafety` (Step 8): two partial unique indexes on `dupli
 - Keep toasts clear of sheets and of each other, link refused fields to their error, ask before waking the server with unsaved typing and show Updating on every signed-in screen.
 - Refuse or re-answer the second of two same-moment changes to expenses, payments, plans, merges, members and accounts.
 - Reword the privacy notice on removals and the download, show ден. in Macedonian and clearer messages for plans, names, One bill, owner tools and restored expenses.
+- Open the installed app on Kvit's start page and wait calmly after the wake trip instead of showing the bar and Try again.

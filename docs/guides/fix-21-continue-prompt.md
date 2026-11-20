@@ -20,7 +20,7 @@ We are continuing Kvit on the branch `fix/21-small-bugs` ("Fix 21: empty the bac
 - Until I say the live check is over: nothing is merged into `main`, and nobody calls `kvit-mk.pages.dev` or the Render address. Local work and pushing the branch are fine.
 
 ## The steps
-State when this prompt was last updated (2026-11-19): Steps 1 to 4 and 8 are committed and pushed (Step 8 is `55dd25e`); Steps 0 and 5 are done and may not be committed yet. Next: Steps 6, 7, 9, 10. The Fable allowance is used up: every coder run goes on Opus 5.5.
+State when this prompt was last updated (2026-11-20): Steps 0 to 5 and 8 are committed (Step 5 is `db810d8`); the wake fixes found on Filip's phone (web app manifest, calm wait after the trip, DECISIONS "Wake fixes") are done and may not be committed yet. Next: Steps 6, 7, 9, 10. The Fable allowance is used up: every coder run goes on Opus 5.5.
 
 **Order (Filip, 2026-11-15): after Step 4 comes Step 8, before Steps 5, 6, 7 and 9.** Step 8 (same-moment problems, with migrations) is the one step where the strongest model is worth it for the coder, and Filip has a Fable allowance that resets on 2026-11-16, so its coder run goes on Fable (`model: fable`), not Opus. If allowance is left afterwards, the next best uses are Step 7, then Step 6. The steps do not depend on each other. Not known: whether that allowance also covers the tester, which runs on Sonnet and is what hit the 5-hour limit twice; Step 8's tester run is heavy (the full backend suite, Docker, new same-moment tests). A half-done database change must never be committed. If today is after 2026-11-16, ask me whether Fable is still available before choosing the model for Step 8.
 
