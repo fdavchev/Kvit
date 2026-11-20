@@ -1605,7 +1605,7 @@ describe('MembersScreen', () => {
       })
       expect(requestCount(fetchMock, 'POST', leavePath)).toBe(1)
       expect(requestsOf(fetchMock, 'POST', leavePath)[0].body).toBeUndefined()
-      expect(screen.getByText('groups page')).toBeTruthy()
+      expect(await screen.findByText('groups page')).toBeTruthy()
     })
 
     it('shows the left toast with the group name, with no Undo button, in the wine-red danger style', async () => {

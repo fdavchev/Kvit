@@ -144,21 +144,6 @@ namespace Kvit.Api.Tests.PossibleDuplicates
         }
 
         [Fact]
-        public async Task Put_SameForAnotherExpenseAfterTheMergeWasRemoved_Answers204()
-        {
-            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
-            Guid firstExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group);
-            Guid secondExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group, SecondDate);
-            Guid entryId = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
-            await PossibleDuplicateSteps.AnswerAsync(group.Member, entryId, firstExpense, DuplicateAnswerRequests.SameAnswer);
-            await DuplicateAnswerRequests.DeleteAsync(group.Member.Client, entryId, firstExpense);
-
-            await PossibleDuplicateSteps.AnswerAsync(group.Member, entryId, secondExpense, DuplicateAnswerRequests.SameAnswer);
-
-            Assert.Equal(secondExpense, await PossibleDuplicateSteps.MergedWithAsync(group.Member.Client, entryId));
-        }
-
-        [Fact]
         public async Task Put_SameWhenTheEarlierMergedExpenseWasDeleted_Answers204AndMergesWithTheNewOne()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();

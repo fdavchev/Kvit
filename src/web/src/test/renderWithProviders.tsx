@@ -2,7 +2,7 @@ import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
 import type { Persister } from '@tanstack/react-query-persist-client'
 import { render, renderHook, type RenderHookResult } from '@testing-library/react'
 import type { i18n as I18nInstance } from 'i18next'
-import type { ReactElement, ReactNode } from 'react'
+import { isValidElement, type ReactElement, type ReactNode } from 'react'
 import { I18nextProvider } from 'react-i18next'
 import { createMemoryRouter, type DataRouter, type RouteObject } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
@@ -82,11 +82,29 @@ export async function renderHookWithProviders<Result>(
   return { result, queryClient, i18n, outboxSender }
 }
 
+function preloadOf(element: ReactNode): (() => Promise<void>) | undefined {
+  if (!isValidElement(element) || typeof element.type !== 'function' || !('preload' in element.type)) {
+    return undefined
+  }
+  const { preload } = element.type
+  return typeof preload === 'function' ? () => preload() : undefined
+}
+
+async function preloadLazyScreens(routeObjects: RouteObject[]): Promise<void> {
+  await Promise.all(
+    routeObjects.map(async (route) => {
+      await preloadOf(route.element)?.()
+      await preloadLazyScreens(route.children ?? [])
+    }),
+  )
+}
+
 export async function renderRoutesWithProviders(
   routeObjects: RouteObject[],
   initialPath: string,
   options: RenderOptions = {},
 ): Promise<RoutesRender> {
+  await preloadLazyScreens(routeObjects)
   const { queryClient, i18n, outboxSender, withProviders } = await createProviders(options)
   const initialEntry =
     options.routerState === undefined

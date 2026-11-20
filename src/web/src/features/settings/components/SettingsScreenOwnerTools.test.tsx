@@ -67,7 +67,7 @@ describe('SettingsScreen, the Owner tools row', () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe(routes.adminTools)
     })
-    expect(screen.getByText('owner tools page')).toBeTruthy()
+    expect(await screen.findByText('owner tools page')).toBeTruthy()
   })
 
   it('puts the row directly under the Statistics row, with no other row between them', async () => {

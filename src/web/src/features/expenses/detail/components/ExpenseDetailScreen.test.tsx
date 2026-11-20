@@ -881,7 +881,7 @@ describe('ExpenseDetailScreen', () => {
       await waitFor(() => {
         expect(router.state.location.pathname).toBe(routes.group(testGroupId))
       })
-      expect(screen.getByText('group page')).toBeTruthy()
+      expect(await screen.findByText('group page')).toBeTruthy()
     })
 
     it.each(languages)('shows the Expense deleted toast with an Undo button for 4 seconds (%s)', async (language) => {

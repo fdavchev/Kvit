@@ -51,6 +51,7 @@ namespace Kvit.Application.Queries.OwnerTools
         private IQueryable<OwnerToolsPersonRow> OwnerToolsPersonRowsOf(IQueryable<AppUser> users)
         {
             IQueryable<GroupMember> currentMembers = _context.CurrentGroupMembers();
+            IQueryable<Guid> adminUserIds = _context.AdminUserIds();
 
             return users
                 .AsNoTracking()
@@ -63,8 +64,7 @@ namespace Kvit.Application.Queries.OwnerTools
                     user.Email,
                     user.IsGuest,
                     user.SuspendedAt != null,
-                    _context.UserRoles.Any(userRole => userRole.UserId == user.Id
-                        && _context.Roles.Any(role => role.Id == userRole.RoleId && role.Name == Roles.Admin)),
+                    adminUserIds.Contains(user.Id),
                     user.DeletionRequestedAt != null && user.PurgedAt == null,
                     user.PurgedAt != null,
                     user.CreatedAt,

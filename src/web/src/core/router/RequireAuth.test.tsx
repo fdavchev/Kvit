@@ -212,7 +212,7 @@ describe('RequireAuth', () => {
         seedCache: seedRestoredMe(mustChangePasswordMe),
       })
 
-      expect(screen.getByText('change password page')).toBeTruthy()
+      expect(await screen.findByText('change password page')).toBeTruthy()
     })
 
     it('goes to the welcome page at once when the saved copy says nobody is signed in', async () => {
@@ -222,7 +222,7 @@ describe('RequireAuth', () => {
         seedCache: seedRestoredMe(null),
       })
 
-      expect(screen.getByText('welcome page')).toBeTruthy()
+      expect(await screen.findByText('welcome page')).toBeTruthy()
     })
   })
 

@@ -317,7 +317,7 @@ describe('JoinScreen', () => {
         expect(router.state.location.pathname).toBe(routes.group(testGroupId))
       })
       expect(router.state.historyAction).toBe('REPLACE')
-      expect(screen.getByText('group page')).toBeTruthy()
+      expect(await screen.findByText('group page')).toBeTruthy()
     })
 
     it('shows no invite card and sends no join request on the way', async () => {

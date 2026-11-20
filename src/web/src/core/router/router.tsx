@@ -1,41 +1,121 @@
 import { createBrowserRouter, type RouteObject } from 'react-router'
-import { AdminStatsScreen } from '@/features/admin/stats/components/AdminStatsScreen'
-import { OwnerToolsScreen } from '@/features/admin/tools/components/OwnerToolsScreen'
-import { ChangePasswordScreen } from '@/features/auth/changePassword/components/ChangePasswordScreen'
-import { GoogleSignUpScreen } from '@/features/auth/googleSignUp/components/GoogleSignUpScreen'
 import { LogInScreen } from '@/features/auth/logIn/components/LogInScreen'
-import { MakeAccountScreen } from '@/features/auth/makeAccount/components/MakeAccountScreen'
-import { SetPasswordScreen } from '@/features/auth/setPassword/components/SetPasswordScreen'
 import { SignUpScreen } from '@/features/auth/signUp/components/SignUpScreen'
 import { WelcomeScreen } from '@/features/auth/welcome/components/WelcomeScreen'
-import { BudgetScreen } from '@/features/budget/overview/components/BudgetScreen'
-import { RecurringIncomeScreen } from '@/features/budget/recurring/components/RecurringIncomeScreen'
-import { BudgetSummaryScreen } from '@/features/budget/summary/components/BudgetSummaryScreen'
-import { AddExpenseScreen } from '@/features/expenses/add/components/AddExpenseScreen'
-import { RecentlyDeletedExpensesScreen } from '@/features/expenses/deleted/components/RecentlyDeletedExpensesScreen'
-import { ExpenseDetailScreen } from '@/features/expenses/detail/components/ExpenseDetailScreen'
-import { EditExpenseScreen } from '@/features/expenses/edit/components/EditExpenseScreen'
-import { OneBillScreen } from '@/features/expenses/oneBill/components/OneBillScreen'
-import { GroupScreen } from '@/features/groups/group/components/GroupScreen'
-import { JoinScreen } from '@/features/groups/join/components/JoinScreen'
-import { GroupsScreen } from '@/features/groups/list/components/GroupsScreen'
-import { RecentlyDeletedScreen } from '@/features/groups/list/components/RecentlyDeletedScreen'
-import { MembersScreen } from '@/features/groups/members/components/MembersScreen'
-import { NewGroupChoiceScreen } from '@/features/groups/newGroup/components/NewGroupChoiceScreen'
-import { NewGroupScreen } from '@/features/groups/newGroup/components/NewGroupScreen'
-import { GroupSettingsScreen } from '@/features/groups/settings/components/GroupSettingsScreen'
 import { HomeScreen } from '@/features/home/components/HomeScreen'
 import { NotFoundScreen } from '@/features/notFound/components/NotFoundScreen'
-import { PrivacyScreen } from '@/features/privacy/components/PrivacyScreen'
-import { SettingsScreen } from '@/features/settings/components/SettingsScreen'
-import { TermsScreen } from '@/features/terms/components/TermsScreen'
 import { adminOnlyHandle } from './adminOnlyRoutes'
 import { BottomBarLayout } from './BottomBarLayout'
+import { lazyScreen, type LazyScreen } from './lazyScreen'
 import { RequireAccount } from './RequireAccount'
 import { RequireAuth } from './RequireAuth'
 import { RequireSignedOut } from './RequireSignedOut'
 import { RouteError } from './RouteError'
 import { routes } from './routes'
+
+const AdminStatsScreen = lazyScreen(
+  async () => (await import('@/features/admin/stats/components/AdminStatsScreen')).AdminStatsScreen,
+)
+const OwnerToolsScreen = lazyScreen(
+  async () => (await import('@/features/admin/tools/components/OwnerToolsScreen')).OwnerToolsScreen,
+)
+const ChangePasswordScreen = lazyScreen(
+  async () => (await import('@/features/auth/changePassword/components/ChangePasswordScreen')).ChangePasswordScreen,
+)
+const GoogleSignUpScreen = lazyScreen(
+  async () => (await import('@/features/auth/googleSignUp/components/GoogleSignUpScreen')).GoogleSignUpScreen,
+)
+const MakeAccountScreen = lazyScreen(
+  async () => (await import('@/features/auth/makeAccount/components/MakeAccountScreen')).MakeAccountScreen,
+)
+const SetPasswordScreen = lazyScreen(
+  async () => (await import('@/features/auth/setPassword/components/SetPasswordScreen')).SetPasswordScreen,
+)
+const BudgetScreen = lazyScreen(
+  async () => (await import('@/features/budget/overview/components/BudgetScreen')).BudgetScreen,
+)
+const RecurringIncomeScreen = lazyScreen(
+  async () => (await import('@/features/budget/recurring/components/RecurringIncomeScreen')).RecurringIncomeScreen,
+)
+const BudgetSummaryScreen = lazyScreen(
+  async () => (await import('@/features/budget/summary/components/BudgetSummaryScreen')).BudgetSummaryScreen,
+)
+const AddExpenseScreen = lazyScreen(
+  async () => (await import('@/features/expenses/add/components/AddExpenseScreen')).AddExpenseScreen,
+)
+const RecentlyDeletedExpensesScreen = lazyScreen(
+  async () => (await import('@/features/expenses/deleted/components/RecentlyDeletedExpensesScreen')).RecentlyDeletedExpensesScreen,
+)
+const ExpenseDetailScreen = lazyScreen(
+  async () => (await import('@/features/expenses/detail/components/ExpenseDetailScreen')).ExpenseDetailScreen,
+)
+const EditExpenseScreen = lazyScreen(
+  async () => (await import('@/features/expenses/edit/components/EditExpenseScreen')).EditExpenseScreen,
+)
+const OneBillScreen = lazyScreen(
+  async () => (await import('@/features/expenses/oneBill/components/OneBillScreen')).OneBillScreen,
+)
+const GroupScreen = lazyScreen(
+  async () => (await import('@/features/groups/group/components/GroupScreen')).GroupScreen,
+)
+const JoinScreen = lazyScreen(
+  async () => (await import('@/features/groups/join/components/JoinScreen')).JoinScreen,
+)
+const GroupsScreen = lazyScreen(
+  async () => (await import('@/features/groups/list/components/GroupsScreen')).GroupsScreen,
+)
+const RecentlyDeletedScreen = lazyScreen(
+  async () => (await import('@/features/groups/list/components/RecentlyDeletedScreen')).RecentlyDeletedScreen,
+)
+const MembersScreen = lazyScreen(
+  async () => (await import('@/features/groups/members/components/MembersScreen')).MembersScreen,
+)
+const NewGroupChoiceScreen = lazyScreen(
+  async () => (await import('@/features/groups/newGroup/components/NewGroupChoiceScreen')).NewGroupChoiceScreen,
+)
+const NewGroupScreen = lazyScreen(
+  async () => (await import('@/features/groups/newGroup/components/NewGroupScreen')).NewGroupScreen,
+)
+const GroupSettingsScreen = lazyScreen(
+  async () => (await import('@/features/groups/settings/components/GroupSettingsScreen')).GroupSettingsScreen,
+)
+const PrivacyScreen = lazyScreen(
+  async () => (await import('@/features/privacy/components/PrivacyScreen')).PrivacyScreen,
+)
+const SettingsScreen = lazyScreen(
+  async () => (await import('@/features/settings/components/SettingsScreen')).SettingsScreen,
+)
+const TermsScreen = lazyScreen(
+  async () => (await import('@/features/terms/components/TermsScreen')).TermsScreen,
+)
+
+const lazyScreens: LazyScreen[] = [
+  AdminStatsScreen,
+  OwnerToolsScreen,
+  ChangePasswordScreen,
+  GoogleSignUpScreen,
+  MakeAccountScreen,
+  SetPasswordScreen,
+  BudgetScreen,
+  RecurringIncomeScreen,
+  BudgetSummaryScreen,
+  AddExpenseScreen,
+  RecentlyDeletedExpensesScreen,
+  ExpenseDetailScreen,
+  EditExpenseScreen,
+  OneBillScreen,
+  GroupScreen,
+  JoinScreen,
+  GroupsScreen,
+  RecentlyDeletedScreen,
+  MembersScreen,
+  NewGroupChoiceScreen,
+  NewGroupScreen,
+  GroupSettingsScreen,
+  PrivacyScreen,
+  SettingsScreen,
+  TermsScreen,
+]
 
 const groupIdPattern = ':groupId'
 const expenseIdPattern = ':expenseId'
@@ -120,5 +200,9 @@ export const routeObjects: RouteObject[] = [
     ],
   },
 ]
+
+export function preloadScreens(): Promise<void> {
+  return Promise.all(lazyScreens.map((screen) => screen.preload())).then(() => undefined)
+}
 
 export const router = createBrowserRouter(routeObjects)

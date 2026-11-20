@@ -29,6 +29,10 @@ $WindowsFile = Join-Path $env:TEMP 'kvit-local-windows.json'
 $ApiExitFile = Join-Path $env:TEMP 'kvit-local-api.exit'
 $WebExitFile = Join-Path $env:TEMP 'kvit-local-web.exit'
 $ScriptCommand = '.\scripts\start-local.ps1'
+$CheckLogFolder = Join-Path $env:TEMP 'kvit-check'
+$CheckOutputLinesRead = 400
+$FailureOutputLinesShown = 40
+$FailedTestLinesShown = 20
 
 function Exit-WithError {
     param([string]$Message)
@@ -441,22 +445,54 @@ function Stop-LocalApp {
     Write-Host "Ports $ApiPort and $WebPort are free." -ForegroundColor Green
 }
 
+function Read-LastLines {
+    param([string]$Path, [int]$Count)
+    @(Get-Content -LiteralPath $Path -Tail $Count -Encoding UTF8)
+}
+
+function Write-FailureSummary {
+    param([string]$OutputFile, [string]$ErrorFile)
+    $failedTests = @(Select-String -LiteralPath $OutputFile -Pattern '^\s*failed\s' -Encoding UTF8 | Select-Object -First $FailedTestLinesShown)
+    if ($failedTests.Count -gt 0) {
+        Write-Host "First failed tests (at most $FailedTestLinesShown):" -ForegroundColor Red
+        $failedTests | ForEach-Object { Write-Host $_.Line }
+        Write-Host ''
+    }
+    Write-Host "Last $FailureOutputLinesShown lines of its output:"
+    Read-LastLines -Path $OutputFile -Count $FailureOutputLinesShown | ForEach-Object { Write-Host $_ }
+    $errorLines = @(Read-LastLines -Path $ErrorFile -Count $FailureOutputLinesShown)
+    if ($errorLines.Count -gt 0) {
+        Write-Host ''
+        Write-Host "Last $FailureOutputLinesShown lines of its error output:"
+        $errorLines | ForEach-Object { Write-Host $_ }
+    }
+}
+
 function Invoke-CheckCommand {
     param([string]$Title, [string]$FilePath, [string[]]$ArgumentList, [string]$WorkingDirectory)
+    Assert-CommandAvailable $FilePath
+    $null = New-Item -ItemType Directory -Force -Path $CheckLogFolder
+    $logName = ($Title -replace '[^A-Za-z0-9]+', '-').Trim('-')
+    $outputFile = Join-Path $CheckLogFolder "$logName.log"
+    $errorFile = Join-Path $CheckLogFolder "$logName.errors.log"
     Write-Host ''
-    Write-Host "==> $Title" -ForegroundColor Cyan
-    $result = Invoke-NativeCommandShown -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $WorkingDirectory
-    if ($result.ExitCode -ne 0) {
-        Exit-WithError "FAIL  $Title (exit code $($result.ExitCode)). Its output is above. The later checks were not run."
+    Write-Host "==> $Title (full output: $outputFile)" -ForegroundColor Cyan
+    $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $WorkingDirectory `
+        -RedirectStandardOutput $outputFile -RedirectStandardError $errorFile -NoNewWindow -PassThru
+    $null = $process.Handle
+    $process.WaitForExit()
+    if ($process.ExitCode -ne 0) {
+        Write-FailureSummary -OutputFile $outputFile -ErrorFile $errorFile
+        Exit-WithError "FAIL  $Title (exit code $($process.ExitCode)). The end of its output is above; all of it is in $outputFile. The later checks were not run."
     }
-    $result.Lines -join "`n"
+    (Read-LastLines -Path $outputFile -Count $CheckOutputLinesRead) -join "`n"
 }
 
 function Read-LastNumber {
     param([string]$Output, [string]$Pattern, [string]$Title, [string]$What)
     $found = [regex]::Matches($Output, $Pattern)
     if ($found.Count -eq 0) {
-        Exit-WithError "FAIL  $Title finished, but its output has no $What (looked for /$Pattern/), so the result cannot be confirmed. Its output is above."
+        Exit-WithError "FAIL  $Title finished, but the end of its output has no $What (looked for /$Pattern/), so the result cannot be confirmed. Its full output is in $CheckLogFolder."
     }
     [int]$found[$found.Count - 1].Groups[1].Value
 }
@@ -467,7 +503,7 @@ function Invoke-BackendBuild {
     $warnings = Read-LastNumber -Output $output -Pattern '(\d+) Warning\(s\)' -Title $title -What 'warning count'
     $errors = Read-LastNumber -Output $output -Pattern '(\d+) Error\(s\)' -Title $title -What 'error count'
     if ($warnings -ne 0) {
-        Exit-WithError "FAIL  $title finished with $warnings warnings; it must show 0. They are listed above. The later checks were not run."
+        Exit-WithError "FAIL  $title finished with $warnings warnings; it must show 0. They are listed in its full output in $CheckLogFolder. The later checks were not run."
     }
     "PASS  {0,-24} {1} warnings, {2} errors" -f $title, $warnings, $errors
 }

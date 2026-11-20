@@ -19,13 +19,6 @@ namespace Kvit.Infrastructure.Repositories
                 cancellationToken);
         }
 
-        public async Task RemoveAsync(Guid userId, Guid personalEntryId, Guid expenseId, CancellationToken cancellationToken)
-        {
-            await _context.DuplicateAnswers
-                .Where(answer => answer.UserId == userId && answer.PersonalEntryId == personalEntryId && answer.ExpenseId == expenseId)
-                .ExecuteDeleteAsync(cancellationToken);
-        }
-
         public async Task RemoveSameAnswersOfEntryAsync(Guid userId, Guid personalEntryId, CancellationToken cancellationToken)
         {
             await _context.DuplicateAnswers

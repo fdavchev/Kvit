@@ -1,12 +1,13 @@
 # Status: Kvit
 
-_Last updated: 2026-11-20 (on `fix/21-small-bugs` Steps 0 to 8 and the wake fixes are committed; Claude works through Steps 9 and 10 while Filip is away, committing locally without pushing; Filip's live check of Fix 20 is partly done)_
+_Last updated: 2026-11-20 (on `fix/21-small-bugs` Steps 0 to 9 and the wake fixes are committed; Claude works on Step 10 while Filip is away, committing locally without pushing; Filip's live check of Fix 20 is partly done)_
 
 ## Where we stopped
 - Branch: `fix/21-small-bugs` (made from `main` = `25c4a3d`, the Fix 20 merge). Step 1 is commit `d523031`, pushed. Step 2 is commit `d7ddc66`. Step 3 (the lightest peach light theme, contrast leftovers, Home totals) is commit `6801b09`, pushed. Step 4 (toasts, sheets, focus) is committed locally by Claude on 2026-11-16 while Filip was away (his instruction: "you commit, don't push"); Step 8 (same-moment problems, migration `SameMomentSafety`) is committed locally by Claude on 2026-11-19 on Filip's earlier "you commit, don't push". Filip pushes both and ticks Steps 4 and 8 in the PR description. To continue in a new session from any step: paste `docs/guides/fix-21-continue-prompt.md`.
 - The plan: `ROADMAP.md`, "Fix 21: empty the backlog" (Steps 0 to 10, then Release 4 for new features). Decisions: `DECISIONS.md`, "2026-11-14: Fix 21". Commit and PR texts: `docs/guides/fix-21-pr-text.md`. The prompt that started it: `docs/guides/fix-21-small-bugs-prompt.md`.
 - Step 6 is committed locally by Claude on 2026-11-20 (Filip: "you commit everything, just don't push"): website behaviour bugs, two coder runs (DECISIONS "Step 6"; four choices for Filip to confirm in BACKLOG "Fix 21 Step 6 leftovers" (f)). Screenshots: `docs/design/2026-11-20-fix-21-step-6/`.
 - Step 7 is committed locally by Claude on 2026-11-20: server behaviour bugs, no migration (DECISIONS "Step 7"; three choices for Filip to confirm in BACKLOG "Fix 21 Step 7 leftovers" (a)). Screenshots: `docs/design/2026-11-20-fix-21-step-7/`.
+- Step 9 is committed locally by Claude on 2026-11-20: tidy-up and speed (DECISIONS "Step 9"). The tester found that the coder's chunk setting made the production build a blank page; Claude removed the setting's `maxSize` and checked the built pages in Chromium. Screenshots: `docs/design/2026-11-20-fix-21-step-9/`.
 - Step 0 is done (2026-11-19): every already-built BACKLOG item found is ticked; the three JavaScript-size lines are one item for Step 9.
 - Step 5 is done and committed by Filip (`db810d8`): texts and the privacy notice version 2026-11-19 (DECISIONS "Step 5"). The Macedonian to read: `docs/guides/fix-21-macedonian-to-read.md`. Screenshots: `docs/design/2026-11-19-fix-21-step-5/`.
 - Wake fixes are committed and pushed (`29207a9`): a web app manifest so the installed app opens "/" and wakes the server by itself, and a calm 2-minute wait after the trip (DECISIONS "Wake fixes"). Screenshots: `docs/design/2026-11-20-fix-21-wake-calm/`. Hosting research (stay on Render): `docs/reports/2026-11-19-free-hosting-research.md`.
@@ -24,7 +25,7 @@ Filip:
 3. Delete `Cleanup__Secret` on Render and `CLEANUP_SECRET` on GitHub (no longer used).
 4. Still open from Phase 19 (`docs/guides/phase-19-legal.md`): run the **Backup** workflow once, the practice restore, **Private vulnerability reporting** on GitHub (checked 2026-11-14: off), and Part E.
 
-Claude: Steps 6 and 7 are committed (2026-11-20). Next Step 9 (each: read the code, propose, Filip's go before the coder), then Step 10 (its browser pass also covers Step 8, never run in a browser). Coder runs go on Opus 5.5 without browser measuring, the tester on Sonnet measures once at the end (Filip, 2026-11-15 and 2026-11-19; the Fable allowance is used up).
+Claude: Steps 6, 7 and 9 are committed (2026-11-20). Next Step 10 (each: read the code, propose, Filip's go before the coder), then Step 10 (its browser pass also covers Step 8, never run in a browser). Coder runs go on Opus 5.5 without browser measuring, the tester on Sonnet measures once at the end (Filip, 2026-11-15 and 2026-11-19; the Fable allowance is used up).
 
 ## Blockers and open questions
 - Not known until the live check: whether every person passes Render's robot check without a tap, how an installed home-screen Kvit and iOS Safari behave on the trip, and whether Render changes this again.
@@ -60,6 +61,9 @@ On `fix/21-small-bugs` (working folder, 2026-11-14, after Step 1):
 - Step 7, VERIFIED by automated test: tester's run after the main change (2026-11-20) build 0 warnings, backend 7577/7577, lint 0, type check 0, frontend 16386/16386, no pending model change; after the follow-up (413 answer, steadier race test) the coder's run backend 7579/7579, frontend 16404/16404, build 0 warnings.
 - Step 7, VERIFIED by live run (headless Chromium, 360 px, English, local stack): Home's activity and the group Activity both say restored "Pizza S7"; the rate log line writes ISO dates; a negative amount answers `EXPENSE_AMOUNT_NOT_POSITIVE`, bad JSON 400, wrong content type 415, unknown route 404.
 - Step 7, NOT VERIFIED: the 413 fix live (tests only), statistics without `by` and the certificate checks live, the guest cleanup on real data, a browser pass of the new error texts.
+- Step 9, VERIFIED by automated test (tester, `start-local.ps1 -Check`, 2026-11-20, before the one-line fix): build 0 warnings, backend 7562/7562, lint 0, type check 0, frontend 16418/16418; after the fix (`maxSize` removed from `vite.config.ts`, Claude): `npm run build` passes, router and setup tests 536/536. The full suite was not re-run after that one line (it changes only the build's file split).
+- Step 9, VERIFIED by live run (headless Chromium, 360 px, English, `vite preview` of a build without `maxSize`, local API): a cold deep link draws; after 3 s offline, Budget, Settings, Groups, the group, Members and Add expense draw; a blocked screen file shows "Couldn't load this page…" and Try again loads it; sign up, log in, new group, expense, budget entry, language switch, log out. Claude: the real fixed build draws /welcome, /login and /privacy with no page errors.
+- Step 9, NOT VERIFIED: signed-in screens on the real fixed build (Step 10's pass covers them), a real phone, a deploy where an old tab asks for a screen file that no longer exists.
 - NOT VERIFIED: that each Step 1 test fails without its fix (not tried; done for Step 2); Macedonian, dark mode and widths other than 360 px for the Step 1 screens; a real Google sign-in through the new redirect; a real phone; anything on the live site.
 
 On `main` = `25c4a3d` (2026-11-14):

@@ -1,30 +1,17 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { setCategoryLimit, setMonthLimit } from '@/core/services/budgetLimits/budgetLimitsService'
+import type { SaveRun } from '@/shared/hooks/saveRun'
 import type { SaveOnce } from '../../categories/hooks/useSaveOnce'
-import type { PersonalEntryRun } from '../../entries/hooks/useAddPersonalEntry'
-import { refreshPersonalEntries } from '../../entries/personalEntryCache'
+import { useSaveThenRefreshEntries } from '../../entries/hooks/useSaveThenRefreshEntries'
 
 export interface LimitChange {
   categoryId: string | null
   limitMinor: number
 }
 
-export function useSetLimit(oneAtATime: SaveOnce): PersonalEntryRun<LimitChange> {
-  const queryClient = useQueryClient()
-  const mutation = useMutation<void, Error, LimitChange>({
-    mutationFn: ({ categoryId, limitMinor }) =>
+export function useSetLimit(oneAtATime: SaveOnce): SaveRun<LimitChange> {
+  return useSaveThenRefreshEntries(
+    ({ categoryId, limitMinor }: LimitChange) =>
       categoryId === null ? setMonthLimit(limitMinor) : setCategoryLimit(categoryId, limitMinor),
-    onSuccess: () => refreshPersonalEntries(queryClient),
-    onSettled: oneAtATime.finish,
-  })
-
-  return {
-    run: (change, onDone, onRefused) => {
-      if (oneAtATime.tryStart()) {
-        mutation.mutate(change, { onSuccess: onDone, onError: onRefused })
-      }
-    },
-    isPending: mutation.isPending,
-    error: mutation.error,
-  }
+    oneAtATime,
+  )
 }

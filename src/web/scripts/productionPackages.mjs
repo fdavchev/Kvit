@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
 const licenceFileName = /^(licen[sc]e|copying|notice)([.\-_].*)?$/i
+const developmentPackagesWithCssInTheSite = ['shadcn']
 
 function readText(value) {
   return typeof value === 'string' && value.trim() !== '' ? value : undefined
@@ -41,10 +42,13 @@ export function readProductionPackages(webRoot) {
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,
   })
-  const directories = listing
-    .split(/\r?\n/)
-    .filter((line) => line.trim() !== '')
-    .slice(1)
+  const directories = [
+    ...listing
+      .split(/\r?\n/)
+      .filter((line) => line.trim() !== '')
+      .slice(1),
+    ...developmentPackagesWithCssInTheSite.map((name) => path.join(webRoot, 'node_modules', name)),
+  ]
   const packagesByKey = new Map()
   for (const installed of directories.map(readInstalledPackage)) {
     const key = `${installed.name}@${installed.version}`

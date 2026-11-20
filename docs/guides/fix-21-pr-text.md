@@ -23,7 +23,7 @@ The last branch before new features: every open bug, glitch, wrong text, rare sa
 - Wake fixes (found on Filip's phone): Kvit has a web app manifest, so the installed app opens Kvit's start page and wakes the server by itself instead of opening on Welcome; for 2 minutes after the wake trip it shows "Waking up…" and quietly tries again instead of the bar and "Try again".
 - Step 6: website behaviour bugs. Closing and Finished groups hide what the server refuses (Recently deleted, Share, invite text) and Edit expense warns that saving cancels the closing; Home shows the Closing badge; the owner can cancel a plain name's waiting payment; the only other person is pre-selected when recording a payment; dialogs keep toasts off their buttons; no error box during the calm wait; dead invite links stop after one try; Share sends the group name; the Google button follows the page language and the window size; admin addresses look like any unknown page to others; Settings saves only the final budget currency, changes the language at once and has 44 px buttons; the app fails clearly when the API leaves out a field; a suspended person's waiting changes are kept and their Log out warns about unsent changes.
 - Step 7: server behaviour bugs. An unexpected crash answers a clear `SERVER_ERROR` (and a same-moment clash `CHANGED_MEANWHILE`, an oversized request 413) instead of a bare 500; password and deletion clashes are tried once more; Home names a restored expense; Edit expense asks NBRM only after every check, NBRM gives up after 3 s and looks back over holidays; a guest's Change password gets a clear refusal; a repeated Record after delete is a quiet success; statistics pick a grouping by range; an expired login-key certificate stops start-up with a clear message; guests left with nothing are cleaned up after 30 days.
-- Step 9: tidy-up and speed.
+- Step 9: tidy-up and speed. Screens load on demand, so the first screen downloads less (1,030 → 836 kB) and an open app still has every screen while the server sleeps; an unused endpoint and test-only code are gone and duplicated rules live in one place; the licence file lists only shipped packages (39); development packages are updated; four flaky tests are fixed at their cause; `start-local.ps1 -Check` stops promptly with a short summary.
 - Step 10: full check, browser pass, code review, report, and an up-to-date README.
 
 ### Database changes
@@ -40,7 +40,7 @@ One migration, `SameMomentSafety` (Step 8): two partial unique indexes on `dupli
 - [x] Step 6: behaviour bugs, website
 - [x] Step 7: behaviour bugs, server
 - [x] Step 8: same-moment problems (migrations)
-- [ ] Step 9: tidy-up and speed
+- [x] Step 9: tidy-up and speed
 - [ ] Step 10: full check, browser pass, code review, report, README brought up to date
 
 ## Later pushes (one-line commit subjects)
@@ -52,3 +52,4 @@ One migration, `SameMomentSafety` (Step 8): two partial unique indexes on `dupli
 - Open the installed app on Kvit's start page and wait calmly after the wake trip instead of showing the bar and Try again.
 - Hide what Closing groups refuse, let the owner cancel a plain name's payment, keep toasts off dialogs, stop dead invite links, follow the page language on the Google button and fix the Settings, admin and suspended screens.
 - Answer crashes with SERVER_ERROR and same-moment clashes with CHANGED_MEANWHILE, retry account clashes, name restored expenses, look back for the NBRM rate and clean up left-behind guests.
+- Load screens on demand, remove unused and duplicated code, list only shipped packages in the licence file, fix four flaky tests and make the local check stop with a short summary.

@@ -683,7 +683,7 @@ describe('EditExpenseScreen', () => {
       await waitFor(() => {
         expect(router.state.location.pathname).toBe(detailRoute)
       })
-      expect(screen.getByText('expense detail page')).toBeTruthy()
+      expect(await screen.findByText('expense detail page')).toBeTruthy()
     })
 
     it.each(languages)('shows the plain Expense saved toast after the edit was saved (%s)', async (language) => {
@@ -893,7 +893,7 @@ describe('EditExpenseScreen', () => {
       await waitFor(() => {
         expect(router.state.location.pathname).toBe(detailRoute)
       })
-      expect(screen.getByText('expense detail page')).toBeTruthy()
+      expect(await screen.findByText('expense detail page')).toBeTruthy()
       expect(screen.queryByRole('button', { name: translated('en', 'groupSettings.save') })).toBeNull()
       expect(requestCount(fetchMock, 'PUT', detailPath)).toBe(0)
     })

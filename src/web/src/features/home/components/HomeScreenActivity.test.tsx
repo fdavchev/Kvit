@@ -154,7 +154,7 @@ describe('the recent activity of the home screen', () => {
     expect(within(row).getByRole('link').getAttribute('href')).toBe(routes.group(greeceGroupId))
   })
 
-  it('shows at most the first 5 rows when the server sends more', async () => {
+  it('shows every row the server sends, because the server already keeps only the newest ones', async () => {
     const sixRows = Array.from({ length: 6 }, (_unused, index) =>
       dashboardActivityRowOf(
         {
@@ -171,10 +171,9 @@ describe('the recent activity of the home screen', () => {
     await renderHome({ dashboard: dashboardOf({ recentActivity: sixRows }) })
     await screen.findByRole('heading', { name: translated('en', 'home.recentActivity') })
 
-    for (let index = 0; index < 5; index += 1) {
+    for (let index = 0; index < 6; index += 1) {
       expect(screen.getByText(textMatching(translated('en', 'activity.memberJoined', { member: `Person${index}` })))).toBeTruthy()
     }
-    expect(screen.queryByText(textMatching(translated('en', 'activity.memberJoined', { member: 'Person5' })))).toBeNull()
   })
 
   it('shows all 5 rows when the server sends exactly 5', async () => {

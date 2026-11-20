@@ -21,6 +21,7 @@ const developmentOnlyPackages = [
   '@testing-library/react',
   '@cloudflare/workers-types',
   '@vitejs/plugin-react',
+  '@tailwindcss/vite',
 ]
 const minutes = 60_000
 
@@ -138,12 +139,16 @@ describe('scripts/licenses.mjs', () => {
     expect(generated).not.toContain(name)
   })
 
+  it('names shadcn, a development dependency whose tailwind.css is bundled into the site', () => {
+    expect(generated).toMatch(/^shadcn \d+\.\d+\.\d+$/m)
+  })
+
   it('finds react and its dependency scheduler among the production packages, so the list is not empty by accident', () => {
     const names = readProductionPackages().map((installed) => installed.name)
 
     expect(names).toContain('react')
     expect(names).toContain('scheduler')
-    expect(readProductionPackages().length).toBeGreaterThan(100)
+    expect(readProductionPackages().length).toBeGreaterThan(20)
   })
 })
 

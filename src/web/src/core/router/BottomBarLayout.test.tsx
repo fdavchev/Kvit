@@ -197,7 +197,7 @@ describe('BottomBarLayout', () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe(routes.settings)
     })
-    expect(screen.getByText('settings page')).toBeTruthy()
+    expect(await screen.findByText('settings page')).toBeTruthy()
     expect(tab('en', 'nav.settings').getAttribute('aria-current')).toBe('page')
   })
 })

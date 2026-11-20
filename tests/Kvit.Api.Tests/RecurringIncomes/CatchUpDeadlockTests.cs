@@ -15,6 +15,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
         private const int Rounds = 5;
         private const int CallsPerRound = 8;
         private const int WeeklyDueDatesFromJune3 = 20;
+        private const string PersonalEntriesTable = "personal_entries";
 
         private static readonly DateOnly FirstDueDate = new(2026, 8, 15);
         private static readonly DateOnly LastDueDate = new(2026, 10, 15);
@@ -26,11 +27,16 @@ namespace Kvit.Api.Tests.RecurringIncomes
             SignedInUser user = await CatchUpSteps.SignUpAsync(_app);
             Guid recurringIncomeId = await RecurringIncomeRows.InsertAsync(_app, user.UserId, dayOfMonth: 15, startsOn: new DateOnly(2026, 8, 1));
             await using DeadlockPartner partner = await DeadlockPartner.BeginAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(
+                _app, PersonalEntriesTable, $"NEW.entry_date = DATE '{LastDueDate:yyyy-MM-dd}' AND pg_backend_pid() <> {partner.ProcessId}");
             await partner.InsertEntryAsync(user.UserId, recurringIncomeId, LastDueDate);
 
             Task<HttpResponseMessage> catchUp = RecurringIncomeRequests.CatchUpAsync(user.Client);
-            await partner.WaitUntilARequestWaitsForItAsync();
-            await partner.InsertEntryAsync(user.UserId, recurringIncomeId, FirstDueDate);
+            await gate.WaitUntilRequestsAreHeldAsync(1);
+            Task partnerWaitsForTheRequest = partner.InsertEntryAsync(user.UserId, recurringIncomeId, FirstDueDate);
+            await gate.WaitUntilRequestsWaitForTheHeldRowAsync(1);
+            await gate.OpenAsync();
+            await partnerWaitsForTheRequest;
             await partner.RollBackAsync();
             HttpResponseMessage response = await catchUp;
 

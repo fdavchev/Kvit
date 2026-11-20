@@ -207,7 +207,7 @@ describe('NewGroupScreen', () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe(routes.group(testGroup.id))
     })
-    expect(screen.getByText('group page')).toBeTruthy()
+    expect(await screen.findByText('group page')).toBeTruthy()
   })
 
   it('disables the Create button while the request waits for an answer', async () => {

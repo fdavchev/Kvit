@@ -525,7 +525,7 @@ namespace Kvit.Infrastructure.Auth
 
         private async Task<MeResponse> MeResponseOfAsync(AppUser user)
         {
-            bool isAdmin = await _userManager.IsInRoleAsync(user, Roles.Admin);
+            bool isAdmin = await _context.AdminUserIds().ContainsAsync(user.Id);
 
             return new MeResponse(
                 user.Id,

@@ -24,6 +24,7 @@
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
+    "pageLoadFailed": "Couldn't load this page. Check your connection and try again.",
     "network": "The server may be waking up. Check your connection and try again in a moment.",
     "AUTH_INVALID_CREDENTIALS": "Wrong email or password.",
     "AUTH_EMAIL_TAKEN": "This email already has an account. Log in, or use a different email.",

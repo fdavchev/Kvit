@@ -286,7 +286,7 @@ const currencyCodes = /MKD|EUR/g
 const latinLetters = /[A-Za-z\u00C0-\u024F]/
 const placeholders = /\{\{\w+\}\}/g
 
-const textsWhereMacedonianMeansConnection =['errors.network', 'welcome.googleUnavailable']
+const textsWhereMacedonianMeansConnection =['errors.network', 'errors.pageLoadFailed', 'welcome.googleUnavailable']
 
 const macedonianWordForConnection = 'врск'
 
@@ -634,7 +634,7 @@ describe('the Macedonian word for a link', () => {
     expect(translated('mk', key)).toContain('врската')
   })
 
-  it('is never "врска" in any Macedonian text except the two that mean an internet connection', () => {
+  it('is never "врска" in any Macedonian text except the ones that mean an internet connection', () => {
     const textsWithTheWord = collectTexts(mk)
       .filter(([, text]) => typeof text === 'string' && text.toLowerCase().includes(macedonianWordForConnection))
       .map(([path]) => path)

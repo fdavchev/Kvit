@@ -39,6 +39,7 @@ vi.mock('@/core/router/router', () => ({
   get router() {
     return routerHolder.current
   },
+  preloadScreens: () => Promise.resolve(),
 }))
 
 vi.mock('idb-keyval', () => ({ get: vi.fn(), set: vi.fn(), del: vi.fn(), createStore: vi.fn() }))

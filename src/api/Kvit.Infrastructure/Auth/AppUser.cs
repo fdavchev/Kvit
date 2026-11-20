@@ -52,11 +52,6 @@ namespace Kvit.Infrastructure.Auth
             return $"{TombstoneUserNamePrefix}{userId:N}";
         }
 
-        public void SetBudgetTotalCurrency(Currency? budgetTotalCurrency)
-        {
-            BudgetTotalCurrency = budgetTotalCurrency;
-        }
-
         public void AcceptTerms(string termsVersion, DateTimeOffset acceptedAt)
         {
             TermsVersion = termsVersion;

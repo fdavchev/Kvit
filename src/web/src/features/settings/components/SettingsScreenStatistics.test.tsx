@@ -58,7 +58,7 @@ describe('SettingsScreen, the Statistics row', () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe(routes.admin)
     })
-    expect(screen.getByText('statistics page')).toBeTruthy()
+    expect(await screen.findByText('statistics page')).toBeTruthy()
   })
 
   it.each(languages)('shows no Statistics row to a person who is not an admin (%s)', async (language) => {

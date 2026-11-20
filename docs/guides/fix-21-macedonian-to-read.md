@@ -115,3 +115,8 @@ The five currency errors (expense, group, personal entry, repeating income, paym
 | 80 | Someone changed this at the same moment. Try again. | Некој го смени ова во истиот момент. Пробај пак. |
 | 81 | This is too large to send. Make it shorter and try again. | Ова е преголемо за испраќање. Скрати го и обиди се повторно. |
 | 82 | The server could not read what the app sent. Reload the page and try again. | Серверот не можеше да го прочита она што го испрати апликацијата. Вчитај ја страницата повторно и обиди се пак. |
+
+## 7. New in Fix 21 Step 9 (2026-11-20)
+| # | English | Macedonian |
+|---|---|---|
+| 83 | Couldn't load this page. Check your connection and try again. | Не можевме да ја вчитаме страницата. Провери ја врската и обиди се повторно. |
