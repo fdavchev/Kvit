@@ -11,6 +11,7 @@ import {
   stubFetch,
   stubFetchThatNeverAnswers,
 } from '@/test/apiTestHelpers'
+import { isDescribedBy } from '@/test/describedByTestHelpers'
 import {
   descriptionOf,
   expectDisabledWhilePending,
@@ -239,5 +240,52 @@ describe('ChangePasswordScreen', () => {
     expect(fieldLabelled(translated('en', 'auth.changePassword.new')).value).toBe(passwords.new)
     expect(router.state.location.pathname).toBe(routes.changePassword)
     expect(queryClient.getQueryData(meQueryKey)).toEqual({ ...testMe, mustChangePassword: true })
+  })
+
+  describe('marking the refused field', () => {
+    const currentLabel = translated('en', 'auth.changePassword.current')
+    const newLabel = translated('en', 'auth.changePassword.new')
+
+    function markedLabels(): string[] {
+      return [currentLabel, newLabel].filter((label) => fieldLabelled(label).getAttribute('aria-invalid') === 'true')
+    }
+
+    async function refuseWith(code: string): Promise<void> {
+      stubFetch(problemResponse(400, code))
+      await renderChangePassword()
+      fillForm('en')
+      pressSubmit('en')
+      await screen.findByRole('alert')
+    }
+
+    it('marks no field before anything is sent', async () => {
+      await renderChangePassword()
+
+      expect(markedLabels()).toEqual([])
+    })
+
+    it('marks only the current password for a wrong current password and links it to the error', async () => {
+      await refuseWith('AUTH_CURRENT_PASSWORD_WRONG')
+
+      expect(markedLabels()).toEqual([currentLabel])
+      expect(isDescribedBy(fieldLabelled(currentLabel), screen.getByRole('alert'))).toBe(true)
+    })
+
+    it.each(['AUTH_PASSWORD_UNCHANGED', 'AUTH_PASSWORD_TOO_WEAK'])('marks only the new password for %s and links it to the error', async (code) => {
+      await refuseWith(code)
+
+      expect(markedLabels()).toEqual([newLabel])
+      expect(isDescribedBy(fieldLabelled(newLabel), screen.getByRole('alert'))).toBe(true)
+    })
+
+    it('takes the mark away when the marked field is edited and keeps it when the other one is', async () => {
+      await refuseWith('AUTH_CURRENT_PASSWORD_WRONG')
+
+      typeInto(newLabel, 'Another2026')
+      expect(markedLabels()).toEqual([currentLabel])
+      typeInto(currentLabel, 'Other2026')
+
+      expect(markedLabels()).toEqual([])
+    })
   })
 })

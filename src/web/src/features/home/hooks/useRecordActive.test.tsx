@@ -118,4 +118,75 @@ describe('useRecordActive', () => {
 
     expect(requestCount(fetchMock, 'POST', activePath)).toBe(1)
   })
+
+  describe('when the page is left open over midnight UTC', () => {
+    function setPageVisibility(state: DocumentVisibilityState): void {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, value: state })
+      fireEvent(document, new Event('visibilitychange'))
+    }
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] })
+      vi.setSystemTime(new Date('2026-11-04T23:50:00Z'))
+    })
+
+    afterEach(() => {
+      Reflect.deleteProperty(document, 'visibilityState')
+      vi.useRealTimers()
+    })
+
+    async function renderAndWaitForFirstPost() {
+      const fetchMock = stubActive(noContentAnswer())
+      await renderElementWithProviders(<Probe />, '/')
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'POST', activePath)).toBe(1)
+      })
+      return fetchMock
+    }
+
+    it('sends it again when the page is shown again on a new day in UTC', async () => {
+      const fetchMock = await renderAndWaitForFirstPost()
+
+      vi.setSystemTime(new Date('2026-11-05T00:10:00Z'))
+      setPageVisibility('visible')
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'POST', activePath)).toBe(2)
+      })
+    })
+
+    it('sends it only once more when the page is shown several times on that new day', async () => {
+      const fetchMock = await renderAndWaitForFirstPost()
+
+      vi.setSystemTime(new Date('2026-11-05T00:10:00Z'))
+      setPageVisibility('visible')
+      setPageVisibility('hidden')
+      setPageVisibility('visible')
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'POST', activePath)).toBe(2)
+      })
+      vi.setSystemTime(new Date('2026-11-05T09:00:00Z'))
+      setPageVisibility('visible')
+      expect(requestCount(fetchMock, 'POST', activePath)).toBe(2)
+    })
+
+    it('sends nothing more when the page is shown again on the same day in UTC', async () => {
+      const fetchMock = await renderAndWaitForFirstPost()
+
+      vi.setSystemTime(new Date('2026-11-04T23:59:00Z'))
+      setPageVisibility('visible')
+
+      expect(requestCount(fetchMock, 'POST', activePath)).toBe(1)
+    })
+
+    it('sends nothing while the page is hidden, even on a new day', async () => {
+      const fetchMock = await renderAndWaitForFirstPost()
+
+      vi.setSystemTime(new Date('2026-11-05T00:10:00Z'))
+      setPageVisibility('hidden')
+
+      expect(requestCount(fetchMock, 'POST', activePath)).toBe(1)
+    })
+  })
 })

@@ -18,6 +18,7 @@ import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { todayInTimeZone } from '@/shared/utils/formatDate'
+import { ClosingCancelsNote } from '../../shared/components/ClosingCancelsNote'
 import { ExpenseForm } from '../../shared/components/ExpenseForm'
 import { ExpenseFormTitle } from '../../shared/components/ExpenseFormTitle'
 import { expensePeople, personOf } from '../../shared/expensePeople'
@@ -77,9 +78,7 @@ export function AddExpenseScreen() {
     const today = todayInTimeZone(me.timeZone, new Date())
     return (
       <>
-        {groupQuery.data.status === 'Closing' && (
-          <p className="pt-2 pb-3 text-[0.9375rem] text-pretty text-muted-foreground">{t('closing.addCancels')}</p>
-        )}
+        {groupQuery.data.status === 'Closing' && <ClosingCancelsNote />}
         <ExpenseForm
           initialValues={{
             amountText: '',
@@ -92,6 +91,7 @@ export function AddExpenseScreen() {
             note: '',
           }}
           people={expensePeople(members)}
+          addsNewMembersToAnEveryoneSplit
           categories={categoriesQuery.data}
           today={today}
           isPending={queuedSave.isPending}

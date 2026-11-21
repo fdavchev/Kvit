@@ -56,13 +56,10 @@ describe('exportMyData', () => {
     expect(file.fileName).toBe('kvit-my-data-2026-11-04.json')
   })
 
-  it('falls back to kvit-my-data.json when the Content-Disposition header is missing, and still returns the data', async () => {
+  it('throws an error naming the missing Content-Disposition header instead of making up a file name', async () => {
     stubFetch(exportResponse(null))
 
-    const file = await exportMyData()
-
-    expect(file.fileName).toBe('kvit-my-data.json')
-    expect(await file.blob.text()).toBe(exportBody)
+    await expect(exportMyData()).rejects.toThrow('GET /api/me/export answered without a Content-Disposition header')
   })
 
   it('returns the body exactly as the server sent it, without parsing and re-writing the JSON', async () => {

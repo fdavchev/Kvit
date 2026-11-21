@@ -6,7 +6,7 @@ import { meQueryKey } from '@/core/auth/useMe'
 import { languages, type Language } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import { themeChoices, type ThemeChoice } from '@/core/theme/theme'
-import { sentRequest, stubFetch } from '@/test/apiTestHelpers'
+import { sentRequest, stubFetch, stubFetchThatNeverAnswers } from '@/test/apiTestHelpers'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { seedMe, testMe } from '@/test/testMe'
 import { appliedTheme, resetThemeDocument, themeButtonName } from '@/test/themeTestHelpers'
@@ -47,6 +47,7 @@ describe('SettingsScreen', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+    vi.restoreAllMocks()
   })
 
   it.each(languages)('shows the settings heading (%s)', async (language) => {
@@ -151,6 +152,42 @@ describe('SettingsScreen', () => {
     expect(linksAfterLogOut).toEqual([])
   })
 
+  it('puts Log out after the Delete account button, as the last button of the screen', async () => {
+    await renderSettings()
+    const logOut = screen.getByRole('button', { name: translated('en', 'settings.logOut') })
+    const deleteAccount = screen.getByRole('button', { name: translated('en', 'settings.deleteAccount') })
+
+    const buttonsAfterLogOut = screen
+      .getAllByRole('button')
+      .filter((button) => button !== logOut && !(button.compareDocumentPosition(logOut) & Node.DOCUMENT_POSITION_FOLLOWING))
+
+    expect(deleteAccount.compareDocumentPosition(logOut) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(buttonsAfterLogOut).toEqual([])
+  })
+
+  it('draws Log out as a link without a filled box, at least 48 px tall', async () => {
+    await renderSettings()
+
+    const classes = Array.from(screen.getByRole('button', { name: translated('en', 'settings.logOut') }).classList)
+
+    expect(classes).toContain('text-link')
+    expect(classes).toContain('min-h-12')
+    expect(classes.filter((name) => name.startsWith('bg-') && name !== 'bg-clip-padding')).toEqual([])
+  })
+
+  it('keeps Log out enabled until it is pressed and disables it while the server has not answered', async () => {
+    stubFetchThatNeverAnswers()
+    await renderSettings()
+    const logOut = screen.getByRole('button', { name: translated('en', 'settings.logOut') })
+    expect(logOut.matches(':disabled')).toBe(false)
+
+    pressLogOut()
+
+    await waitFor(() => {
+      expect(logOut.matches(':disabled')).toBe(true)
+    })
+  })
+
   it.each(languages)('shows the language of the screen as the pressed one (%s)', async (language) => {
     await renderSettings(language)
 
@@ -176,8 +213,8 @@ describe('SettingsScreen', () => {
     })
   })
 
-  it('switches the screen language once the server has saved it', async () => {
-    stubFetch(new Response(null, { status: 204 }))
+  it('switches the screen language and remembers it on this device at once, before the server answers', async () => {
+    stubFetchThatNeverAnswers()
     const { i18n } = await renderSettings()
 
     pressLanguage('mk')
@@ -185,10 +222,38 @@ describe('SettingsScreen', () => {
     await waitFor(() => {
       expect(i18n.language).toBe('mk')
     })
+    expect(window.localStorage.getItem('kvit.language')).toBe('mk')
+    expect(screen.getByRole('button', { name: translated('en', 'language.mk') }).getAttribute('aria-pressed')).toBe('true')
     expect(toast.error).not.toHaveBeenCalled()
   })
 
-  it('shows the generic error toast when the server does not save the language', async () => {
+  it('switches the screen back to the previous language and shows the network error in it when the server cannot be reached', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    stubFetch(new TypeError('Failed to fetch'))
+    const { i18n } = await renderSettings()
+
+    pressLanguage('mk')
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(translated('en', 'errors.network'))
+    })
+    expect(i18n.language).toBe('en')
+  })
+
+  it('puts the new language in the me cache once the server has saved it', async () => {
+    stubFetch(new Response(null, { status: 204 }))
+    const { queryClient } = await renderSettings()
+
+    pressLanguage('mk')
+
+    await waitFor(() => {
+      expect(queryClient.getQueryData(meQueryKey)).toMatchObject({ language: 'mk' })
+    })
+    expect(toast.error).not.toHaveBeenCalled()
+  })
+
+  it('shows the generic error toast in the previous language when the server does not save the language', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
     stubFetch(new Response(null, { status: 500 }))
     await renderSettings()
 
@@ -197,11 +262,13 @@ describe('SettingsScreen', () => {
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(translated('en', 'errors.generic'))
     })
+    expect(toast.error).toHaveBeenCalledOnce()
   })
 
-  it('keeps the screen language when the server does not save the language', async () => {
+  it('switches the screen and the saved choice on this device back to the account language when the server does not save it', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
     stubFetch(new Response(null, { status: 500 }))
-    const { i18n } = await renderSettings()
+    const { i18n, queryClient } = await renderSettings()
 
     pressLanguage('mk')
     await waitFor(() => {
@@ -209,7 +276,35 @@ describe('SettingsScreen', () => {
     })
 
     expect(i18n.language).toBe('en')
-    expect(window.localStorage.getItem('kvit.language')).toBeNull()
+    expect(window.localStorage.getItem('kvit.language')).toBe('en')
+    expect(screen.getByRole('button', { name: translated('en', 'language.en') }).getAttribute('aria-pressed')).toBe('true')
+    expect(queryClient.getQueryData(meQueryKey)).toMatchObject({ language: 'en' })
+  })
+
+  it('switches a Macedonian screen back to Macedonian when saving English fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    stubFetch(new Response(null, { status: 500 }))
+    const { i18n } = await renderSettings('mk')
+
+    pressLanguage('en')
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(translated('mk', 'errors.generic'))
+    })
+    expect(i18n.language).toBe('mk')
+    expect(window.localStorage.getItem('kvit.language')).toBe('mk')
+  })
+
+  it('logs the failed language save with console.error', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    stubFetch(new Response(null, { status: 500 }))
+    await renderSettings()
+
+    pressLanguage('mk')
+
+    await waitFor(() => {
+      expect(consoleError).toHaveBeenCalledWith('A settings action failed', expect.any(Error))
+    })
   })
 
   it('shows Same as device as the pressed theme when nothing is saved', async () => {

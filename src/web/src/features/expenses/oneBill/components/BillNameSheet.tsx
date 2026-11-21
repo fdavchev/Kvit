@@ -5,14 +5,19 @@ import { isValidMemberName } from '@/features/groups/shared/memberName'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
 
 interface BillNameSheetProps {
-  takenNames: readonly string[]
+  ownName: string
+  addedNames: readonly string[]
   onAdd: (name: string) => void
   onClose: () => void
 }
 
-type Refusal = { kind: 'invalid' } | { kind: 'taken'; name: string }
+type Refusal = { kind: 'invalid' } | { kind: 'own' } | { kind: 'taken'; name: string }
 
-export function BillNameSheet({ takenNames, onAdd, onClose }: BillNameSheetProps) {
+function isSameName(first: string, second: string): boolean {
+  return first.trim().toLowerCase() === second.trim().toLowerCase()
+}
+
+export function BillNameSheet({ ownName, addedNames, onAdd, onClose }: BillNameSheetProps) {
   const { t } = useTranslation()
   const sheet = useKvitSheet()
   const [refusal, setRefusal] = useState<Refusal | null>(null)
@@ -23,7 +28,11 @@ export function BillNameSheet({ takenNames, onAdd, onClose }: BillNameSheetProps
       setRefusal({ kind: 'invalid' })
       return
     }
-    if (takenNames.some((taken) => taken.trim().toLowerCase() === name.toLowerCase())) {
+    if (isSameName(ownName, name)) {
+      setRefusal({ kind: 'own' })
+      return
+    }
+    if (addedNames.some((added) => isSameName(added, name))) {
       setRefusal({ kind: 'taken', name })
       return
     }
@@ -36,9 +45,14 @@ export function BillNameSheet({ takenNames, onAdd, onClose }: BillNameSheetProps
     if (refusal === null) {
       return null
     }
-    return refusal.kind === 'invalid'
-      ? t('errors.MEMBER_NAME_INVALID')
-      : t('errors.MEMBER_NAME_TAKEN', { name: refusal.name })
+    switch (refusal.kind) {
+      case 'invalid':
+        return t('errors.MEMBER_NAME_INVALID')
+      case 'own':
+        return t('oneBill.ownName')
+      case 'taken':
+        return t('oneBill.nameTaken', { name: refusal.name })
+    }
   }
 
   return (

@@ -8,7 +8,6 @@ import {
   readList,
   readObject,
   readOneOf,
-  readOrNullWhenMissing,
   readText,
   readYesNo,
   type Fields,
@@ -196,7 +195,7 @@ function parseGroup(body: unknown): Group {
     closingWaitingFor: readClosingPeople(fields, 'closingWaitingFor', what),
     canStartClosing: readYesNo(fields, 'canStartClosing', what),
     countsInBudget: readYesNo(fields, 'countsInBudget', what),
-    closedByAdmin: readOrNullWhenMissing(fields, 'closedByAdmin', what, readYesNo) ?? false,
+    closedByAdmin: readYesNo(fields, 'closedByAdmin', what),
     ...readGroupPlan(fields, what),
   }
 }

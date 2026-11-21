@@ -19,5 +19,10 @@ namespace Kvit.Api.Tests.PersonalEntries
         {
             return _inner.RollbackAsync(cancellationToken);
         }
+
+        public void LogCaughtClash(Exception clash, string nextStep)
+        {
+            _inner.LogCaughtClash(clash, nextStep);
+        }
     }
 }

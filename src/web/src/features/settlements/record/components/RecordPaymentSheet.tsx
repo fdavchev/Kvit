@@ -40,16 +40,10 @@ export function RecordPaymentSheet({ groupId, me, members, defaultCurrency, onCl
   const [currency, setCurrency] = useState<Currency>(defaultCurrency)
   const [amountText, setAmountText] = useState<string>('')
   const others = members.filter((member) => !member.isYou)
-  const person = others.find((member) => member.id === personId) ?? null
+  const onlyOther = others.length === 1 ? others[0] : null
+  const person = others.find((member) => member.id === personId) ?? onlyOther
   const chosen = person === null ? null : chosenPaymentOf(direction, me, person)
   const amountMinor = parseMoneyInput(amountText, currency)
-
-  function chooseDirection(nextDirection: Direction): void {
-    setDirection(nextDirection)
-    if (others.length === 1) {
-      setPersonId(others[0].id)
-    }
-  }
 
   function save(): void {
     if (chosen === null || amountMinor === null) {
@@ -92,13 +86,13 @@ export function RecordPaymentSheet({ groupId, me, members, defaultCurrency, onCl
               { value: 'paidMe', label: t('settlements.someonePaidMe') },
             ]}
             value={direction}
-            onChange={chooseDirection}
+            onChange={setDirection}
           />
           <KvitChoiceChips<string>
             label={t('settlements.person')}
             labelClassName="sr-only"
             options={others.map((member) => ({ value: member.id, label: member.displayName }))}
-            value={personId ?? ''}
+            value={person?.id ?? ''}
             onChange={setPersonId}
           />
           <KvitChoiceChips<Currency>

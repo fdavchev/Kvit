@@ -1,10 +1,13 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { meQueryKey } from '@/core/auth/useMe'
 import { languages, type Language } from '@/core/i18n/language'
 import type { Me } from '@/core/services/me/meService'
 import { stubGoogleSignIn } from '@/test/googleTestHelpers'
+import { testOutboxItem } from '@/test/outboxTestData'
+import { outboxText } from '@/test/outboxTextsTestData'
+import { seedOutbox, storedIds } from '@/test/outboxTestHelpers'
 import {
   elementShowingText,
   mailtoLinks,
@@ -278,6 +281,87 @@ describe('the screen of a suspended person', () => {
       })
       expect(screen.getByRole('heading', { level: 1, name: translated('en', 'suspended.title') })).toBeTruthy()
       expect(logOutButton().matches(':disabled')).toBe(false)
+    })
+  })
+
+  describe('Log out with changes that were not sent yet', () => {
+    function seedTwoUnsentChanges(): void {
+      seedOutbox(testSuspendedMe.id, [testOutboxItem('first-change'), testOutboxItem('second-change')])
+    }
+
+    it('asks first with the same warning as Settings and sends nothing yet', async () => {
+      seedTwoUnsentChanges()
+      const { fetchMock } = await renderSuspended()
+      await suspendedHeading()
+
+      fireEvent.click(logOutButton())
+
+      const sheet = await screen.findByRole('dialog', { name: translated('en', 'outbox.logOutTitle') })
+      expect(within(sheet).getByText(outboxText('en', 'outbox.logOutBody', 2))).toBeTruthy()
+      expect(requestCount(fetchMock, 'POST', '/api/auth/logout')).toBe(0)
+    })
+
+    it('logs out and removes the counted changes from this browser when Log out anyway is pressed', async () => {
+      seedTwoUnsentChanges()
+      const { fetchMock } = await renderSuspended()
+      await suspendedHeading()
+      fireEvent.click(logOutButton())
+      const sheet = await screen.findByRole('dialog', { name: translated('en', 'outbox.logOutTitle') })
+
+      fireEvent.click(within(sheet).getByRole('button', { name: translated('en', 'outbox.logOutAnyway') }))
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'POST', '/api/auth/logout')).toBe(1)
+      })
+      await waitFor(() => {
+        expect(storedIds(testSuspendedMe.id)).toEqual([])
+      })
+    })
+
+    it('keeps the person and the changes when Stay is pressed', async () => {
+      seedTwoUnsentChanges()
+      const { fetchMock } = await renderSuspended()
+      await suspendedHeading()
+      fireEvent.click(logOutButton())
+      const sheet = await screen.findByRole('dialog', { name: translated('en', 'outbox.logOutTitle') })
+
+      fireEvent.click(within(sheet).getByRole('button', { name: translated('en', 'outbox.stay') }))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      expect(requestCount(fetchMock, 'POST', '/api/auth/logout')).toBe(0)
+      expect(storedIds(testSuspendedMe.id)).toEqual(['first-change', 'second-change'])
+    })
+  })
+
+  describe('the changes that wait in the outbox', () => {
+    const expensePost = 'POST /api/groups/group-1/expenses'
+
+    it('sends nothing while the person is suspended', async () => {
+      seedOutbox(testSuspendedMe.id, [testOutboxItem('waiting-change')])
+      const { fetchMock } = await renderSuspended({ answers: { [expensePost]: jsonAnswer({}) } })
+      await suspendedHeading()
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      })
+
+      expect(requestCount(fetchMock, 'POST', '/api/groups/group-1/expenses')).toBe(0)
+      expect(storedIds(testSuspendedMe.id)).toEqual(['waiting-change'])
+    })
+
+    it('sends a change that waited while the person was suspended once they are no longer suspended', async () => {
+      seedOutbox(testSuspendedMe.id, [testOutboxItem('waiting-change')])
+      const { fetchMock, queryClient } = await renderSuspended({ answers: { [expensePost]: jsonAnswer({}) } })
+      await suspendedHeading()
+
+      act(() => {
+        queryClient.setQueryData<Me>(meQueryKey, testMe)
+      })
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'POST', '/api/groups/group-1/expenses')).toBe(1)
+      })
     })
   })
 

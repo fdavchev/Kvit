@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { setGroupPlan, type GroupPlanInput } from '@/core/services/groups/groupsService'
 import type { SaveOnce } from '@/features/budget/categories/hooks/useSaveOnce'
-import type { PersonalEntryRun } from '@/features/budget/entries/hooks/useAddPersonalEntry'
+import type { SaveRun } from '@/shared/hooks/saveRun'
 import { showChangedPlan } from '../groupPlanCache'
 
-export function useSetGroupPlan(groupId: string, oneAtATime: SaveOnce): PersonalEntryRun<GroupPlanInput> {
+export function useSetGroupPlan(groupId: string, oneAtATime: SaveOnce): SaveRun<GroupPlanInput> {
   const queryClient = useQueryClient()
   const mutation = useMutation<void, Error, GroupPlanInput>({
     mutationFn: (plan) => setGroupPlan(groupId, plan),

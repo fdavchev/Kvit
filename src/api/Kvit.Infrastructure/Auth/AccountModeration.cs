@@ -96,9 +96,7 @@ namespace Kvit.Infrastructure.Auth
 
         private Task<bool> IsAdminAsync(Guid userId, CancellationToken cancellationToken)
         {
-            return _context.UserRoles.AnyAsync(
-                userRole => userRole.UserId == userId && _context.Roles.Any(role => role.Id == userRole.RoleId && role.Name == Roles.Admin),
-                cancellationToken);
+            return _context.AdminUserIds().ContainsAsync(userId, cancellationToken);
         }
 
         private async Task<AppUser?> LockUserAsync(Guid userId, CancellationToken cancellationToken)

@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages, type Language } from '@/core/i18n/language'
@@ -13,6 +13,7 @@ import {
   type GoogleIdentityStub,
 } from '@/test/googleTestHelpers'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
+import { installFakeResizeObservers } from '@/test/resizeObserverTestHelpers'
 import {
   resetThemeDocument,
   stubDeviceColorScheme,
@@ -20,8 +21,6 @@ import {
 } from '@/test/themeTestHelpers'
 import { translated } from '@/test/translated'
 import { GoogleSignInButton } from './GoogleSignInButton'
-
-const otherLanguage: Record<Language, Language> = { en: 'mk', mk: 'en' }
 
 async function renderButton(
   onCredential: (idToken: string) => void = () => {},
@@ -36,18 +35,18 @@ async function renderButton(
   })
 }
 
-function slotFor(language: Language): HTMLElement {
-  const slot = document.querySelector<HTMLElement>(`[data-language="${language}"]`)
-  if (slot === null) {
-    throw new Error(`The Google button has no slot with data-language="${language}"`)
+function slot(): HTMLElement {
+  const slots = document.querySelectorAll<HTMLElement>('[data-language]')
+  if (slots.length !== 1) {
+    throw new Error(`Expected exactly one Google button slot, found ${slots.length}`)
   }
-  return slot
+  return slots[0]
 }
 
-function rootOfSlots(): HTMLElement {
-  const root = slotFor('en').parentElement
+function rootOfSlot(): HTMLElement {
+  const root = slot().parentElement
   if (root === null) {
-    throw new Error('The "en" slot of the Google button has no parent element')
+    throw new Error('The Google button slot has no parent element')
   }
   return root
 }
@@ -58,19 +57,16 @@ async function waitForDraws(identity: GoogleIdentityStub, count: number): Promis
   })
 }
 
-function drawsInto(identity: GoogleIdentityStub, slot: HTMLElement): GoogleButtonOptions[] {
-  return identity.renderButton.mock.calls
-    .filter(([element]) => element === slot)
-    .map(([, options]) => options)
+function drawnLocales(identity: GoogleIdentityStub): unknown[] {
+  return identity.renderButton.mock.calls.map(([, options]) => options.locale)
 }
 
-function lastDrawInto(identity: GoogleIdentityStub, slot: HTMLElement): GoogleButtonOptions {
-  const draws = drawsInto(identity, slot)
-  const lastDraw = draws[draws.length - 1]
-  if (lastDraw === undefined) {
-    throw new Error('Google has not drawn a button into the given slot')
+function lastDraw(identity: GoogleIdentityStub): GoogleButtonOptions {
+  const draw = identity.renderButton.mock.calls.at(-1)
+  if (draw === undefined) {
+    throw new Error('Google has not drawn a button yet')
   }
-  return lastDraw
+  return draw[1]
 }
 
 function stubElementWidth(width: number): void {
@@ -85,22 +81,6 @@ function failEveryGoogleScript(): void {
   document.head
     .querySelectorAll(`script[src="${testGoogleScriptUrl}"]`)
     .forEach((script) => script.dispatchEvent(new Event('error')))
-}
-
-function expectActive(slot: HTMLElement): void {
-  expect(slot.hasAttribute('aria-hidden')).toBe(false)
-  expect(slot.hasAttribute('inert')).toBe(false)
-  expect(slot.classList.contains('opacity-0')).toBe(false)
-  expect(slot.classList.contains('pointer-events-none')).toBe(false)
-  expect(slot.classList.contains('invisible')).toBe(false)
-}
-
-function expectInactive(slot: HTMLElement): void {
-  expect(slot.getAttribute('aria-hidden')).toBe('true')
-  expect(slot.hasAttribute('inert')).toBe(true)
-  expect(slot.classList.contains('opacity-0')).toBe(true)
-  expect(slot.classList.contains('pointer-events-none')).toBe(true)
-  expect(slot.classList.contains('invisible')).toBe(false)
 }
 
 function SwitchableHandler({
@@ -136,7 +116,7 @@ describe('GoogleSignInButton', () => {
     const identity = stubGoogleSignIn()
 
     await renderButton()
-    await waitForDraws(identity, 2)
+    await waitForDraws(identity, 1)
 
     expect(identity.initialize).toHaveBeenCalledOnce()
     expect(identity.initialize).toHaveBeenCalledWith(
@@ -144,15 +124,16 @@ describe('GoogleSignInButton', () => {
     )
   })
 
-  it('has one root element with a slot per app language, in the order en, mk', async () => {
+  it.each(languages)('has one root element with one slot, marked with the app language %s, and no hidden slot', async (language) => {
     stubGoogleSignIn()
 
-    await renderButton()
+    await renderButton(() => {}, { language })
 
-    const slots = document.querySelectorAll('[data-language]')
-    expect(Array.from(slots, (slot) => slot.getAttribute('data-language'))).toEqual(['en', 'mk'])
-    expect(slots[0].parentElement).toBe(slots[1].parentElement)
-    expect(Array.from(rootOfSlots().children)).toEqual(Array.from(slots))
+    expect(slot().getAttribute('data-language')).toBe(language)
+    expect(Array.from(rootOfSlot().children)).toEqual([slot()])
+    expect(slot().hasAttribute('aria-hidden')).toBe(false)
+    expect(slot().hasAttribute('inert')).toBe(false)
+    expect(slot().classList.contains('opacity-0')).toBe(false)
   })
 
   it('keeps the scheme-light class on the root element', async () => {
@@ -160,39 +141,35 @@ describe('GoogleSignInButton', () => {
 
     await renderButton()
 
-    expect(rootOfSlots().classList.contains('scheme-light')).toBe(true)
+    expect(rootOfSlot().classList.contains('scheme-light')).toBe(true)
   })
 
-  it('draws exactly two Google buttons on the first draw, one into each slot of the page', async () => {
+  it('draws exactly one Google button on the first draw, into the slot on the page', async () => {
     const identity = stubGoogleSignIn()
 
     await renderButton()
-    await waitForDraws(identity, 2)
+    await waitForDraws(identity, 1)
 
-    const drawnElements = identity.renderButton.mock.calls.map(([element]) => element)
-    expect(drawnElements).toEqual([slotFor('en'), slotFor('mk')])
-    drawnElements.forEach((element) => {
-      expect(document.body.contains(element)).toBe(true)
-    })
+    expect(identity.renderButton.mock.calls.map(([element]) => element)).toEqual([slot()])
+    expect(document.body.contains(slot())).toBe(true)
   })
 
-  it.each(languages)('draws the %s slot with the locale of the same name', async (language) => {
+  it.each(languages)('draws the button only with the locale of the app language %s, never in the other language', async (language) => {
     const identity = stubGoogleSignIn()
 
-    await renderButton(() => {}, { language: otherLanguage[language] })
-    await waitForDraws(identity, 2)
+    await renderButton(() => {}, { language })
+    await waitForDraws(identity, 1)
 
-    expect(drawsInto(identity, slotFor(language))).toHaveLength(1)
-    expect(lastDrawInto(identity, slotFor(language))).toMatchObject({ locale: language })
+    expect(drawnLocales(identity)).toEqual([language])
   })
 
-  it.each(languages)('asks for the standard large pill button that says "Continue with" with the logo on the left in the %s slot', async (language) => {
+  it('asks for the standard large pill button that says "Continue with" with the logo on the left', async () => {
     const identity = stubGoogleSignIn()
 
     await renderButton()
-    await waitForDraws(identity, 2)
+    await waitForDraws(identity, 1)
 
-    expect(lastDrawInto(identity, slotFor(language))).toMatchObject({
+    expect(lastDraw(identity)).toMatchObject({
       type: 'standard',
       size: 'large',
       text: 'continue_with',
@@ -208,80 +185,63 @@ describe('GoogleSignInButton', () => {
     ['dark', 'dark'],
     ['system', 'light'],
     ['system', 'dark'],
-  ] as const)('draws both slots with the outline Google theme for the %s saved choice on a %s device', async (saved, device) => {
+  ] as const)('draws the button with the outline Google theme for the %s saved choice on a %s device', async (saved, device) => {
     const identity = stubGoogleSignIn()
 
     await renderButton(() => {}, { saved, device })
-    await waitForDraws(identity, 2)
+    await waitForDraws(identity, 1)
 
-    languages.forEach((language) => {
-      expect(lastDrawInto(identity, slotFor(language))).toMatchObject({ theme: 'outline' })
-    })
+    expect(lastDraw(identity)).toMatchObject({ theme: 'outline' })
   })
 
-  it.each(languages.flatMap((language) => [360, 1000].map((width) => [language, width] as const)))('draws the %s slot with a width in pixels of at most 400 inside a %i pixel wide container', async (language, containerWidth) => {
+  it.each([360, 1000])('draws the button with a width in pixels of at most 400 inside a %i pixel wide container', async (containerWidth) => {
     const identity = stubGoogleSignIn()
     stubElementWidth(containerWidth)
 
     await renderButton()
-    await waitForDraws(identity, 2)
+    await waitForDraws(identity, 1)
 
-    const { width } = lastDrawInto(identity, slotFor(language))
+    const { width } = lastDraw(identity)
     expect(width).toMatch(/^\d+$/)
     expect(Number(width)).toBeGreaterThan(0)
     expect(Number(width)).toBeLessThanOrEqual(400)
   })
 
-  it.each(languages)('shows only the slot of the app language when the app starts in %s', async (language) => {
-    stubGoogleSignIn()
-
-    await renderButton(() => {}, { language })
-
-    expectActive(slotFor(language))
-    expectInactive(slotFor(otherLanguage[language]))
-  })
-
   it.each([
     ['en', 'mk'],
     ['mk', 'en'],
-  ] as const)('switches the active slot from %s to %s when the app language changes', async (from, to) => {
+  ] as const)('draws the button once more when the app language changes from %s to %s, in the new language', async (from, to) => {
     const identity = stubGoogleSignIn()
     const { i18n } = await renderButton(() => {}, { language: from })
-    await waitForDraws(identity, 2)
+    await waitForDraws(identity, 1)
 
     await act(() => i18n.changeLanguage(to))
 
-    await waitFor(() => {
-      expectActive(slotFor(to))
-    })
-    expectInactive(slotFor(from))
+    await waitForDraws(identity, 2)
+    expect(drawnLocales(identity)).toEqual([from, to])
+    expect(identity.renderButton.mock.calls[1][0]).toBe(slot())
+    expect(slot().getAttribute('data-language')).toBe(to)
   })
 
-  it.each([
-    ['en', 'mk'],
-    ['mk', 'en'],
-  ] as const)('draws no new Google button when the app language changes from %s to %s', async (from, to) => {
+  it('keeps the width when it draws the button again for a new language', async () => {
     const identity = stubGoogleSignIn()
-    const { i18n } = await renderButton(() => {}, { language: from })
+    stubElementWidth(320)
+    const { i18n } = await renderButton(() => {}, { language: 'en' })
+    await waitForDraws(identity, 1)
+
+    await act(() => i18n.changeLanguage('mk'))
+
     await waitForDraws(identity, 2)
-
-    await act(() => i18n.changeLanguage(to))
-    await waitFor(() => {
-      expectActive(slotFor(to))
-    })
-
-    expect(identity.renderButton).toHaveBeenCalledTimes(2)
+    expect(lastDraw(identity)).toMatchObject({ width: '320', locale: 'mk' })
   })
 
   it('does not initialize Google again when the app language changes', async () => {
     const identity = stubGoogleSignIn()
     const { i18n } = await renderButton(() => {}, { language: 'en' })
-    await waitForDraws(identity, 2)
+    await waitForDraws(identity, 1)
 
     await act(() => i18n.changeLanguage('mk'))
-    await waitFor(() => {
-      expectActive(slotFor('mk'))
-    })
+    await waitForDraws(identity, 2)
 
     expect(identity.initialize).toHaveBeenCalledOnce()
   })
@@ -302,7 +262,7 @@ describe('GoogleSignInButton', () => {
         </>,
         '/',
       )
-      await waitForDraws(identity, 2)
+      await waitForDraws(identity, 1)
 
       fireEvent.click(screen.getByRole('button', { name: translated('en', toggleText) }))
       await waitFor(() => {
@@ -320,7 +280,7 @@ describe('GoogleSignInButton', () => {
     it.each(changes)('draws no new Google button when the %s saved choice on a %s device is changed', async (saved, device, toggleText) => {
       const identity = await renderWithThemeToggleAndTapIt(saved, device, toggleText)
 
-      expect(identity.renderButton).toHaveBeenCalledTimes(2)
+      expect(identity.renderButton).toHaveBeenCalledTimes(1)
     })
 
     it.each(changes)('does not initialize Google again when the %s saved choice on a %s device is changed', async (saved, device, toggleText) => {
@@ -334,20 +294,19 @@ describe('GoogleSignInButton', () => {
     async function renderOnLightDeviceThenSwitchToDarkAndChangeLanguage(): Promise<GoogleIdentityStub> {
       const identity = stubGoogleSignIn()
       const { i18n } = await renderButton(() => {}, { saved: 'system', device: 'light' })
-      await waitForDraws(identity, 2)
+      await waitForDraws(identity, 1)
 
       stubDeviceColorScheme('dark')
       await act(() => i18n.changeLanguage('mk'))
-      await waitFor(() => {
-        expectActive(slotFor('mk'))
-      })
+      await waitForDraws(identity, 2)
       return identity
     }
 
-    it('draws no new Google button', async () => {
+    it('draws only the one new button the language change asks for, still in the outline theme', async () => {
       const identity = await renderOnLightDeviceThenSwitchToDarkAndChangeLanguage()
 
       expect(identity.renderButton).toHaveBeenCalledTimes(2)
+      expect(lastDraw(identity)).toMatchObject({ theme: 'outline' })
     })
 
     it('does not initialize Google again', async () => {
@@ -357,13 +316,13 @@ describe('GoogleSignInButton', () => {
     })
   })
 
-  it.each(languages)('passes the credential Google returns to onCredential (%s slot)', async (language) => {
+  it.each(languages)('passes the credential Google returns to onCredential (%s)', async (language) => {
     const identity = stubGoogleSignIn()
     const onCredential = vi.fn<(idToken: string) => void>()
-    await renderButton(onCredential)
-    await waitForDraws(identity, 2)
+    await renderButton(onCredential, { language })
+    await waitForDraws(identity, 1)
 
-    sendGoogleCredential(identity, slotFor(language), 'header.payload.signature')
+    sendGoogleCredential(identity, slot(), 'header.payload.signature')
 
     expect(onCredential).toHaveBeenCalledExactlyOnceWith('header.payload.signature')
   })
@@ -374,10 +333,10 @@ describe('GoogleSignInButton', () => {
     const second = vi.fn<(idToken: string) => void>()
     stubDeviceColorScheme('light')
     await renderElementWithProviders(<SwitchableHandler first={first} second={second} />, '/')
-    await waitForDraws(identity, 2)
+    await waitForDraws(identity, 1)
     fireEvent.click(screen.getByRole('button', { name: 'use the second handler' }))
 
-    sendGoogleCredential(identity, slotFor('en'), 'header.payload.signature')
+    sendGoogleCredential(identity, slot(), 'header.payload.signature')
 
     expect(second).toHaveBeenCalledExactlyOnceWith('header.payload.signature')
     expect(first).not.toHaveBeenCalled()
@@ -387,22 +346,92 @@ describe('GoogleSignInButton', () => {
     const identity = stubGoogleSignIn()
     const onCredential = vi.fn<(idToken: string) => void>()
     const { i18n } = await renderButton(onCredential, { language: 'en' })
-    await waitForDraws(identity, 2)
+    await waitForDraws(identity, 1)
     await act(() => i18n.changeLanguage('mk'))
-    await waitFor(() => {
-      expectActive(slotFor('mk'))
-    })
+    await waitForDraws(identity, 2)
 
-    sendGoogleCredential(identity, slotFor('mk'), 'header.payload.signature')
+    sendGoogleCredential(identity, slot(), 'header.payload.signature')
 
     expect(onCredential).toHaveBeenCalledExactlyOnceWith('header.payload.signature')
+  })
+
+  it('initializes Google only once in the page when a Google button is shown again later', async () => {
+    const identity = stubGoogleSignIn()
+    await renderButton()
+    await waitForDraws(identity, 1)
+    cleanup()
+
+    await renderButton()
+    await waitForDraws(identity, 2)
+
+    expect(identity.initialize).toHaveBeenCalledOnce()
+  })
+
+  it('passes the credential to the onCredential of the Google button shown again later', async () => {
+    const identity = stubGoogleSignIn()
+    const first = vi.fn<(idToken: string) => void>()
+    const second = vi.fn<(idToken: string) => void>()
+    await renderButton(first)
+    await waitForDraws(identity, 1)
+    cleanup()
+    await renderButton(second)
+    await waitForDraws(identity, 2)
+
+    sendGoogleCredential(identity, slot(), 'header.payload.signature')
+
+    expect(second).toHaveBeenCalledExactlyOnceWith('header.payload.signature')
+    expect(first).not.toHaveBeenCalled()
+  })
+
+  describe('when the window is resized after the first draw', () => {
+    it('draws the button again with the new width once the resizing stops', async () => {
+      const resizeObservers = installFakeResizeObservers()
+      const identity = stubGoogleSignIn()
+      stubElementWidth(360)
+      await renderButton()
+      await waitForDraws(identity, 1)
+
+      stubElementWidth(300)
+      resizeObservers.fireFor(rootOfSlot())
+      resizeObservers.fireFor(rootOfSlot())
+
+      await waitForDraws(identity, 2)
+      expect(lastDraw(identity)).toMatchObject({ width: '300', locale: 'en' })
+    })
+
+    it('draws nothing again when the width stayed the same', async () => {
+      const resizeObservers = installFakeResizeObservers()
+      const identity = stubGoogleSignIn()
+      stubElementWidth(360)
+      await renderButton()
+      await waitForDraws(identity, 1)
+
+      resizeObservers.fireFor(rootOfSlot())
+      await act(() => new Promise<void>((resolve) => setTimeout(resolve, 400)))
+
+      expect(identity.renderButton).toHaveBeenCalledTimes(1)
+    })
+
+    it('keeps the widest button at 400 pixels on a window that gets wider', async () => {
+      const resizeObservers = installFakeResizeObservers()
+      const identity = stubGoogleSignIn()
+      stubElementWidth(320)
+      await renderButton()
+      await waitForDraws(identity, 1)
+
+      stubElementWidth(1000)
+      resizeObservers.fireFor(rootOfSlot())
+
+      await waitForDraws(identity, 2)
+      expect(lastDraw(identity)).toMatchObject({ width: '400' })
+    })
   })
 
   it('shows no alert while Google loads fine', async () => {
     const identity = stubGoogleSignIn()
 
     await renderButton()
-    await waitForDraws(identity, 2)
+    await waitForDraws(identity, 1)
 
     expect(screen.queryByRole('alert')).toBeNull()
   })
@@ -419,10 +448,10 @@ describe('the title of the frame Google draws', () => {
     })
   }
 
-  function frameIn(slot: HTMLElement): HTMLIFrameElement {
-    const frame = slot.querySelector('iframe')
+  function frameInSlot(): HTMLIFrameElement {
+    const frame = slot().querySelector('iframe')
     if (frame === null) {
-      throw new Error(`The "${slot.getAttribute('data-language')}" slot has no Google frame`)
+      throw new Error('The Google button slot has no Google frame')
     }
     return frame
   }
@@ -437,48 +466,50 @@ describe('the title of the frame Google draws', () => {
     vi.restoreAllMocks()
   })
 
-  it.each(languages)('titles the frame in the %s slot in its own language, not in the language of the Google script', async (language) => {
+  it.each(languages)('titles the frame in the app language %s, not in the language of the Google script', async (language) => {
     const identity = stubGoogleSignIn()
     drawFramesLikeGoogle(identity)
 
-    await renderButton(() => {}, { language: otherLanguage[language] })
-    await waitForDraws(identity, 2)
+    await renderButton(() => {}, { language })
+    await waitForDraws(identity, 1)
 
     await waitFor(() => {
-      expect(frameIn(slotFor(language)).title).toBe(translated(language, 'welcome.googleButtonTitle'))
+      expect(frameInSlot().title).toBe(translated(language, 'welcome.googleButtonTitle'))
     })
+    expect(document.querySelectorAll('iframe')).toHaveLength(1)
   })
 
   it.each([
     ['en', 'mk'],
     ['mk', 'en'],
-  ] as const)('gives the visible frame the title in the page language, %s first and %s after a switch', async (from, to) => {
+  ] as const)('gives the frame the title in the page language, %s first and %s after a switch', async (from, to) => {
     const identity = stubGoogleSignIn()
     drawFramesLikeGoogle(identity)
     const { i18n } = await renderButton(() => {}, { language: from })
-    await waitForDraws(identity, 2)
+    await waitForDraws(identity, 1)
     await waitFor(() => {
-      expect(frameIn(slotFor(from)).title).toBe(translated(from, 'welcome.googleButtonTitle'))
+      expect(frameInSlot().title).toBe(translated(from, 'welcome.googleButtonTitle'))
     })
 
     await act(() => i18n.changeLanguage(to))
 
+    await waitForDraws(identity, 2)
     await waitFor(() => {
-      expectActive(slotFor(to))
+      expect(frameInSlot().title).toBe(translated(to, 'welcome.googleButtonTitle'))
     })
-    expect(frameIn(slotFor(to)).title).toBe(translated(to, 'welcome.googleButtonTitle'))
+    expect(document.querySelectorAll('iframe')).toHaveLength(1)
   })
 
-  it('titles a frame that Google puts into a slot again later', async () => {
+  it('titles a frame that Google puts into the slot again later', async () => {
     const identity = stubGoogleSignIn()
     drawFramesLikeGoogle(identity)
     await renderButton(() => {}, { language: 'en' })
-    await waitForDraws(identity, 2)
+    await waitForDraws(identity, 1)
     const newFrame = document.createElement('iframe')
     newFrame.title = titleFromGoogleScript
 
     act(() => {
-      slotFor('en').replaceChildren(newFrame)
+      slot().replaceChildren(newFrame)
     })
 
     await waitFor(() => {

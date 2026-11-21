@@ -20,5 +20,6 @@ namespace Kvit.Application.Queries.Expenses
         string CreatedByName,
         DateTimeOffset CreatedAt,
         DateTimeOffset? UpdatedAt,
-        bool CanEdit);
+        bool CanEdit,
+        uint Version);
 }

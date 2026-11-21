@@ -3,11 +3,11 @@ import { colorOfToken, colorTokenOfClasses, contrastBetween, hasColorToken } fro
 
 describe('indexCssColors', () => {
   it('reads a plain hex token of the light theme', () => {
-    expect(colorOfToken('pill', 'light')).toEqual([255, 255, 255])
+    expect(colorOfToken('card', 'light')).toEqual([255, 255, 255])
   })
 
   it('reads a token that points to another token', () => {
-    expect(colorOfToken('card', 'light')).toEqual(colorOfToken('brand-50', 'light'))
+    expect(colorOfToken('pill', 'light')).toEqual(colorOfToken('brand-100', 'light'))
   })
 
   it('takes the dark value of a token that the dark theme replaces', () => {
@@ -19,8 +19,8 @@ describe('indexCssColors', () => {
     expect(colorOfToken('card', 'dark')).toEqual([44, 34, 32])
   })
 
-  it('measures the white pill on the peach page as 1.33:1, the number in the BACKLOG', () => {
-    expect(contrastBetween('pill', 'background', 'light')).toBeCloseTo(1.33, 2)
+  it('measures the white card on the lightest peach page as 1.09:1', () => {
+    expect(contrastBetween('card', 'background', 'light')).toBeCloseTo(1.09, 2)
   })
 
   it('measures the dark danger color on the dark card as 6.78:1', () => {

@@ -30,7 +30,7 @@ async function renderWithOneBrokenExpense() {
   })
   const waiting: OutboxItem[] = [queuedExpense('good'), withoutDisplayFields(queuedExpense('broken'))]
   seedOutbox(testMe.id, waiting)
-  await renderElementWithProviders(<GroupExpenses groupId={testGroupId} actionsWhenEmpty={null} />, '/expenses', {
+  await renderElementWithProviders(<GroupExpenses groupId={testGroupId} actionsWhenEmpty={null} showsRecentlyDeletedLink />, '/expenses', {
     seedCache: seedMe(testMe),
   })
   await findWaitingRowWith('Museum tickets')

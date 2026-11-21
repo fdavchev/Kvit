@@ -10,6 +10,7 @@ import {
   stubFetch,
   stubFetchThatNeverAnswers,
 } from '@/test/apiTestHelpers'
+import { isDescribedBy } from '@/test/describedByTestHelpers'
 import {
   descriptionOf,
   expectDisabledWhilePending,
@@ -314,6 +315,40 @@ describe('GoogleSignUpScreen', () => {
       await waitFor(() => {
         expect(router.state.location.pathname).toBe(routes.welcome)
       })
+    })
+  })
+
+  describe('marking the refused field', () => {
+    it('marks the name field for a refused name and links it to the error', async () => {
+      stubFetch(problemResponse(400, 'AUTH_DISPLAY_NAME_INVALID'))
+      await renderGoogleSignUp()
+
+      pressSubmit()
+      await screen.findByRole('alert')
+
+      expect(nameField().getAttribute('aria-invalid')).toBe('true')
+      expect(isDescribedBy(nameField(), screen.getByRole('alert'))).toBe(true)
+    })
+
+    it('marks no field for a Google answer that is not about the name', async () => {
+      stubFetch(problemResponse(401, 'AUTH_GOOGLE_TOKEN_INVALID'))
+      await renderGoogleSignUp()
+
+      pressSubmit()
+      await screen.findByRole('alert')
+
+      expect(nameField().getAttribute('aria-invalid')).not.toBe('true')
+    })
+
+    it('takes the mark away when the name is edited', async () => {
+      stubFetch(problemResponse(400, 'AUTH_DISPLAY_NAME_INVALID'))
+      await renderGoogleSignUp()
+      pressSubmit()
+      await screen.findByRole('alert')
+
+      typeInto(translated('en', 'auth.signUp.name'), 'Filip')
+
+      expect(nameField().getAttribute('aria-invalid')).not.toBe('true')
     })
   })
 })

@@ -1,12 +1,12 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Language } from '@/core/i18n/language'
 import { languages } from '@/core/i18n/language'
 import { routes } from '@/core/router/routes'
 import type { ExpenseDetail } from '@/core/services/expenses/expensesService'
 import type { GroupMembers } from '@/core/services/groups/membersService'
-import { formatMoney } from '@/shared/utils/formatMoney'
+import { currencyLabel, formatMoney } from '@/shared/utils/formatMoney'
 import {
   accommodationCategory,
   detailOf,
@@ -131,6 +131,15 @@ function money(amountMinor: number, currency: 'MKD' | 'EUR' = 'MKD', language: L
 
 const maxRowExtra = 12
 
+function splitRowOf(name: string, amount: string): HTMLElement {
+  const nameAndAmount = elementWithAll([name, amount], maxRowExtra)
+  const row = nameAndAmount.closest('li')
+  if (row === null) {
+    throw new Error(`Expected the name "${name}" and the amount "${amount}" to sit inside a row of the split: ${nameAndAmount.outerHTML}`)
+  }
+  return row
+}
+
 describe('ExpenseDetailScreen', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -183,6 +192,17 @@ describe('ExpenseDetailScreen', () => {
       await renderDetail()
 
       expect(await screen.findByRole('heading', { level: 1, name: 'Hotel' })).toBeTruthy()
+    })
+
+    it('lets a title of 60 letters without a space wrap inside the screen: min-w-0 and wrap-anywhere', async () => {
+      const longTitle = 'W'.repeat(60)
+      await renderDetail({ detail: detailOf({ title: longTitle }) })
+
+      const heading = await screen.findByRole('heading', { level: 1, name: longTitle })
+
+      expect(Array.from(heading.classList)).toEqual(expect.arrayContaining(['min-w-0', 'wrap-anywhere']))
+      expect(Array.from(heading.classList)).not.toContain('whitespace-nowrap')
+      expect(Array.from(heading.classList)).not.toContain('truncate')
     })
 
     it('shows the name of the category as the heading when the expense has no title', async () => {
@@ -273,14 +293,29 @@ describe('ExpenseDetailScreen', () => {
       }
     })
 
+    it.each(['Filip', 'Marko'])('puts the name and the amount of %s in one block that may wrap, so a long name pushes the amount under it', async (name) => {
+      await renderDetail()
+      await showsDetail()
+
+      const row = splitRowOf(name, money(name === 'Marko' ? 108000 : 48000))
+      const nameElement = within(row).getByText(name)
+      const amountElement = within(row).getByText(money(name === 'Marko' ? 108000 : 48000), { normalizer: plainSpaces })
+
+      expect(nameElement.parentElement).toBe(amountElement.parentElement)
+      expect(Array.from(nameElement.parentElement?.classList ?? [])).toEqual(expect.arrayContaining(['flex', 'flex-wrap', 'min-w-0', 'flex-1']))
+      expect(Array.from(nameElement.classList)).toEqual(expect.arrayContaining(['min-w-0', 'grow', 'break-words']))
+      expect(Array.from(nameElement.classList)).not.toContain('wrap-anywhere')
+      expect(Array.from(amountElement.classList)).toEqual(expect.arrayContaining(['ml-auto', 'whitespace-nowrap']))
+    })
+
     it('shows the Google picture of a person who has one and the initial of the others in their row', async () => {
       await renderDetail({
         members: { ...ownerViewMembers, members: [{ ...filipMember, pictureUrl: filipPictureUrl }, anaMember, markoMember, grandmaMember, petarMember] },
       })
       await showsDetail()
 
-      const filipRow = elementWithAll(['Filip', money(48000)], maxRowExtra)
-      const anaRow = elementWithAll(['Ana', money(48000)], maxRowExtra)
+      const filipRow = splitRowOf('Filip', money(48000))
+      const anaRow = splitRowOf('Ana', money(48000))
 
       expect(filipRow.querySelector('img')?.getAttribute('src')).toBe(filipPictureUrl)
       expect(filipRow.querySelector('img')?.getAttribute('referrerpolicy')).toBe('no-referrer')
@@ -291,9 +326,9 @@ describe('ExpenseDetailScreen', () => {
       await renderDetail()
       await showsDetail()
 
-      expect(elementWithAll(['Filip', money(48000)], maxRowExtra).innerHTML).toMatch(/--avatar-0(?!\d)/)
-      expect(elementWithAll(['Ana', money(48000)], maxRowExtra).innerHTML).toMatch(/--avatar-1(?!\d)/)
-      expect(elementWithAll(['Marko', money(108000)], maxRowExtra).innerHTML).toMatch(/--avatar-2(?!\d)/)
+      expect(splitRowOf('Filip', money(48000)).innerHTML).toMatch(/--avatar-0(?!\d)/)
+      expect(splitRowOf('Ana', money(48000)).innerHTML).toMatch(/--avatar-1(?!\d)/)
+      expect(splitRowOf('Marko', money(108000)).innerHTML).toMatch(/--avatar-2(?!\d)/)
     })
   })
 
@@ -308,7 +343,7 @@ describe('ExpenseDetailScreen', () => {
       })
       await showsDetail()
 
-      const row = elementWithAll(['Bojan', money(7000)], maxRowExtra)
+      const row = splitRowOf('Bojan', money(7000))
 
       expect(row.innerHTML).toMatch(/--avatar-9(?!\d)/)
       expect(row.querySelector('img')).toBeNull()
@@ -341,28 +376,28 @@ describe('ExpenseDetailScreen', () => {
       await renderDetail({ language: 'mk', detail: groceriesDetail })
       await showsDetail('Groceries')
 
-      expect(screen.getByText('Цена на еврото: 1 EUR = 61,5610 MKD · 24 сеп 2026')).toBeTruthy()
+      expect(screen.getByText('Цена на еврото: 1 EUR = 61,5610 ден. · 24 сеп 2026')).toBeTruthy()
     })
 
     it('writes the rate in Macedonian with four decimals even when the last ones are zeros', async () => {
       await renderDetail({ language: 'mk', detail: { ...groceriesDetail, mkdPerEur: 61.5 } })
       await showsDetail('Groceries')
 
-      expect(screen.getByText(/1 EUR = 61,5000 MKD/)).toBeTruthy()
+      expect(screen.getByText(/1 EUR = 61,5000 ден\. ·/)).toBeTruthy()
     })
 
     it('writes the rate in Macedonian with four decimals when the rate has more of them', async () => {
       await renderDetail({ language: 'mk', detail: { ...groceriesDetail, mkdPerEur: 61.56789 } })
       await showsDetail('Groceries')
 
-      expect(screen.getByText(/1 EUR = 61,5679 MKD/)).toBeTruthy()
+      expect(screen.getByText(/1 EUR = 61,5679 ден\. ·/)).toBeTruthy()
     })
 
     it('writes the date of the rate in Macedonian with the year and no dot, whatever the month', async () => {
       await renderDetail({ language: 'mk', detail: { ...groceriesDetail, rateDate: '2026-11-03' } })
       await showsDetail('Groceries')
 
-      expect(screen.getByText(/MKD · 3 ное 2026$/)).toBeTruthy()
+      expect(screen.getByText(/ден\. · 3 ное 2026$/)).toBeTruthy()
     })
 
     it('writes the rate with four decimals even when the last ones are zeros', async () => {
@@ -459,7 +494,7 @@ describe('ExpenseDetailScreen', () => {
           new: day('2026-10-03'),
         }),
         paidBy: translated(language, 'expense.historyChangedPaidBy', { name: 'Filip', old: 'Ana', new: 'Filip' }),
-        currency: translated(language, 'expense.historyChangedCurrency', { name: 'Filip', old: 'EUR', new: 'MKD' }),
+        currency: translated(language, 'expense.historyChangedCurrency', { name: 'Filip', old: 'EUR', new: currencyLabel('MKD', language) }),
         split: translated(language, 'expense.historyChangedSplit', { name: 'Filip' }),
         added: translated(language, 'expense.historyAdded', { name: 'Bojan' }),
         noSplitDetails: /Equal: Ana/,
@@ -846,7 +881,7 @@ describe('ExpenseDetailScreen', () => {
       await waitFor(() => {
         expect(router.state.location.pathname).toBe(routes.group(testGroupId))
       })
-      expect(screen.getByText('group page')).toBeTruthy()
+      expect(await screen.findByText('group page')).toBeTruthy()
     })
 
     it.each(languages)('shows the Expense deleted toast with an Undo button for 4 seconds (%s)', async (language) => {
@@ -1001,6 +1036,90 @@ describe('ExpenseDetailScreen', () => {
       await findErrorText(translated('en', `errors.${code}`))
       expect(router.state.location.pathname).toBe(routes.groupExpense(testGroupId, hotelExpenseId))
       expect(toastsShownWithOptions()).toEqual([])
+    })
+
+    it.each(languages)('shows the translated text for 409 EXPENSE_CHANGED_MEANWHILE (%s), stays on the screen and shows no Expense deleted toast', async (language) => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { router } = await renderDetail({
+        language,
+        answers: { [`DELETE ${detailPath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE') },
+      })
+      await showsDetail()
+
+      fireEvent.click(deleteButton(language))
+
+      await findErrorText(translated(language, 'errors.EXPENSE_CHANGED_MEANWHILE'))
+      expect(router.state.location.pathname).toBe(routes.groupExpense(testGroupId, hotelExpenseId))
+      expect(toastsShownWithOptions()).toEqual([])
+    })
+
+    it('asks again for the expense after a delete refused with 409 EXPENSE_CHANGED_MEANWHILE', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock } = await renderDetail({
+        answers: { [`DELETE ${detailPath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE') },
+      })
+      await showsDetail()
+      expect(requestCount(fetchMock, 'GET', detailPath)).toBe(1)
+
+      fireEvent.click(deleteButton())
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'GET', detailPath)).toBe(2)
+      })
+    })
+
+    it('marks the list, the activity, the balances and the spending of the group as out of date after a delete refused with 409 EXPENSE_CHANGED_MEANWHILE', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const keys = [
+        ['groups', testGroupId, 'expenses'],
+        ['groups', testGroupId, 'activity'],
+        ['groups', testGroupId, 'balances'],
+        ['groups', testGroupId, 'spending'],
+      ]
+      const { queryClient } = await renderDetail({
+        answers: { [`DELETE ${detailPath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE') },
+        seedCache: (cache) => {
+          for (const key of keys) {
+            cache.setQueryData(key, [])
+          }
+        },
+      })
+      await showsDetail()
+
+      fireEvent.click(deleteButton())
+
+      await waitFor(() => {
+        for (const key of keys) {
+          expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true)
+        }
+      })
+    })
+
+    it('does not ask again for the expense after a delete refused for another reason', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock } = await renderDetail({
+        answers: { [`DELETE ${detailPath}`]: problemAnswer(403, 'EXPENSE_NOT_ALLOWED') },
+      })
+      await showsDetail()
+
+      fireEvent.click(deleteButton())
+
+      await findErrorText(translated('en', 'errors.EXPENSE_NOT_ALLOWED'))
+      expect(requestCount(fetchMock, 'GET', detailPath)).toBe(1)
+    })
+
+    it('shows the translated text when the restore after Undo is refused with 409 EXPENSE_CHANGED_MEANWHILE', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      await renderDetail({
+        answers: { [`POST ${restorePath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE') },
+      })
+      await showsDetail()
+      fireEvent.click(deleteButton())
+      const shown = await waitFor(() => toastShownWithText(translated('en', 'expenses.deleted')))
+
+      pressToastAction(shown)
+
+      await findErrorText(translated('en', 'errors.EXPENSE_CHANGED_MEANWHILE'))
     })
 
     it('shows the network message when the delete cannot reach the server', async () => {

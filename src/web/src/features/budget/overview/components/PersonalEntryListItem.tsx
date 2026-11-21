@@ -40,27 +40,29 @@ export function PersonalEntryListItem({ entry, today, mergedLabel, onOpen }: Per
         ) : (
           <KvitEmojiTile emoji={category.emoji} background={categoryColor(category)} />
         )}
-        <span data-entry-text className="flex min-w-0 flex-1 flex-col">
-          <span className="line-clamp-2 font-semibold break-words">
-            {category === null ? (entry.note ?? t('budget.income.listTitle')) : personalCategoryName(category, t)}
-          </span>
-          <span className="line-clamp-2 text-[0.8125rem] break-words text-muted-foreground">
-            {dayText}
-            {category !== null && entry.note !== null && ` · ${entry.note}`}
-          </span>
-          {mergedLabel !== null && (
-            <span data-entry-merged className="line-clamp-2 text-[0.8125rem] break-words text-muted-foreground">
-              {mergedLabel}
+        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-0.5">
+          <span data-entry-text className="flex min-w-0 flex-1 basis-16 flex-col">
+            <span className="line-clamp-2 font-semibold break-words">
+              {category === null ? (entry.note ?? t('budget.income.listTitle')) : personalCategoryName(category, t)}
             </span>
-          )}
-        </span>
-        <span
-          data-entry-amount
-          className={cn('text-right font-bold whitespace-nowrap', category === null && 'text-positive')}
-        >
-          {category === null
-            ? formatSignedMoney(entry.amountMinor, entry.currency, language)
-            : formatMoney(entry.amountMinor, entry.currency, language)}
+            <span className="line-clamp-2 text-[0.8125rem] break-words text-muted-foreground">
+              {dayText}
+              {category !== null && entry.note !== null && ` · ${entry.note}`}
+            </span>
+            {mergedLabel !== null && (
+              <span data-entry-merged className="line-clamp-2 text-[0.8125rem] break-words text-muted-foreground">
+                {mergedLabel}
+              </span>
+            )}
+          </span>
+          <span
+            data-entry-amount
+            className={cn('ml-auto text-right font-bold whitespace-nowrap', category === null && 'text-positive')}
+          >
+            {category === null
+              ? formatSignedMoney(entry.amountMinor, entry.currency, language)
+              : formatMoney(entry.amountMinor, entry.currency, language)}
+          </span>
         </span>
       </button>
     </li>

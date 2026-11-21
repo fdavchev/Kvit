@@ -144,8 +144,8 @@ describe('savedQueryCacheOptions', () => {
     expect(savedQueryCacheVersion).not.toBe('')
   })
 
-  it('is at version 7 because the saved me answers gained termsVersion, termsUpToDate and termsUpdateIsMaterial', () => {
-    expect(savedQueryCacheVersion).toBe('7')
+  it('is at version 8 because the saved expense answers gained version', () => {
+    expect(savedQueryCacheVersion).toBe('8')
   })
 
   it('uses the persister it is given', () => {

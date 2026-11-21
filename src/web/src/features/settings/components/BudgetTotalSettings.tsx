@@ -1,8 +1,5 @@
-import { useId } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
-import { errorMessageKey } from '@/core/api/errors'
-import { useSaveOnce } from '@/features/budget/categories/hooks/useSaveOnce'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
 import { KvitRatesSourceNote } from '@/shared/components/KvitRatesSourceNote'
 import type { Currency } from '@/shared/utils/formatMoney'
@@ -14,6 +11,13 @@ type BudgetTotalCurrency = Currency | null
 interface BudgetTotalOption {
   value: BudgetTotalCurrency
   textKey: string
+}
+
+const saveAfterLastChoiceMilliseconds = 400
+
+interface WaitingSave {
+  timer: ReturnType<typeof setTimeout>
+  currency: BudgetTotalCurrency
 }
 
 const options: readonly BudgetTotalOption[] = [
@@ -31,20 +35,52 @@ export function BudgetTotalSettings({ budgetTotalCurrency }: BudgetTotalSettings
   const labelId = useId()
   const optionName = useId()
   const changeCurrency = useChangeBudgetCurrency()
-  const oneAtATime = useSaveOnce()
-  const shownCurrency = changeCurrency.isPending ? changeCurrency.variables : budgetTotalCurrency
+  const { mutate: saveCurrency } = changeCurrency
+  const [pickedCurrency, setPickedCurrency] = useState<BudgetTotalCurrency | undefined>(undefined)
+  const waitingSaveRef = useRef<WaitingSave | null>(null)
+  const shownCurrency = pickedCurrency === undefined ? budgetTotalCurrency : pickedCurrency
+
+  useEffect(
+    () => () => {
+      const waitingSave = waitingSaveRef.current
+      if (waitingSave !== null) {
+        clearTimeout(waitingSave.timer)
+        saveCurrency(waitingSave.currency)
+      }
+    },
+    [saveCurrency],
+  )
+
+  function forgetPickOnceSettled(currency: BudgetTotalCurrency): void {
+    setPickedCurrency((current) => (current === currency ? undefined : current))
+  }
+
+  function save(currency: BudgetTotalCurrency): void {
+    waitingSaveRef.current = null
+    saveCurrency(currency, {
+      onSuccess: () => forgetPickOnceSettled(currency),
+      onError: () => forgetPickOnceSettled(currency),
+    })
+  }
 
   function choose(value: BudgetTotalCurrency): void {
-    if (value === shownCurrency || !oneAtATime.tryStart()) {
+    if (value === shownCurrency) {
       return
     }
-    changeCurrency.mutate(value, {
-      onError: (error) => {
-        console.error('Changing the budget total currency failed', error)
-        toast.error(t(errorMessageKey(error)))
-      },
-      onSettled: oneAtATime.finish,
-    })
+    const waitingSave = waitingSaveRef.current
+    if (waitingSave !== null) {
+      clearTimeout(waitingSave.timer)
+      waitingSaveRef.current = null
+    }
+    if (value === budgetTotalCurrency && !changeCurrency.isPending) {
+      setPickedCurrency(undefined)
+      return
+    }
+    setPickedCurrency(value)
+    waitingSaveRef.current = {
+      timer: setTimeout(() => save(value), saveAfterLastChoiceMilliseconds),
+      currency: value,
+    }
   }
 
   return (
@@ -57,7 +93,7 @@ export function BudgetTotalSettings({ budgetTotalCurrency }: BudgetTotalSettings
         {options.map((option) => (
           <label
             key={option.textKey}
-            className="pressable -mx-2 flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl px-2 py-1.5 text-[0.9375rem] has-checked:bg-background has-checked:font-semibold"
+            className="pressable -mx-2 flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl px-2 py-1.5 text-[0.9375rem] has-checked:bg-card-tint has-checked:font-semibold"
           >
             <input
               type="radio"

@@ -36,25 +36,23 @@ namespace Kvit.Api.Tests.Persistence
             return CloseAtAsync(database, table, "UPDATE", rowCondition);
         }
 
-        public async Task WaitUntilRequestsAreHeldAsync(int expectedHeldRequests)
+        public Task WaitUntilRequestsAreHeldAsync(int expectedHeldRequests)
         {
-            DateTime giveUpAt = DateTime.UtcNow + WaitLimit;
-            int held = 0;
-            while (DateTime.UtcNow < giveUpAt)
-            {
-                List<string?> counts = await _database.QueryAsync(
-                    "SELECT count(*)::text FROM pg_locks WHERE locktype = 'advisory' AND NOT granted "
-                    + "AND database = (SELECT oid FROM pg_database WHERE datname = current_database())");
-                held = int.Parse(Assert.Single(counts)!);
-                if (held >= expectedHeldRequests)
-                {
-                    return;
-                }
+            return WaitUntilCountedAsync(
+                "SELECT count(*)::text FROM pg_locks WHERE locktype = 'advisory' AND NOT granted "
+                + "AND database = (SELECT oid FROM pg_database WHERE datname = current_database())",
+                expectedHeldRequests,
+                $"held at the {_table} {_operation.ToLowerInvariant()}");
+        }
 
-                await Task.Delay(PollInterval, TestContext.Current.CancellationToken);
-            }
-
-            throw new TimeoutException($"Expected {expectedHeldRequests} requests to be held at the {_table} {_operation.ToLowerInvariant()}, but only {held} arrived within {WaitLimit.TotalSeconds} seconds.");
+        public Task WaitUntilRequestsWaitForTheHeldRowAsync(int expectedWaitingRequests)
+        {
+            return WaitUntilCountedAsync(
+                "SELECT count(DISTINCT waiting.pid)::text FROM pg_locks AS waiting "
+                + "JOIN pg_stat_activity AS activity ON activity.pid = waiting.pid "
+                + "WHERE waiting.locktype = 'transactionid' AND NOT waiting.granted AND activity.datname = current_database()",
+                expectedWaitingRequests,
+                $"waiting for the row that the held {_table} {_operation.ToLowerInvariant()} keeps locked");
         }
 
         public async Task OpenAsync()
@@ -68,6 +66,25 @@ namespace Kvit.Api.Tests.Persistence
             await OpenAsync();
             await _holder.DisposeAsync();
             await _database.ExecuteAsync($"DROP TRIGGER IF EXISTS {GateNameOf(_table)} ON {_table}; DROP FUNCTION IF EXISTS {GateNameOf(_table)}();");
+        }
+
+        private async Task WaitUntilCountedAsync(string countSql, int expected, string whereTheRequestsAre)
+        {
+            DateTime giveUpAt = DateTime.UtcNow + WaitLimit;
+            int counted = 0;
+            while (DateTime.UtcNow < giveUpAt)
+            {
+                List<string?> counts = await _database.QueryAsync(countSql);
+                counted = int.Parse(Assert.Single(counts)!);
+                if (counted >= expected)
+                {
+                    return;
+                }
+
+                await Task.Delay(PollInterval, TestContext.Current.CancellationToken);
+            }
+
+            throw new TimeoutException($"Expected {expected} requests to be {whereTheRequestsAre}, but only {counted} arrived within {WaitLimit.TotalSeconds} seconds.");
         }
 
         private static async Task<InsertGate> CloseAtAsync(MigratedDatabase database, string table, string operation, string rowCondition)

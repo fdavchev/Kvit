@@ -575,7 +575,7 @@ describe('JoinScreen for a visitor without an account', () => {
   })
 
   describe('when the join is refused', () => {
-    it.each(languages)('shows MEMBER_NOT_FOUND and asks the invite again so the name someone just took disappears (%s)', async (language) => {
+    it.each(languages)('says someone just took the name and asks the invite again so the name someone just took disappears (%s)', async (language) => {
       let previews = 0
       const previewWithoutMarko: InvitePreview = { ...openInvitePreviewWithNames, unclaimedNames: [freeNames[1]] }
       const { fetchMock } = await renderGuestJoin({
@@ -590,8 +590,9 @@ describe('JoinScreen for a visitor without an account', () => {
       fireEvent.click(nameButton('Marko'))
 
       expect((await screen.findByRole('alert')).textContent).toContain(
-        translated(language, 'errors.MEMBER_NOT_FOUND'),
+        translated(language, 'members.nameJustTaken'),
       )
+      expect(screen.getByRole('alert').textContent).not.toContain(translated(language, 'errors.MEMBER_NOT_FOUND'))
       await waitFor(() => {
         expect(screen.queryByRole('button', { name: 'Marko' })).toBeNull()
       })
@@ -603,7 +604,6 @@ describe('JoinScreen for a visitor without an account', () => {
       languages.flatMap((language) =>
         (
           [
-            ['INVITE_NOT_FOUND', 404],
             ['RATE_LIMITED', 429],
             ['INVITE_GUEST_CHOICE_INVALID', 400],
             ['AUTH_DISPLAY_NAME_INVALID', 400],
@@ -653,8 +653,19 @@ describe('JoinScreen for a visitor without an account', () => {
       expect(screen.queryByRole('button', { name: translated(language, 'join.guest.imNew') })).toBeNull()
     })
 
+    it.each(languages)('in %s shows the dead-link message with a Home link and no names any more when the invite link stopped working', async (language) => {
+      const { fetchMock } = await renderGuestJoin({ language, answers: refusedWith(404, 'INVITE_NOT_FOUND') })
+
+      fireEvent.click(nameButton('Marko'))
+
+      expect((await screen.findByRole('alert')).textContent).toContain(translated(language, 'errors.INVITE_NOT_FOUND'))
+      expect(screen.getByRole('link', { name: translated(language, 'nav.home') })).toBeTruthy()
+      expect(screen.queryByRole('button', { name: 'Marko' })).toBeNull()
+      expect(requestCount(fetchMock, 'POST', endpoints.inviteJoinAsGuest)).toBe(1)
+    })
+
     it('shows GUEST_JOIN_SIGNED_IN as an error toast and asks who is signed in again, then shows the join for that account', async () => {
-      consoleErrorSilenced()
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
       const { fetchMock } = await renderGuestJoin({
         answers: { ...refusedWith(409, 'GUEST_JOIN_SIGNED_IN'), [meRequest]: jsonAnswer(testMe) },
       })
@@ -667,6 +678,7 @@ describe('JoinScreen for a visitor without an account', () => {
       expect(await screen.findByRole('button', { name: translated('en', 'join.join') })).toBeTruthy()
       expect(requestCount(fetchMock, 'GET', endpoints.me)).toBe(1)
       expect(screen.queryByRole('button', { name: translated('en', 'join.guest.imNew') })).toBeNull()
+      expect(consoleError).not.toHaveBeenCalled()
     })
 
     it('shows the generic message when the server says nobody is signed in right after the join', async () => {

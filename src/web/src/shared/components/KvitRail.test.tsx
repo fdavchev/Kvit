@@ -44,6 +44,12 @@ describe('KvitRail', () => {
     expect(rail().firstElementChild?.textContent).toBe('Kvit')
   })
 
+  it('marks the navigation with data-kvit-rail, so the page styles can tell that the rail is there', async () => {
+    await renderRailAt('/')
+
+    expect(rail().hasAttribute('data-kvit-rail')).toBe(true)
+  })
+
   it('shows the items in the given order, with each group under Groups', async () => {
     await renderRailAt('/')
 

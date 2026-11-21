@@ -230,6 +230,7 @@ export const hotelDetail: ExpenseDetail = {
   createdAt: '2026-10-03T08:00:00Z',
   updatedAt: '2026-10-04T09:00:00Z',
   canEdit: true,
+  version: 4021,
   shares: [
     { memberId: filipMember.id, name: 'Filip', inputValue: 0, shareMinor: 48000 },
     { memberId: anaMember.id, name: 'Ana', inputValue: 0, shareMinor: 48000 },
@@ -272,6 +273,7 @@ export const groceriesDetail: ExpenseDetail = {
   createdAt: '2026-10-05T18:00:00Z',
   updatedAt: null,
   canEdit: true,
+  version: 3517,
   shares: [
     { memberId: filipMember.id, name: 'Filip', inputValue: 0, shareMinor: 1500 },
     { memberId: anaMember.id, name: 'Ana', inputValue: 0, shareMinor: 1500 },

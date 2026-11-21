@@ -100,6 +100,7 @@ export function BudgetScreen() {
   const entriesRef = useListAnimation<HTMLUListElement>()
   const waitingEntries = useWaitingItems((item) => item.kind === 'personalEntry' && isInMonth(item, selectedMonth))
   const waitingSheet = useOpenedWaitingItem(waitingEntries)
+  const shownWaitingEntries = waitingEntries.filter((item) => item.isSaved !== true || entriesQuery.isFetching)
   useCatchUpOnOpen()
   const today = todayInTimeZone(me.timeZone, new Date())
   const shownPair = entriesQuery.data?.possibleDuplicates[0]
@@ -154,9 +155,12 @@ export function BudgetScreen() {
   }
 
   function closeLimit(target: LimitTarget): void {
-    const monthUpdatedAt = queryClient.getQueryState(personalEntriesQueryKey(selectedMonth))?.dataUpdatedAt ?? 0
+    const monthState = queryClient.getQueryState(personalEntriesQueryKey(selectedMonth))
     setOpenedLimit(null)
-    setClosedLimitSheet({ target, opener: handOnOpener, monthUpdatedAt })
+    if (monthState?.status === 'error') {
+      return
+    }
+    setClosedLimitSheet({ target, opener: handOnOpener, monthUpdatedAt: monthState?.dataUpdatedAt ?? 0 })
   }
 
   function renderRepeatingRow(): ReactNode {
@@ -190,7 +194,7 @@ export function BudgetScreen() {
       entriesQuery.data
     const needsCategories =
       groupShares.some((share) => share.categoryId !== null) ||
-      waitingEntries.some((item) => (item.display.categoryId ?? null) !== null)
+      shownWaitingEntries.some((item) => (item.display.categoryId ?? null) !== null)
     if (needsCategories && categoriesQuery.isPending) {
       return <BudgetMonthSkeleton />
     }
@@ -199,13 +203,13 @@ export function BudgetScreen() {
     }
     const categories = categoriesQuery.data ?? []
     const waitingNote = <ChangesWaitingNote scope={{ kind: 'personal' }} />
-    const entryList = (entries.length > 0 || waitingEntries.length > 0) && (
+    const entryList = (entries.length > 0 || shownWaitingEntries.length > 0) && (
       <ul
         ref={entriesRef}
         aria-label={t('budget.screen.entries')}
         className="mt-5 flex flex-col gap-0.5 rounded-[20px] bg-card p-1.5 text-card-foreground"
       >
-        {waitingEntries.map((item) => (
+        {shownWaitingEntries.map((item) => (
           <WaitingEntryRow key={item.id} item={item} categories={categories} onOpen={waitingSheet.open} />
         ))}
         {entries.map((entry) => (
@@ -251,7 +255,7 @@ export function BudgetScreen() {
           {summaryRow}
           {limitsPart}
           {entryList}
-          {waitingEntries.length === 0 && (
+          {shownWaitingEntries.length === 0 && (
             <div className="pt-6">
               <KvitEmpty emoji={receiptEmoji} title={t('budget.screen.emptyTitle')} message={t('expenses.emptyHint')} />
             </div>

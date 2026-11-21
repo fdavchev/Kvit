@@ -1,3 +1,4 @@
+using Kvit.Api.Tests.Expenses;
 using Kvit.Contracts.Cleanup;
 using Kvit.Infrastructure.Cleanup;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,7 @@ namespace Kvit.Api.Tests.Cleanup
         private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
 
         private readonly CleanupRecorder _recorder = new();
+        private readonly AdjustableClock _clock = new(Noon);
         private readonly RecordingLoggerProvider _logs = new();
         private readonly ServiceProvider _services;
         private readonly LoggerFactory _loggerFactory;
@@ -25,7 +27,7 @@ namespace Kvit.Api.Tests.Cleanup
             services.AddScoped<IDataCleanup>(_ => new ScopedFakeDataCleanup(_recorder));
             _services = services.BuildServiceProvider();
             _loggerFactory = new LoggerFactory([_logs]);
-            _cleanup = new LazyDailyCleanup(_services.GetRequiredService<IServiceScopeFactory>(), _loggerFactory.CreateLogger<LazyDailyCleanup>());
+            _cleanup = new LazyDailyCleanup(_services.GetRequiredService<IServiceScopeFactory>(), _clock, _loggerFactory.CreateLogger<LazyDailyCleanup>());
         }
 
         public void Dispose()
@@ -176,11 +178,39 @@ namespace Kvit.Api.Tests.Cleanup
             _recorder.FailNextRunWith(new InvalidOperationException("The database is down."));
             await WaitForAsync(_cleanup.StartUnlessFinishedOn(Noon));
 
-            Task? retry = _cleanup.StartUnlessFinishedOn(Noon.AddMinutes(10));
+            Task? retry = _cleanup.StartUnlessFinishedOn(Noon + LazyDailyCleanup.WaitAfterFailure);
 
             await WaitForAsync(retry);
-            Assert.Equal([Noon, Noon.AddMinutes(10)], _recorder.Runs);
+            Assert.Equal([Noon, Noon + LazyDailyCleanup.WaitAfterFailure], _recorder.Runs);
             Assert.Null(_cleanup.StartUnlessFinishedOn(Noon.AddHours(1)));
+        }
+
+        [Fact]
+        public async Task Start_LessThanFifteenMinutesAfterAFailedRun_DoesNotRunItAgain()
+        {
+            _recorder.FailNextRunWith(new InvalidOperationException("The database is down."));
+            await WaitForAsync(_cleanup.StartUnlessFinishedOn(Noon));
+
+            Task? tooSoon = _cleanup.StartUnlessFinishedOn(Noon + LazyDailyCleanup.WaitAfterFailure - OneSecond);
+
+            Assert.Null(tooSoon);
+            Assert.Equal([Noon], _recorder.Runs);
+        }
+
+        [Fact]
+        public async Task Start_AfterAFailedRun_WaitsFifteenMinutesFromTheMomentItFailedNotFromItsStart()
+        {
+            DateTimeOffset failedAt = Noon.AddMinutes(5);
+            _clock.SetTo(failedAt);
+            _recorder.FailNextRunWith(new InvalidOperationException("The database is down."));
+            await WaitForAsync(_cleanup.StartUnlessFinishedOn(Noon));
+
+            Task? tooSoon = _cleanup.StartUnlessFinishedOn(failedAt + LazyDailyCleanup.WaitAfterFailure - OneSecond);
+            Task? retry = _cleanup.StartUnlessFinishedOn(failedAt + LazyDailyCleanup.WaitAfterFailure);
+
+            Assert.Null(tooSoon);
+            await WaitForAsync(retry);
+            Assert.Equal([Noon, failedAt + LazyDailyCleanup.WaitAfterFailure], _recorder.Runs);
         }
 
         [Fact]

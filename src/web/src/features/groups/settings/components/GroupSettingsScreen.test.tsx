@@ -646,7 +646,7 @@ describe('GroupSettingsScreen', () => {
         await waitFor(() => {
           expect(router.state.location.pathname).toBe(routes.groups)
         })
-        expect(screen.getByText('groups page')).toBeTruthy()
+        expect(await screen.findByText('groups page')).toBeTruthy()
       })
 
       it.each(languages)('shows the Group deleted toast with an Undo button for 4 seconds (%s)', async (language) => {
@@ -817,7 +817,7 @@ describe('GroupSettingsScreen', () => {
       await waitFor(() => {
         expect(router.state.location.pathname).toBe(routes.groups)
       })
-      expect(screen.getByText('groups page')).toBeTruthy()
+      expect(await screen.findByText('groups page')).toBeTruthy()
     })
 
     it.each([

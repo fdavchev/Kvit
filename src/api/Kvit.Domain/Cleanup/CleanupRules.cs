@@ -6,6 +6,7 @@ namespace Kvit.Domain.Cleanup
     {
         public const int KeptAfterRestoreWindowDays = 30;
         public const int UsageEventLinkMonths = 12;
+        public const int LeftBehindGuestDays = 30;
 
         public static DateTimeOffset LatestRemovableRowDeletion(DateTimeOffset now)
         {
@@ -15,6 +16,11 @@ namespace Kvit.Domain.Cleanup
         public static DateTimeOffset LatestRemovableGroupDeletion(DateTimeOffset now)
         {
             return now.AddDays(-(Group.DeletedGroupRestoreDays + KeptAfterRestoreWindowDays));
+        }
+
+        public static DateTimeOffset LatestRemovableGuestCreation(DateTimeOffset now)
+        {
+            return now.AddDays(-LeftBehindGuestDays);
         }
 
         public static DateTimeOffset OldestLinkedUsageEvent(DateTimeOffset now)

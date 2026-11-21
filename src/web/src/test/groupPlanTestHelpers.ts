@@ -82,6 +82,10 @@ export function nearLine(leftMinor: number, currency: Currency, language: Langua
   return translated(language, 'groupPlan.near', { amount: money(leftMinor, currency, language) })
 }
 
+export function reachedLine(language: Language = 'en'): string {
+  return translated(language, 'groupPlan.reached')
+}
+
 export function overLine(overMinor: number, currency: Currency, language: Language = 'en'): string {
   return translated(language, 'groupPlan.over', { amount: money(overMinor, currency, language) })
 }

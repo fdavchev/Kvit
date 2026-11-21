@@ -16,7 +16,7 @@ namespace Kvit.Api.Tests.Cleanup
         {
             await _recorder.RecordRunAsync(now);
 
-            return new CleanupResponse(0, 0, 0, 0, 0, 0);
+            return new CleanupResponse(0, 0, 0, 0, 0, 0, 0);
         }
 
         public void Dispose()

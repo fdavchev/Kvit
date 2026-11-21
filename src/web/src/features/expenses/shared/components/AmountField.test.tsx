@@ -26,6 +26,15 @@ describe('the placeholder of AmountField', () => {
     expect(() => placeholderTokenOf(input, theme)).not.toThrow()
   })
 
+  it('is drawn in normal weight while the typed amount is extra bold, so the two never look alike', async () => {
+    const input = await renderedAmountInput()
+
+    const classes = Array.from(input.classList)
+
+    expect(classes).toContain('placeholder:font-normal')
+    expect(classes).toContain('font-extrabold')
+  })
+
   it('has at least 4.5:1 contrast on the page and on a sheet, in light and in dark mode', async () => {
     const input = await renderedAmountInput()
 

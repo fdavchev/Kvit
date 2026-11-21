@@ -203,6 +203,32 @@ describe('the statistics screen, loading, errors and the look', () => {
       expect(statsRequestCount(fetchMock, defaultStatsUrl)).toBe(1)
     })
 
+    it.each([
+      ['a server error', () => new Response(null, { status: 500 })],
+      ['a lost connection', () => new TypeError('Failed to fetch')],
+    ] as const)('shows the error at once after one request for %s, with the retry policy of the app', async (_name, failure) => {
+      const { fetchMock } = await renderAdminStats({ statsAnswerFor: failure, seedCache: restoreRealRetryPolicy })
+
+      const alert = await screen.findByRole('alert', {}, { timeout: 500 })
+
+      expect(within(alert).getByRole('button', { name: translated('en', 'common.retry') })).toBeTruthy()
+      expect(statsRequestCount(fetchMock, defaultStatsUrl)).toBe(1)
+    })
+
+    it('replaces the dimmed old cards with the error at once when the next range fails, with the retry policy of the app', async () => {
+      const { fetchMock } = await renderAdminStats({
+        statsAnswerFor: failingFor(sevenDaysUrl, () => new Response(null, { status: 500 })),
+        seedCache: restoreRealRetryPolicy,
+      })
+      await findStatsCard('New sign-ups')
+
+      pressChip('7 days')
+
+      expect(await screen.findByRole('alert', {}, { timeout: 500 })).toBeTruthy()
+      expect(queryCardsContainer()).toBeNull()
+      expect(statsRequestCount(fetchMock, sevenDaysUrl)).toBe(1)
+    })
+
     it('shows the error with Try again when the next range is refused after cards were shown', async () => {
       await renderAdminStats({ statsAnswerFor: failingFor(sevenDaysUrl, () => problemResponse(400, 'ADMIN_STATS_FUTURE_DATE')) })
       await findStatsCard('New sign-ups')

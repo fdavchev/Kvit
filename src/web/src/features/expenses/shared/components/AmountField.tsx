@@ -10,6 +10,7 @@ interface AmountFieldProps {
   currency: Currency
   onAmountTextChange: (amountText: string) => void
   onCurrencyChange?: (currency: Currency) => void
+  isCurrencyShownByChips?: boolean
   invalid?: boolean
   invalidMessage?: string
 }
@@ -34,6 +35,7 @@ export function AmountField({
   currency,
   onAmountTextChange,
   onCurrencyChange,
+  isCurrencyShownByChips = false,
   invalid = false,
   invalidMessage,
 }: AmountFieldProps) {
@@ -63,13 +65,15 @@ export function AmountField({
           aria-describedby={shownMessage === undefined ? undefined : messageId}
           onChange={(event) => onAmountTextChange(event.target.value)}
           className={cn(
-            '-mx-0.5 w-full min-w-0 flex-1 rounded-[14px] border-2 border-transparent bg-transparent px-3 py-0.5 font-extrabold tracking-[-0.02em] text-foreground placeholder:text-muted-foreground focus-visible:outline-offset-0 aria-invalid:border-destructive',
+            '-mx-0.5 w-full min-w-0 flex-1 rounded-[14px] border-2 border-transparent bg-transparent px-3 py-0.5 font-extrabold tracking-[-0.02em] text-foreground placeholder:font-normal placeholder:text-muted-foreground focus-visible:outline-offset-0 aria-invalid:border-destructive',
             amountTextSize(amountText),
             onCurrencyChange === undefined ? 'text-left' : 'text-right',
           )}
         />
         {onCurrencyChange === undefined ? (
-          <span className="flex-none px-1 text-lg font-bold text-muted-foreground">{shownCurrency}</span>
+          !isCurrencyShownByChips && (
+            <span className="flex-none px-1 text-lg font-bold text-muted-foreground">{shownCurrency}</span>
+          )
         ) : (
           <button
             type="button"

@@ -121,6 +121,7 @@ export function GroupPlanSheet({ group, plan, opener, onClose }: GroupPlanSheetP
         <AmountField
           amountText={amountText}
           currency={currency}
+          isCurrencyShownByChips
           invalid={isAmountRefused}
           invalidMessage={t(currency === 'MKD' ? 'groupPlan.amountInvalidMkd' : 'groupPlan.amountInvalidEur')}
           onAmountTextChange={(nextAmountText) => {

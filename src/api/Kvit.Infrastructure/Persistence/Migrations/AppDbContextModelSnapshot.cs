@@ -408,6 +408,16 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                     b.HasIndex("PersonalEntryId")
                         .HasDatabaseName("ix_duplicate_answers_personal_entry_id");
 
+                    b.HasIndex("UserId", "ExpenseId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_duplicate_answers_user_id_expense_id_same")
+                        .HasFilter("answer = 'Same'");
+
+                    b.HasIndex("UserId", "PersonalEntryId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_duplicate_answers_user_id_personal_entry_id_same")
+                        .HasFilter("answer = 'Same'");
+
                     b.HasIndex("UserId", "PersonalEntryId", "ExpenseId")
                         .IsUnique()
                         .HasDatabaseName("ix_duplicate_answers_user_id_personal_entry_id_expense_id");
@@ -514,6 +524,12 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly>("RateDate")
                         .HasColumnType("date")
                         .HasColumnName("rate_date");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.Property<string>("SplitType")
                         .IsRequired()
@@ -756,6 +772,7 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                         .HasColumnName("name");
 
                     b.Property<DateTimeOffset?>("RemovedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("removed_at");
 
@@ -1035,6 +1052,12 @@ namespace Kvit.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ResolvedByUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("resolved_by_user_id");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.Property<string>("Status")
                         .IsRequired()

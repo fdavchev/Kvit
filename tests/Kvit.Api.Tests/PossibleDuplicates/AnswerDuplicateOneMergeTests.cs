@@ -144,21 +144,6 @@ namespace Kvit.Api.Tests.PossibleDuplicates
         }
 
         [Fact]
-        public async Task Put_SameForAnotherExpenseAfterTheMergeWasRemoved_Answers204()
-        {
-            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
-            Guid firstExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group);
-            Guid secondExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group, SecondDate);
-            Guid entryId = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
-            await PossibleDuplicateSteps.AnswerAsync(group.Member, entryId, firstExpense, DuplicateAnswerRequests.SameAnswer);
-            await DuplicateAnswerRequests.DeleteAsync(group.Member.Client, entryId, firstExpense);
-
-            await PossibleDuplicateSteps.AnswerAsync(group.Member, entryId, secondExpense, DuplicateAnswerRequests.SameAnswer);
-
-            Assert.Equal(secondExpense, await PossibleDuplicateSteps.MergedWithAsync(group.Member.Client, entryId));
-        }
-
-        [Fact]
         public async Task Put_SameWhenTheEarlierMergedExpenseWasDeleted_Answers204AndMergesWithTheNewOne()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
@@ -172,6 +157,93 @@ namespace Kvit.Api.Tests.PossibleDuplicates
 
             Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
             Assert.Equal(secondExpense, await PossibleDuplicateSteps.MergedWithAsync(group.Member.Client, entryId));
+        }
+
+        [Fact]
+        public async Task Put_SameWhenTheEarlierMergedExpenseWasDeleted_RemovesTheEndedMergeSoItCannotComeBackWithARestore()
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            Guid firstExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group);
+            Guid secondExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group, SecondDate);
+            Guid entryId = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
+            await PossibleDuplicateSteps.AnswerAsync(group.Member, entryId, firstExpense, DuplicateAnswerRequests.SameAnswer);
+            await ExpenseRequests.DeleteAsync(group.Owner.Client, group.GroupId, firstExpense);
+
+            await PossibleDuplicateSteps.AnswerAsync(group.Member, entryId, secondExpense, DuplicateAnswerRequests.SameAnswer);
+            await ExpenseRequests.RestoreAsync(group.Owner.Client, group.GroupId, firstExpense);
+
+            Assert.Null(await DuplicateAnswerRows.AnswerOfAsync(_app, group.Member.UserId, entryId, firstExpense));
+            Assert.Equal(secondExpense, await PossibleDuplicateSteps.MergedWithAsync(group.Member.Client, entryId));
+        }
+
+        [Fact]
+        public async Task Put_SameWhenTheEarlierMergedEntryWasDeleted_RemovesTheEndedMergeOfTheExpense()
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            Guid expenseId = await BudgetShareSteps.AddSharedExpenseAsync(_app, group);
+            Guid firstEntry = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
+            Guid secondEntry = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
+            await PossibleDuplicateSteps.AnswerAsync(group.Member, firstEntry, expenseId, DuplicateAnswerRequests.SameAnswer);
+            await PersonalEntryRequests.DeleteAsync(group.Member.Client, firstEntry);
+
+            await PossibleDuplicateSteps.AnswerAsync(group.Member, secondEntry, expenseId, DuplicateAnswerRequests.SameAnswer);
+
+            Assert.Null(await DuplicateAnswerRows.AnswerOfAsync(_app, group.Member.UserId, firstEntry, expenseId));
+            Assert.Equal(DuplicateAnswerRequests.SameAnswer, await DuplicateAnswerRows.AnswerOfAsync(_app, group.Member.UserId, secondEntry, expenseId));
+        }
+
+        [Fact]
+        public async Task Put_SameWhenAnEarlierExpenseOfTheEntryAndAnEarlierEntryOfTheExpenseBothEnded_RemovesBothEndedMergesSoRestoringThemLeavesOneLiveMerge()
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            Guid endedExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group);
+            Guid targetExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group, SecondDate);
+            Guid targetEntry = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
+            Guid endedEntry = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
+            await PossibleDuplicateSteps.AnswerAsync(group.Member, targetEntry, endedExpense, DuplicateAnswerRequests.SameAnswer);
+            await PossibleDuplicateSteps.AnswerAsync(group.Member, endedEntry, targetExpense, DuplicateAnswerRequests.SameAnswer);
+            await ExpenseRequests.DeleteAsync(group.Owner.Client, group.GroupId, endedExpense);
+            await PersonalEntryRequests.DeleteAsync(group.Member.Client, endedEntry);
+
+            await PossibleDuplicateSteps.AnswerAsync(group.Member, targetEntry, targetExpense, DuplicateAnswerRequests.SameAnswer);
+            await ExpenseRequests.RestoreAsync(group.Owner.Client, group.GroupId, endedExpense);
+            await PersonalEntryRequests.RestoreAsync(group.Member.Client, endedEntry);
+
+            Assert.Equal(1, await DuplicateAnswerRows.CountOfUserAsync(_app, group.Member.UserId));
+            Assert.Equal(targetExpense, await PossibleDuplicateSteps.MergedWithAsync(group.Member.Client, targetEntry));
+            Assert.Null(await PossibleDuplicateSteps.MergedWithAsync(group.Member.Client, endedEntry));
+        }
+
+        [Fact]
+        public async Task Put_NewAnswersForOneEntryWithTwoExpensesAndForOneExpenseWithTwoEntries_AllAnswer204AndEveryRowStays()
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            Guid firstExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group);
+            Guid secondExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group, SecondDate);
+            Guid firstEntry = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
+            Guid secondEntry = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
+
+            await PossibleDuplicateSteps.AnswerAsync(group.Member, firstEntry, firstExpense, DuplicateAnswerRequests.NewAnswer);
+            await PossibleDuplicateSteps.AnswerAsync(group.Member, firstEntry, secondExpense, DuplicateAnswerRequests.NewAnswer);
+            await PossibleDuplicateSteps.AnswerAsync(group.Member, secondEntry, firstExpense, DuplicateAnswerRequests.NewAnswer);
+
+            Assert.Equal(3, await DuplicateAnswerRows.CountOfUserAsync(_app, group.Member.UserId));
+        }
+
+        [Fact]
+        public async Task Put_SameWhenTheGroupOfTheEarlierMergedExpenseWasDeleted_RemovesTheEndedMergeRowAndStoresTheNewOne()
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            Guid firstExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group);
+            (_, Guid secondExpense) = await PossibleDuplicateSteps.AddSharedExpenseInAnotherGroupAsync(_app, group, SecondDate);
+            Guid entryId = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
+            await PossibleDuplicateSteps.AnswerAsync(group.Member, entryId, firstExpense, DuplicateAnswerRequests.SameAnswer);
+            await GroupRows.SetDeletedAsync(_app, group.GroupId, group.Owner.UserId, 1);
+
+            await PossibleDuplicateSteps.AnswerAsync(group.Member, entryId, secondExpense, DuplicateAnswerRequests.SameAnswer);
+
+            Assert.Null(await DuplicateAnswerRows.AnswerOfAsync(_app, group.Member.UserId, entryId, firstExpense));
+            Assert.Equal(DuplicateAnswerRequests.SameAnswer, await DuplicateAnswerRows.AnswerOfAsync(_app, group.Member.UserId, entryId, secondExpense));
         }
 
         [Fact]

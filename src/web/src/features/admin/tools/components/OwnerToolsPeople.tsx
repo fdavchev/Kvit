@@ -31,10 +31,13 @@ export function OwnerToolsPeople() {
   const eraseName = useEraseName()
   const actions = { suspend: suspendPerson, unsuspend: unsuspendPerson, eraseName }
   const [openAction, setOpenAction] = useState<OpenPersonAction | null>(null)
+  const [isSearchTooShort, setIsSearchTooShort] = useState<boolean>(false)
 
   function search(text: string): void {
     const searchText = text.trim()
-    if (searchText.length < shortestSearch) {
+    const isTooShort = searchText.length < shortestSearch
+    setIsSearchTooShort(isTooShort)
+    if (isTooShort) {
       return
     }
     if (searchText === query) {
@@ -78,6 +81,7 @@ export function OwnerToolsPeople() {
         id="owner-tools-people-search"
         label={t('ownerTools.people.searchLabel')}
         buttonLabel={t('ownerTools.people.search')}
+        errorMessage={isSearchTooShort ? t('ownerTools.people.tooShort') : null}
         onSearch={search}
       />
       {renderResults()}
@@ -88,6 +92,7 @@ export function OwnerToolsPeople() {
           doneMessage={t(`ownerTools.done.${openAction.kind}`, { name: openAction.person.displayName })}
           targetId={openAction.person.id}
           action={actions[openAction.kind]}
+          cannotBeUndone={openAction.kind === 'eraseName'}
           onClose={() => setOpenAction(null)}
         />
       )}

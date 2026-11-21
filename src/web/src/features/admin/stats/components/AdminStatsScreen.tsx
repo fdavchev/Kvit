@@ -9,7 +9,7 @@ import { KvitLoading } from '@/shared/components/KvitLoading'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 import { KvitSkeleton } from '@/shared/components/KvitSkeleton'
-import { todayInTimeZone } from '@/shared/utils/formatDate'
+import { useTodayInTimeZone } from '@/shared/hooks/useTodayInTimeZone'
 import { useAdminStats } from '../hooks/useAdminStats'
 import {
   allowsDayGrouping,
@@ -31,7 +31,7 @@ const dayGroupingOnly: readonly AdminStatsGrouping[] = ['day']
 
 export function AdminStatsScreen() {
   const { t } = useTranslation()
-  const [today] = useState<string>(() => todayInTimeZone(statsTimeZone, new Date()))
+  const today = useTodayInTimeZone(statsTimeZone)
   const [range, setRange] = useState<StatsRangeChoice>('thisMonth')
   const [grouping, setGrouping] = useState<AdminStatsGrouping>('day')
   const [customDraft, setCustomDraft] = useState<StatsDates>(() => thisMonthDates(today))

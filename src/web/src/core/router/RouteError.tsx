@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useRouteError } from 'react-router'
 import { KvitError } from '@/shared/components/KvitError'
 import { KvitScreen } from '@/shared/components/KvitScreen'
+import { ScreenLoadError } from './lazyScreen'
 
 function reloadPage(): void {
   window.location.reload()
@@ -18,7 +19,10 @@ export function RouteError() {
 
   return (
     <KvitScreen className="items-center justify-center">
-      <KvitError message={t('errors.generic')} onRetry={reloadPage} />
+      <KvitError
+        message={t(error instanceof ScreenLoadError ? 'errors.pageLoadFailed' : 'errors.generic')}
+        onRetry={reloadPage}
+      />
     </KvitScreen>
   )
 }

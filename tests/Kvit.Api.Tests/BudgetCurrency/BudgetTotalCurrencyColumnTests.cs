@@ -106,10 +106,10 @@ namespace Kvit.Api.Tests.BudgetCurrency
             {
                 AppDbContext writeContext = writeScope.ServiceProvider.GetRequiredService<AppDbContext>();
                 AppUser user = TestUsers.Create();
-                user.SetBudgetTotalCurrency(currency);
                 writeContext.Users.Add(user);
                 await writeContext.SaveChangesAsync(TestContext.Current.CancellationToken);
                 userId = user.Id;
+                await SetStoredCurrencyAsync(writeContext, userId, currency);
             }
 
             using IServiceScope readScope = _database.CreateScope();
@@ -128,12 +128,11 @@ namespace Kvit.Api.Tests.BudgetCurrency
             {
                 AppDbContext writeContext = writeScope.ServiceProvider.GetRequiredService<AppDbContext>();
                 AppUser user = TestUsers.Create();
-                user.SetBudgetTotalCurrency(Currency.EUR);
                 writeContext.Users.Add(user);
                 await writeContext.SaveChangesAsync(TestContext.Current.CancellationToken);
-                user.SetBudgetTotalCurrency(null);
-                await writeContext.SaveChangesAsync(TestContext.Current.CancellationToken);
                 userId = user.Id;
+                await SetStoredCurrencyAsync(writeContext, userId, Currency.EUR);
+                await SetStoredCurrencyAsync(writeContext, userId, null);
             }
 
             using IServiceScope readScope = _database.CreateScope();
@@ -142,6 +141,13 @@ namespace Kvit.Api.Tests.BudgetCurrency
 
             Assert.Null(await BudgetCurrencySteps.StoredAsync(_database, userId));
             Assert.Null(stored.BudgetTotalCurrency);
+        }
+
+        private static async Task SetStoredCurrencyAsync(AppDbContext context, Guid userId, Currency? currency)
+        {
+            await context.Users
+                .Where(user => user.Id == userId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(user => user.BudgetTotalCurrency, currency), TestContext.Current.CancellationToken);
         }
     }
 }

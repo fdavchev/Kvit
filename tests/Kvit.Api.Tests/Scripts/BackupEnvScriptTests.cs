@@ -269,7 +269,7 @@ namespace Kvit.Api.Tests.Scripts
 
         private static async Task<ScriptRun?> EvaluateWithBashAsync(string exports)
         {
-            ScriptRun? probe = await RunBashAsync("printf ok");
+            ScriptRun? probe = await RunBashAsync(["-c", "printf ok"], null);
             if (probe is null || probe.ExitCode != 0 || probe.StandardOutput != "ok")
             {
                 return null;
@@ -278,10 +278,10 @@ namespace Kvit.Api.Tests.Scripts
             string script = exports.ReplaceLineEndings("\n") +
                 "\nprintf '%s\\n%s\\n%s\\n%s\\n%s\\n%s' \"$PGHOST\" \"$PGPORT\" \"$PGDATABASE\" \"$PGUSER\" \"$PGPASSWORD\" \"$PGSSLMODE\"\n";
 
-            return await RunBashAsync(script);
+            return await RunBashAsync(["-s"], script);
         }
 
-        private static async Task<ScriptRun?> RunBashAsync(string script)
+        private static async Task<ScriptRun?> RunBashAsync(string[] arguments, string? standardInput)
         {
             ProcessStartInfo startInfo = new("bash")
             {
@@ -290,7 +290,10 @@ namespace Kvit.Api.Tests.Scripts
                 RedirectStandardError = true,
                 UseShellExecute = false,
             };
-            startInfo.ArgumentList.Add("-s");
+            foreach (string argument in arguments)
+            {
+                startInfo.ArgumentList.Add(argument);
+            }
 
             Process? process;
             try
@@ -309,8 +312,13 @@ namespace Kvit.Api.Tests.Scripts
 
             using (process)
             {
-                await process.StandardInput.WriteAsync(script);
+                if (standardInput is not null)
+                {
+                    await process.StandardInput.WriteAsync(standardInput);
+                }
+
                 process.StandardInput.Close();
+
                 Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
                 Task<string> standardError = process.StandardError.ReadToEndAsync();
 

@@ -75,13 +75,20 @@ namespace Kvit.Api.Tests.AdminStats
         }
 
         [Fact]
-        public async Task Stats_GroupingOmittedAndMoreThan92Days_Answers400DayRangeTooLong()
+        public async Task Stats_GroupingOmittedAndMoreThan92Days_Answers200GroupedByWeek()
         {
-            HttpClient client = await AdminClientAsync();
+            JsonElement stats = await StatsAsync(from: "2026-01-01", to: "2026-11-04");
 
-            HttpResponseMessage response = await AdminStatsRequests.GetAsync(client, from: "2026-01-01", to: "2026-11-04");
+            Assert.Equal("week", StatsJson.Text(stats, "by"));
+        }
 
-            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, "ADMIN_STATS_DAY_RANGE_TOO_LONG");
+        [Fact]
+        public async Task Stats_GroupingOmittedAndAtMost92Days_Answers200GroupedByDay()
+        {
+            JsonElement stats = await StatsAsync(from: "2026-08-05", to: "2026-11-04");
+
+            Assert.Equal("day", StatsJson.Text(stats, "by"));
+            Assert.Equal(92, StatsJson.Buckets(stats).Count);
         }
 
         [Fact]
@@ -109,15 +116,15 @@ namespace Kvit.Api.Tests.AdminStats
         }
 
         [Fact]
-        public async Task Stats_FromOmittedAndTheEarliestEventIsMoreThan92DaysAgo_Answers400DayRangeTooLong()
+        public async Task Stats_FromAndGroupingOmittedAndTheEarliestEventIsMoreThan92DaysAgo_Answers200GroupedByWeekFromThatDay()
         {
             Guid person = await _app.AddPersonAsync();
             await _app.AddEventsAsync(UsageEvent.SignedUp(person, SignUpMethod.Email, Moment.At("2026-01-01T10:00:00Z")));
-            HttpClient client = await AdminClientAsync();
 
-            HttpResponseMessage response = await AdminStatsRequests.GetAsync(client);
+            JsonElement stats = await StatsAsync();
 
-            await ProblemResponse.AssertAsync(response, HttpStatusCode.BadRequest, "ADMIN_STATS_DAY_RANGE_TOO_LONG");
+            Assert.Equal("2026-01-01", StatsJson.Text(stats, "from"));
+            Assert.Equal("week", StatsJson.Text(stats, "by"));
         }
 
         [Fact]

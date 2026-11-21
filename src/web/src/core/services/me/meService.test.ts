@@ -9,9 +9,8 @@ import {
 import { testMe } from '@/test/testMe'
 import { acceptTerms, changeBudgetTotalCurrency, changeLanguage, getMe } from './meService'
 
-const termsFields = ['termsVersion', 'termsUpToDate', 'termsUpdateIsMaterial']
-const fieldsThatMayBeMissing = [...termsFields, 'deletionCancelled', 'isSuspended']
-const meFields = Object.keys(testMe).filter((field) => !fieldsThatMayBeMissing.includes(field))
+const meFields = Object.keys(testMe)
+const fieldsTheOldParserFilledIn = ['termsVersion', 'termsUpToDate', 'termsUpdateIsMaterial', 'deletionCancelled', 'isSuspended']
 
 describe('getMe', () => {
   afterEach(() => {
@@ -86,30 +85,12 @@ describe('getMe', () => {
     expect(me).toMatchObject({ deletionCancelled })
   })
 
-  it('reads deletionCancelled as false when an older answer does not carry it, and changes no other field', async () => {
-    const olderAnswer = Object.fromEntries(Object.entries(testMe).filter(([name]) => name !== 'deletionCancelled'))
-    stubFetch(Response.json(olderAnswer))
-
-    const me = await getMe()
-
-    expect(me).toEqual({ ...olderAnswer, deletionCancelled: false })
-  })
-
   it.each([true, false])('keeps isSuspended %j as the answer sent it', async (isSuspended) => {
     stubFetch(Response.json({ ...testMe, isSuspended }))
 
     const me = await getMe()
 
     expect(me).toMatchObject({ isSuspended })
-  })
-
-  it('reads isSuspended as false when an older answer does not carry it, and changes no other field', async () => {
-    const olderAnswer = Object.fromEntries(Object.entries(testMe).filter(([name]) => name !== 'isSuspended'))
-    stubFetch(Response.json(olderAnswer))
-
-    const me = await getMe()
-
-    expect(me).toEqual({ ...olderAnswer, isSuspended: false })
   })
 
   it('reads a person who must agree to a material change as it was sent', async () => {
@@ -119,42 +100,6 @@ describe('getMe', () => {
     const me = await getMe()
 
     expect(me).toEqual(body)
-  })
-
-  it('reads an older answer without any terms field as: no version, up to date, not material, so no notice is shown before a fresh answer', async () => {
-    const olderAnswer = Object.fromEntries(
-      Object.entries(testMe).filter(([name]) => !termsFields.includes(name)),
-    )
-    stubFetch(Response.json(olderAnswer))
-
-    const me = await getMe()
-
-    expect(me).toEqual({
-      ...olderAnswer,
-      termsVersion: null,
-      termsUpToDate: true,
-      termsUpdateIsMaterial: false,
-    })
-  })
-
-  it.each(termsFields)('fills only "%s" when it is the one field missing from the answer', async (field) => {
-    const withoutField = Object.fromEntries(
-      Object.entries({ ...testMe, termsVersion: '2026-01-01', termsUpToDate: false, termsUpdateIsMaterial: true }).filter(
-        ([name]) => name !== field,
-      ),
-    )
-    const defaults = { termsVersion: null, termsUpToDate: true, termsUpdateIsMaterial: false }
-    stubFetch(Response.json(withoutField))
-
-    const me = await getMe()
-
-    expect(me).toEqual({
-      ...testMe,
-      termsVersion: '2026-01-01',
-      termsUpToDate: false,
-      termsUpdateIsMaterial: true,
-      [field]: defaults[field as keyof typeof defaults],
-    })
   })
 
   it.each(['MKD', 'EUR', null])('keeps budgetTotalCurrency %j as the answer sent it', async (budgetTotalCurrency) => {
@@ -219,6 +164,13 @@ describe('getMe', () => {
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({ httpStatus: null })
+  })
+
+  it.each(fieldsTheOldParserFilledIn)('throws an error naming "%s" when the answer lacks it, instead of filling it in', async (field) => {
+    const incomplete = Object.fromEntries(Object.entries(testMe).filter(([name]) => name !== field))
+    stubFetch(Response.json(incomplete))
+
+    await expect(getMe()).rejects.toThrow(`"${field}"`)
   })
 
   it.each(meFields)('throws an error naming "%s" when the answer lacks it', async (field) => {

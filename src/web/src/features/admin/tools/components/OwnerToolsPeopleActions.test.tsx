@@ -134,6 +134,16 @@ describe.each(actionCases)('the $name sheet of the owner tools', (testCase) => {
   })
 
   describe('when it opens', () => {
+    const isRed = testCase.action === 'erase-name'
+
+    it(`gives the Confirm button the red danger look: ${String(isRed)}, because only erasing a name cannot be undone`, async () => {
+      const { sheet } = await openSheet(testCase)
+
+      const classes = confirmButtonIn(sheet).className.split(/\s+/)
+      expect(classes.includes('text-destructive')).toBe(isRed)
+      expect(classes.includes('border-negative')).toBe(isRed)
+    })
+
     it('is titled with the name of the person and explains what happens', async () => {
       const { sheet } = await openSheet(testCase)
 
@@ -186,6 +196,40 @@ describe.each(actionCases)('the $name sheet of the owner tools', (testCase) => {
       typeReason(sheet, text)
 
       expect(confirmButtonIn(sheet).disabled).toBe(true)
+    })
+
+    it.each([
+      ['en', 'At most 500 characters.'],
+      ['mk', 'Најмногу 500 знаци.'],
+    ] as const)('says the reason is too long beside the field, linked to it, for a reason of 501 characters (%s)', async (language, message) => {
+      const { sheet } = await openSheet(testCase, { language })
+
+      typeReason(sheet, 'x'.repeat(501), language)
+
+      const alert = within(sheet).getByRole('alert')
+      const field = reasonFieldIn(sheet, language)
+      expect(alert.textContent).toBe(message)
+      expect(field.getAttribute('aria-invalid')).toBe('true')
+      expect(field.getAttribute('aria-describedby')).toBe(alert.id)
+    })
+
+    it.each(['x'.repeat(500), `  ${'x'.repeat(500)}  `, ''])('says nothing about the length for a reason that is not over 500 characters once trimmed (%#)', async (text) => {
+      const { sheet } = await openSheet(testCase)
+
+      typeReason(sheet, text)
+
+      expect(within(sheet).queryByText(translated('en', 'ownerTools.reasonTooLong'))).toBeNull()
+      expect(reasonFieldIn(sheet).getAttribute('aria-invalid')).not.toBe('true')
+    })
+
+    it('takes the length message away once the reason is shortened to 500 characters', async () => {
+      const { sheet } = await openSheet(testCase)
+      typeReason(sheet, 'x'.repeat(501))
+
+      typeReason(sheet, 'x'.repeat(500))
+
+      expect(within(sheet).queryByText(translated('en', 'ownerTools.reasonTooLong'))).toBeNull()
+      expect(confirmButtonIn(sheet).disabled).toBe(false)
     })
 
     it('disables Confirm again when the reason is cleared', async () => {

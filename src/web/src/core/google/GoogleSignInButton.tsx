@@ -1,28 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { languages, type Language } from '@/core/i18n/language'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import { KvitInlineError } from '@/shared/components/KvitInlineError'
-import { googleClientId } from './googleClientId'
 import type { GoogleIdentity } from './googleIdentity'
 import { loadGoogleIdentity } from './loadGoogleIdentity'
+import { listenForGoogleCredential, startGoogleIdentity } from './startGoogleIdentity'
 
 interface GoogleSignInButtonProps {
   onCredential: (idToken: string) => void
 }
 
 const maxButtonWidth = 400
+const redrawAfterResizeMilliseconds = 200
 
 const slotLooks =
   'flex h-11 justify-center overflow-y-clip [grid-area:1/1] [&>div]:grid [&>div>*]:[grid-area:1/1]'
-
-const inactiveSlotLooks = 'opacity-0 pointer-events-none'
 
 export function GoogleSignInButton({ onCredential }: GoogleSignInButtonProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const rootRef = useRef<HTMLDivElement>(null)
-  const slotsRef = useRef<Record<Language, HTMLDivElement | null>>({ en: null, mk: null })
+  const slotRef = useRef<HTMLDivElement>(null)
   const onCredentialRef = useRef<(idToken: string) => void>(onCredential)
   const [identity, setIdentity] = useState<GoogleIdentity | null>(null)
   const [hasFailed, setHasFailed] = useState<boolean>(false)
@@ -31,6 +29,8 @@ export function GoogleSignInButton({ onCredential }: GoogleSignInButtonProps) {
     onCredentialRef.current = onCredential
   }, [onCredential])
 
+  useEffect(() => listenForGoogleCredential((idToken) => onCredentialRef.current(idToken)), [])
+
   useEffect(() => {
     let isMounted = true
     loadGoogleIdentity()
@@ -38,10 +38,7 @@ export function GoogleSignInButton({ onCredential }: GoogleSignInButtonProps) {
         if (!isMounted) {
           return
         }
-        loadedIdentity.initialize({
-          client_id: googleClientId(),
-          callback: (response) => onCredentialRef.current(response.credential),
-        })
+        startGoogleIdentity(loadedIdentity)
         setIdentity(loadedIdentity)
       })
       .catch((error: unknown) => {
@@ -55,36 +52,40 @@ export function GoogleSignInButton({ onCredential }: GoogleSignInButtonProps) {
     }
   }, [])
 
+  const frameTitle = t('welcome.googleButtonTitle')
+
   useEffect(() => {
     if (hasFailed) {
       return
     }
-    const observers = languages.map((slotLanguage) => {
-      const slot = slotOf(slotsRef.current, slotLanguage)
-      const frameTitle = t('welcome.googleButtonTitle', { lng: slotLanguage })
-      const titleFrames = (): void => {
-        slot.querySelectorAll('iframe').forEach((frame) => {
-          frame.title = frameTitle
-        })
-      }
-      titleFrames()
-      const observer = new MutationObserver(titleFrames)
-      observer.observe(slot, { childList: true, subtree: true })
-      return observer
-    })
-    return () => {
-      observers.forEach((observer) => observer.disconnect())
+    const slot = slotOf(slotRef.current)
+    const titleFrames = (): void => {
+      slot.querySelectorAll('iframe').forEach((frame) => {
+        frame.title = frameTitle
+      })
     }
-  }, [t, hasFailed])
+    titleFrames()
+    const observer = new MutationObserver(titleFrames)
+    observer.observe(slot, { childList: true, subtree: true })
+    return () => {
+      observer.disconnect()
+    }
+  }, [frameTitle, hasFailed])
 
   useEffect(() => {
     const root = rootRef.current
     if (identity === null || root === null) {
       return
     }
-    const width = Math.min(maxButtonWidth, Math.floor(root.getBoundingClientRect().width))
-    languages.forEach((slotLanguage) => {
-      const slot = slotOf(slotsRef.current, slotLanguage)
+    const slot = slotOf(slotRef.current)
+    let drawnWidth: number | null = null
+    let redrawTimer: ReturnType<typeof setTimeout> | undefined
+    const drawAtCurrentWidth = (): void => {
+      const width = Math.min(maxButtonWidth, Math.floor(root.getBoundingClientRect().width))
+      if (width === drawnWidth) {
+        return
+      }
+      drawnWidth = width
       identity.renderButton(slot, {
         type: 'standard',
         theme: 'outline',
@@ -93,39 +94,34 @@ export function GoogleSignInButton({ onCredential }: GoogleSignInButtonProps) {
         shape: 'pill',
         logo_alignment: 'left',
         width: String(width),
-        locale: slotLanguage,
+        locale: language,
       })
+    }
+    drawAtCurrentWidth()
+    const observer = new ResizeObserver(() => {
+      clearTimeout(redrawTimer)
+      redrawTimer = setTimeout(drawAtCurrentWidth, redrawAfterResizeMilliseconds)
     })
-  }, [identity])
+    observer.observe(root)
+    return () => {
+      observer.disconnect()
+      clearTimeout(redrawTimer)
+    }
+  }, [identity, language])
 
   if (hasFailed) {
     return <KvitInlineError message={t('welcome.googleUnavailable')} />
   }
   return (
     <div ref={rootRef} className="grid min-h-11 w-full scheme-light">
-      {languages.map((slotLanguage) => {
-        const isActive = slotLanguage === language
-        return (
-          <div
-            key={slotLanguage}
-            ref={(element) => {
-              slotsRef.current[slotLanguage] = element
-            }}
-            data-language={slotLanguage}
-            aria-hidden={isActive ? undefined : true}
-            inert={!isActive}
-            className={isActive ? slotLooks : `${slotLooks} ${inactiveSlotLooks}`}
-          />
-        )
-      })}
+      <div ref={slotRef} data-language={language} className={slotLooks} />
     </div>
   )
 }
 
-function slotOf(slots: Record<Language, HTMLDivElement | null>, slotLanguage: Language): HTMLDivElement {
-  const slot = slots[slotLanguage]
+function slotOf(slot: HTMLDivElement | null): HTMLDivElement {
   if (slot === null) {
-    throw new Error(`The Google button slot for "${slotLanguage}" is not on the page`)
+    throw new Error('The Google button slot is not on the page')
   }
   return slot
 }

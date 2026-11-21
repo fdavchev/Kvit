@@ -7,7 +7,7 @@ interface KvitCategoryChoiceProps {
   onClick: () => void
 }
 
-export const kvitCategoryGridLook = 'grid grid-cols-4 gap-x-1.5 gap-y-2.5'
+export const kvitCategoryGridLook = 'grid grid-cols-4 gap-x-1.5 gap-y-2.5 max-[346px]:grid-cols-3'
 
 export function KvitCategoryChoice({ label, tile, isPressed, onClick }: KvitCategoryChoiceProps) {
   return (

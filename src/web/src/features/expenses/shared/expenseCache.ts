@@ -1,4 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
+import { hasErrorCode } from '@/core/api/errors'
 import {
   activityQueryKey,
   balancesQueryKey,
@@ -30,6 +31,12 @@ export async function refreshAfterExpenseChange(queryClient: QueryClient, groupI
     queryClient.invalidateQueries({ queryKey: expensesQueryKey(groupId) }),
     refreshGroupAfterExpenseChange(queryClient, groupId),
   ])
+}
+
+export async function refreshWhenExpenseChangedMeanwhile(queryClient: QueryClient, groupId: string, error: unknown): Promise<void> {
+  if (hasErrorCode(error, 'EXPENSE_CHANGED_MEANWHILE')) {
+    await refreshAfterExpenseChange(queryClient, groupId)
+  }
 }
 
 export async function refreshAfterExpenseDelete(queryClient: QueryClient, groupId: string): Promise<void> {

@@ -183,9 +183,12 @@ namespace Kvit.Domain.Entities
             return activityEvent;
         }
 
-        public static ActivityEvent ExpenseRestored(Guid groupId, Guid actorUserId, Guid expenseId, DateTimeOffset createdAt)
+        public static ActivityEvent ExpenseRestored(Guid groupId, Guid actorUserId, Guid expenseId, string? title, long amountMinor, Currency currency, DateTimeOffset createdAt)
         {
-            return AboutExpense(groupId, actorUserId, ActivityEventType.ExpenseRestored, expenseId, createdAt);
+            ActivityEvent activityEvent = AboutExpense(groupId, actorUserId, ActivityEventType.ExpenseRestored, expenseId, createdAt);
+            activityEvent.Data = ExpenseFacts(title, amountMinor, currency);
+
+            return activityEvent;
         }
 
         public static ActivityEvent SettlementRecorded(Guid actorUserId, Settlement settlement, GroupRoster roster, DateTimeOffset createdAt)

@@ -2,10 +2,16 @@ import { routes } from '@/core/router/routes'
 
 export type ShareOutcome = 'shared' | 'copied' | 'closed'
 
-export async function shareInviteLink(inviteToken: string): Promise<ShareOutcome> {
+export interface InviteToShare {
+  inviteToken: string
+  groupName: string
+  text: string
+}
+
+export async function shareInviteLink({ inviteToken, groupName, text }: InviteToShare): Promise<ShareOutcome> {
   if (typeof navigator.share === 'function') {
     try {
-      await navigator.share({ url: inviteLinkOf(inviteToken) })
+      await navigator.share({ title: groupName, text, url: inviteLinkOf(inviteToken) })
       return 'shared'
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {

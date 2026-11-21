@@ -80,6 +80,22 @@ describe('the two totals boxes of the home screen', () => {
     expect(backgroundOf(owed)).not.toEqual(backgroundOf(owe))
   })
 
+  it('puts a box whose amount is wider than half the row on its own row, by wrapping boxes that start at half the row and never get narrower than their amount', async () => {
+    await renderHome()
+    const { owed, owe } = await findBoxes()
+
+    const row = owed.parentElement
+
+    expect(owe.parentElement).toBe(row)
+    expect(row?.className.split(/\s+/)).toEqual(expect.arrayContaining(['flex', 'flex-wrap', 'gap-2.5']))
+    expect(row?.className.split(/\s+/)).not.toContain('grid')
+    for (const box of [owed, owe]) {
+      const classes = box.className.split(/\s+/)
+      expect(classes).toEqual(expect.arrayContaining(['grow', 'basis-[calc(50%-0.3125rem-1px)]', 'lg:min-w-0', 'lg:grow-0', 'lg:basis-auto']))
+      expect(classes).not.toContain('min-w-0')
+    }
+  })
+
   it('writes the amounts without a plus or a minus sign, because the box already says the direction', async () => {
     await renderHome()
     const { owed, owe } = await findBoxes()

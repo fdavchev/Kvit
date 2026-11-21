@@ -11,25 +11,23 @@ namespace Kvit.Api.Tests.PossibleDuplicates
 {
     public class DuplicateAnswerAccessTests(ExpensesApp _app) : IClassFixture<ExpensesApp>
     {
-        [Theory]
-        [MemberData(nameof(DuplicateAnswerRequests.AllEndpoints), MemberType = typeof(DuplicateAnswerRequests))]
-        public async Task Anonymous_Answers401(string endpoint)
+        [Fact]
+        public async Task Anonymous_Answers401()
         {
             HttpClient anonymous = _app.CreateClient();
 
-            HttpResponseMessage response = await DuplicateAnswerRequests.SendAsync(anonymous, endpoint, Guid.CreateVersion7(), Guid.CreateVersion7());
+            HttpResponseMessage response = await DuplicateAnswerRequests.PutAsync(anonymous, Guid.CreateVersion7(), Guid.CreateVersion7());
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
 
-        [Theory]
-        [MemberData(nameof(DuplicateAnswerRequests.AllEndpoints), MemberType = typeof(DuplicateAnswerRequests))]
-        public async Task Guest_Answers403GuestNotAllowedAndWritesNothing(string endpoint)
+        [Fact]
+        public async Task Guest_Answers403GuestNotAllowedAndWritesNothing()
         {
             GuestMember guest = await JoinAsGuestAsync();
             string before = await DuplicateAnswerRows.SnapshotAsync(_app);
 
-            HttpResponseMessage response = await DuplicateAnswerRequests.SendAsync(guest.Client, endpoint, Guid.CreateVersion7(), Guid.CreateVersion7());
+            HttpResponseMessage response = await DuplicateAnswerRequests.PutAsync(guest.Client, Guid.CreateVersion7(), Guid.CreateVersion7());
 
             await ProblemResponse.AssertAsync(response, HttpStatusCode.Forbidden, ResultCodes.GUEST_NOT_ALLOWED);
             Assert.Equal(before, await DuplicateAnswerRows.SnapshotAsync(_app));

@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { removeGroupPlan } from '@/core/services/groups/groupsService'
 import type { SaveOnce } from '@/features/budget/categories/hooks/useSaveOnce'
-import type { PersonalEntryRun } from '@/features/budget/entries/hooks/useAddPersonalEntry'
+import type { SaveRun } from '@/shared/hooks/saveRun'
 import { showChangedPlan } from '../groupPlanCache'
 
-export function useRemoveGroupPlan(groupId: string, oneAtATime: SaveOnce): PersonalEntryRun<void> {
+export function useRemoveGroupPlan(groupId: string, oneAtATime: SaveOnce): SaveRun<void> {
   const queryClient = useQueryClient()
   const mutation = useMutation<void, Error, void>({
     mutationFn: () => removeGroupPlan(groupId),

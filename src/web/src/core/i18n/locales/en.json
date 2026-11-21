@@ -24,6 +24,7 @@
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
+    "pageLoadFailed": "Couldn't load this page. Check your connection and try again.",
     "network": "The server may be waking up. Check your connection and try again in a moment.",
     "AUTH_INVALID_CREDENTIALS": "Wrong email or password.",
     "AUTH_EMAIL_TAKEN": "This email already has an account. Log in, or use a different email.",
@@ -106,6 +107,7 @@
     "EXPENSE_CATEGORY_INVALID": "Pick a category from the list.",
     "EXPENSE_AMOUNT_TOO_LARGE": "This amount is too large.",
     "EXPENSE_CLIENT_REQUEST_ID_USED": "This request was already used for something else.",
+    "EXPENSE_CHANGED_MEANWHILE": "Someone else just changed this expense. Check the new version and try again.",
     "CATEGORY_NOT_FOUND": "This category no longer exists.",
     "CATEGORY_NAME_INVALID": "Enter a name (up to 30 characters).",
     "CATEGORY_NAME_TAKEN": "You already have a category with this name.",
@@ -164,7 +166,11 @@
     "OWNER_REASON_INVALID": "Write a reason (up to 500 characters).",
     "OWNER_PERSON_NOT_FOUND": "This person doesn't exist.",
     "OWNER_GROUP_NOT_FOUND": "This group doesn't exist.",
-    "OWNER_CANNOT_ACT_ON_ADMIN": "You can't do this to an owner of Kvit."
+    "OWNER_CANNOT_ACT_ON_ADMIN": "You can't do this to an owner of Kvit.",
+    "SERVER_ERROR": "Something went wrong on our side. Try again in a moment.",
+    "CHANGED_MEANWHILE": "Someone changed this at the same moment. Try again.",
+    "REQUEST_TOO_LARGE": "This is too large to send. Make it shorter and try again.",
+    "REQUEST_INVALID": "The server could not read what the app sent. Reload the page and try again."
   },
   "language": {
     "label": "Language",
@@ -290,7 +296,7 @@
   },
   "privacy": {
     "title": "Privacy",
-    "updated": "Last updated 4 November 2026 · version 2026-11-04",
+    "updated": "Last updated 19 November 2026 · version 2026-11-19",
     "short": {
       "title": "In short",
       "items": {
@@ -340,7 +346,7 @@
       },
       "10": {
         "heading": "How long Kvit keeps things",
-        "body": "Your data stays while your account exists. When you delete your account it is switched off at once and removed within 30 days. A deleted group or expense can be restored for a while, and is removed 30 days after that. After 12 months, usage events are no longer tied to an account. The companies above keep technical logs for a short time, from days to a few weeks. Kvit's database can be restored up to 6 hours back, and Kvit keeps an encrypted weekly backup for up to 90 days. Accounts that are not used are kept and are not deleted automatically."
+        "body": "Your data stays while your account exists. When you delete your account it is switched off at once and removed after 30 days. Removals that are due happen the first time someone uses Kvit after that day, so if nobody uses Kvit for a while, they can come a little later. A deleted group or expense can be restored for a while, and is removed 30 days after that. After 12 months, usage events are no longer tied to an account. The companies above keep technical logs for a short time, from days to a few weeks. Kvit's database can be restored up to 6 hours back, and Kvit keeps an encrypted weekly backup for up to 90 days. Accounts that are not used are kept and are not deleted automatically."
       },
       "11": {
         "heading": "If someone added your name",
@@ -352,7 +358,7 @@
       },
       "13": {
         "heading": "Download your data",
-        "body": "In Settings, tap “Download my data”. You get a file with your profile, your personal budget and your groups with their expenses, payments and activity. It does not contain other people's emails or private budgets."
+        "body": "In Settings, tap “Download my data”. You get a file with your profile, your personal budget and your groups with their expenses, payments and activity. It does not contain other people's emails or private budgets. Groups you deleted in the last 30 days are not in the file, though Kvit keeps them until they are removed. The file also does not list the days you opened Kvit, which Kvit counts for its usage numbers."
       },
       "14": {
         "heading": "Delete your account",
@@ -382,7 +388,7 @@
   },
   "terms": {
     "title": "Terms of Use",
-    "updated": "Last updated 4 November 2026 · version 2026-11-04",
+    "updated": "Last updated 19 November 2026 · version 2026-11-19",
     "short": {
       "title": "In short",
       "items": {
@@ -510,6 +516,8 @@
     "people": "Who is with you?",
     "nameLabel": "name",
     "removeName": "Remove {{name}}",
+    "ownName": "You're already in this bill.",
+    "nameTaken": "Someone called “{{name}}” is already in this bill.",
     "save": "Save bill",
     "titleTooLong": "The title can have up to 60 characters.",
     "groupName": "Bill · {{date}}"
@@ -519,6 +527,7 @@
     "addPeopleHasKvit": "Have Kvit? Share the link and they join with their own account.",
     "addName": "Add a name",
     "shareLink": "Share invite link",
+    "shareText": "Join “{{name}}” on Kvit.",
     "linkCopied": "Link copied",
     "settings": "Group settings",
     "closedByAdmin": "🔒 Closed by the owner of Kvit · read-only"
@@ -605,6 +614,7 @@
     "expenseDeleted": "{{name}} deleted “{{title}}” · {{amount}}",
     "expenseDeletedNoTitle": "{{name}} deleted an expense · {{amount}}",
     "expenseRestored": "{{name}} restored an expense",
+    "expenseRestoredWithTitle": "{{name}} restored “{{title}}”",
     "settlementRecorded": "{{name}} recorded a payment: {{from}} paid {{to}} {{amount}}",
     "settlementConfirmed": "{{name}} confirmed that {{from}} paid {{to}} {{amount}}",
     "settlementRejected": "{{name}} rejected {{from}}'s payment of {{amount}} to {{to}}",
@@ -667,6 +677,7 @@
     "each_other": "{{amount}} each · {{count}} people",
     "onTrack": "On track",
     "near": "Near the plan · {{amount}} left",
+    "reached": "Plan reached",
     "over": "{{amount}} over",
     "included": "includes {{amount}} converted to {{currency}}",
     "hint": "Everyone in the group sees the plan.",
@@ -921,6 +932,7 @@
     "claimUndone": "{{name}} stays in the group. “{{claimed}}” is just a name again.",
     "thatsMe": "That's me",
     "claimed": "You are now “{{name}}” in this group.",
+    "nameJustTaken": "Someone just took this name, or it was removed.",
     "removedTitle": "Removed",
     "letBackIn": "Let back in",
     "backInGroup": "{{name}} is back in the group",
@@ -1064,6 +1076,7 @@
       "searchLabel": "Find by email, name or number",
       "search": "Search",
       "empty": "Nobody found.",
+      "tooShort": "Type at least 2 letters.",
       "groupCount_one": "{{count}} group",
       "groupCount_other": "{{count}} groups"
     },
@@ -1078,6 +1091,7 @@
     "unsuspend": "Unsuspend",
     "eraseName": "Erase name",
     "reasonLabel": "Reason (saved in the log)",
+    "reasonTooLong": "At most 500 characters.",
     "confirm": "Confirm",
     "sheet": {
       "suspend": {
@@ -1111,6 +1125,7 @@
     "groups": {
       "searchLabel": "Group number (from a report email)",
       "search": "Find",
+      "numberInvalid": "That's not a group number. Copy the whole number from the report email.",
       "members_one": "{{count}} member",
       "members_other": "{{count}} members",
       "owner": "Owner: {{name}}",

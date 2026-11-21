@@ -87,3 +87,58 @@ describe('the chips of the people of a one bill', () => {
     expect(Array.from(button.classList)).not.toContain('absolute')
   })
 })
+
+describe('the name under each circle of the people of a one bill', () => {
+  const namedPeople: ExpensePerson[] = [
+    { memberId: 'p1', name: 'Filip', pictureUrl: null, colorIndex: 0, isYou: true, isCurrentMember: true },
+    { memberId: 'p2', name: 'Александар', pictureUrl: null, colorIndex: 1, isYou: false, isCurrentMember: true },
+    { memberId: 'p3', name: 'Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', pictureUrl: null, colorIndex: 2, isYou: false, isCurrentMember: true },
+    { memberId: 'p4', name: 'Marija Petrovska', pictureUrl: null, colorIndex: 3, isYou: false, isCurrentMember: true },
+  ]
+
+  async function renderedLabel(text: string, language: Language = 'en'): Promise<HTMLElement> {
+    await renderElementWithProviders(
+      <BillPeople people={namedPeople} onRemove={() => {}} onAddName={() => {}} />,
+      '/people',
+      { language },
+    )
+    return screen.getByText(text)
+  }
+
+  it.each(namedPeople.filter((person) => !person.isYou).map((person) => [person.name]))(
+    'lets the name %s use the whole width of its chip, at least the 4 rem circle width, up to two lines, centred, not cut to one line',
+    async (name) => {
+      const label = await renderedLabel(name)
+
+      expect(Array.from(label.classList)).toEqual(
+        expect.arrayContaining(['line-clamp-2', 'col-span-full', 'w-min', 'min-w-16', 'max-w-full', 'justify-self-start', 'text-center', 'break-words']),
+      )
+      expect(Array.from(label.classList)).not.toContain('max-w-16')
+      expect(Array.from(label.classList)).not.toContain('truncate')
+    },
+  )
+
+  it('keeps the chip of a person with a remove button 4 rem + 2.75 rem wide and my chip 4 rem wide, whatever the name', async () => {
+    const label = await renderedLabel('Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+    const myLabel = screen.getByText(translated('en', 'expense.me'))
+
+    expect(Array.from(label.closest('li')?.classList ?? [])).toContain('grid-cols-[4rem_2.75rem]')
+    expect(Array.from(myLabel.closest('li')?.classList ?? [])).toContain('grid-cols-[4rem]')
+  })
+
+  it.each<Language>(['en', 'mk'])('gives the + Name label the same two-line look as the names (%s)', async (language) => {
+    const label = await renderedLabel(translated(language, 'oneBill.nameLabel'), language)
+
+    expect(Array.from(label.classList)).toEqual(expect.arrayContaining(['line-clamp-2', 'max-w-16', 'text-center', 'break-words']))
+    expect(Array.from(label.classList)).not.toContain('truncate')
+  })
+
+  it('keeps the circles of all chips on the top edge of the row, so a two-line name does not push its neighbours down', async () => {
+    const label = await renderedLabel('Marija Petrovska')
+
+    const list = label.closest('ul')
+
+    expect(Array.from(label.closest('li')?.classList ?? [])).toContain('items-start')
+    expect(Array.from(list?.classList ?? [])).toContain('items-start')
+  })
+})

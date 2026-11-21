@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Toaster } from 'sonner'
 import { useTheme } from '@/core/theme/useTheme'
 import { kvitGlassPanelBlur } from '@/shared/components/kvitGlassLooks'
+import { openSheetHeightProperty } from '@/shared/hooks/useToastsAboveElement'
 
 const toasterStyle: CSSProperties & Record<`--${string}`, string> = {
   '--normal-bg': 'var(--glass-panel)',
@@ -11,7 +12,11 @@ const toasterStyle: CSSProperties & Record<`--${string}`, string> = {
   '--border-radius': 'var(--radius)',
 }
 
-const bottomOffset = { bottom: 'calc(var(--toast-offset-bottom) + var(--toast-lift, 0px))' }
+const bottomAbovePageBars = 'calc(var(--toast-offset-bottom) + var(--toast-lift, 0px))'
+const bottomAboveOpenSheet = `var(${openSheetHeightProperty}, ${bottomAbovePageBars})`
+const highestBottomThatKeepsAToastOnScreen = 'calc(100dvh - 96px - env(safe-area-inset-top))'
+const bottomOffset = { bottom: `min(${bottomAboveOpenSheet}, ${highestBottomThatKeepsAToastOnScreen})` }
+const toastsShownAtOnce = 3
 
 const actionButtonStyle: CSSProperties = {
   height: 'auto',
@@ -31,11 +36,13 @@ export function KvitToaster() {
     <Toaster
       theme={theme}
       position="bottom-center"
+      expand
+      visibleToasts={toastsShownAtOnce}
       style={toasterStyle}
       offset={bottomOffset}
       mobileOffset={bottomOffset}
       toastOptions={{ className: kvitGlassPanelBlur, actionButtonStyle }}
-      containerAriaLabel={t('toasts.region')}
+      customAriaLabel={t('toasts.region')}
     />
   )
 }

@@ -16,7 +16,7 @@ export function HomeTotals({ totals }: HomeTotalsProps) {
   const { t } = useTranslation()
 
   return (
-    <div className="grid grid-cols-2 gap-2.5 lg:flex lg:flex-wrap lg:items-start lg:gap-x-[clamp(2rem,5vw,4rem)] lg:gap-y-4">
+    <div className="flex flex-wrap gap-2.5 lg:items-start lg:gap-x-[clamp(2rem,5vw,4rem)] lg:gap-y-4">
       <TotalBox label={t('home.owed')} amounts={totals.owed} boxLook="bg-positive-surface" amountLook="text-positive" />
       <TotalBox label={t('home.owe')} amounts={totals.owe} boxLook="bg-negative-surface" amountLook="text-negative" />
     </div>
@@ -38,7 +38,7 @@ function TotalBox({ label, amounts, boxLook, amountLook }: TotalBoxProps) {
     <section
       aria-labelledby={labelId}
       className={cn(
-        'flex min-w-0 flex-col gap-0.5 rounded-[20px] px-3.5 py-3 text-foreground lg:gap-1 lg:bg-transparent lg:p-0',
+        'flex grow basis-[calc(50%-0.3125rem-1px)] flex-col gap-0.5 rounded-[20px] px-3.5 py-3 text-foreground lg:min-w-0 lg:grow-0 lg:basis-auto lg:gap-1 lg:bg-transparent lg:p-0',
         boxLook,
       )}
     >

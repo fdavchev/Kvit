@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { KvitDialog } from './KvitDialog'
 import { kvitGlassPanelLook } from './kvitGlassLooks'
 
@@ -102,5 +102,68 @@ describe('KvitDialog', () => {
     renderDialog()
 
     expect(screen.getByRole('dialog').className.split(/\s+/)).toEqual(expect.arrayContaining(kvitGlassPanelLook.split(' ')))
+  })
+
+  it('draws its backdrop and its viewport at the same height as a sheet, above the page', () => {
+    renderDialog()
+    const viewport = backdropOf(screen.getByRole('dialog'))
+
+    expect(viewport.className.split(/\s+/)).toContain('z-50')
+    expect(viewport.previousElementSibling?.className.split(/\s+/)).toContain('z-50')
+  })
+})
+
+describe('KvitDialog and the toasts above it', () => {
+  const openSheetHeightProperty = '--open-sheet-height'
+
+  function openSheetHeightOnPage(): string {
+    return document.documentElement.style.getPropertyValue(openSheetHeightProperty)
+  }
+
+  function placeDialogsWithTopAt(top: number): void {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      return DOMRect.fromRect({ x: 0, y: this.getAttribute('role') === 'dialog' ? top : 0, width: 320, height: 200 })
+    })
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    document.documentElement.style.removeProperty(openSheetHeightProperty)
+  })
+
+  it('writes the space from the top of the dialog to the bottom of the window plus 12px to --open-sheet-height, so the toasts sit above the whole dialog', () => {
+    vi.stubGlobal('innerHeight', 360)
+    placeDialogsWithTopAt(60)
+
+    renderDialog()
+
+    expect(openSheetHeightOnPage()).toBe('312px')
+  })
+
+  it('writes the new space when the window gets taller and the dialog moves down', () => {
+    vi.stubGlobal('innerHeight', 360)
+    placeDialogsWithTopAt(60)
+    renderDialog()
+
+    vi.stubGlobal('innerHeight', 600)
+    placeDialogsWithTopAt(200)
+    fireEvent(window, new Event('resize'))
+
+    expect(openSheetHeightOnPage()).toBe('412px')
+  })
+
+  it('removes --open-sheet-height when the dialog is gone', () => {
+    vi.stubGlobal('innerHeight', 360)
+    placeDialogsWithTopAt(60)
+    const { unmount } = render(
+      <KvitDialog title={title} onClose={() => {}}>
+        <p>dialog content</p>
+      </KvitDialog>,
+    )
+
+    unmount()
+
+    expect(openSheetHeightOnPage()).toBe('')
   })
 })

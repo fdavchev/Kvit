@@ -12,6 +12,7 @@ import type { OutboxItem } from './outboxItem'
 import {
   addOutboxItem,
   clearOutbox,
+  clearOutboxIfEmpty,
   readOutbox,
   removeOutboxItem,
   updateOutboxItem,
@@ -348,5 +349,33 @@ describe('clearOutbox', () => {
     await addOutboxItem(personId, testOutboxItem('b'))
 
     expect(idsOf(await readOutbox(personId))).toEqual(['b'])
+  })
+})
+
+describe('clearOutboxIfEmpty', () => {
+  it('removes the key of a person whose outbox is an empty list', async () => {
+    seedOutbox(personId, [])
+
+    await clearOutboxIfEmpty(personId)
+
+    expect(storedOutbox.has(personId)).toBe(false)
+  })
+
+  it('keeps the outbox of a person that still holds an item', async () => {
+    await addOutboxItem(personId, testOutboxItem('a'))
+
+    await clearOutboxIfEmpty(personId)
+
+    expect(storedIds(personId)).toEqual(['a'])
+    expect(fakeIdbKeyval.del).not.toHaveBeenCalled()
+  })
+
+  it('leaves the outbox of another person alone', async () => {
+    seedOutbox(personId, [])
+    seedOutbox(otherPersonId, [])
+
+    await clearOutboxIfEmpty(personId)
+
+    expect(storedOutbox.has(otherPersonId)).toBe(true)
   })
 })

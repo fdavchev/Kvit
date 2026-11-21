@@ -62,6 +62,7 @@ import {
   unfreezeTime,
 } from '@/test/expenseTestHelpers'
 import { expectDisabledWhilePending } from '@/test/formTestHelpers'
+import { groupQueryKey, membersQueryKey } from '@/features/groups/shared/groupCache'
 import { groupOf, testGroupId } from '@/test/groupTestData'
 import {
   anaMember,
@@ -76,6 +77,7 @@ import { holdOutboxSender, readSavedOutbox } from '@/test/queuedSaveTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import {
   jsonAnswer,
+  neverAnswer,
   networkFailureAnswer,
   noContentAnswer,
   problemAnswer,
@@ -87,6 +89,7 @@ import {
 import { seedMe, testMe } from '@/test/testMe'
 import { shownToastTexts } from '@/test/toastTestHelpers'
 import { translated } from '@/test/translated'
+import { categoriesQueryKey, expenseQueryKey } from '../../shared/expenseCache'
 import { EditExpenseScreen } from './EditExpenseScreen'
 
 vi.mock('sonner', async () => (await import('@/test/sonnerMock')).sonnerMock)
@@ -138,6 +141,25 @@ async function renderReadyEdit(options: RenderOptions = {}) {
   await screen.findByRole('button', { name: translated(options.language ?? 'en', 'groupSettings.save') })
   return rendered
 }
+
+function firstThen(first: AnswerFactory, then: AnswerFactory): AnswerFactory {
+  let calls = 0
+  return () => {
+    calls += 1
+    return calls === 1 ? first() : then()
+  }
+}
+
+function seedSavedCopy(detail: ExpenseDetail): (queryClient: QueryClient) => void {
+  return (queryClient) => {
+    queryClient.setQueryData(groupQueryKey(testGroupId), groupOf({ memberCount: 5 }))
+    queryClient.setQueryData(membersQueryKey(testGroupId), ownerViewMembers)
+    queryClient.setQueryData(categoriesQueryKey, testCategories)
+    queryClient.setQueryData(expenseQueryKey(testGroupId, detail.id), detail)
+  }
+}
+
+const newerHotelDetail: ExpenseDetail = detailOf({ title: 'Hotel Bristol', amountMinor: 320000, version: 4022 })
 
 function sharesOf(body: Record<string, unknown>): { memberId: string; inputValue: number }[] {
   const shares = body.shares
@@ -203,6 +225,41 @@ describe('EditExpenseScreen', () => {
       )
 
       expect(screen.getByRole('status')).toBeTruthy()
+    })
+  })
+
+  describe('opened on a saved copy of the expense', () => {
+    it('shows the loading spinner and no form until the server answers the expense again', async () => {
+      await renderEdit({
+        seedCache: seedSavedCopy(detailOf({ amountMinor: 100000, version: 4000 })),
+        answers: { [`GET ${detailPath}`]: neverAnswer() },
+      })
+
+      expect(await screen.findByRole('status')).toBeTruthy()
+      expect(screen.queryByRole('button', { name: translated('en', 'groupSettings.save') })).toBeNull()
+    })
+
+    it('opens the form with the answer of the server, not with the saved copy', async () => {
+      await renderReadyEdit({ seedCache: seedSavedCopy(detailOf({ amountMinor: 100000, title: 'Old hotel', version: 4000 })) })
+
+      await waitFor(() => {
+        expect(amountField().value).toBe('3000')
+      })
+      expect(titleField().value).toBe('Hotel')
+    })
+
+    it('sends the version of the answer of the server, not of the saved copy', async () => {
+      const { fetchMock } = await renderReadyEdit({ seedCache: seedSavedCopy(detailOf({ amountMinor: 100000, version: 4000 })) })
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'GET', detailPath)).toBe(1)
+      })
+
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'PUT', detailPath)).toBe(1)
+      })
+      expect(sentBody(fetchMock, 'PUT', detailPath)).toMatchObject({ version: 4021, amountMinor: 300000 })
     })
   })
 
@@ -532,6 +589,42 @@ describe('EditExpenseScreen', () => {
       )
     })
 
+    it('sends the version the form was opened from', async () => {
+      const { fetchMock } = await renderReadyEdit()
+
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'PUT', detailPath)).toBe(1)
+      })
+      expect(sentBody(fetchMock, 'PUT', detailPath)).toMatchObject({ version: 4021 })
+    })
+
+    it('sends the version the form was opened from even after the expense was asked for again without a refusal', async () => {
+      const { fetchMock, queryClient } = await renderReadyEdit()
+      typeTitle('Hotel by the sea')
+      queryClient.setQueryData(expenseQueryKey(testGroupId, hotelExpenseId), newerHotelDetail)
+
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'PUT', detailPath)).toBe(1)
+      })
+      expect(sentBody(fetchMock, 'PUT', detailPath)).toMatchObject({ version: 4021, title: 'Hotel by the sea', amountMinor: 300000 })
+    })
+
+    it('sends a null version when the server answered the expense without one', async () => {
+      const detailWithoutVersion = Object.fromEntries(Object.entries(hotelDetail).filter(([field]) => field !== 'version'))
+      const { fetchMock } = await renderReadyEdit({ answers: { [`GET ${detailPath}`]: jsonAnswer(detailWithoutVersion) } })
+
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'PUT', detailPath)).toBe(1)
+      })
+      expect(sentBody(fetchMock, 'PUT', detailPath)).toMatchObject({ version: null })
+    })
+
     it('never creates an expense', async () => {
       const { fetchMock } = await renderReadyEdit()
 
@@ -683,7 +776,7 @@ describe('EditExpenseScreen', () => {
       await waitFor(() => {
         expect(router.state.location.pathname).toBe(detailRoute)
       })
-      expect(screen.getByText('expense detail page')).toBeTruthy()
+      expect(await screen.findByText('expense detail page')).toBeTruthy()
     })
 
     it.each(languages)('shows the plain Expense saved toast after the edit was saved (%s)', async (language) => {
@@ -773,6 +866,78 @@ describe('EditExpenseScreen', () => {
       expect(titleField().value).toBe('Hotel by the sea')
     })
 
+    it('shows the text for 409 EXPENSE_CHANGED_MEANWHILE, keeps the typed values and asks for the expense again', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock, router } = await renderReadyEdit({
+        answers: {
+          [`GET ${detailPath}`]: firstThen(jsonAnswer(hotelDetail), jsonAnswer(newerHotelDetail)),
+          [`PUT ${detailPath}`]: problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE'),
+        },
+      })
+      typeAmount('3500')
+      typeTitle('Hotel by the sea')
+
+      fireEvent.click(saveButton())
+
+      expect((await screen.findByRole('alert')).textContent).toContain(
+        'Someone else just changed this expense. Check the new version and try again.',
+      )
+      await waitFor(() => {
+        expect(isDisabled(saveButton())).toBe(false)
+      })
+      expect(requestCount(fetchMock, 'GET', detailPath)).toBeGreaterThanOrEqual(2)
+      expect(amountField().value).toBe('3500')
+      expect(titleField().value).toBe('Hotel by the sea')
+      expect(screen.getByRole('alert').textContent).toContain(
+        'Someone else just changed this expense. Check the new version and try again.',
+      )
+      expect(router.state.location.pathname).toBe(editRoute)
+    })
+
+    it('sends the typed values with the new version when Save is pressed again after 409 EXPENSE_CHANGED_MEANWHILE, and saves', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock, router } = await renderReadyEdit({
+        answers: {
+          [`GET ${detailPath}`]: firstThen(jsonAnswer(hotelDetail), jsonAnswer(newerHotelDetail)),
+          [`PUT ${detailPath}`]: firstThen(problemAnswer(409, 'EXPENSE_CHANGED_MEANWHILE'), noContentAnswer()),
+        },
+      })
+      typeAmount('3500')
+      typeTitle('Hotel by the sea')
+      fireEvent.click(saveButton())
+      await screen.findByRole('alert')
+      await waitFor(() => {
+        expect(isDisabled(saveButton())).toBe(false)
+      })
+
+      fireEvent.click(saveButton())
+
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'PUT', detailPath)).toBe(2)
+      })
+      expect(sentBody(fetchMock, 'PUT', detailPath, 0)).toMatchObject({ version: 4021 })
+      expect(sentBody(fetchMock, 'PUT', detailPath, 1)).toMatchObject({
+        version: 4022,
+        title: 'Hotel by the sea',
+        amountMinor: 350000,
+      })
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe(detailRoute)
+      })
+    })
+
+    it('does not ask for the expense again after another refusal', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock } = await renderReadyEdit({
+        answers: { [`PUT ${detailPath}`]: problemAnswer(400, 'EXPENSE_AMOUNT_TOO_LARGE') },
+      })
+
+      fireEvent.click(saveButton())
+
+      await screen.findByRole('alert')
+      expect(requestCount(fetchMock, 'GET', detailPath)).toBe(1)
+    })
+
     it('shows the network message when the server cannot be reached', async () => {
       await renderReadyEdit({ answers: { [`PUT ${detailPath}`]: networkFailureAnswer() } })
 
@@ -860,7 +1025,7 @@ describe('EditExpenseScreen', () => {
       await waitFor(() => {
         expect(router.state.location.pathname).toBe(detailRoute)
       })
-      expect(screen.getByText('expense detail page')).toBeTruthy()
+      expect(await screen.findByText('expense detail page')).toBeTruthy()
       expect(screen.queryByRole('button', { name: translated('en', 'groupSettings.save') })).toBeNull()
       expect(requestCount(fetchMock, 'PUT', detailPath)).toBe(0)
     })

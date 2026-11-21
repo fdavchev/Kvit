@@ -1,5 +1,5 @@
 import type { Language } from '@/core/i18n/language'
-import { formatMoney } from '@/shared/utils/formatMoney'
+import { currencyLabel, formatMoney } from '@/shared/utils/formatMoney'
 import {
   bojanUserId,
   dinnerExpenseId,
@@ -167,7 +167,7 @@ export const sentenceCases: SentenceCase[] = [
       changes: [{ field: 'defaultCurrency', old: 'MKD', new: 'EUR' }],
     }),
     key: 'activity.groupCurrencyChanged',
-    params: () => ({ name: 'Ana', old: 'MKD', new: 'EUR' }),
+    params: (language) => ({ name: 'Ana', old: currencyLabel('MKD', language), new: 'EUR' }),
   },
   {
     name: 'InviteLinkReset',
@@ -330,8 +330,20 @@ export const sentenceCases: SentenceCase[] = [
     params: (language) => ({ name: 'Ana', amount: money(1250, 'EUR', language) }),
   },
   {
-    name: 'ExpenseRestored',
+    name: 'ExpenseRestored of an expense with a title that is in the list',
     event: activityEventOf({ type: 'ExpenseRestored', expenseId: taxiExpenseId }),
+    key: 'activity.expenseRestoredWithTitle',
+    params: () => ({ name: 'Ana', title: 'Taxi' }),
+  },
+  {
+    name: 'ExpenseRestored of an expense without a title that is in the list',
+    event: activityEventOf({ type: 'ExpenseRestored', expenseId: untitledExpenseId }),
+    key: 'activity.expenseRestored',
+    params: () => ({ name: 'Ana' }),
+  },
+  {
+    name: 'ExpenseRestored of an expense that is not in the list',
+    event: activityEventOf({ type: 'ExpenseRestored', expenseId: museumExpenseId }),
     key: 'activity.expenseRestored',
     params: () => ({ name: 'Ana' }),
   },
@@ -400,7 +412,7 @@ export const editCases: EditCase[] = [
     old: 'EUR',
     new: 'MKD',
     key: 'expense.historyChangedCurrency',
-    params: () => ({ name: 'Ana', old: 'EUR', new: 'MKD' }),
+    params: (language) => ({ name: 'Ana', old: 'EUR', new: currencyLabel('MKD', language) }),
   },
   {
     field: 'title',

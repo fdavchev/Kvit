@@ -33,6 +33,7 @@ import {
   planThatChanges,
   queryPlanCard,
   querySetPlanRow,
+  reachedLine,
   requireLine,
   setPlanRow,
 } from '@/test/groupPlanTestHelpers'
@@ -251,10 +252,33 @@ describe('GroupScreen Totals tab, the spending plan card', () => {
       expect(requireLine(card, 'Near the plan · 1,000 MKD left')).toBeTruthy()
     })
 
-    it('says "Near the plan · 0 MKD left" when the plan is exactly reached', async () => {
+    it('says "Plan reached" and not "Near the plan · 0 MKD left" when the plan is exactly reached', async () => {
       const card = await planCardOf({ spending: spendingOfPlanSpent(1000000) })
 
-      expect(requireLine(card, 'Near the plan · 0 MKD left')).toBeTruthy()
+      expect(requireLine(card, 'Plan reached')).toBeTruthy()
+      expect(lineWithText(card, 'Near the plan · 0 MKD left')).toBeNull()
+    })
+
+    it('writes "Plan reached" in the near colour, not in the red of a plan that is over', async () => {
+      const card = await planCardOf({ spending: spendingOfPlanSpent(1000000) })
+
+      const line = requireLine(card, 'Plan reached')
+
+      expect(classesOf(line)).toContain('text-warning')
+      expect(classesOf(line)).not.toContain('text-negative')
+    })
+
+    it('writes the Macedonian words for a plan that is exactly reached', async () => {
+      const card = await planCardOf({ language: 'mk', spending: spendingOfPlanSpent(1000000) })
+
+      expect(requireLine(card, 'Планот е достигнат')).toBeTruthy()
+    })
+
+    it('still says "1 MKD over" when the plan is passed by one denar', async () => {
+      const card = await planCardOf({ spending: spendingOfPlanSpent(1000100) })
+
+      expect(requireLine(card, '1 MKD over')).toBeTruthy()
+      expect(lineWithText(card, 'Plan reached')).toBeNull()
     })
 
     it('says "2,000 MKD over" in red at 120 % of a plan of 10,000 MKD, taking the amount from the answer', async () => {
@@ -333,6 +357,24 @@ describe('GroupScreen Totals tab, the spending plan card', () => {
 
       expect(card.textContent).not.toContain('converted')
       expect(lineWithText(card, includedLine(0, 'EUR', 'MKD'))).toBeNull()
+    })
+
+    it.each(languages)('names the source of the exchange rates under the note when money was converted (%s)', async (language) => {
+      const card = await planCardOf({
+        language,
+        spending: spendingWithPlanOf({ ...mkdPlanOfTwoThousand, includedOtherCurrencyMinor: 2000 }),
+      })
+
+      const note = requireLine(card, includedLine(2000, 'EUR', 'MKD', language))
+      const source = requireLine(card, translated(language, 'legal.ratesSource'))
+
+      expect(isBefore(note, source)).toBe(true)
+    })
+
+    it('does not name the source of the exchange rates when nothing was converted', async () => {
+      const card = await planCardOf()
+
+      expect(lineWithText(card, translated('en', 'legal.ratesSource'))).toBeNull()
     })
   })
 
@@ -520,10 +562,14 @@ function expectStateWords(
   amountMinor: number,
   currency: 'MKD' | 'EUR',
 ): void {
+  const isPlanReached = spentMinor === amountMinor
   const wordsOf = {
     ok: onTrackLine(),
-    near: nearLine(amountMinor - spentMinor, currency),
+    near: isPlanReached ? reachedLine() : nearLine(amountMinor - spentMinor, currency),
     over: overLine(spentMinor - amountMinor, currency),
+  }
+  if (isPlanReached) {
+    expect(lineWithText(card, nearLine(0, currency)), 'a reached plan should not say "Near the plan · 0 left"').toBeNull()
   }
   for (const [name, words] of Object.entries(wordsOf)) {
     const line = lineWithText(card, words)

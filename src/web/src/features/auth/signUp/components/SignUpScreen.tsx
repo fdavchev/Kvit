@@ -9,6 +9,11 @@ import {
   readJoinToken,
 } from '@/core/invites/joinRoundTrip'
 import { routes } from '@/core/router/routes'
+import {
+  displayNameRefusedCodes,
+  emailRefusedCodes,
+  newPasswordRefusedCodes,
+} from '@/features/auth/shared/accountFieldRefusals'
 import { AgreeLine } from '@/features/legal/components/AgreeLine'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitEmailField } from '@/shared/components/KvitEmailField'
@@ -18,7 +23,14 @@ import { KvitPasswordField } from '@/shared/components/KvitPasswordField'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
 import { KvitTextField } from '@/shared/components/KvitTextField'
+import { useFieldRefusals } from '@/shared/hooks/useFieldRefusals'
 import { useSignUp } from '../hooks/useSignUp'
+
+const refusedCodesOf = {
+  displayName: displayNameRefusedCodes,
+  email: emailRefusedCodes,
+  password: newPasswordRefusedCodes,
+}
 
 export function SignUpScreen() {
   const { t } = useTranslation()
@@ -29,8 +41,25 @@ export function SignUpScreen() {
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const refusals = useFieldRefusals(refusedCodesOf, signUp.error)
+
+  function changeDisplayName(nextDisplayName: string): void {
+    setDisplayName(nextDisplayName)
+    refusals.noteChange('displayName')
+  }
+
+  function changeEmail(nextEmail: string): void {
+    setEmail(nextEmail)
+    refusals.noteChange('email')
+  }
+
+  function changePassword(nextPassword: string): void {
+    setPassword(nextPassword)
+    refusals.noteChange('password')
+  }
 
   function submit(): void {
+    refusals.noteSave()
     signUp.mutate(
       { displayName, email, password },
       { onSuccess: () => navigate(pathAfterSignIn(joinToken), { replace: true }) },
@@ -39,7 +68,7 @@ export function SignUpScreen() {
 
   return (
     <KvitScreen>
-      <KvitBackButton to={pathBeforeSignIn(joinToken)} />
+      <KvitBackButton to={pathBeforeSignIn(joinToken)} replace />
       <KvitScreenTitle>{t('auth.signUp.title')}</KvitScreenTitle>
       <KvitForm
         submitLabel={t('auth.signUp.title')}
@@ -52,6 +81,7 @@ export function SignUpScreen() {
             <KvitLinkButton
               to={routes.logIn}
               state={joinTokenState(joinToken)}
+              replace
               variant="underlinedLink"
             >
               {t('welcome.haveAccount')}
@@ -63,7 +93,8 @@ export function SignUpScreen() {
           id="sign-up-name"
           label={t('auth.signUp.name')}
           value={displayName}
-          onChange={setDisplayName}
+          onChange={changeDisplayName}
+          invalid={refusals.isRefused('displayName')}
           autoComplete="name"
           autoCapitalize="words"
           enterKeyHint="next"
@@ -72,16 +103,18 @@ export function SignUpScreen() {
           id="sign-up-email"
           label={t('auth.email')}
           value={email}
-          onChange={setEmail}
+          onChange={changeEmail}
+          invalid={refusals.isRefused('email')}
         />
         <KvitPasswordField
           id="sign-up-password"
           label={t('auth.password')}
           value={password}
-          onChange={setPassword}
+          onChange={changePassword}
           autoComplete="new-password"
           enterKeyHint="done"
           hint={t('auth.passwordHint')}
+          invalid={refusals.isRefused('password')}
         />
       </KvitForm>
     </KvitScreen>

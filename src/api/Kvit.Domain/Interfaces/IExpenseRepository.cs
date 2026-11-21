@@ -1,5 +1,4 @@
 using Kvit.Domain.Entities;
-using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 
 namespace Kvit.Domain.Interfaces
@@ -14,7 +13,9 @@ namespace Kvit.Domain.Interfaces
 
         Task<Result<Expense>> FindIncludingDeletedInGroupAsync(Guid groupId, Guid expenseId, CancellationToken cancellationToken);
 
-        Task<Currency?> FindCurrencyAsync(Guid groupId, Guid expenseId, CancellationToken cancellationToken);
+        void MarkChanged(Expense expense);
+
+        uint VersionOf(Expense expense);
 
         Task<bool> BringsCountedShareToAsync(Guid userId, Guid expenseId, CancellationToken cancellationToken);
     }

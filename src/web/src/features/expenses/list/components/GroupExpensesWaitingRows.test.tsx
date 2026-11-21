@@ -49,7 +49,7 @@ async function renderExpenses(options: RenderOptions = {}) {
   })
   seedOutbox(testMe.id, options.waiting ?? [])
   return renderElementWithProviders(
-    <GroupExpenses groupId={testGroupId} actionsWhenEmpty={null} />,
+    <GroupExpenses groupId={testGroupId} actionsWhenEmpty={null} showsRecentlyDeletedLink />,
     '/expenses',
     { language, seedCache: seedMe({ ...testMe, language }) },
   )

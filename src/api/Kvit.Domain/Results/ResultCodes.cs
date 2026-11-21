@@ -23,6 +23,7 @@ namespace Kvit.Domain.Results
         public const string EXPENSE_CATEGORY_INVALID = "EXPENSE_CATEGORY_INVALID";
         public const string EXPENSE_AMOUNT_TOO_LARGE = "EXPENSE_AMOUNT_TOO_LARGE";
         public const string EXPENSE_CLIENT_REQUEST_ID_USED = "EXPENSE_CLIENT_REQUEST_ID_USED";
+        public const string EXPENSE_CHANGED_MEANWHILE = "EXPENSE_CHANGED_MEANWHILE";
         public const string CATEGORY_NOT_FOUND = "CATEGORY_NOT_FOUND";
         public const string CATEGORY_NAME_INVALID = "CATEGORY_NAME_INVALID";
         public const string CATEGORY_NAME_TAKEN = "CATEGORY_NAME_TAKEN";
@@ -142,5 +143,9 @@ namespace Kvit.Domain.Results
         public const string OWNER_PERSON_NOT_FOUND = "OWNER_PERSON_NOT_FOUND";
         public const string OWNER_GROUP_NOT_FOUND = "OWNER_GROUP_NOT_FOUND";
         public const string OWNER_CANNOT_ACT_ON_ADMIN = "OWNER_CANNOT_ACT_ON_ADMIN";
+        public const string SERVER_ERROR = "SERVER_ERROR";
+        public const string CHANGED_MEANWHILE = "CHANGED_MEANWHILE";
+        public const string REQUEST_TOO_LARGE = "REQUEST_TOO_LARGE";
+        public const string REQUEST_INVALID = "REQUEST_INVALID";
     }
 }

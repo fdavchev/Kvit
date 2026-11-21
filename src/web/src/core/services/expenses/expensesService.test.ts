@@ -30,6 +30,7 @@ import {
   getExpenses,
   restoreExpense,
   updateExpense,
+  type ExpenseEdit,
   type ExpenseInput,
   type OneBillInput,
 } from './expensesService'
@@ -52,6 +53,8 @@ const expenseChanges: Omit<ExpenseInput, 'clientRequestId'> = {
     { memberId: markoMember.id, inputValue: 60000 },
   ],
 }
+
+const expenseEdit: ExpenseEdit = { ...expenseChanges, version: 4021 }
 
 const expenseInput: ExpenseInput = {
   clientRequestId: '5b1f2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d',
@@ -84,7 +87,7 @@ const createdBillFields = Object.keys(createdBill)
 
 const rowFields = Object.keys(dinnerRow)
 const deletedRowFields = Object.keys(museumDeletedRow)
-const detailFields = Object.keys(hotelDetail)
+const detailFields = Object.keys(hotelDetail).filter((field) => field !== 'version')
 const shareFields = Object.keys(hotelDetail.shares[0])
 const historyFields = Object.keys(hotelDetail.history[0])
 
@@ -274,6 +277,22 @@ describe('getExpense', () => {
     expect(detail).toMatchObject({ [field]: value })
   })
 
+  it('returns the version of the expense', async () => {
+    stubFetch(Response.json(hotelDetail))
+
+    const detail = await getExpense(testGroupId, hotelExpenseId)
+
+    expect(detail.version).toBe(4021)
+  })
+
+  it('returns null for the version when the answer lacks it, because the API can be one deploy behind', async () => {
+    stubFetch(Response.json(withoutField(hotelDetail, 'version')))
+
+    const detail = await getExpense(testGroupId, hotelExpenseId)
+
+    expect(detail.version).toBeNull()
+  })
+
   it('keeps null for the changes of a history entry that is not an edit', async () => {
     stubFetch(Response.json(hotelDetail))
 
@@ -373,6 +392,10 @@ describe('getExpense', () => {
     ['updatedAt', 5],
     ['canEdit', 'true'],
     ['canEdit', null],
+    ['version', '4021'],
+    ['version', -1],
+    ['version', 1.5],
+    ['version', null],
     ['shares', 'Filip'],
     ['shares', null],
     ['history', 'none'],
@@ -547,19 +570,27 @@ describe('updateExpense', () => {
     vi.unstubAllGlobals()
   })
 
-  it('sends PUT /api/groups/{id}/expenses/{expenseId} with the changes as JSON and no clientRequestId, and resolves on 204', async () => {
+  it('sends PUT /api/groups/{id}/expenses/{expenseId} with the changes and the version as JSON and no clientRequestId, and resolves on 204', async () => {
     const fetchMock = stubFetch(noContent())
 
-    const result = await updateExpense(testGroupId, hotelExpenseId, expenseChanges)
+    const result = await updateExpense(testGroupId, hotelExpenseId, expenseEdit)
 
     expect(result).toBeUndefined()
     expect(sentRequest(fetchMock)).toEqual({
       url: expensePath,
       method: 'PUT',
       contentType: 'application/json',
-      body: expenseChanges,
+      body: expenseEdit,
     })
     expect(sentRequest(fetchMock).body).not.toHaveProperty('clientRequestId')
+  })
+
+  it('sends a null version when the expense was read without one', async () => {
+    const fetchMock = stubFetch(noContent())
+
+    await updateExpense(testGroupId, hotelExpenseId, { ...expenseChanges, version: null })
+
+    expect(sentRequest(fetchMock).body).toEqual({ ...expenseChanges, version: null })
   })
 
   it.each([
@@ -569,7 +600,7 @@ describe('updateExpense', () => {
   ])('rethrows the ApiError unchanged for %i %s', async (httpStatus, errorCode) => {
     stubFetch(problemResponse(httpStatus, errorCode))
 
-    const error = await captureError(updateExpense(testGroupId, hotelExpenseId, expenseChanges))
+    const error = await captureError(updateExpense(testGroupId, hotelExpenseId, expenseEdit))
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({ httpStatus, errorCode })

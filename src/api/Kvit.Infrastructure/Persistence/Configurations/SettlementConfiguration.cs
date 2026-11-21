@@ -21,6 +21,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
 
             builder.Property(settlement => settlement.Currency).HasConversion<string>();
             builder.Property(settlement => settlement.Status).HasConversion<string>();
+            builder.Property<uint>("RowVersion").IsRowVersion();
 
             builder.HasIndex(settlement => settlement.ClientRequestId).HasDatabaseName(ClientRequestIdIndexName).IsUnique();
             builder.HasIndex(settlement => settlement.GroupId);

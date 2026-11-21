@@ -40,6 +40,7 @@ namespace Kvit.Domain.Services.Groups
 
             if (group.SetPlan(plan.Value))
             {
+                _groups.MarkPlanChanged(group);
                 _activityEvents.Add(ActivityEvent.GroupPlanSet(group.Id, userId, plan.Value, now));
             }
 

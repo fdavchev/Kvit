@@ -21,6 +21,8 @@ namespace Kvit.Api.Tests.Persistence
             _transaction = transaction;
         }
 
+        public int ProcessId => _connection.ProcessID;
+
         public static async Task<DeadlockPartner> BeginAsync(MigratedDatabase database)
         {
             NpgsqlConnection connection = await database.OpenConnectionAsync();

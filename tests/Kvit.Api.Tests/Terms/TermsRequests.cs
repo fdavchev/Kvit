@@ -7,7 +7,7 @@ namespace Kvit.Api.Tests.Terms
 {
     public static class TermsRequests
     {
-        public const string CurrentVersion = "2026-11-04";
+        public const string CurrentVersion = "2026-11-19";
         public const string OlderVersion = "2025-01-01";
         public const string AcceptPath = "/api/me/terms/accept";
 

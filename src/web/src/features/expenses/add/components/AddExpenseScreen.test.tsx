@@ -82,7 +82,7 @@ import {
   ownerViewMembers,
   petarMember,
 } from '@/test/memberTestData'
-import { colorTokenOfClasses, contrastBetween, type ThemeName } from '@/test/indexCssColors'
+import { colorOfToken, colorTokenOfClasses, contrastBetween, type ThemeName } from '@/test/indexCssColors'
 import { holdOutboxSender, readSavedOutbox } from '@/test/queuedSaveTestHelpers'
 import { renderRoutesWithProviders } from '@/test/renderWithProviders'
 import {
@@ -1037,7 +1037,7 @@ describe('AddExpenseScreen', () => {
     it.each([
       ['1999-12-31', 'a day before the year 2000'],
       ['1900-01-01', 'the year 1900'],
-      [addDays(testToday, 366), 'a year and a day from today'],
+      [addDays(testToday, 367), 'a year and two days from today'],
       ['2062-10-06', 'the year 2062, a typo'],
     ])('keeps Done disabled for %s, %s, which is out of range', async (date) => {
       await renderReadyAdd()
@@ -1050,7 +1050,7 @@ describe('AddExpenseScreen', () => {
 
     it.each([
       ['2000-01-01', 'the first day of the year 2000'],
-      [addDays(testToday, 365), 'a year from today'],
+      [addDays(testToday, 366), 'a year and a day from today, the last day the server accepts'],
       [testToday, 'today'],
     ])('keeps Done enabled for %s, %s, which is in range', async (date) => {
       await renderReadyAdd()
@@ -1122,22 +1122,22 @@ describe('AddExpenseScreen', () => {
       expect(field.min).toBe('2000-01-01')
     })
 
-    it('does not offer a date beyond today plus 365 days, so a typo like 2062 is not possible', async () => {
+    it('does not offer a date beyond today plus 366 days, the last day the server accepts, so a typo like 2062 is not possible', async () => {
       await renderReadyAdd()
       const sheet = await openSheet('date')
 
       const field = within(sheet).getByLabelText<HTMLInputElement>(translated('en', 'expense.date'), { selector: 'input' })
 
-      expect(field.max).toBe(addDays(testToday, 365))
+      expect(field.max).toBe(addDays(testToday, 366))
     })
 
-    it('counts the year ahead from today in the time zone of the account', async () => {
+    it('counts the days ahead from the date in UTC, as the server does, not from today in the time zone of the account', async () => {
       await renderReadyAdd({ me: { timeZone: 'Pacific/Pago_Pago' } })
       const sheet = await openSheet('date')
 
       const field = within(sheet).getByLabelText<HTMLInputElement>(translated('en', 'expense.date'), { selector: 'input' })
 
-      expect(field.max).toBe(addDays('2026-10-05', 365))
+      expect(field.max).toBe(addDays('2026-10-06', 366))
     })
   })
 
@@ -1161,6 +1161,25 @@ describe('AddExpenseScreen', () => {
 
       expect(splitTab(sheet, 'splitShares').getAttribute('aria-selected')).toBe('true')
       expect(splitTab(sheet, 'splitEqual').getAttribute('aria-selected')).toBe('false')
+    })
+
+    it('gives the selected tab the tab-active pill and its text colour, the same as the bottom bar', async () => {
+      await renderReadyAdd()
+      const sheet = await openSheet('split')
+
+      const classes = splitTab(sheet, 'splitEqual').className
+
+      expect(classes).toContain('aria-selected:bg-tab-active')
+      expect(classes).toContain('aria-selected:text-tab-active-foreground')
+    })
+
+    it.each(['light', 'dark'] as const)('keeps the text of the selected and of the other tabs at 4.5:1 or better in %s mode', (theme) => {
+      expect(contrastBetween('tab-active-foreground', 'tab-active', theme)).toBeGreaterThanOrEqual(4.5)
+      expect(contrastBetween('muted-foreground', 'track', theme)).toBeGreaterThanOrEqual(4.5)
+    })
+
+    it.each(['light', 'dark'] as const)('shows the selected tab pill against its track in %s mode', (theme) => {
+      expect(colorOfToken('tab-active', theme)).not.toEqual(colorOfToken('track', theme))
     })
 
     it('lists every current member of the group in the joining order on the Equal tab, all ticked', async () => {

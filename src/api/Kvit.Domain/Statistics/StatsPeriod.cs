@@ -5,6 +5,7 @@ namespace Kvit.Domain.Statistics
     public sealed class StatsPeriod
     {
         public const int MaxDaysGroupedByDay = 92;
+        public const int MaxDaysGroupedByWeekWhenNoGroupingIsAsked = 366;
 
         public static readonly DateOnly EarliestDay = new(2026, 1, 1);
 
@@ -23,10 +24,10 @@ namespace Kvit.Domain.Statistics
 
         public static Result<StatsPeriod> Create(DateOnly? from, DateOnly? to, string? groupingName, DateOnly today, DateOnly? firstEventDay)
         {
-            Result<StatsGrouping> grouping = groupingName is null ? Result.Ok(StatsGrouping.Day) : StatsCalendar.GroupingNamed(groupingName);
-            if (!grouping.IsSuccess)
+            Result<StatsGrouping>? askedGrouping = groupingName is null ? null : StatsCalendar.GroupingNamed(groupingName);
+            if (askedGrouping is { IsSuccess: false })
             {
-                return grouping.ToFailure<StatsPeriod>();
+                return askedGrouping.ToFailure<StatsPeriod>();
             }
 
             DateOnly lastDay = to ?? today;
@@ -46,7 +47,8 @@ namespace Kvit.Domain.Statistics
             }
 
             StatsDateRange range = new(from ?? FirstDayOfEverything(firstEventDay, lastDay), lastDay);
-            if (grouping.Value == StatsGrouping.Day && range.DayCount() > MaxDaysGroupedByDay)
+            StatsGrouping grouping = askedGrouping?.Value ?? DefaultGroupingOf(range);
+            if (grouping == StatsGrouping.Day && range.DayCount() > MaxDaysGroupedByDay)
             {
                 return Result.Failure<StatsPeriod>(
                     $"The range {range.From}..{range.To} has {range.DayCount()} days; grouping by day allows at most {MaxDaysGroupedByDay}.",
@@ -55,12 +57,23 @@ namespace Kvit.Domain.Statistics
 
             StatsDateRange? previousRange = from is null ? null : range.PreviousOfSameLength();
 
-            return Result.Ok(new StatsPeriod(range, grouping.Value, previousRange));
+            return Result.Ok(new StatsPeriod(range, grouping, previousRange));
         }
 
         public IReadOnlyList<DateOnly> BucketStarts()
         {
             return StatsCalendar.BucketStartsOf(Range, Grouping);
+        }
+
+        private static StatsGrouping DefaultGroupingOf(StatsDateRange range)
+        {
+            int dayCount = range.DayCount();
+            if (dayCount <= MaxDaysGroupedByDay)
+            {
+                return StatsGrouping.Day;
+            }
+
+            return dayCount <= MaxDaysGroupedByWeekWhenNoGroupingIsAsked ? StatsGrouping.Week : StatsGrouping.Month;
         }
 
         private static DateOnly FirstDayOfEverything(DateOnly? firstEventDay, DateOnly lastDay)

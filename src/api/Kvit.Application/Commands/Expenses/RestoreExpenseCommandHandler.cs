@@ -19,7 +19,9 @@ namespace Kvit.Application.Commands.Expenses
                 return userId;
             }
 
-            return await _groupWrite.RunAsync(command.GroupId, userId.Value, () => _restoreExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, cancellationToken), cancellationToken);
+            Func<Task<Result>> restore = () => _restoreExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, cancellationToken);
+
+            return await _groupWrite.RunOrAnswerIfExpenseChangedMeanwhileAsync(command.GroupId, userId.Value, restore, restore, cancellationToken);
         }
     }
 }

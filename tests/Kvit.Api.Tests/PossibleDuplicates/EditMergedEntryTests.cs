@@ -133,12 +133,10 @@ namespace Kvit.Api.Tests.PossibleDuplicates
         }
 
         [Fact]
-        public async Task Edit_ChangingTheAmountOfAMergedEntry_AlsoRemovesAStaleSameAnswerOfTheEntry()
+        public async Task Edit_ChangingTheAmountOfAnEntryWhoseMergedExpenseWasDeleted_AlsoRemovesThatSameAnswer()
         {
             MergedScene scene = await StartSceneAsync();
-            Guid deletedExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, scene.Group, "2026-10-04");
-            await DuplicateAnswerRows.InsertAsync(_app, scene.Group.Member.UserId, scene.EntryId, deletedExpense);
-            await ExpenseRequests.DeleteAsync(scene.Group.Owner.Client, scene.Group.GroupId, deletedExpense);
+            await ExpenseRequests.DeleteAsync(scene.Group.Owner.Client, scene.Group.GroupId, scene.ExpenseId);
 
             await PersonalEntryRequests.EditAsync(scene.Group.Member.Client, scene.EntryId, ChangedInput("amount"));
 

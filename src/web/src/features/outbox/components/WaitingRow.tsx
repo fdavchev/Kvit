@@ -39,7 +39,7 @@ export function WaitingRow({
     >
       <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 opacity-80">
         {leading}
-        <span className="flex min-w-30 flex-1 flex-col">
+        <span className="flex min-w-24 flex-1 flex-col">
           <span className="line-clamp-2 font-semibold break-words italic">{title}</span>
           <span className="min-w-0 text-[0.8125rem] break-words">{detail === undefined ? notSynced : `${detail} · ${notSynced}`}</span>
           {showsRateNote && currency === 'EUR' && <span className="text-[0.8125rem] break-words">{t('outbox.rateWhenSent')}</span>}

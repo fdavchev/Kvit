@@ -7,6 +7,8 @@ namespace Kvit.Domain.Interfaces
     {
         void Add(Group group);
 
+        void MarkPlanChanged(Group group);
+
         Task<Result<Group>> FindForMemberAsync(Guid groupId, Guid userId, CancellationToken cancellationToken);
 
         Task<Result<Group>> FindIncludingDeletedForMemberAsync(Guid groupId, Guid userId, CancellationToken cancellationToken);

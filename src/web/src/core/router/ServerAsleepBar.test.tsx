@@ -15,6 +15,7 @@ import { routes } from './routes'
 
 const wakeUrl = 'https://kvit-mk-api.onrender.com/wake'
 const beforeThePageOpened = performance.timeOrigin - 60_000
+const twoMinutes = 2 * 60 * 1000
 
 let assign: Mock<(url: string) => void>
 
@@ -140,12 +141,30 @@ describe('opening the app while the server is asleep', () => {
         children: [{ path, element: <p>saved groups page</p> }],
       },
     ]
-    await renderRoutesWithProviders(signedInRoutes, path, {
+    return renderRoutesWithProviders(signedInRoutes, path, {
       seedCache: (queryClient) => {
         seedCache?.(queryClient)
         void checkRestoredMeWithServer(queryClient)
       },
     })
+  }
+
+  async function waitForTheMeCheckToFail(queryClient: QueryClient): Promise<void> {
+    await waitFor(() => {
+      expect(queryClient.getQueryState(meQueryKey)?.status).toBe('error')
+    })
+  }
+
+  function rememberWakeVisitEndingIn(milliseconds: number): void {
+    window.sessionStorage.setItem('kvit.lastWakeVisitAt', String(Date.now() - twoMinutes + milliseconds))
+  }
+
+  function tryAgainButton(): HTMLElement | null {
+    return screen.queryByRole('button', { name: translated('en', 'common.retry') })
+  }
+
+  function asleepBar(): Element | null {
+    return document.querySelector('[data-server-asleep-bar]')
   }
 
   it('shows the saved data and sends the whole page through the wake address at once', async () => {
@@ -171,15 +190,64 @@ describe('opening the app while the server is asleep', () => {
     })
   })
 
-  it('comes back from the wake page still asleep within 2 minutes: stays, keeps the saved data and offers the Wake the server button', async () => {
+  it('comes back from the wake page still asleep within 2 minutes: stays, keeps the saved data and waits without the Wake the server bar', async () => {
     stubLocation(routes.groups)
     rememberWakeVisitJustNow()
     stubFetch(asleepAnswer())
 
-    await openTheApp(routes.groups, restoredMe(testMe))
+    const { queryClient } = await openTheApp(routes.groups, restoredMe(testMe))
+    await waitForTheMeCheckToFail(queryClient)
 
-    expect(await screen.findByRole('button', { name: translated('en', 'wakingUp.wake') })).toBeTruthy()
     expect(screen.getByText('saved groups page')).toBeTruthy()
+    expect(asleepBar()).toBeNull()
+    expect(assign).not.toHaveBeenCalled()
+  })
+
+  it('comes back from the wake page still asleep within 2 minutes without saved data: keeps showing Waking up instead of Try again', async () => {
+    stubLocation(routes.dashboard)
+    rememberWakeVisitJustNow()
+    stubFetch(asleepAnswer())
+
+    const { queryClient } = await openTheApp(routes.dashboard)
+    await waitForTheMeCheckToFail(queryClient)
+
+    expect(screen.getByRole('status')).toBeTruthy()
+    expect(tryAgainButton()).toBeNull()
+    expect(asleepBar()).toBeNull()
+    expect(assign).not.toHaveBeenCalled()
+  })
+
+  it('shows the Wake the server bar and Try again as today once the 2 minutes after the wake visit are over with the server still asleep', async () => {
+    stubLocation(routes.dashboard)
+    rememberWakeVisitEndingIn(200)
+    stubFetch(asleepAnswer())
+
+    const { queryClient } = await openTheApp(routes.dashboard)
+    await waitForTheMeCheckToFail(queryClient)
+
+    await waitFor(
+      () => {
+        expect(asleepBar()).not.toBeNull()
+        expect(tryAgainButton()).not.toBeNull()
+      },
+      { timeout: 3000 },
+    )
+    expect(assign).not.toHaveBeenCalled()
+  })
+
+  it('shows Try again and the bar at once when there was no wake visit and the automatic one cannot be remembered', async () => {
+    stubLocation(routes.dashboard)
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Storage is full', 'QuotaExceededError')
+    })
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    stubFetch(asleepAnswer())
+
+    const { queryClient } = await openTheApp(routes.dashboard)
+    await waitForTheMeCheckToFail(queryClient)
+
+    expect(await screen.findByRole('button', { name: translated('en', 'common.retry') })).toBeTruthy()
+    expect(asleepBar()).not.toBeNull()
     expect(assign).not.toHaveBeenCalled()
   })
 })

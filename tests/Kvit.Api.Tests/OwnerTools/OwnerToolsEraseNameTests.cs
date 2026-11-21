@@ -166,8 +166,8 @@ namespace Kvit.Api.Tests.OwnerTools
                 await _app.ExecuteAsync("DROP TRIGGER IF EXISTS block_name_erased_row ON admin_actions");
             }
 
-            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
-            Assert.Contains("log row is blocked by the test", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.InternalServerError, ResultCodes.SERVER_ERROR);
+            Assert.DoesNotContain("log row is blocked by the test", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
             Assert.Equal(userBefore, await DeletionRows.SnapshotOfUserRowAsync(_app, person.UserId));
             Assert.Equal(tablesBefore, await DeletionRows.SnapshotOfEveryTableExceptUsersAsync(_app));
             Assert.Equal(HttpStatusCode.OK, (await AuthRequests.GetMeAsync(person.Client)).StatusCode);

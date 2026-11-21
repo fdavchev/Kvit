@@ -11,7 +11,9 @@ import { KvitSpinner } from '@/shared/components/KvitSpinner'
 import { KvitTextField } from '@/shared/components/KvitTextField'
 import { kvitIconAttributes } from '@/shared/components/kvitIconAttributes'
 import { useListAnimation } from '@/shared/hooks/useListAnimation'
+import { claimFailureMessageKey } from '../../shared/claimFailureMessageKey'
 import { useJoinAsGuest } from '../hooks/useJoinAsGuest'
+import { isJoinDeadEnd } from '../joinDeadEnd'
 import { JoinLogInSheet } from './JoinLogInSheet'
 import { JoinMessage } from './JoinMessage'
 
@@ -36,16 +38,17 @@ export function SignedOutJoin({ token, preview, onGoogleCredential }: SignedOutJ
   const [isLogInOpen, setIsLogInOpen] = useState<boolean>(false)
   const { error, variables, isPending } = joinAsGuest
 
-  if (hasErrorCode(error, 'GROUP_CLOSING') || hasErrorCode(error, 'GROUP_FINISHED')) {
+  if (error !== null && isJoinDeadEnd(error)) {
     return <JoinMessage message={t(errorMessageKey(error))} />
   }
 
   const hasFreeNames: boolean = preview.unclaimedNames.length > 0
   const showsNameField: boolean = isNewNameOpen || !hasFreeNames
   const typedName: string | null = variables !== undefined && 'name' in variables ? variables.name.trim() : null
+  const isClaimChoice: boolean = variables !== undefined && 'claimMemberId' in variables
   const errorMessage: string | null =
     joinAsGuest.isError && !hasErrorCode(error, 'GUEST_JOIN_SIGNED_IN')
-      ? t(errorMessageKey(error), { name: typedName })
+      ? t(isClaimChoice ? claimFailureMessageKey(error) : errorMessageKey(error), { name: typedName })
       : null
   const isNameRefused: boolean =
     typedName !== null && nameRefusedCodes.some((code) => hasErrorCode(error, code)) && !isNameChangedSinceJoin

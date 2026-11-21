@@ -26,6 +26,7 @@ import { ExpenseDaySection } from './ExpenseDaySection'
 interface GroupExpensesProps {
   groupId: string
   actionsWhenEmpty: ReactNode
+  showsRecentlyDeletedLink: boolean
 }
 
 interface ExpenseDay {
@@ -35,7 +36,7 @@ interface ExpenseDay {
 
 const receiptEmoji = '\u{1F9FE}'
 
-export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps) {
+export function GroupExpenses({ groupId, actionsWhenEmpty, showsRecentlyDeletedLink }: GroupExpensesProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const me = useSignedInMe()
@@ -140,15 +141,17 @@ export function GroupExpenses({ groupId, actionsWhenEmpty }: GroupExpensesProps)
   return (
     <div className="flex flex-col">
       {renderList()}
-      <div className="flex justify-center pt-3">
-        <Link
-          to={routes.groupExpensesDeleted(groupId)}
-          className="pressable inline-flex min-h-11 items-center gap-1 rounded-xl px-3 text-[0.9375rem] font-semibold text-link hover:underline"
-        >
-          {t('groups.recentlyDeletedLink')}
-          <span aria-hidden="true">›</span>
-        </Link>
-      </div>
+      {showsRecentlyDeletedLink && (
+        <div className="flex justify-center pt-3">
+          <Link
+            to={routes.groupExpensesDeleted(groupId)}
+            className="pressable inline-flex min-h-11 items-center gap-1 rounded-xl px-3 text-[0.9375rem] font-semibold text-link hover:underline"
+          >
+            {t('groups.recentlyDeletedLink')}
+            <span aria-hidden="true">›</span>
+          </Link>
+        </div>
+      )}
       {waitingSheet.openedItem !== null && (
         <DiscardWaitingSheet item={waitingSheet.openedItem} onClose={waitingSheet.close} />
       )}

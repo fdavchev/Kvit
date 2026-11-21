@@ -112,7 +112,7 @@ export function ExpenseDetailScreen() {
       <>
         <div className="flex flex-col items-center gap-1.5 pb-2 text-center">
           <CategoryTile category={category} size="large" />
-          <h1 className="text-[1.75rem] leading-[1.15] font-extrabold tracking-[-0.02em] text-balance">
+          <h1 className="min-w-0 text-[1.75rem] leading-[1.15] font-extrabold tracking-[-0.02em] text-balance wrap-anywhere">
             {expenseTitle(expense.title, category, t)}
           </h1>
           <p className="text-[2.2rem] leading-tight font-extrabold tracking-[-0.02em]">
@@ -188,9 +188,11 @@ function SplitRows({ expense, members, language }: SplitRowsProps) {
             className="flex min-h-13 items-center gap-3 rounded-2xl bg-card px-3.5 py-2 text-card-foreground"
           >
             <KvitAvatar name={share.name} pictureUrl={person.pictureUrl} colorIndex={person.colorIndex} />
-            <span className="min-w-0 flex-1 font-semibold break-words">{share.name}</span>
-            <span className="font-bold whitespace-nowrap">
-              {formatMoney(share.shareMinor, expense.currency, language)}
+            <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3">
+              <span className="min-w-0 grow font-semibold break-words">{share.name}</span>
+              <span className="ml-auto font-bold whitespace-nowrap">
+                {formatMoney(share.shareMinor, expense.currency, language)}
+              </span>
             </span>
           </li>
         )

@@ -15,7 +15,7 @@ export function WakingUp() {
   }, [])
 
   return (
-    <KvitScreen className="items-center justify-center">
+    <KvitScreen className="items-center justify-center pt-[max(24px,env(safe-area-inset-top))] pb-[calc(max(24px,env(safe-area-inset-bottom))+var(--outbox-bar-space)+var(--terms-pill-space))]">
       <div role="status" className="flex flex-col items-center gap-4 p-6 text-center">
         <KvitSpinner />
         {isTakingLong ? (

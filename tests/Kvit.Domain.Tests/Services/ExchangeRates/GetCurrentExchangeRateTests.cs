@@ -1,3 +1,4 @@
+using System.Globalization;
 using Kvit.Domain.Entities;
 using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Results;
@@ -141,6 +142,30 @@ namespace Kvit.Domain.Tests.Services.ExchangeRates
         }
 
         [Fact]
+        public async Task Execute_FetchFails_WritesTheDatesInTheLogAsIso8601WhateverTheCulture()
+        {
+            SeedOldRow();
+            _source.FailWith(FetchFailureMessage);
+            CultureInfo originalCulture = CultureInfo.CurrentCulture;
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            try
+            {
+                await ExecuteAsync();
+            }
+            finally
+            {
+                CultureInfo.CurrentCulture = originalCulture;
+            }
+
+            string message = Assert.Single(_logger.Entries).Message;
+            Assert.Contains("2026-10-05", message, StringComparison.Ordinal);
+            Assert.Contains("2026-09-24", message, StringComparison.Ordinal);
+            Assert.Contains("2026-10-04T17:30:00.0000000+00:00", message, StringComparison.Ordinal);
+            Assert.DoesNotContain("10/05/2026", message, StringComparison.Ordinal);
+            Assert.DoesNotContain("09/24/2026", message, StringComparison.Ordinal);
+        }
+
+        [Fact]
         public async Task Execute_SecondCallWithin30MinutesOfAFailure_DoesNotFetchAndReturnsTheOldRow()
         {
             DateTimeOffset fetchedAt = SeedOldRow();
@@ -188,6 +213,49 @@ namespace Kvit.Domain.Tests.Services.ExchangeRates
 
             Assert.Equal(2, _source.RequestedDates.Count);
             Assert.Equal(2, _logger.Entries.Count(entry => entry.Level == LogLevel.Error));
+        }
+
+        [Fact]
+        public async Task Execute_NothingPublishedForTodayAndYesterday_AsksEachEarlierDayUntilARateIsFoundAndSavesIt()
+        {
+            SeedOldRow();
+            DateOnly yesterday = ExchangeRateTestData.UtcToday.AddDays(-1);
+            DateOnly twoDaysAgo = ExchangeRateTestData.UtcToday.AddDays(-2);
+            _source.HasNothingPublishedOn(ExchangeRateTestData.UtcToday, yesterday);
+            _source.AnswerWith(twoDaysAgo, ExchangeRateTestData.FetchedRate);
+
+            Result<ExchangeRateSnapshot> result = await ExecuteAsync();
+
+            Assert.Equal([ExchangeRateTestData.UtcToday, yesterday, twoDaysAgo], _source.RequestedDates);
+            Assert.Equal(new ExchangeRateSnapshot(twoDaysAgo, ExchangeRateTestData.FetchedRate, ExchangeRateTestData.Now), result.Value);
+            Assert.Equal([new SavedExchangeRate(twoDaysAgo, ExchangeRateTestData.FetchedRate, ExchangeRateTestData.Now)], _repository.Saved);
+            Assert.Empty(_logger.Entries);
+        }
+
+        [Fact]
+        public async Task Execute_NothingPublishedForTodayAndTheSevenDaysBefore_StopsAfterEightDaysKeepsTheOldRowAndLogsAnError()
+        {
+            DateOnly[] eightDays = [.. Enumerable.Range(0, GetCurrentExchangeRate.LookBackDays + 1).Select(daysBack => ExchangeRateTestData.UtcToday.AddDays(-daysBack))];
+            DateTimeOffset fetchedAt = SeedOldRow();
+            _source.HasNothingPublishedOn([.. eightDays, ExchangeRateTestData.UtcToday.AddDays(-8)]);
+
+            Result<ExchangeRateSnapshot> result = await ExecuteAsync();
+
+            Assert.Equal(eightDays, _source.RequestedDates);
+            Assert.Equal(new ExchangeRateSnapshot(ExchangeRateTestData.SeededDate, ExchangeRateTestData.SeededRate, fetchedAt), result.Value);
+            Assert.Empty(_repository.Saved);
+            Assert.Single(_logger.Entries, entry => entry.Level == LogLevel.Error);
+        }
+
+        [Fact]
+        public async Task Execute_FetchFailsForAnotherReason_DoesNotAskEarlierDays()
+        {
+            SeedOldRow();
+            _source.FailWith(FetchFailureMessage);
+
+            await ExecuteAsync();
+
+            Assert.Equal([ExchangeRateTestData.UtcToday], _source.RequestedDates);
         }
 
         [Fact]

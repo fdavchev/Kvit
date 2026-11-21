@@ -1,3 +1,4 @@
+using System.Globalization;
 using Kvit.Contracts.Cleanup;
 using Kvit.Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
@@ -5,10 +6,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Kvit.Infrastructure.Cleanup
 {
-    public sealed class LazyDailyCleanup(IServiceScopeFactory _scopeFactory, ILogger<LazyDailyCleanup> _logger)
+    public sealed class LazyDailyCleanup(IServiceScopeFactory _scopeFactory, TimeProvider _timeProvider, ILogger<LazyDailyCleanup> _logger)
     {
+        public static readonly TimeSpan WaitAfterFailure = TimeSpan.FromMinutes(15);
+
         private readonly Lock _lock = new();
         private DateOnly _lastFinishedDay = DateOnly.MinValue;
+        private DateTimeOffset _lastFailedAt = DateTimeOffset.MinValue;
         private Task _currentRun = Task.CompletedTask;
 
         public Task? StartUnlessFinishedOn(DateTimeOffset now)
@@ -16,7 +20,7 @@ namespace Kvit.Infrastructure.Cleanup
             DateOnly day = UsageEvent.UtcDayOf(now);
             lock (_lock)
             {
-                if (day <= _lastFinishedDay || !_currentRun.IsCompleted)
+                if (day <= _lastFinishedDay || !_currentRun.IsCompleted || now < _lastFailedAt + WaitAfterFailure)
                 {
                     return null;
                 }
@@ -38,11 +42,17 @@ namespace Kvit.Infrastructure.Cleanup
                     _lastFinishedDay = day;
                 }
 
-                _logger.LogInformation("The daily cleanup of {Day} (UTC) finished: {Removed}", day, removed);
+                _logger.LogInformation("The daily cleanup of {Day} (UTC) finished: {Removed}", day.ToString("O", CultureInfo.InvariantCulture), removed);
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "The daily cleanup of {Day} (UTC), started at {Now}, failed; the next Active usage event tries it again.", day, now);
+                DateTimeOffset failedAt = _timeProvider.GetUtcNow();
+                lock (_lock)
+                {
+                    _lastFailedAt = failedAt;
+                }
+
+                _logger.LogError(exception, "The daily cleanup of {Day} (UTC), started at {Now}, failed at {FailedAt}; the next Active usage event from {RetryFrom} on tries it again.", day.ToString("O", CultureInfo.InvariantCulture), now.ToString("O", CultureInfo.InvariantCulture), failedAt.ToString("O", CultureInfo.InvariantCulture), (failedAt + WaitAfterFailure).ToString("O", CultureInfo.InvariantCulture));
             }
         }
     }

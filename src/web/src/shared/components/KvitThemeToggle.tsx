@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { resolveColorScheme } from '@/core/theme/colorScheme'
+import { useColorScheme } from '@/core/theme/useColorScheme'
 import { useTheme } from '@/core/theme/useTheme'
 import { cn } from '@/shared/utils/cn'
 import { kvitIconAttributes } from './kvitIconAttributes'
@@ -12,7 +12,7 @@ const shownIconLook = 'rotate-0 scale-100 opacity-100'
 export function KvitThemeToggle() {
   const { t } = useTranslation()
   const { theme, setTheme } = useTheme()
-  const isDark = resolveColorScheme(theme) === 'dark'
+  const isDark = useColorScheme(theme) === 'dark'
 
   return (
     <button

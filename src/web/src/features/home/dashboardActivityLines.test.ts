@@ -46,6 +46,34 @@ describe('dashboardActivityLines', () => {
     )
   })
 
+  it.each(languages)('names a restored expense by the title its event carries in %s', async (language) => {
+    const restoredRow = dashboardActivityRowOf(
+      {
+        type: 'ExpenseRestored',
+        expenseId: 'e0000000-0000-4000-8000-000000000001',
+        data: { title: 'Taxi', amountMinor: 90000, currency: 'MKD' },
+      },
+      greeceGroupId,
+      'Greece trip',
+    )
+
+    const lines = dashboardActivityLines([restoredRow], await contextOf(language))
+
+    expect(lines[0].sentence).toBe(translated(language, 'activity.expenseRestoredWithTitle', { name: 'Ana', title: 'Taxi' }))
+  })
+
+  it.each(languages)('keeps "restored an expense" for an older restored event that carries no data in %s', async (language) => {
+    const restoredRow = dashboardActivityRowOf(
+      { type: 'ExpenseRestored', expenseId: 'e0000000-0000-4000-8000-000000000001' },
+      greeceGroupId,
+      'Greece trip',
+    )
+
+    const lines = dashboardActivityLines([restoredRow], await contextOf(language))
+
+    expect(lines[0].sentence).toBe(translated(language, 'activity.expenseRestored', { name: 'Ana' }))
+  })
+
   it.each(languages)('writes the sentence of a member who joined in %s', async (language) => {
     const lines = dashboardActivityLines([danaJoinedRow], await contextOf(language))
 

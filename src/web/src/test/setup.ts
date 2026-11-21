@@ -1,6 +1,7 @@
 import { cleanup } from '@testing-library/react'
 import { afterEach, vi } from 'vitest'
 import { makeIntlLikeChromeWithoutMacedonian } from './chromeWithoutMacedonian'
+import { forgetFailedPictures } from '@/shared/components/failedPictureUrls'
 import { desktopQuery } from '@/shared/hooks/useIsDesktop'
 import { fakeMatchMedia, reducedMotionQuery } from './matchMediaTestHelpers'
 import { resetFakeOutboxStorage } from './outboxTestHelpers'
@@ -25,4 +26,5 @@ afterEach(() => {
   cleanup()
   vi.unstubAllEnvs()
   resetFakeOutboxStorage()
+  forgetFailedPictures()
 })

@@ -17,7 +17,7 @@ namespace Kvit.Api.Registers
 {
     public static partial class Register
     {
-        private const int NbrmTimeoutSeconds = 10;
+        private const int NbrmTimeoutSeconds = 3;
 
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {

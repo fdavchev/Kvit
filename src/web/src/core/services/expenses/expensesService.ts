@@ -1,4 +1,4 @@
-import { apiRequest, jsonRequest } from '@/core/api/apiClient'
+import { ApiError, apiRequest, jsonRequest, notFoundStatus } from '@/core/api/apiClient'
 import { endpoints } from '@/core/api/endpoints'
 import { groupCurrencies } from '@/core/services/groups/groupsService'
 import {
@@ -9,6 +9,7 @@ import {
   readList,
   readObject,
   readOneOf,
+  readOrNullWhenMissing,
   readPositiveNumber,
   readText,
   readTextOrNull,
@@ -16,6 +17,7 @@ import {
   type Fields,
 } from '@/core/services/readFields'
 import type { Currency } from '@/shared/utils/formatMoney'
+import { isGuid } from '@/shared/utils/isGuid'
 
 export const splitTypes = ['Equal', 'Exact', 'Percentage', 'Shares'] as const
 const historyEntryTypes = ['ExpenseAdded', 'ExpenseEdited', 'ExpenseDeleted', 'ExpenseRestored'] as const
@@ -75,6 +77,7 @@ export interface ExpenseDetail {
   createdAt: string
   updatedAt: string | null
   canEdit: boolean
+  version: number | null
   shares: ExpenseShare[]
   history: ExpenseHistoryEntry[]
 }
@@ -107,6 +110,10 @@ export interface ExpenseChanges {
   paidByMemberId: string
   splitType: SplitType
   shares: SplitShareInput[]
+}
+
+export interface ExpenseEdit extends ExpenseChanges {
+  version: number | null
 }
 
 export interface ExpenseInput extends ExpenseChanges {
@@ -145,6 +152,12 @@ export async function getExpenses(groupId: string): Promise<ExpenseListRow[]> {
 }
 
 export async function getExpense(groupId: string, expenseId: string): Promise<ExpenseDetail> {
+  if (!isGuid(expenseId)) {
+    throw new ApiError(`The expense id "${expenseId}" is not a GUID, so no expense has it and the server is not asked`, {
+      httpStatus: notFoundStatus,
+      errorCode: 'EXPENSE_NOT_FOUND',
+    })
+  }
   return parseExpenseDetail(await apiRequest(endpoints.groupExpense(groupId, expenseId)))
 }
 
@@ -157,9 +170,9 @@ export async function createExpense(groupId: string, input: ExpenseInput): Promi
 export async function updateExpense(
   groupId: string,
   expenseId: string,
-  changes: ExpenseChanges,
+  edit: ExpenseEdit,
 ): Promise<void> {
-  await apiRequest(endpoints.groupExpense(groupId, expenseId), jsonRequest('PUT', changes))
+  await apiRequest(endpoints.groupExpense(groupId, expenseId), jsonRequest('PUT', edit))
 }
 
 export async function deleteExpense(groupId: string, expenseId: string): Promise<void> {
@@ -231,6 +244,7 @@ function parseExpenseDetail(body: unknown): ExpenseDetail {
     createdAt: readDate(fields, 'createdAt', what),
     updatedAt: readDateOrNull(fields, 'updatedAt', what),
     canEdit: readYesNo(fields, 'canEdit', what),
+    version: readOrNullWhenMissing(fields, 'version', what, readCount),
     shares: readList(fields, 'shares', what).map(parseExpenseShare),
     history: readList(fields, 'history', what).map(parseHistoryEntry),
   }

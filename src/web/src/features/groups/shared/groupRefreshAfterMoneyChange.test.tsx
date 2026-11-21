@@ -71,7 +71,7 @@ const mountUpdateExpense: Mount = async () => {
   const { result, queryClient } = await renderHookWithProviders(() => useUpdateExpense(testGroupId, hotelExpenseId), {
     seedCache: seedGroupsAndList,
   })
-  return { queryClient, answer: noContent(), run: () => act(() => result.current.mutateAsync(expenseChanges)) }
+  return { queryClient, answer: noContent(), run: () => act(() => result.current.mutateAsync({ ...expenseChanges, version: hotelDetail.version })) }
 }
 
 const mountDeleteExpense: Mount = async () => {

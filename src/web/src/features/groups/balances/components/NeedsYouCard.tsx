@@ -1,6 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { errorMessageKey } from '@/core/api/errors'
-import { useAnswerSettlement } from '@/features/settlements/pending/hooks/useAnswerSettlement'
+import { useAnswerSettlement, type SettlementAnswer } from '@/features/settlements/pending/hooks/useAnswerSettlement'
+import { refreshWhenSettlementChangedMeanwhile } from '@/features/settlements/shared/settlementCache'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitInlineError } from '@/shared/components/KvitInlineError'
@@ -20,7 +22,14 @@ interface NeedsYouCardProps {
 
 export function NeedsYouCard({ groupId, item, sentence, howLongAgo, canAnswer }: NeedsYouCardProps) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const answerSettlement = useAnswerSettlement(groupId, item.settlementId)
+
+  function answer(choice: SettlementAnswer) {
+    answerSettlement.mutate(choice, {
+      onError: (error) => refreshWhenSettlementChangedMeanwhile(queryClient, groupId, error),
+    })
+  }
 
   return (
     <li className={cn(balancesCardLook, 'flex flex-col gap-2.5')}>
@@ -38,14 +47,14 @@ export function NeedsYouCard({ groupId, item, sentence, howLongAgo, canAnswer }:
           <KvitButton
             className={cn(balancesActionButtonLook, kvitGlassDangerButtonLook, 'flex-1')}
             disabled={answerSettlement.isPending}
-            onClick={() => answerSettlement.mutate('reject')}
+            onClick={() => answer('reject')}
           >
             {t('settlements.reject')}
           </KvitButton>
           <KvitButton
             className={cn(balancesActionButtonLook, kvitGlassButtonLook, 'flex-1')}
             disabled={answerSettlement.isPending}
-            onClick={() => answerSettlement.mutate('confirm')}
+            onClick={() => answer('confirm')}
           >
             {t('settlements.confirm')}
           </KvitButton>

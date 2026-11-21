@@ -1,0 +1,5 @@
+export const displayNameRefusedCodes: readonly string[] = ['AUTH_DISPLAY_NAME_INVALID']
+export const emailRefusedCodes: readonly string[] = ['AUTH_EMAIL_INVALID', 'AUTH_EMAIL_TAKEN']
+export const newPasswordRefusedCodes: readonly string[] = ['AUTH_PASSWORD_TOO_WEAK']
+export const changedPasswordRefusedCodes: readonly string[] = [...newPasswordRefusedCodes, 'AUTH_PASSWORD_UNCHANGED']
+export const currentPasswordRefusedCodes: readonly string[] = ['AUTH_CURRENT_PASSWORD_WRONG']

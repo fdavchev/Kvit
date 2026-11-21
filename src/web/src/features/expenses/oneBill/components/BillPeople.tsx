@@ -10,8 +10,12 @@ interface BillPeopleProps {
 }
 
 const circleLook = 'flex w-16 flex-col items-center gap-1'
-const circleLabelLook = 'max-w-16 truncate text-[0.8125rem] text-muted-foreground'
-const personChipLook = 'grid grid-cols-[4rem_auto] items-start justify-items-center gap-y-1'
+const labelTextLook = 'line-clamp-2 text-center text-[0.8125rem] break-words text-muted-foreground'
+const circleLabelLook = cn(labelTextLook, 'max-w-16')
+const personLabelLook = cn(labelTextLook, 'col-span-full row-start-2 w-min min-w-16 max-w-full justify-self-start')
+const personChipLook = 'grid items-start justify-items-center gap-y-1'
+const myChipColumns = 'grid-cols-[4rem]'
+const removableChipColumns = 'grid-cols-[4rem_2.75rem]'
 
 export function BillPeople({ people, onRemove, onAddName }: BillPeopleProps) {
   const { t } = useTranslation()
@@ -21,14 +25,14 @@ export function BillPeople({ people, onRemove, onAddName }: BillPeopleProps) {
       <h2 className="text-[1.0625rem] font-bold">{t('oneBill.people')}</h2>
       <ul className="flex flex-wrap items-start gap-2.5">
         {people.map((person) => (
-          <li key={person.memberId} className={personChipLook}>
+          <li key={person.memberId} className={cn(personChipLook, person.isYou ? myChipColumns : removableChipColumns)}>
             <KvitAvatar
               name={person.name}
               pictureUrl={person.pictureUrl}
               colorIndex={person.colorIndex}
               size="large"
             />
-            <span className={cn(circleLabelLook, 'col-start-1 row-start-2')}>{person.isYou ? t('expense.me') : person.name}</span>
+            <span className={personLabelLook}>{person.isYou ? t('expense.me') : person.name}</span>
             {!person.isYou && (
               <button
                 type="button"

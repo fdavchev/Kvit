@@ -3,8 +3,6 @@ import indexCss from '@/index.css?raw'
 import { blockAfter } from '@/test/indexCssColors'
 
 const noPreferenceHeader = '@media (prefers-reduced-motion: no-preference) {'
-const toastRemovedCollapsedSelector =
-  "html [data-sonner-toast][data-removed='true'][data-front='false'][data-swipe-out='false'][data-expanded='false']"
 
 function declarationsOfRule(css: string, selector: string): string {
   return blockAfter(css, `${selector} {`).trim().replace(/\s+/g, ' ')
@@ -42,13 +40,9 @@ describe('index.css motion', () => {
     expect(declarationsOfRule(motionBlock(), 'html [data-sonner-toast] > *')).toBe('transition: opacity 200ms;')
   })
 
-  it('lifts the whole toast stack in 200 ms', () => {
-    expect(declarationsOfRule(motionBlock(), 'html [data-sonner-toaster]')).toBe('transition: transform 200ms ease;')
-  })
-
-  it('lets a toast behind the front one leave in 200 ms', () => {
-    expect(declarationsOfRule(motionBlock(), toastRemovedCollapsedSelector)).toBe(
-      'transition: transform 200ms, opacity 200ms;',
+  it('lifts and moves the whole toast stack in 200 ms', () => {
+    expect(declarationsOfRule(motionBlock(), 'html [data-sonner-toaster]')).toBe(
+      'transition: transform 200ms ease, bottom 200ms ease;',
     )
   })
 

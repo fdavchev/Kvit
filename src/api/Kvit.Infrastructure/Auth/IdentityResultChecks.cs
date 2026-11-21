@@ -1,3 +1,4 @@
+using Kvit.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 
 namespace Kvit.Infrastructure.Auth
@@ -9,6 +10,14 @@ namespace Kvit.Infrastructure.Auth
             if (!result.Succeeded)
             {
                 throw new InvalidOperationException($"Identity refused to {attempt}: {Describe(result)}");
+            }
+        }
+
+        public static async Task ThrowIfAccountChangedMeanwhileAsync(this AppDbContext context, IdentityResult saved, CancellationToken cancellationToken)
+        {
+            if (saved.Errors.Any(error => error.Code == nameof(IdentityErrorDescriber.ConcurrencyFailure)))
+            {
+                throw await context.DiscardBecauseAccountChangedMeanwhileAsync(Describe(saved), cancellationToken);
             }
         }
 

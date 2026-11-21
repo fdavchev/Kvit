@@ -277,13 +277,17 @@ describe('the terms-changed notice, a thin pill above the tab bar', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
-  it('shows nothing when the saved me has no terms fields, because nobody has said yet that the terms changed', async () => {
+  it('shows the error with Try again and no notice when the me answer has no terms fields, instead of guessing them', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     const olderMe = Object.fromEntries(Object.entries(testMe).filter(([name]) => !termsFields.includes(name)))
     await renderGroupApp(routes.settings, { answers: { [meRequest]: jsonAnswer(olderMe) } })
-    await settingsHasOpened()
 
+    const alert = await screen.findByRole('alert')
+
+    expect(within(alert).getByText(translated('en', 'errors.generic'))).toBeTruthy()
     expect(pill()).toBeNull()
     expect(screen.queryByRole('dialog')).toBeNull()
+    consoleError.mockRestore()
   })
 
   it('shows no sheet next to the notice', async () => {

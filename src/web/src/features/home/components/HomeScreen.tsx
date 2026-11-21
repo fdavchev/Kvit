@@ -47,7 +47,7 @@ export function HomeScreen() {
   return (
     <KvitScreen width="wide">
       <header className="flex items-center justify-between gap-4 pt-11 pb-7">
-        <h1 className="text-[2.25rem] leading-[1.1] font-extrabold tracking-[-0.025em]">
+        <h1 className="min-w-0 text-[2.25rem] leading-[1.1] font-extrabold tracking-[-0.025em] wrap-anywhere">
           {t('home.greeting', { name: me.displayName })}
         </h1>
         <Link

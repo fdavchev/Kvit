@@ -4,7 +4,6 @@ using Kvit.Application.Queries.Me;
 using Kvit.Contracts.Expenses;
 using Kvit.Contracts.Me;
 using Kvit.Contracts.Persistence;
-using Kvit.Domain.Accounts;
 using Kvit.Domain.Expenses;
 using Kvit.Domain.Results;
 using Kvit.Domain.Services.Expenses;
@@ -18,16 +17,10 @@ namespace Kvit.Application.Commands.Expenses
     {
         public async Task<Result<OneBillResponse>> Handle(CreateOneBillCommand command, CancellationToken cancellationToken)
         {
-            Result<MeResponse> me = await _dispatcher.Query<GetMeQuery, MeResponse>(new GetMeQuery(), cancellationToken);
+            Result<MeResponse> me = await _dispatcher.FullAccountOfCallerAsync(cancellationToken);
             if (!me.IsSuccess)
             {
                 return me.ToFailure<OneBillResponse>();
-            }
-
-            Result notGuest = AccountRules.CheckIsNotGuest(me.Value.IsGuest);
-            if (!notGuest.IsSuccess)
-            {
-                return notGuest.ToFailure<OneBillResponse>();
             }
 
             Result<OneBillCreated> created = await _unitOfWork.RunInTransactionOnceMoreIfClientRequestIdWasTakenAsync(

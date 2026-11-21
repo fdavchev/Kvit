@@ -20,7 +20,7 @@ namespace Kvit.Application.Commands.DuplicateAnswers
                 return userId;
             }
 
-            return await _unitOfWork.RunInTransactionAsync(
+            return await _unitOfWork.RunInTransactionOnceMoreIfMergeWasSavedAsync(
                 () => _setDuplicateAnswer.Execute(userId.Value, command.EntryId, command.ExpenseId, command.Answer, cancellationToken),
                 cancellationToken);
         }

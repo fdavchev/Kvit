@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { languages } from '@/core/i18n/language'
+import { currencyLabel } from '@/shared/utils/formatMoney'
 import { freezeTime, isBefore, unfreezeTime } from '@/test/expenseTestHelpers'
 import { dismissSheetByTappingBackdrop } from '@/test/expenseFormTestHelpers'
 import {
@@ -141,6 +142,17 @@ describe('GroupScreen Totals tab, the plan sheet', () => {
       expect(planCurrencyChip(sheet, 'EUR', language).tagName).toBe('BUTTON')
       expect(pressedCurrencies(sheet, language)).toHaveLength(1)
     })
+
+    it.each(languages.flatMap((language) => (['MKD', 'EUR'] as const).map((currency) => [language, currency] as const)))(
+      'shows the currency only in the chips, with no second label beside the amount (%s, %s)',
+      async (language, currency) => {
+        const { sheet } = await openNewPlanSheet({ language, group: groupOf({ defaultCurrency: currency }) })
+
+        const label = currencyLabel(currency, language)
+        expect(within(sheet).getAllByText(label)).toEqual([planCurrencyChip(sheet, currency, language)])
+        expect(planAmountField(sheet, language).parentElement?.textContent).not.toContain(label)
+      },
+    )
 
     it.each([
       ['a group in denars', groupWithoutPlan, 'MKD'],

@@ -7,6 +7,7 @@ Not legal advice, not checked by a lawyer. Research: `docs/reports/2026-11-04-ph
 | Version | What changed | Kind of change |
 |---|---|---|
 | 2026-11-04 | First Terms of Use and a full rewrite of the privacy notice (controller and contact, purposes, recipients, transfers, retention, rights, deletion, download, browser storage, age 16). | First version. Everyone who signed up before it sees the "terms changed" notice once. |
+| 2026-11-19 | Privacy notice only (Fix 21 Step 5): section 10 says a deleted account is removed after 30 days, not within, and that due removals happen the first time someone uses Kvit after that day; section 13 says the download leaves out groups deleted in the last 30 days and the days you opened Kvit. The Terms text is unchanged; only its "updated" line moved, because both pages share one version. | Small change (thin notice with one OK tap): a clearer description, no new data, purpose or fee. |
 
 ## How to publish a change
 1. Edit the text in `en.json` and `mk.json` and the pinned test.

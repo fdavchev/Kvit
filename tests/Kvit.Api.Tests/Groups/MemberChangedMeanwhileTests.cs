@@ -125,6 +125,47 @@ namespace Kvit.Api.Tests.Groups
             Assert.Null(await GroupRows.MemberRowValueAsync(_app, guest.RowId, "removed_at"));
         }
 
+        [Fact]
+        public async Task Join_WhileTheOwnerRemovesTheSameFreeNameFirst_Answers404MemberNotFoundAndTheRemovedNameStaysFree()
+        {
+            (GroupSetup setup, Guid freeNameRowId) = await CreateGroupWithFreeNameAsync();
+            SignedInUser joiner = await _app.SignUpAsync("Cvetan");
+            await using InsertGate gate = await HoldAtActivityEventAsync("MemberJoined");
+
+            Task<HttpResponseMessage> join = GroupRequests.JoinAsync(joiner.Client, setup.InviteToken, freeNameRowId);
+            await gate.WaitUntilRequestsAreHeldAsync(1);
+            HttpResponseMessage removed = await GroupRequests.RemoveMemberAsync(setup.Owner.Client, setup.GroupId, freeNameRowId);
+            await gate.OpenAsync();
+            HttpResponseMessage joined = await join;
+
+            Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
+            await ProblemResponse.AssertAsync(joined, HttpStatusCode.NotFound, ResultCodes.MEMBER_NOT_FOUND);
+            Assert.Null(await GroupRows.MemberRowValueAsync(_app, freeNameRowId, "user_id"));
+            Assert.Equal("Removed", await GroupRows.MemberRowValueAsync(_app, freeNameRowId, "end_kind"));
+            Assert.Equal(0, await GroupRows.CountMemberRowsOfUserAsync(_app, setup.GroupId, joiner.UserId));
+            Assert.Equal(0, await GroupRows.CountEventsOfTypeAsync(_app, setup.GroupId, "MemberJoined"));
+        }
+
+        [Fact]
+        public async Task LetInAgain_WhileTheSameGuestLeavesFirst_Answers404MemberNotFoundAndTheLeftRowKeepsTheGuest()
+        {
+            GroupSetup setup = await _app.CreateGroupWithMemberAsync();
+            GuestMember guest = await GuestSteps.JoinWithNewNameAsync(_app, setup.GroupId, "Cvetan");
+            await using InsertGate gate = await HoldAtActivityEventAsync("GuestLetInAgain");
+
+            Task<HttpResponseMessage> letInAgain = GroupRequests.LetGuestInAgainAsync(setup.Owner.Client, setup.GroupId, guest.RowId);
+            await gate.WaitUntilRequestsAreHeldAsync(1);
+            HttpResponseMessage left = await GroupRequests.LeaveAsync(guest.Client, setup.GroupId);
+            await gate.OpenAsync();
+            HttpResponseMessage letIn = await letInAgain;
+
+            Assert.Equal(HttpStatusCode.NoContent, left.StatusCode);
+            await ProblemResponse.AssertAsync(letIn, HttpStatusCode.NotFound, ResultCodes.MEMBER_NOT_FOUND);
+            Assert.Equal(guest.UserId.ToString(), await GroupRows.MemberRowValueAsync(_app, guest.RowId, "user_id"));
+            Assert.Equal("Left", await GroupRows.MemberRowValueAsync(_app, guest.RowId, "end_kind"));
+            Assert.Equal(0, await GroupRows.CountEventsOfTypeAsync(_app, setup.GroupId, "GuestLetInAgain"));
+        }
+
         private async Task<(GroupSetup Setup, Guid FreeNameRowId)> CreateGroupWithFreeNameAsync()
         {
             GroupSetup setup = await _app.CreateGroupWithMemberAsync();

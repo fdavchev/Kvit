@@ -8,7 +8,6 @@ import { useIsGuest } from '@/core/auth/useIsGuest'
 import { useMe } from '@/core/auth/useMe'
 import type { Language } from '@/core/i18n/language'
 import { useLanguage } from '@/core/i18n/useLanguage'
-import { removeOutboxItem } from '@/core/outbox/outboxStorage'
 import { useOutboxItems } from '@/core/outbox/useOutbox'
 import { routes } from '@/core/router/routes'
 import type { DeleteAccountNameChoice } from '@/core/services/me/meService'
@@ -25,7 +24,7 @@ import { cn } from '@/shared/utils/cn'
 import { useChangeLanguage } from '../hooks/useChangeLanguage'
 import { useDeleteMyAccount } from '../hooks/useDeleteMyAccount'
 import { useDownloadMyData } from '../hooks/useDownloadMyData'
-import { useLogOut } from '../hooks/useLogOut'
+import { removeCountedChanges, useLogOutAndForgetCountedChanges } from '../hooks/useLogOutAndForgetCountedChanges'
 import { BudgetTotalSettings } from './BudgetTotalSettings'
 import { DeleteAccountSheet } from './DeleteAccountSheet'
 import { GuestLogOutSheet } from './GuestLogOutSheet'
@@ -38,15 +37,14 @@ type DeleteAccountStep =
   | { sheet: 'unsentChanges'; nameChoice: DeleteAccountNameChoice }
 
 export function SettingsScreen() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const { language } = useLanguage()
+  const { language, changeLanguage: changeScreenLanguage } = useLanguage()
   const { theme, setTheme } = useTheme()
   const { data: me } = useMe()
   const isGuest = useIsGuest()
   const isAdmin = useIsAdmin()
   const changeLanguage = useChangeLanguage()
-  const logOut = useLogOut()
   const downloadMyData = useDownloadMyData()
   const oneDownloadAtATime = useSaveOnce()
   const deleteMyAccount = useDeleteMyAccount()
@@ -54,16 +52,33 @@ export function SettingsScreen() {
   const downloadHintId = useId()
   const unsentItems = useOutboxItems()
   const unsentCount = unsentItems.length
+  const logOut = useLogOutAndForgetCountedChanges(showFailure)
   const [openLogOutSheet, setOpenLogOutSheet] = useState<LogOutSheet | null>(null)
   const [deleteAccountStep, setDeleteAccountStep] = useState<DeleteAccountStep | null>(null)
 
   function showFailure(error: Error): void {
     console.error('A settings action failed', error)
-    toast.error(t(errorMessageKey(error)))
+    toast.error(i18n.t(errorMessageKey(error)))
   }
 
   function switchLanguage(newLanguage: Language): void {
-    changeLanguage.mutate(newLanguage, { onError: showFailure })
+    const previousLanguage = language
+    changeScreenLanguage(newLanguage).then(() => {
+      changeLanguage.mutate(newLanguage, {
+        onError: (error) => {
+          switchBackAfterFailedSave(previousLanguage, error)
+        },
+      })
+    }, showFailure)
+  }
+
+  function switchBackAfterFailedSave(previousLanguage: Language, saveError: Error): void {
+    changeScreenLanguage(previousLanguage).then(() => {
+      showFailure(saveError)
+    }, (switchBackError: unknown) => {
+      console.error(`The language save failed and the screen could not switch back to "${previousLanguage}"`, switchBackError)
+      showFailure(saveError)
+    })
   }
 
   function downloadData(): void {
@@ -79,18 +94,6 @@ export function SettingsScreen() {
     })
   }
 
-  function logOutNow(): void {
-    const personId = me?.id
-    const countedIds = unsentItems.map((item) => item.id)
-    logOut.mutateAsync().then(() => {
-      if (personId !== undefined && countedIds.length > 0) {
-        removeCountedChanges(personId, countedIds).catch((error: unknown) => {
-          console.error(`Logged out, but the unsent changes of person ${personId} could not be removed from this browser`, error)
-        })
-      }
-    }, showFailure)
-  }
-
   function pressLogOut(): void {
     if (isGuest) {
       setOpenLogOutSheet('guest')
@@ -100,7 +103,7 @@ export function SettingsScreen() {
       setOpenLogOutSheet('unsentChanges')
       return
     }
-    logOutNow()
+    logOut.logOutNow()
   }
 
   function deleteAccountNow(nameChoice: DeleteAccountNameChoice): void {
@@ -201,8 +204,8 @@ export function SettingsScreen() {
           {t('settings.deleteAccount')}
         </KvitButton>
         <KvitButton
-          variant="secondary"
-          disabled={logOut.isPending}
+          variant="link"
+          disabled={logOut.isLoggingOut}
           onClick={pressLogOut}
         >
           {t('settings.logOut')}
@@ -211,16 +214,16 @@ export function SettingsScreen() {
       {openLogOutSheet === 'guest' && (
         <GuestLogOutSheet
           unsentCount={unsentCount}
-          isLoggingOut={logOut.isPending}
-          onLogOut={logOutNow}
+          isLoggingOut={logOut.isLoggingOut}
+          onLogOut={logOut.logOutNow}
           onClose={() => setOpenLogOutSheet(null)}
         />
       )}
       {openLogOutSheet === 'unsentChanges' && (
         <UnsentChangesLogOutSheet
           unsentCount={unsentCount}
-          isLoggingOut={logOut.isPending}
-          onLogOut={logOutNow}
+          isLoggingOut={logOut.isLoggingOut}
+          onLogOut={logOut.logOutNow}
           onClose={() => setOpenLogOutSheet(null)}
         />
       )}
@@ -242,10 +245,4 @@ export function SettingsScreen() {
       )}
     </KvitScreen>
   )
-}
-
-async function removeCountedChanges(personId: string, ids: readonly string[]): Promise<void> {
-  for (const id of ids) {
-    await removeOutboxItem(personId, id)
-  }
 }

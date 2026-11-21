@@ -178,7 +178,7 @@ namespace Kvit.Api.Tests.Expenses
         }
 
         [Fact]
-        public async Task Activity_ExpenseRestoredEvent_KeepsNullData()
+        public async Task Activity_ExpenseRestoredEventWithoutATitle_CarriesANullTitleTheAmountAndTheCurrency()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
             Guid expenseId = await _app.AddExpenseAsync(group.Owner, group.GroupId, ExpenseInputs.Equal(1_550, "EUR", group.OwnerRowId, group.OwnerRowId));
@@ -190,7 +190,10 @@ namespace Kvit.Api.Tests.Expenses
             JsonElement entry = (await ReadActivityAsync(group))[0];
 
             Assert.Equal("ExpenseRestored", entry.GetProperty("type").GetString());
-            Assert.Equal(JsonValueKind.Null, entry.GetProperty("data").ValueKind);
+            JsonElement data = entry.GetProperty("data");
+            Assert.Equal(JsonValueKind.Null, data.GetProperty("title").ValueKind);
+            Assert.Equal(1_550, data.GetProperty("amountMinor").GetInt64());
+            Assert.Equal("EUR", data.GetProperty("currency").GetString());
         }
 
         private async Task EditAsync(ExpenseGroup group, Guid expenseId, ExpenseInput changed)

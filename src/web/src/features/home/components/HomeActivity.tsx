@@ -13,8 +13,6 @@ interface HomeActivityProps {
   rows: readonly DashboardActivityRow[]
 }
 
-const recentActivityLimit = 5
-
 export function HomeActivity({ rows }: HomeActivityProps) {
   const { t } = useTranslation()
   const { language } = useLanguage()
@@ -25,7 +23,7 @@ export function HomeActivity({ rows }: HomeActivityProps) {
     return null
   }
   const now = new Date()
-  const lines = dashboardActivityLines(rows.slice(0, recentActivityLimit), { t, language })
+  const lines = dashboardActivityLines(rows, { t, language })
   return (
     <section aria-labelledby={headingId} className={homeSectionLook}>
       <h2 id={headingId} className={balancesSectionHeadingLook}>

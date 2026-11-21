@@ -227,7 +227,8 @@ function OneBillForm({ me, categories }: OneBillFormProps) {
       </KvitForm>
       {isAddingName && (
         <BillNameSheet
-          takenNames={[me.displayName, ...names.map((billName) => billName.name)]}
+          ownName={me.displayName}
+          addedNames={names.map((billName) => billName.name)}
           onAdd={addName}
           onClose={() => setIsAddingName(false)}
         />

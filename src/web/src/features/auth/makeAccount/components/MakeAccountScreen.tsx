@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router'
-import { errorMessageKey, hasErrorCode } from '@/core/api/errors'
+import { errorMessageKey } from '@/core/api/errors'
 import { useIsGuest } from '@/core/auth/useIsGuest'
 import { GoogleSignInButton } from '@/core/google/GoogleSignInButton'
 import { routes } from '@/core/router/routes'
+import { emailRefusedCodes, newPasswordRefusedCodes } from '@/features/auth/shared/accountFieldRefusals'
 import { GoogleEmailTakenDialog } from '@/features/auth/welcome/components/GoogleEmailTakenDialog'
 import { AgreeLine } from '@/features/legal/components/AgreeLine'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
@@ -14,10 +15,10 @@ import { KvitOrDivider } from '@/shared/components/KvitOrDivider'
 import { KvitPasswordField } from '@/shared/components/KvitPasswordField'
 import { KvitScreen } from '@/shared/components/KvitScreen'
 import { KvitScreenTitle } from '@/shared/components/KvitScreenTitle'
+import { useFieldRefusals } from '@/shared/hooks/useFieldRefusals'
 import { useUpgradeGuest } from '../hooks/useUpgradeGuest'
 
-const emailRefusedCodes = ['AUTH_EMAIL_INVALID', 'AUTH_EMAIL_TAKEN']
-const passwordRefusedCodes = ['AUTH_PASSWORD_TOO_WEAK']
+const refusedCodesOf = { email: emailRefusedCodes, password: newPasswordRefusedCodes }
 
 export function MakeAccountScreen() {
   const { t } = useTranslation()
@@ -26,32 +27,25 @@ export function MakeAccountScreen() {
   const upgrade = useUpgradeGuest(setTakenIdToken)
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
-  const [isEmailChangedSinceSave, setIsEmailChangedSinceSave] = useState<boolean>(false)
-  const [isPasswordChangedSinceSave, setIsPasswordChangedSinceSave] = useState<boolean>(false)
   const { emailError } = upgrade
+  const refusals = useFieldRefusals(refusedCodesOf, emailError)
 
   if (!isGuest) {
     return <Navigate to={routes.settings} replace />
   }
 
-  const isEmailRefused: boolean =
-    emailRefusedCodes.some((code) => hasErrorCode(emailError, code)) && !isEmailChangedSinceSave
-  const isPasswordRefused: boolean =
-    passwordRefusedCodes.some((code) => hasErrorCode(emailError, code)) && !isPasswordChangedSinceSave
-
   function changeEmail(nextEmail: string): void {
     setEmail(nextEmail)
-    setIsEmailChangedSinceSave(true)
+    refusals.noteChange('email')
   }
 
   function changePassword(nextPassword: string): void {
     setPassword(nextPassword)
-    setIsPasswordChangedSinceSave(true)
+    refusals.noteChange('password')
   }
 
   function save(): void {
-    setIsEmailChangedSinceSave(false)
-    setIsPasswordChangedSinceSave(false)
+    refusals.noteSave()
     upgrade.upgradeWithEmail({ email, password })
   }
 
@@ -82,7 +76,7 @@ export function MakeAccountScreen() {
           label={t('auth.email')}
           value={email}
           onChange={changeEmail}
-          invalid={isEmailRefused}
+          invalid={refusals.isRefused('email')}
         />
         <KvitPasswordField
           id="make-account-password"
@@ -92,7 +86,7 @@ export function MakeAccountScreen() {
           autoComplete="new-password"
           enterKeyHint="done"
           hint={t('auth.passwordHint')}
-          invalid={isPasswordRefused}
+          invalid={refusals.isRefused('password')}
         />
       </KvitForm>
       {takenIdToken !== null && (

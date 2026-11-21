@@ -44,4 +44,20 @@ describe('index.css on desktop', () => {
     expect(desktopRailLayout).toContain('var(--rail-width)')
     expect(desktopRailLayout).not.toContain('clamp(11rem,17vw,16rem)')
   })
+
+  describe('the toast area next to the side menu', () => {
+    const railToasterRule = "html:has([data-kvit-rail]) [data-sonner-toaster][data-x-position='center']"
+
+    it('moves the centred toast area to the middle of the content column, next to the side menu, from the lg breakpoint', () => {
+      expect(lgBlockInside(railToasterRule)).toBe('left: calc(50% + var(--rail-width) / 2);')
+    })
+
+    it('changes nothing below the lg breakpoint, where there is no side menu', () => {
+      const rule = blockAfter(indexCss, `${railToasterRule} {`).trim()
+
+      expect(rule.startsWith('@variant lg {')).toBe(true)
+      expect(rule.endsWith('}')).toBe(true)
+      expect(rule.slice('@variant lg {'.length, -1)).not.toContain('{')
+    })
+  })
 })

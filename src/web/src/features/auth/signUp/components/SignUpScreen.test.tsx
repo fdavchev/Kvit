@@ -9,6 +9,7 @@ import {
   stubFetch,
   stubFetchThatNeverAnswers,
 } from '@/test/apiTestHelpers'
+import { isDescribedBy } from '@/test/describedByTestHelpers'
 import {
   descriptionOf,
   expectDisabledWhilePending,
@@ -201,6 +202,100 @@ describe('SignUpScreen', () => {
     expect(fieldLabelled(translated('en', 'auth.email')).value).toBe(newAccount.email)
     expect(fieldLabelled(translated('en', 'auth.password')).value).toBe(newAccount.password)
     expect(router.state.location.pathname).toBe(routes.signUp)
+  })
+
+  describe('marking the refused field', () => {
+    const nameLabel = translated('en', 'auth.signUp.name')
+    const emailLabel = translated('en', 'auth.email')
+    const passwordLabel = translated('en', 'auth.password')
+    const refusals = [
+      ['AUTH_EMAIL_TAKEN', 409, emailLabel],
+      ['AUTH_EMAIL_INVALID', 400, emailLabel],
+      ['AUTH_PASSWORD_TOO_WEAK', 400, passwordLabel],
+      ['AUTH_DISPLAY_NAME_INVALID', 400, nameLabel],
+    ] as const
+    const allLabels = [nameLabel, emailLabel, passwordLabel]
+
+    function markedLabels(): string[] {
+      return allLabels.filter((label) => fieldLabelled(label).getAttribute('aria-invalid') === 'true')
+    }
+
+    async function refuseWith(code: string, status: number) {
+      const fetchMock = vi.fn<typeof fetch>(async () => problemResponse(status, code))
+      vi.stubGlobal('fetch', fetchMock)
+      await renderSignUp()
+      fillForm('en')
+      pressSubmit('en')
+      await screen.findByRole('alert')
+      return fetchMock
+    }
+
+    it('marks no field before anything is sent', async () => {
+      await renderSignUp()
+
+      expect(markedLabels()).toEqual([])
+    })
+
+    it.each(refusals)('marks only the field of %s', async (code, status, label) => {
+      await refuseWith(code, status)
+
+      expect(markedLabels()).toEqual([label])
+    })
+
+    it.each(refusals)('links the field of %s to the error shown under the form', async (code, status, label) => {
+      await refuseWith(code, status)
+
+      expect(isDescribedBy(fieldLabelled(label), screen.getByRole('alert'))).toBe(true)
+    })
+
+    it('keeps the password rule linked to the password field next to the error', async () => {
+      await refuseWith('AUTH_PASSWORD_TOO_WEAK', 400)
+
+      expect(descriptionOf(fieldLabelled(passwordLabel))).toBe(
+        `${translated('en', 'errors.AUTH_PASSWORD_TOO_WEAK')} ${translated('en', 'auth.passwordHint')}`,
+      )
+    })
+
+    it('links no field to the error of an answer that belongs to no field', async () => {
+      await refuseWith('RATE_LIMITED', 429)
+
+      expect(markedLabels()).toEqual([])
+      allLabels.forEach((label) => {
+        expect(isDescribedBy(fieldLabelled(label), screen.getByRole('alert'))).toBe(false)
+      })
+    })
+
+    it.each(refusals)('takes the mark of %s away when that field is edited', async (code, status, label) => {
+      await refuseWith(code, status)
+
+      typeInto(label, 'edited')
+
+      expect(markedLabels()).toEqual([])
+      expect(isDescribedBy(fieldLabelled(label), screen.getByRole('alert'))).toBe(false)
+    })
+
+    it('keeps the mark when a different field is edited', async () => {
+      await refuseWith('AUTH_EMAIL_TAKEN', 409)
+
+      typeInto(passwordLabel, 'another-Passw0rd')
+
+      expect(markedLabels()).toEqual([emailLabel])
+    })
+
+    it('marks the field again when the next save is refused with the same answer', async () => {
+      const fetchMock = await refuseWith('AUTH_EMAIL_TAKEN', 409)
+      typeInto(emailLabel, 'second@example.com')
+      expect(markedLabels()).toEqual([])
+
+      pressSubmit('en')
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledTimes(2)
+      })
+      await waitFor(() => {
+        expect(markedLabels()).toEqual([emailLabel])
+      })
+    })
   })
 
   describe('when it is opened from an invite card', () => {

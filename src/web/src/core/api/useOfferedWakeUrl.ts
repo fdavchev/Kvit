@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
-import { readOfferedWakeUrl, subscribeToWakeOffer } from './serverWake'
+import { readOfferedWakeUrl, subscribeToServerWake } from './serverWake'
 
 export function useOfferedWakeUrl(): string | null {
-  return useSyncExternalStore(subscribeToWakeOffer, readOfferedWakeUrl)
+  return useSyncExternalStore(subscribeToServerWake, readOfferedWakeUrl)
 }

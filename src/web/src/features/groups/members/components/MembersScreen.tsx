@@ -19,8 +19,9 @@ import { useListAnimation } from '@/shared/hooks/useListAnimation'
 import { AddNameSheet } from '../../group/components/AddNameSheet'
 import { useGroup } from '../../group/hooks/useGroup'
 import { LeaveGroupSection } from '../../settings/components/LeaveGroupSection'
+import { claimFailureMessageKey } from '../../shared/claimFailureMessageKey'
 import { GroupLoadError } from '../../shared/components/GroupLoadError'
-import { canChangeGroup, canLeaveGroup } from '../../shared/groupAccess'
+import { canChangeGroup, canInviteToGroup, canLeaveGroup } from '../../shared/groupAccess'
 import { useGroupIdParam } from '../../shared/useGroupIdParam'
 import { useClaimName } from '../hooks/useClaimName'
 import { useLetBackIn } from '../hooks/useLetBackIn'
@@ -52,7 +53,10 @@ export function MembersScreen() {
       onSuccess: () => {
         toast.success(t('members.claimed', { name: member.displayName }))
       },
-      onError: showFailure,
+      onError: (error) => {
+        console.error('Claiming a name failed', error)
+        toast.error(t(claimFailureMessageKey(error)))
+      },
     })
   }
 
@@ -74,21 +78,23 @@ export function MembersScreen() {
     const canChange: boolean = canChangeGroup(group)
     return (
       <div className="flex flex-col gap-6">
-        <ul ref={membersListRef} className="flex flex-col gap-2.5">
-          {groupMembers.members.map((member) => (
-            <MemberListItem
-              key={member.id}
-              member={member}
-              showsTakenName={group.isOwner}
-              canClaim={canChange && groupMembers.canClaimNames && member.isNameOnly}
-              isClaimPending={claimName.isPending}
-              hasOptions={canChange && group.isOwner && !member.isOwner}
-              onClaim={() => claim(member)}
-              onOpenOptions={() => setOptionsMember(member)}
-            />
-          ))}
+        <div className="flex flex-col gap-1">
+          <ul ref={membersListRef} className="flex flex-col gap-2.5">
+            {groupMembers.members.map((member) => (
+              <MemberListItem
+                key={member.id}
+                member={member}
+                showsTakenName={group.isOwner}
+                canClaim={canChange && groupMembers.canClaimNames && member.isNameOnly}
+                isClaimPending={claimName.isPending}
+                hasOptions={canChange && group.isOwner && !member.isOwner}
+                onClaim={() => claim(member)}
+                onOpenOptions={() => setOptionsMember(member)}
+              />
+            ))}
+          </ul>
           {canChange && !isGuest && (
-            <li className="-mt-1.5 flex">
+            <div className="flex">
               <button
                 type="button"
                 onClick={() => setIsAddingName(true)}
@@ -96,10 +102,12 @@ export function MembersScreen() {
               >
                 {t('members.addNameLink')}
               </button>
-            </li>
+            </div>
           )}
-        </ul>
-        <InviteLinkCard group={group} canResetLink={canChange && group.isOwner} />
+        </div>
+        {(canInviteToGroup(group) || (canChange && group.isOwner)) && (
+          <InviteLinkCard group={group} canResetLink={canChange && group.isOwner} />
+        )}
         {canChange && group.isOwner && groupMembers.removed.length > 0 && (
           <RemovedMembers
             removed={groupMembers.removed}

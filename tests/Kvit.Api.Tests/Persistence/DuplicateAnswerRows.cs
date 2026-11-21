@@ -20,6 +20,18 @@ namespace Kvit.Api.Tests.Persistence
             return id;
         }
 
+        public static Task InsertWithIdAtAsync(MigratedDatabase database, Guid id, Guid userId, Guid entryId, Guid expenseId, DateTimeOffset createdAt)
+        {
+            return database.ExecuteAsync(
+                "INSERT INTO duplicate_answers (id, user_id, personal_entry_id, expense_id, answer, created_at) "
+                + "VALUES (@id, @user_id, @entry_id, @expense_id, 'Same', @created_at)",
+                new NpgsqlParameter("id", id),
+                new NpgsqlParameter("user_id", userId),
+                new NpgsqlParameter("entry_id", entryId),
+                new NpgsqlParameter("expense_id", expenseId),
+                new NpgsqlParameter("created_at", createdAt));
+        }
+
         public static async Task<string?> AnswerOfAsync(MigratedDatabase database, Guid userId, Guid entryId, Guid expenseId)
         {
             List<string?> answers = await database.QueryAsync(
