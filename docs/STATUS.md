@@ -1,6 +1,6 @@
 # Status: Kvit
 
-_Last updated: 2026-11-21 (Fix 21 is done: Steps 0 to 10 and the wake fixes are committed on `fix/21-small-bugs`; Step 10's two commits (`8c74b3e`, `ed61e91`) are local, not pushed; Filip pushes, checks CI and merges after his Fix 20 live check)_
+_Last updated: 2026-11-21 (Fix 21 is done and pushed up to `3ed08b7`; CI run 44834655750 on that push is green, both jobs, including the first "Smoke check the built website in Chromium" step (VERIFIED by live run of `gh`); PR #25 open, not merged; Filip merges after his Fix 20 live check)_
 
 ## Where we stopped
 - Branch: `fix/21-small-bugs` (made from `main` = `25c4a3d`, the Fix 20 merge). Step 1 is commit `d523031`, pushed. Step 2 is commit `d7ddc66`. Step 3 (the lightest peach light theme, contrast leftovers, Home totals) is commit `6801b09`, pushed. Step 4 (toasts, sheets, focus) is committed locally by Claude on 2026-11-16 while Filip was away (his instruction: "you commit, don't push"); Step 8 (same-moment problems, migration `SameMomentSafety`) is committed locally by Claude on 2026-11-19 on Filip's earlier "you commit, don't push". Filip pushes both and ticks Steps 4 and 8 in the PR description. To continue in a new session from any step: paste `docs/guides/fix-21-continue-prompt.md`.
@@ -21,12 +21,12 @@ Filip:
    - Leave a Kvit tab open for 20 minutes, then tap something. Expected: a bar "The server is asleep. · Wake the server" at the top; the button does the same trip.
    - Add an expense while the bar shows. Expected: it shows as waiting and is sent after the trip.
    - In the Render log after the first signed-in visit: a line "The daily cleanup of … finished".
-2. Push the local commits (Step 6 onwards) and tick the steps in the PR description. Once the branch is live: delete the Kvit icon from the phone's home screen and add it again from Chrome (menu → Add to Home screen / Install app), then open it signed in after 20 minutes away.
+2. Push the local commits (only the docs commits after `3ed08b7` are left) and tick Steps 4 to 10 in the PR description (on GitHub only Steps 0 to 3 are ticked, checked 2026-11-21). Once the branch is live: delete the Kvit icon from the phone's home screen and add it again from Chrome (menu → Add to Home screen / Install app), then open it signed in after 20 minutes away.
 2b. Read `docs/guides/fix-21-macedonian-to-read.md` and send the row numbers that read wrong.
 3. Delete `Cleanup__Secret` on Render and `CLEANUP_SECRET` on GitHub (no longer used).
 4. Still open from Phase 19 (`docs/guides/phase-19-legal.md`): run the **Backup** workflow once, the practice restore, **Private vulnerability reporting** on GitHub (checked 2026-11-14: off), and Part E.
 
-Claude: Fix 21 is done (2026-11-21). Nothing left to build on this branch; Release 4 waits for Filip to pick a phase (each: read the code, propose, Filip's go before the coder), then Step 10 (its browser pass also covers Step 8, never run in a browser). Coder runs go on Opus 5.5 without browser measuring, the tester on Sonnet measures once at the end (Filip, 2026-11-15 and 2026-11-19; the Fable allowance is used up).
+Claude: Fix 21 is done (2026-11-21). Nothing left to build on this branch; Release 4 waits for Filip to pick a phase (the menu with sizes and Claude's top four: `docs/guides/release-4-pick.md`) (each: read the code, propose, Filip's go before the coder), then Step 10 (its browser pass also covers Step 8, never run in a browser). Coder runs go on Opus 5.5 without browser measuring, the tester on Sonnet measures once at the end (Filip, 2026-11-15 and 2026-11-19; the Fable allowance is used up).
 
 ## Blockers and open questions
 - Not known until the live check: whether every person passes Render's robot check without a tap, how an installed home-screen Kvit and iOS Safari behave on the trip, and whether Render changes this again.
@@ -67,7 +67,8 @@ On `fix/21-small-bugs` (working folder, 2026-11-14, after Step 1):
 - Step 9, NOT VERIFIED: signed-in screens on the real fixed build (Step 10's pass covers them), a real phone, a deploy where an old tab asks for a screen file that no longer exists.
 - Step 10, VERIFIED by automated test: tester's `-Check` after the code-review fixes (2026-11-20) build 0 warnings, backend 7578/7578, lint 0, type check 0, smoke 3 built pages, frontend 16425/16425; after the stale-edit fix the coder's runs backend 7584/7584, frontend 16440/16440, lint, build and smoke pass, no pending model change.
 - Step 10, VERIFIED by live run (headless Chromium, local stack): 408 page loads (17 screens, 320 to 1920 px, EN/MK, light/dark) with no sideways scroll, page errors or failed requests; light-theme contrast all passing in both languages and at every width; Step 8 in two browsers; a failed language save switches back; a failed picture returns after going online; the stale-edit fix in two browsers at 360 px (refusal, typing kept, informed second save, Edit never shows the old amount, three same-moment rounds without a 500).
-- Step 10, NOT VERIFIED: the CI smoke step on GitHub, a real phone, the live site, the stale-edit fix in Macedonian, dark mode and other widths.
+- CI on GitHub, VERIFIED by live run (`gh`, 2026-11-21): run 44834655750 (push of `3ed08b7`) and run 44834662516 (pull request) green; the frontend job's Chromium install and smoke check passed.
+- Step 10, NOT VERIFIED: a real phone, the live site, the stale-edit fix in Macedonian, dark mode and other widths.
 - NOT VERIFIED: that each Step 1 test fails without its fix (not tried; done for Step 2); Macedonian, dark mode and widths other than 360 px for the Step 1 screens; a real Google sign-in through the new redirect; a real phone; anything on the live site.
 
 On `main` = `25c4a3d` (2026-11-14):
