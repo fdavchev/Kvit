@@ -12,7 +12,7 @@ All VERIFIED by live run (a Chrome window on your PC that Claude drove; you tick
 
 What Claude could not check: the robot box ticking itself (it never does for a remote-controlled browser, so you ticked it; on your phone on 2026-11-19 it ticked itself), your phone, and the Render log.
 
-One question for you: in the first test the robot box came back about five times before Render woke. Did you have to tick it five times, or only once?
+In the first test the robot box came back several times and you had to tick it several times (Filip, 2026-11-23); in the two later tests one round was enough. It is Cloudflare's box on Render's side, stricter with a remote-controlled browser, and Kvit cannot change it. If it ever asks you more than once on your own phone or browser, tell Claude (then the Railway idea in `BACKLOG.md` becomes worth a look).
 
 ## Part 1. The Render log line (2 minutes, PC or phone)
 1. Open `https://dashboard.render.com` and log in.
