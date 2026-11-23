@@ -456,15 +456,15 @@ describe('MembersScreen', () => {
       expect(addNameLink()).toBeTruthy()
     })
 
-    it('keeps the + Add a name link as the last item of the member list, so it slides with the rows when one is removed', async () => {
+    it('keeps the + Add a name link right under the animated member list, not inside it, so it does not slide through a row that fades out', async () => {
       await renderMembers()
       await showsMembers()
 
-      const item = addNameLink().closest('li')
-      const list = item?.parentElement
+      const linkRow = addNameLink().parentElement
+      const list = linkRow?.previousElementSibling
 
+      expect(addNameLink().closest('li')).toBeNull()
       expect(list?.tagName).toBe('UL')
-      expect(list?.lastElementChild).toBe(item)
     })
 
     it('sends the typed name to the members endpoint of the group', async () => {
@@ -630,6 +630,22 @@ describe('MembersScreen', () => {
         expect(share).toHaveBeenCalledWith(
           expect.objectContaining({ url: inviteUrl(testInviteToken) }),
         )
+      })
+
+      it.each(languages)('sends the name of the group as the title and a short invitation with that name as the text (%s)', async (language) => {
+        const share = stubShare(async () => {})
+        await renderMembers({ language })
+        await showsMembers(language)
+
+        fireEvent.click(shareButton(language))
+
+        await waitFor(() => {
+          expect(share).toHaveBeenCalledWith({
+            title: ownerGroup.name,
+            text: translated(language, 'group.shareText', { name: ownerGroup.name }),
+            url: inviteUrl(testInviteToken),
+          })
+        })
       })
 
       it('uses the invite token of the group that is open', async () => {
@@ -1513,6 +1529,29 @@ describe('MembersScreen', () => {
       })
       expect(shownToastTexts()).toEqual([])
     })
+
+    it.each(languages)('says someone just took the name, or it was removed, when the server answers MEMBER_NOT_FOUND (%s)', async (language) => {
+      consoleErrorSilenced()
+      await renderMembers({
+        language,
+        group: memberGroup,
+        members: anaViewMembers,
+        answers: {
+          [`POST ${memberPath(markoMember)}/claim`]: problemAnswer(404, 'MEMBER_NOT_FOUND'),
+        },
+      })
+      await showsMembers(language)
+
+      fireEvent.click(
+        within(rowOf('Marko')).getByRole('button', { name: translated(language, 'members.thatsMe') }),
+      )
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(translated(language, 'members.nameJustTaken'))
+      })
+      expect(toast.error).not.toHaveBeenCalledWith(translated(language, 'errors.MEMBER_NOT_FOUND'))
+      expect(shownToastTexts()).toEqual([])
+    })
   })
 
   describe('as a member who is not the owner', () => {
@@ -1566,7 +1605,7 @@ describe('MembersScreen', () => {
       })
       expect(requestCount(fetchMock, 'POST', leavePath)).toBe(1)
       expect(requestsOf(fetchMock, 'POST', leavePath)[0].body).toBeUndefined()
-      expect(screen.getByText('groups page')).toBeTruthy()
+      expect(await screen.findByText('groups page')).toBeTruthy()
     })
 
     it('shows the left toast with the group name, with no Undo button, in the wine-red danger style', async () => {

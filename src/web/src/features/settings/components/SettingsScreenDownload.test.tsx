@@ -64,6 +64,7 @@ describe('SettingsScreen, Download my data', () => {
   afterEach(() => {
     download.restore()
     vi.unstubAllGlobals()
+    vi.restoreAllMocks()
   })
 
   describe('the row', () => {
@@ -173,17 +174,18 @@ describe('SettingsScreen, Download my data', () => {
       expect(await download.createdBlobs[0].text()).toBe(exportBody)
     })
 
-    it('saves the file as kvit-my-data.json when the answer has no Content-Disposition header', async () => {
+    it('saves nothing and shows the generic error toast when the answer has no Content-Disposition header', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
       stubFetch(exportResponse(null))
       await renderSettings()
 
       pressDownload()
 
       await waitFor(() => {
-        expect(download.savedFiles).toHaveLength(1)
+        expect(toast.error).toHaveBeenCalledWith(translated('en', 'errors.generic'))
       })
-      expect(download.savedFiles[0].fileName).toBe('kvit-my-data.json')
-      expect(await download.createdBlobs[0].text()).toBe(exportBody)
+      expect(download.savedFiles).toEqual([])
+      expect(toast.success).not.toHaveBeenCalled()
     })
 
     it.each(languages)('shows the success toast after the file was saved (%s)', async (language) => {

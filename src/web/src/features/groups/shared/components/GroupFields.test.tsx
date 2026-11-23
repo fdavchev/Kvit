@@ -2,6 +2,7 @@ import { fireEvent, screen, within } from '@testing-library/react'
 import type { SubmitEvent } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { languages, type Language } from '@/core/i18n/language'
+import { describingElementsOf, isDescribedBy } from '@/test/describedByTestHelpers'
 import { defaultGroupEmoji, groupEmojis } from '@/test/groupTestData'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { translated } from '@/test/translated'
@@ -144,6 +145,18 @@ describe('GroupFields', () => {
     await renderFields({ language })
 
     expect(screen.getByText(translated(language, 'groupFields.currencyHint'))).toBeTruthy()
+  })
+
+  it('links the name field to its own message with aria-describedby when nameInvalid is given', async () => {
+    await renderFields({ nameInvalid })
+
+    expect(isDescribedBy(nameField(), screen.getByText(nameInvalid))).toBe(true)
+  })
+
+  it('describes the name field by nothing when there is no message', async () => {
+    await renderFields({ nameInvalid: null })
+
+    expect(describingElementsOf(nameField())).toEqual([])
   })
 
   it('shows the message and marks the name field invalid when nameInvalid is given', async () => {

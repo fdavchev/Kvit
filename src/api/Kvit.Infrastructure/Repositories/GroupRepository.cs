@@ -13,6 +13,12 @@ namespace Kvit.Infrastructure.Repositories
             _context.Groups.Add(group);
         }
 
+        public void MarkPlanChanged(Group group)
+        {
+            _context.Entry(group).Property(changed => changed.PlanAmountMinor).IsModified = true;
+            _context.Entry(group).Property(changed => changed.PlanCurrency).IsModified = true;
+        }
+
         public Task<Result<Group>> FindForMemberAsync(Guid groupId, Guid userId, CancellationToken cancellationToken)
         {
             return SingleOrNotFoundAsync(_context.GroupsWithCurrentMember(userId).Where(group => group.DeletedAt == null), groupId, cancellationToken);

@@ -10,6 +10,7 @@ import {
   savedQueryCacheOptions,
 } from '@/core/api/savedQueryCache'
 import { startI18n } from '@/core/i18n/i18n'
+import { RetryWhileServerWakes } from '@/core/router/RetryWhileServerWakes'
 import { RouterAfterRestore } from '@/core/router/RouterAfterRestore'
 import { ServerAsleepBar } from '@/core/router/ServerAsleepBar'
 import { renderStartupFailure } from '@/core/startup/renderStartupFailure'
@@ -42,6 +43,7 @@ createRoot(rootElement).render(
       >
         <RouterAfterRestore />
         <ServerAsleepBar />
+        <RetryWhileServerWakes />
         <KvitToaster />
       </PersistQueryClientProvider>
     </I18nextProvider>

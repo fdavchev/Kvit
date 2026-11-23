@@ -38,7 +38,6 @@ import {
 import { testNow } from '@/test/expenseTestData'
 import { freezeTime, unfreezeTime, uuidFormat } from '@/test/expenseTestHelpers'
 import { macedonianOf } from '@/test/englishTextKeys'
-import { expectDisabledWhilePending } from '@/test/formTestHelpers'
 import { testGroup } from '@/test/groupTestData'
 import {
   anaMember,
@@ -705,10 +704,12 @@ describe('Mark paid on the Balances tab', () => {
       await renderScenario(owedByMarko)
       await openSheetOf(owedByMarko)
       neverAnsweringFetch()
+      installFakeTimers(testNow)
 
       fireEvent.click(saveButton())
+      await letTimeGoBy(0)
 
-      await expectDisabledWhilePending(saveButton())
+      expect(saveButton().matches(':disabled')).toBe(true)
       expect(screen.getByRole('dialog', { name: owedByMarko.title })).toBeTruthy()
     })
 
@@ -716,9 +717,11 @@ describe('Mark paid on the Balances tab', () => {
       await renderScenario(owedByMarko)
       await openSheetOf(owedByMarko)
       const neverAnswering = neverAnsweringFetch()
+      installFakeTimers(testNow)
 
       fireEvent.click(saveButton())
-      await expectDisabledWhilePending(saveButton())
+      await letTimeGoBy(0)
+      expect(saveButton().matches(':disabled')).toBe(true)
       fireEvent.click(saveButton())
 
       expect(sentBodies(neverAnswering)).toHaveLength(1)

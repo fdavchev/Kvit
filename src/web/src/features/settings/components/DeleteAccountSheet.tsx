@@ -47,7 +47,7 @@ export function DeleteAccountSheet({ isGuest, isDeleting, onConfirm, onClose }: 
         {nameChoiceOptions.map((option) => (
           <label
             key={option.value}
-            className="pressable -mx-2 flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl px-2 py-1.5 text-[0.9375rem] has-checked:bg-background"
+            className="pressable -mx-2 flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl px-2 py-1.5 text-[0.9375rem] has-checked:bg-card-tint"
           >
             <input
               type="radio"

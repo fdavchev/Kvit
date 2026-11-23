@@ -43,7 +43,7 @@ import {
 import { money } from '@/test/budgetLeftCardTestHelpers'
 import { budgetNow, monthButton, personalEntriesGet } from '@/test/budgetTestHelpers'
 import { dismissSheetByTappingBackdrop } from '@/test/expenseFormTestHelpers'
-import { octoberMonth } from '@/test/personalEntryTestData'
+import { monthAnswerBody, octoberMonth } from '@/test/personalEntryTestData'
 import { coffeeCategory } from '@/test/personalCategoryTestData'
 import {
   networkFailureAnswer,
@@ -600,6 +600,36 @@ describe('BudgetScreen, the set-a-limit sheet', () => {
       await waitFor(() => {
         expect(document.activeElement).toBe(setLimitButtonInCard())
       })
+    })
+
+    it('brings no focus to the "Set a limit" button after a retry when the month could not be loaded again as the sheet closed', async () => {
+      let monthShown = octoberWithLimits
+      let isMonthReachable = true
+      const { sheet } = await renderCoffeeSheet({
+        answers: {
+          [personalEntriesGet('2026-10')]: () =>
+            isMonthReachable ? Response.json(monthAnswerBody(monthShown)) : new TypeError('Failed to fetch'),
+          [coffeeDelete()]: () => {
+            isMonthReachable = false
+            monthShown = octoberWithoutCoffee
+            return new Response(null, { status: 204 })
+          },
+        },
+      })
+
+      fireEvent.click(removeLimitButton(sheet))
+      const retry = await screen.findByRole('button', { name: translated('en', 'common.retry') })
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull()
+      })
+      isMonthReachable = true
+      fireEvent.click(retry)
+
+      await waitFor(() => {
+        expect(limitRows(queryLimitsCard() ?? document.body).map((row) => limitRowText(row).name)).not.toContain('Coffee')
+      })
+      await settle()
+      expect(document.activeElement).not.toBe(setLimitButtonInCard())
     })
 
     it('removes from an earlier month with the same request and keeps that month selected', async () => {

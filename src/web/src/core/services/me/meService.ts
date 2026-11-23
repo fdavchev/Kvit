@@ -2,7 +2,7 @@ import { ApiError, apiFileRequest, apiRequest, jsonRequest, unauthorizedStatus }
 import { endpoints } from '@/core/api/endpoints'
 import { isLanguage, type Language } from '@/core/i18n/language'
 import { groupCurrencies } from '@/core/services/groups/groupsService'
-import { readOneOf, readOrNullWhenMissing, readTextOrNull } from '@/core/services/readFields'
+import { readOneOf, readTextOrNull } from '@/core/services/readFields'
 import type { Currency } from '@/shared/utils/formatMoney'
 
 export interface Me {
@@ -46,11 +46,11 @@ export function parseMe(body: unknown): Me {
     pictureUrl: readTextOrNull(fields, 'pictureUrl', 'the signed-in person'),
     isGuest: readYesNo(fields, 'isGuest'),
     isAdmin: readYesNo(fields, 'isAdmin'),
-    termsVersion: readOrNullWhenMissing(fields, 'termsVersion', 'the signed-in person', readTextOrNull),
-    termsUpToDate: readYesNoOrWhenMissing(fields, 'termsUpToDate', true),
-    termsUpdateIsMaterial: readYesNoOrWhenMissing(fields, 'termsUpdateIsMaterial', false),
-    deletionCancelled: readYesNoOrWhenMissing(fields, 'deletionCancelled', false),
-    isSuspended: readYesNoOrWhenMissing(fields, 'isSuspended', false),
+    termsVersion: readTextOrNull(fields, 'termsVersion', 'the signed-in person'),
+    termsUpToDate: readYesNo(fields, 'termsUpToDate'),
+    termsUpdateIsMaterial: readYesNo(fields, 'termsUpdateIsMaterial'),
+    deletionCancelled: readYesNo(fields, 'deletionCancelled'),
+    isSuspended: readYesNo(fields, 'isSuspended'),
     budgetTotalCurrency: readBudgetTotalCurrency(fields),
   }
 }
@@ -81,11 +81,12 @@ export interface ExportedData {
   fileName: string
 }
 
-const exportFileNameWhenHeaderMissing = 'kvit-my-data.json'
-
 export async function exportMyData(): Promise<ExportedData> {
   const file = await apiFileRequest(endpoints.meExport)
-  return { blob: file.blob, fileName: file.fileName ?? exportFileNameWhenHeaderMissing }
+  if (file.fileName === null) {
+    throw new Error(`GET ${endpoints.meExport} answered without a Content-Disposition header, so the file has no name`)
+  }
+  return { blob: file.blob, fileName: file.fileName }
 }
 
 export async function deleteMyAccount(nameChoice: DeleteAccountNameChoice): Promise<void> {
@@ -114,10 +115,6 @@ function readYesNo(fields: MeFields, name: keyof Me): boolean {
     )
   }
   return value
-}
-
-function readYesNoOrWhenMissing(fields: MeFields, name: keyof Me, whenMissing: boolean): boolean {
-  return Object.hasOwn(fields, name) ? readYesNo(fields, name) : whenMissing
 }
 
 function readLanguage(fields: MeFields): Language {

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { languages } from '@/core/i18n/language'
-import { colorOfToken, contrastBetween } from '@/test/indexCssColors'
+import { contrastBetween } from '@/test/indexCssColors'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { loadingLook } from '@/test/skeletonTestHelpers'
 import { translated } from '@/test/translated'
@@ -41,8 +41,10 @@ describe('KvitSkeleton', () => {
     expect(skeleton().classList.contains('bg-skeleton')).toBe(true)
   })
 
-  it('has the colour of a card in light mode, so the rows that replace it do not change colour', () => {
-    expect(colorOfToken('skeleton', 'light')).toEqual(colorOfToken('card', 'light'))
+  it.each(['background', 'card'] as const)('stands out from the %s in light mode at 1.2:1 or more, so it never sinks into what is behind it', (surface) => {
+    const contrast = contrastBetween('skeleton', surface, 'light')
+
+    expect(contrast, `light skeleton against the ${surface}, ${contrast.toFixed(2)}`).toBeGreaterThanOrEqual(1.2)
   })
 
   it('stands out from the page in dark mode at a calm 1.4:1 to 1.6:1', () => {

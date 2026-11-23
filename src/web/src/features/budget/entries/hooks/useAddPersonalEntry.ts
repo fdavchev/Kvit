@@ -11,12 +11,6 @@ import { withAnswered } from '@/features/outbox/withAnswered'
 import type { SaveOnce } from '../../categories/hooks/useSaveOnce'
 import { refreshPersonalEntries } from '../personalEntryCache'
 
-export interface PersonalEntryRun<Input> {
-  run: (input: Input, onDone: () => void, onRefused: (error: Error) => void) => void
-  isPending: boolean
-  error: Error | null
-}
-
 export interface PersonalEntryAdd {
   run: (
     input: NewPersonalEntry,

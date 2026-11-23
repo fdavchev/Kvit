@@ -1,8 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { ComponentProps } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+import { describingElementsOf } from '@/test/describedByTestHelpers'
 import { descriptionOf, fieldLabelled } from '@/test/formTestHelpers'
 import { expectPlaceholderLegibleOn, placeholderTokenOf } from '@/test/placeholderTestHelpers'
+import { KvitFormErrorIdContext } from './kvitFormErrorId'
 import { KvitTextField } from './KvitTextField'
 
 const label = 'Email address'
@@ -101,11 +103,83 @@ describe('KvitTextField', () => {
     expect(fieldLabelled(label).getAttribute('aria-invalid')).not.toBe('true')
   })
 
+  describe('linking a refused field to the error of its form', () => {
+    const hint = 'Use the email from your invitation.'
+    const errorText = 'This email is already taken.'
+
+    function renderFieldInFormWithError(props: Partial<ComponentProps<typeof KvitTextField>>, errorId: string | null = 'form-error'): void {
+      render(
+        <KvitFormErrorIdContext value={errorId}>
+          <KvitTextField id="email-field" label={label} value="" onChange={vi.fn()} {...props} />
+          {errorId !== null && <p id={errorId}>{errorText}</p>}
+        </KvitFormErrorIdContext>,
+      )
+    }
+
+    it('points to the error of the form when the field is invalid', () => {
+      renderFieldInFormWithError({ invalid: true })
+
+      expect(fieldLabelled(label).getAttribute('aria-describedby')).toBe('form-error')
+      expect(descriptionOf(fieldLabelled(label))).toBe(errorText)
+    })
+
+    it('points to the error first and to the hint second when the field is invalid and has a hint', () => {
+      renderFieldInFormWithError({ invalid: true, hint })
+
+      expect(describingElementsOf(fieldLabelled(label)).map((element) => element.textContent)).toEqual([errorText, hint])
+    })
+
+    it('points only to the hint when the field is not invalid', () => {
+      renderFieldInFormWithError({ invalid: false, hint })
+
+      expect(descriptionOf(fieldLabelled(label))).toBe(hint)
+    })
+
+    it('points only to the hint when invalid is not given', () => {
+      renderFieldInFormWithError({ hint })
+
+      expect(descriptionOf(fieldLabelled(label))).toBe(hint)
+    })
+
+    it('points to nothing when the field is not invalid and has no hint', () => {
+      renderFieldInFormWithError({ invalid: false })
+
+      expect(fieldLabelled(label).hasAttribute('aria-describedby')).toBe(false)
+    })
+
+    it('points only to the hint when the field is invalid but the form shows no error', () => {
+      renderFieldInFormWithError({ invalid: true, hint }, null)
+
+      expect(descriptionOf(fieldLabelled(label))).toBe(hint)
+    })
+
+    it('points to nothing when the field is invalid, has no hint and the form shows no error', () => {
+      renderFieldInFormWithError({ invalid: true }, null)
+
+      expect(fieldLabelled(label).hasAttribute('aria-describedby')).toBe(false)
+    })
+
+    it('points to nothing outside a form when the field is invalid and has no hint', () => {
+      renderField({ invalid: true })
+
+      expect(fieldLabelled(label).hasAttribute('aria-describedby')).toBe(false)
+    })
+  })
+
   describe('the placeholder', () => {
     it.each(['light', 'dark'] as const)('is not left to the browser default grey and not faded with an opacity in %s mode', (theme) => {
       renderField({ placeholder: 'Marko' })
 
       expect(() => placeholderTokenOf(fieldLabelled(label), theme)).not.toThrow()
+    })
+
+    it('is drawn in normal weight while the typed text is semibold, so the two never look alike', () => {
+      renderField({ placeholder: 'Marko' })
+
+      const classes = Array.from(fieldLabelled(label).classList)
+
+      expect(classes).toContain('placeholder:font-normal')
+      expect(classes).toContain('font-semibold')
     })
 
     it('has at least 4.5:1 contrast on the field colour, in light and in dark mode', () => {

@@ -12,7 +12,13 @@ import { captureError } from '@/test/apiTestHelpers'
 import { createTestPersister } from '@/test/testPersister'
 import { testMe } from '@/test/testMe'
 import { ApiError } from './apiClient'
-import { createQueryClient, groupStateChangedCodes, reactToFailedRequest } from './queryClient'
+import {
+  createQueryClient,
+  groupStateChangedCodes,
+  reactToFailedRequest,
+  shouldRetryQueryOnlyWhileServerWakes,
+} from './queryClient'
+import { followServerAnswer, lastWakeVisitKey } from './serverWake'
 
 type FailingCall = 'query' | 'mutation'
 
@@ -43,6 +49,30 @@ function defaultQueryRetry(): (failureCount: number, error: Error) => boolean {
     throw new Error(`The default query retry option is not a function: ${String(retry)}`)
   }
   return retry
+}
+
+function defaultQueryRetryDelay(): (failureCount: number, error: Error) => number {
+  const retryDelay = createQueryClient(createTestPersister()).getDefaultOptions().queries?.retryDelay
+  if (typeof retryDelay !== 'function') {
+    throw new Error(`The default query retry delay option is not a function: ${String(retryDelay)}`)
+  }
+  return retryDelay
+}
+
+const wakeUrl = 'https://kvit-mk-api.onrender.com/wake'
+
+function startWaitingAfterWakeVisit(): void {
+  window.sessionStorage.setItem(lastWakeVisitKey, String(Date.now() - 30_000))
+  followServerAnswer(
+    'GET',
+    '/api/groups',
+    new Response(null, { status: 503, headers: { 'x-kvit-server-asleep': '1', 'x-kvit-wake-url': wakeUrl } }),
+  )
+}
+
+function stopWaitingAfterWakeVisit(): void {
+  followServerAnswer('GET', '/api/groups', new Response(null, { status: 200 }))
+  window.sessionStorage.clear()
 }
 
 function createClientWithSignedInPerson(): QueryClient {
@@ -78,6 +108,7 @@ describe('createQueryClient', () => {
 
     it.each([
       ['a wrong password at log-in (401 AUTH_INVALID_CREDENTIALS)', apiError(401, 'AUTH_INVALID_CREDENTIALS')],
+      ['a bad Google token at log-in or sign-up (401 AUTH_GOOGLE_TOKEN_INVALID)', apiError(401, 'AUTH_GOOGLE_TOKEN_INVALID')],
       ['another 403', apiError(403, 'SOMETHING_ELSE')],
       ['a 500', apiError(500, null)],
       ['a network failure', apiError(null, null)],
@@ -156,6 +187,83 @@ describe('createQueryClient', () => {
         true,
         false,
       ])
+    })
+  })
+
+  describe('the default query retry while waiting after a wake visit', () => {
+    afterEach(() => {
+      stopWaitingAfterWakeVisit()
+    })
+
+    it.each([
+      ['an asleep 503 answer', apiError(503, null)],
+      ['a network failure', apiError(null, null)],
+    ])('keeps retrying %s past three times, so a screen shows its loading state instead of an error', (_name, error) => {
+      const retry = defaultQueryRetry()
+      startWaitingAfterWakeVisit()
+
+      expect([3, 10, 30].map((failureCount) => retry(failureCount, error))).toEqual([true, true, true])
+    })
+
+    it('still does not retry a 404 answer', () => {
+      const retry = defaultQueryRetry()
+      startWaitingAfterWakeVisit()
+
+      expect(retry(0, apiError(404, 'GROUP_NOT_FOUND'))).toBe(false)
+    })
+
+    it('gives up after three retries again once the server has answered', () => {
+      const retry = defaultQueryRetry()
+      startWaitingAfterWakeVisit()
+
+      stopWaitingAfterWakeVisit()
+
+      expect(retry(3, apiError(503, null))).toBe(false)
+    })
+
+    it('asks again every 3 seconds while waiting', () => {
+      const retryDelay = defaultQueryRetryDelay()
+      startWaitingAfterWakeVisit()
+
+      expect([0, 1, 5, 20].map((failureCount) => retryDelay(failureCount, apiError(503, null)))).toEqual([3000, 3000, 3000, 3000])
+    })
+
+    it('waits 1, 2 and 4 seconds and at most 30 seconds between retries when not waiting', () => {
+      const retryDelay = defaultQueryRetryDelay()
+
+      expect([0, 1, 2, 5, 6].map((failureCount) => retryDelay(failureCount, apiError(503, null)))).toEqual([
+        1000, 2000, 4000, 30000, 30000,
+      ])
+    })
+  })
+
+  describe('the retry of a query that shows its error at once', () => {
+    afterEach(() => {
+      stopWaitingAfterWakeVisit()
+    })
+
+    it.each([
+      ['a 500 answer', apiError(500, null)],
+      ['an asleep 503 answer', apiError(503, null)],
+      ['a network failure', apiError(null, null)],
+      ['a 404 answer', apiError(404, 'GROUP_NOT_FOUND')],
+    ])('does not retry %s when nobody is waiting for the server to wake', (_name, error) => {
+      expect(shouldRetryQueryOnlyWhileServerWakes(0, error)).toBe(false)
+    })
+
+    it.each([
+      ['an asleep 503 answer', apiError(503, null)],
+      ['a network failure', apiError(null, null)],
+    ])('keeps retrying %s while waiting after a wake visit', (_name, error) => {
+      startWaitingAfterWakeVisit()
+
+      expect([0, 3, 10].map((failureCount) => shouldRetryQueryOnlyWhileServerWakes(failureCount, error))).toEqual([true, true, true])
+    })
+
+    it('still does not retry a 404 answer while waiting after a wake visit', () => {
+      startWaitingAfterWakeVisit()
+
+      expect(shouldRetryQueryOnlyWhileServerWakes(0, apiError(404, 'GROUP_NOT_FOUND'))).toBe(false)
     })
   })
 
@@ -277,6 +385,7 @@ describe('reactToFailedRequest', () => {
 
   it.each([
     ['a wrong password at log-in (401 AUTH_INVALID_CREDENTIALS)', apiError(401, 'AUTH_INVALID_CREDENTIALS')],
+    ['a bad Google token at log-in or sign-up (401 AUTH_GOOGLE_TOKEN_INVALID)', apiError(401, 'AUTH_GOOGLE_TOKEN_INVALID')],
     ['another 403', apiError(403, 'SOMETHING_ELSE')],
     ['a 400 refusal', apiError(400, 'EXPENSE_AMOUNT_NOT_POSITIVE')],
     ['a 404 refusal', apiError(404, 'GROUP_NOT_FOUND')],

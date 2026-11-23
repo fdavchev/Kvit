@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using Kvit.Api.Tests.Persistence;
 using Kvit.Domain.ExchangeRates;
@@ -94,6 +95,25 @@ namespace Kvit.Api.Tests.ExchangeRates
             Assert.Equal(
                 "https://configured.test/Service/GetExchangeRate?StartDate=24.09.2026&EndDate=24.09.2026&format=json",
                 request.Uri?.AbsoluteUri);
+        }
+
+        [Fact]
+        public async Task ExchangeRateSource_WhenNbrmHangs_GivesUpAfterAboutThreeSecondsInsteadOfTen()
+        {
+            StubHttpMessageHandler handler = StubHttpMessageHandler.Hanging();
+            using WebApplicationFactory<Program> configured = _database.CreateAnotherInstance().WithWebHostBuilder(builder =>
+                builder.ConfigureTestServices(services =>
+                    services.ConfigureHttpClientDefaults(defaults => defaults.ConfigurePrimaryHttpMessageHandler(() => handler))));
+            using IServiceScope scope = configured.Services.CreateScope();
+            IExchangeRateSource source = scope.ServiceProvider.GetRequiredService<IExchangeRateSource>();
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            Result<FetchedExchangeRate> result = await source.FetchEurRateAsync(new DateOnly(2026, 9, 24), TestContext.Current.CancellationToken);
+
+            stopwatch.Stop();
+            Assert.False(result.IsSuccess);
+            Assert.Equal(ExchangeRateFailureCodes.EXCHANGE_RATE_FETCH_FAILED, result.ErrorCode);
+            Assert.InRange(stopwatch.Elapsed, TimeSpan.FromSeconds(2.5), TimeSpan.FromSeconds(8));
         }
     }
 }

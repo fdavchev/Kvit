@@ -1,8 +1,8 @@
 using Kvit.Domain.Entities;
 using Kvit.Domain.Interfaces;
-using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.Persistence;
+using Kvit.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kvit.Infrastructure.Repositories
@@ -31,13 +31,14 @@ namespace Kvit.Infrastructure.Repositories
             return SingleOrNotFoundAsync(_context.Expenses, groupId, expenseId, cancellationToken);
         }
 
-        public Task<Currency?> FindCurrencyAsync(Guid groupId, Guid expenseId, CancellationToken cancellationToken)
+        public void MarkChanged(Expense expense)
         {
-            return _context.Expenses
-                .AsNoTracking()
-                .Where(expense => expense.Id == expenseId && expense.GroupId == groupId && expense.DeletedAt == null)
-                .Select(expense => (Currency?)expense.Currency)
-                .SingleOrDefaultAsync(cancellationToken);
+            _context.Entry(expense).Property(changed => changed.UpdatedAt).IsModified = true;
+        }
+
+        public uint VersionOf(Expense expense)
+        {
+            return _context.Entry(expense).Property<uint>(ExpenseConfiguration.RowVersionProperty).OriginalValue;
         }
 
         public Task<bool> BringsCountedShareToAsync(Guid userId, Guid expenseId, CancellationToken cancellationToken)

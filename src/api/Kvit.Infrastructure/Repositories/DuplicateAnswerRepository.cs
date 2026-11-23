@@ -9,7 +9,7 @@ namespace Kvit.Infrastructure.Repositories
     {
         public async Task SaveAsync(DuplicateAnswer answer, CancellationToken cancellationToken)
         {
-            await _context.Database.ExecuteSqlInterpolatedAsync(
+            await _context.ExecuteSqlOrReportMergeAlreadySavedAsync(
                 $"""
                 INSERT INTO duplicate_answers (id, user_id, personal_entry_id, expense_id, answer, created_at)
                 VALUES ({answer.Id}, {answer.UserId}, {answer.PersonalEntryId}, {answer.ExpenseId}, {answer.Answer.ToString()}, {answer.CreatedAt})
@@ -19,17 +19,23 @@ namespace Kvit.Infrastructure.Repositories
                 cancellationToken);
         }
 
-        public async Task RemoveAsync(Guid userId, Guid personalEntryId, Guid expenseId, CancellationToken cancellationToken)
-        {
-            await _context.DuplicateAnswers
-                .Where(answer => answer.UserId == userId && answer.PersonalEntryId == personalEntryId && answer.ExpenseId == expenseId)
-                .ExecuteDeleteAsync(cancellationToken);
-        }
-
         public async Task RemoveSameAnswersOfEntryAsync(Guid userId, Guid personalEntryId, CancellationToken cancellationToken)
         {
             await _context.DuplicateAnswers
                 .Where(answer => answer.UserId == userId && answer.PersonalEntryId == personalEntryId && answer.Answer == DuplicateAnswerChoice.Same)
+                .ExecuteDeleteAsync(cancellationToken);
+        }
+
+        public async Task RemoveEndedMergesOfEitherAsync(Guid userId, Guid personalEntryId, Guid expenseId, CancellationToken cancellationToken)
+        {
+            IQueryable<DuplicateAnswer> merges = _context.MergesOf(userId);
+
+            await _context.DuplicateAnswers
+                .Where(answer => answer.UserId == userId
+                    && answer.Answer == DuplicateAnswerChoice.Same
+                    && ((answer.PersonalEntryId == personalEntryId && answer.ExpenseId != expenseId)
+                        || (answer.ExpenseId == expenseId && answer.PersonalEntryId != personalEntryId))
+                    && !merges.Any(merge => merge.Id == answer.Id))
                 .ExecuteDeleteAsync(cancellationToken);
         }
 

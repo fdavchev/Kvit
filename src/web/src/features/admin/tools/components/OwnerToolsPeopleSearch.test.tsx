@@ -103,6 +103,46 @@ describe('searching for people in the owner tools', () => {
       expect(resultsList()).toBeNull()
     })
 
+    it.each(['', 'a', ' a '])('says to type at least 2 letters for the text %j, beside the field and linked to it', async (text) => {
+      await renderPeople()
+
+      searchPeopleFor(text)
+
+      const alert = await screen.findByRole('alert')
+      const field = screen.getByLabelText(translated('en', 'ownerTools.people.searchLabel'))
+      expect(alert.textContent).toBe('Type at least 2 letters.')
+      expect(field.getAttribute('aria-invalid')).toBe('true')
+      expect(field.getAttribute('aria-describedby')).toBe(alert.id)
+    })
+
+    it('says to type at least 2 letters in Macedonian for a person who uses Macedonian', async () => {
+      await renderPeople([anaPerson], 'mk')
+
+      searchPeopleFor('a', 'mk')
+
+      expect((await screen.findByRole('alert')).textContent).toBe('Внеси барем 2 букви.')
+    })
+
+    it('says nothing about the length before the first search', async () => {
+      await renderPeople()
+
+      expect(screen.queryByText(translated('en', 'ownerTools.people.tooShort'))).toBeNull()
+      expect(screen.getByLabelText(translated('en', 'ownerTools.people.searchLabel')).getAttribute('aria-invalid')).not.toBe('true')
+    })
+
+    it('takes the length message away and searches once two letters are typed', async () => {
+      const { fetchMock } = await renderPeople()
+      searchPeopleFor('a')
+      await screen.findByText(translated('en', 'ownerTools.people.tooShort'))
+
+      searchPeopleFor('an')
+
+      await waitFor(() => {
+        expect(toolsUrls(fetchMock, 'GET')).toHaveLength(1)
+      })
+      expect(screen.queryByText(translated('en', 'ownerTools.people.tooShort'))).toBeNull()
+    })
+
     it('searches again, with the new text, when the person changes the text and presses Search again', async () => {
       const { fetchMock } = await renderPeople()
       searchPeopleFor('ana')

@@ -17,12 +17,5 @@ namespace Kvit.Api.Controllers
             Result result = await _dispatcher.Send(new SetDuplicateAnswerCommand(request.EntryId, request.ExpenseId, request.AnswerAsText()), cancellationToken);
             return Result(result);
         }
-
-        [HttpDelete]
-        public async Task<ActionResult> Remove(RemoveDuplicateAnswerRequest request, CancellationToken cancellationToken)
-        {
-            Result result = await _dispatcher.Send(new RemoveDuplicateAnswerCommand(request.EntryId, request.ExpenseId), cancellationToken);
-            return Result(result);
-        }
     }
 }

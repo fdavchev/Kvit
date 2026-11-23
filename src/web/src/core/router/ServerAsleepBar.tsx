@@ -3,6 +3,7 @@ import { wakeServer } from '@/core/api/serverWake'
 import { useOfferedWakeUrl } from '@/core/api/useOfferedWakeUrl'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { kvitGlassPanelLook } from '@/shared/components/kvitGlassLooks'
+import { askBeforeLeavingWhenTyping } from '@/shared/hooks/useUnsavedTyping'
 import { cn } from '@/shared/utils/cn'
 
 export function ServerAsleepBar() {
@@ -10,6 +11,11 @@ export function ServerAsleepBar() {
   const wakeUrl = useOfferedWakeUrl()
   if (wakeUrl === null) {
     return null
+  }
+
+  function wake(url: string): void {
+    askBeforeLeavingWhenTyping()
+    wakeServer(url)
   }
 
   return (
@@ -25,7 +31,7 @@ export function ServerAsleepBar() {
         )}
       >
         <span className="min-w-0 flex-1">{t('wakingUp.asleep')}</span>
-        <KvitButton variant="smallLink" className="w-auto min-w-11 flex-none px-2" onClick={() => wakeServer(wakeUrl)}>
+        <KvitButton variant="smallLink" className="w-auto min-w-11 flex-none px-2" onClick={() => wake(wakeUrl)}>
           {t('wakingUp.wake')}
         </KvitButton>
       </div>

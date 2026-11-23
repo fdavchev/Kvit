@@ -26,9 +26,11 @@ export function EveryoneSection({ cards, language }: EveryoneSectionProps) {
           {card.rows.map((row) => (
             <li key={row.person.memberId} className="flex items-center gap-3">
               <KvitAvatar name={row.person.name} pictureUrl={row.person.pictureUrl} colorIndex={row.person.colorIndex} />
-              <span className="min-w-0 flex-1 break-words">{row.person.name}</span>
-              <span className={cn('font-extrabold whitespace-nowrap', amountLookOf(row.balanceMinor))}>
-                {formatSignedMoney(row.balanceMinor, card.currency, language)}
+              <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3">
+                <span className="min-w-0 grow break-words">{row.person.name}</span>
+                <span className={cn('ml-auto font-extrabold whitespace-nowrap', amountLookOf(row.balanceMinor))}>
+                  {formatSignedMoney(row.balanceMinor, card.currency, language)}
+                </span>
               </span>
             </li>
           ))}

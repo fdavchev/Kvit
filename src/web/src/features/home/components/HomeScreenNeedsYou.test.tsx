@@ -412,8 +412,8 @@ describe('answering a payment card from the home screen', () => {
     it.each([
       ['settlements.confirm', 400, 'SETTLEMENT_NOT_PENDING', confirmPaymentPath],
       ['settlements.reject', 400, 'SETTLEMENT_NOT_PENDING', rejectPaymentPath],
-      ['settlements.confirm', 403, 'SETTLEMENT_NOT_ALLOWED', confirmPaymentPath],
       ['settlements.reject', 404, 'SETTLEMENT_NOT_FOUND', rejectPaymentPath],
+      ['settlements.confirm', 400, 'SETTLEMENT_NOT_DELETED', confirmPaymentPath],
     ])(
       'asks for the dashboard again after %s is refused with %i %s, so the stale card can go away',
       async (buttonKey, status, code, path) => {
@@ -429,14 +429,26 @@ describe('answering a payment card from the home screen', () => {
       },
     )
 
-    it('asks for the dashboard again when the server cannot be reached', async () => {
+    it('does not ask for the dashboard again after a 403 SETTLEMENT_NOT_ALLOWED, as the Balances tab does not', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { fetchMock } = await renderLive({ [`POST ${confirmPaymentPath}`]: problemAnswer(403, 'SETTLEMENT_NOT_ALLOWED') })
+      const card = cardOf(markoSentence())
+
+      fireEvent.click(cardButton(card, translated('en', 'settlements.confirm')))
+
+      await within(card).findByRole('alert')
+      expect(requestCount(fetchMock, 'POST', confirmPaymentPath)).toBe(1)
+      expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(1)
+    })
+
+    it('does not ask for the dashboard again when the server cannot be reached, as the Balances tab does not', async () => {
       const { fetchMock } = await renderLive({ [`POST ${confirmPaymentPath}`]: networkFailureAnswer() })
+      const card = cardOf(markoSentence())
 
-      fireEvent.click(cardButton(cardOf(markoSentence()), translated('en', 'settlements.confirm')))
+      fireEvent.click(cardButton(card, translated('en', 'settlements.confirm')))
 
-      await waitFor(() => {
-        expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(2)
-      })
+      await within(card).findByRole('alert')
+      expect(requestCount(fetchMock, 'GET', dashboardPath)).toBe(1)
     })
 
     it('removes the card when the refused payment is already gone from the fresh dashboard', async () => {

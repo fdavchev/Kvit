@@ -3,7 +3,7 @@ import type { RefObject } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { installFakeResizeObservers, type FakeResizeObservers } from '@/test/resizeObserverTestHelpers'
 import { clearToastLiftOnPage, elementWithHeight, toastLiftOnPage } from '@/test/toastLiftTestHelpers'
-import { useToastsAboveElement } from './useToastsAboveElement'
+import { openSheetHeightProperty, useToastsAboveElement, useToastsAboveSheet } from './useToastsAboveElement'
 
 interface HookProps {
   elementRef: RefObject<HTMLElement | null>
@@ -179,5 +179,47 @@ describe('useToastsAboveElement', () => {
 
       expect(toastLiftOnPage()).toBe('')
     })
+  })
+})
+
+describe('useToastsAboveSheet', () => {
+  beforeEach(() => {
+    installFakeResizeObservers()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    clearToastLiftOnPage()
+    document.documentElement.style.removeProperty(openSheetHeightProperty)
+  })
+
+  function openSheetHeightOnPage(): string {
+    return document.documentElement.style.getPropertyValue(openSheetHeightProperty)
+  }
+
+  it('writes the height of the sheet plus 12px to --open-sheet-height', () => {
+    const { element } = elementWithHeight(300)
+
+    renderHook(() => useToastsAboveSheet({ current: element }))
+
+    expect(openSheetHeightProperty).toBe('--open-sheet-height')
+    expect(openSheetHeightOnPage()).toBe('312px')
+  })
+
+  it('leaves the lift of the page bars alone', () => {
+    const { element } = elementWithHeight(300)
+
+    renderHook(() => useToastsAboveSheet({ current: element }))
+
+    expect(toastLiftOnPage()).toBe('')
+  })
+
+  it('removes --open-sheet-height when the sheet goes away', () => {
+    const { element } = elementWithHeight(300)
+    const { unmount } = renderHook(() => useToastsAboveSheet({ current: element }))
+
+    unmount()
+
+    expect(openSheetHeightOnPage()).toBe('')
   })
 })

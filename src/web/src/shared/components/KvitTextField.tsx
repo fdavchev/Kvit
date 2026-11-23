@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '@/shared/utils/cn'
+import { useKvitFormErrorId } from './kvitFormErrorId'
 
 type InputProps = ComponentProps<'input'>
 
@@ -35,6 +36,10 @@ export function KvitTextField({
   ...inputAttributes
 }: KvitTextFieldProps) {
   const hintId = `${id}-hint`
+  const formErrorId = useKvitFormErrorId()
+  const describedByIds = [invalid === true ? formErrorId : null, hint === undefined ? null : hintId].filter(
+    (describedById) => describedById !== null,
+  )
   const hasTrailing: boolean = trailing !== undefined
   return (
     <div className="flex flex-col">
@@ -47,10 +52,10 @@ export function KvitTextField({
           type={type}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          aria-describedby={hint === undefined ? undefined : hintId}
+          aria-describedby={describedByIds.length === 0 ? undefined : describedByIds.join(' ')}
           aria-invalid={invalid}
           className={cn(
-            'min-h-14 w-full rounded-[14px] border-2 border-field-border bg-field px-4 text-[1.0625rem] font-semibold text-field-foreground placeholder:text-muted-foreground focus:border-field-border-focus focus-visible:outline-offset-0 aria-invalid:border-destructive',
+            'min-h-14 w-full rounded-[14px] border-2 border-field-border bg-field px-4 text-[1.0625rem] font-semibold text-field-foreground placeholder:font-normal placeholder:text-muted-foreground focus:border-field-border-focus focus-visible:outline-offset-0 aria-invalid:border-destructive',
             hasTrailing && 'pr-14',
           )}
           {...inputAttributes}

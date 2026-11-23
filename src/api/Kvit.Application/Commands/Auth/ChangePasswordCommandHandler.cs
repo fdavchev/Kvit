@@ -1,4 +1,5 @@
 using Kvit.Application.Dispatching;
+using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
 using Kvit.Contracts.Persistence;
 using Kvit.Domain.Accounts;
@@ -25,9 +26,9 @@ namespace Kvit.Application.Commands.Auth
                 return newPassword;
             }
 
-            await _unitOfWork.OpenTransactionAsync(cancellationToken);
-            Result changed = await _accountService.ChangePasswordAsync(userId.Value, command.CurrentPassword, command.NewPassword, cancellationToken);
-            await _unitOfWork.CommitAsync(cancellationToken);
+            Result changed = await _unitOfWork.RunInTransactionKeepingRefusalsOnceMoreIfAccountChangedMeanwhileAsync(
+                () => _accountService.ChangePasswordAsync(userId.Value, command.CurrentPassword, command.NewPassword, cancellationToken),
+                cancellationToken);
 
             if (changed.IsSuccess)
             {

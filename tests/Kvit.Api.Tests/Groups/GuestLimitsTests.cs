@@ -136,6 +136,20 @@ namespace Kvit.Api.Tests.Groups
         }
 
         [Fact]
+        public async Task ChangePassword_ByAGuest_Answers403GuestNotAllowedAndSetsNoPassword()
+        {
+            (_, GuestMember guest) = await CreateGroupWithGuestAsync();
+
+            HttpResponseMessage response = await AuthRequests.ChangePasswordAsync(guest.Client, "Some-Old-Pass1", StrongPassword);
+
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.Forbidden, ResultCodes.GUEST_NOT_ALLOWED);
+            List<string?> stored = await _app.QueryAsync(
+                "SELECT concat_ws('|', is_guest::text, (password_hash IS NULL)::text) FROM users WHERE id = @id",
+                new NpgsqlParameter("id", guest.UserId));
+            Assert.Equal("true|true", Assert.Single(stored));
+        }
+
+        [Fact]
         public async Task DeleteExpense_ByAGuest_OfAnExpenseAnotherMemberAdded_Answers403ExpenseNotAllowedAndKeepsIt()
         {
             (ExpenseGroup group, GuestMember guest) = await CreateGroupWithGuestAsync();

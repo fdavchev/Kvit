@@ -9,6 +9,7 @@ import type {
 } from '@/core/services/personalSummary/personalSummaryService'
 import { balancesCardLook } from '@/features/groups/balances/balancesLooks'
 import { KvitAmount } from '@/shared/components/KvitAmount'
+import { KvitRatesSourceNote } from '@/shared/components/KvitRatesSourceNote'
 import { cn } from '@/shared/utils/cn'
 import { currencyLabel, moneyParts, type Currency } from '@/shared/utils/formatMoney'
 import { signedMoneyParts } from '@/shared/utils/formatSignedMoney'
@@ -79,7 +80,10 @@ function ConvertedCard({ converted, hasConvertedItems }: ConvertedCardProps) {
         incomePreviousMinor={converted.incomePreviousMinor}
       />
       {hasConvertedItems && (
-        <p className={cn(smallLook, 'mt-1 text-muted-foreground')}>{t(includesConvertedKeys[converted.currency])}</p>
+        <>
+          <p className={cn(smallLook, 'mt-1 text-muted-foreground')}>{t(includesConvertedKeys[converted.currency])}</p>
+          <KvitRatesSourceNote />
+        </>
       )}
     </SummaryCard>
   )

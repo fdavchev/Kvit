@@ -24,7 +24,7 @@ export function KvitProgressBar({ label, spentMinor, limitMinor }: KvitProgressB
       aria-valuenow={Math.min(spentMinor, limitMinor)}
       aria-valuemax={limitMinor}
       data-limit-state={state}
-      className="block h-2 w-full overflow-hidden rounded-full bg-background"
+      className="block h-2 w-full overflow-hidden rounded-full bg-card-tint"
     >
       <span
         data-limit-fill

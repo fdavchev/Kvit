@@ -1,11 +1,12 @@
 import { useState, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
-import { errorMessageKey, hasErrorCode } from '@/core/api/errors'
+import { errorMessageKey } from '@/core/api/errors'
 import type { PersonalCategoryFields } from '@/core/services/personalCategories/personalCategoriesService'
 import { KvitChoiceChips } from '@/shared/components/KvitChoiceChips'
 import { KvitForm } from '@/shared/components/KvitForm'
 import { KvitSheet, type KvitSheetActions } from '@/shared/components/KvitSheet'
 import { KvitTextField } from '@/shared/components/KvitTextField'
+import { useFieldRefusals, type RefusedCodesOfField } from '@/shared/hooks/useFieldRefusals'
 import { personalCategoryEmojis } from '../personalCategoryEmojis'
 import { CategoryColorPicker } from './CategoryColorPicker'
 
@@ -25,13 +26,11 @@ type FieldName = keyof PersonalCategoryFields
 const nameMaxLength = 30
 const emojiMaxLength = 16
 
-const refusedCodesOf: Record<FieldName, readonly string[]> = {
+const refusedCodesOf: RefusedCodesOfField<FieldName> = {
   name: ['CATEGORY_NAME_INVALID', 'CATEGORY_NAME_TAKEN'],
   emoji: ['CATEGORY_EMOJI_INVALID'],
   color: ['CATEGORY_COLOR_INVALID'],
 }
-
-const nothingChanged: Record<FieldName, boolean> = { name: false, emoji: false, color: false }
 
 const emojiOptions = personalCategoryEmojis.map((emoji) => ({ value: emoji, label: emoji }))
 
@@ -47,19 +46,15 @@ export function CategoryFieldsSheet({
 }: CategoryFieldsSheetProps) {
   const { t } = useTranslation()
   const [fields, setFields] = useState<PersonalCategoryFields>(initialFields)
-  const [changedSinceSave, setChangedSinceSave] = useState<Record<FieldName, boolean>>(nothingChanged)
+  const refusals = useFieldRefusals(refusedCodesOf, error)
 
   function change<Name extends FieldName>(name: Name, value: PersonalCategoryFields[Name]): void {
     setFields((current) => ({ ...current, [name]: value }))
-    setChangedSinceSave((current) => ({ ...current, [name]: true }))
-  }
-
-  function isRefused(name: FieldName): boolean {
-    return refusedCodesOf[name].some((code) => hasErrorCode(error, code)) && !changedSinceSave[name]
+    refusals.noteChange(name)
   }
 
   function submit(): void {
-    setChangedSinceSave(nothingChanged)
+    refusals.noteSave()
     onSubmit({ ...fields, emoji: fields.emoji.trim() })
   }
 
@@ -81,7 +76,7 @@ export function CategoryFieldsSheet({
           autoComplete="off"
           enterKeyHint="done"
           autoFocus
-          invalid={isRefused('name')}
+          invalid={refusals.isRefused('name')}
         />
         <div className="flex flex-col gap-2">
           <KvitTextField
@@ -94,7 +89,7 @@ export function CategoryFieldsSheet({
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="done"
-            invalid={isRefused('emoji')}
+            invalid={refusals.isRefused('emoji')}
           />
           <KvitChoiceChips
             label={t('budget.categories.emojiPicks')}
@@ -108,7 +103,7 @@ export function CategoryFieldsSheet({
         </div>
         <CategoryColorPicker
           value={fields.color}
-          invalid={isRefused('color')}
+          invalid={refusals.isRefused('color')}
           onChange={(color) => change('color', color)}
         />
       </KvitForm>

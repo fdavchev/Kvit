@@ -99,6 +99,83 @@ describe('finding a group in the owner tools', () => {
       expect(toolsUrls(fetchMock, 'GET')).toEqual([])
     })
 
+    it.each([
+      ['a word', 'trip'],
+      ['a short number', '12345'],
+      ['a number with one digit missing', tripGroup.id.slice(0, -1)],
+      ['a number with a letter that is not a hex digit', `${tripGroup.id.slice(0, -1)}g`],
+      ['a number with one extra digit', `${tripGroup.id}1`],
+    ])('says %s is not a group number, beside the field and linked to it, and calls no server', async (_name, text) => {
+      const { fetchMock } = await renderOwnerTools({ answers: { [groupGet]: answerWith(tripGroup) } })
+      await findToolsTitle()
+      openTab('groups')
+
+      findGroupNumbered(text)
+
+      const alert = await screen.findByRole('alert')
+      const field = screen.getByLabelText(translated('en', 'ownerTools.groups.searchLabel'))
+      expect(alert.textContent).toBe("That's not a group number. Copy the whole number from the report email.")
+      expect(field.getAttribute('aria-invalid')).toBe('true')
+      expect(field.getAttribute('aria-describedby')).toBe(alert.id)
+      expect(toolsUrls(fetchMock, 'GET')).toEqual([])
+      expect(screen.queryByText(translated('en', 'errors.GROUP_NOT_FOUND'))).toBeNull()
+    })
+
+    it('says it is not a group number in Macedonian for a person who uses Macedonian', async () => {
+      await renderOwnerTools({ language: 'mk', answers: { [groupGet]: answerWith(tripGroup) } })
+      await findToolsTitle('mk')
+      openTab('groups', 'mk')
+
+      findGroupNumbered('trip', 'mk')
+
+      expect((await screen.findByRole('alert')).textContent).toBe(
+        'Ова не е број на група. Копирај го целиот број од е-поштата за пријава.',
+      )
+    })
+
+    it.each([
+      ['in capital letters', tripGroup.id.toUpperCase()],
+      ['without the dashes', tripGroup.id.replaceAll('-', '')],
+    ])('accepts a group number written %s and sends it', async (_name, text) => {
+      const { fetchMock } = await renderOwnerTools({
+        answers: { [`GET /api/admin/tools/groups/${text}`]: answerWith(tripGroup) },
+      })
+      await findToolsTitle()
+      openTab('groups')
+
+      findGroupNumbered(text)
+
+      await waitFor(() => {
+        expect(toolsUrls(fetchMock, 'GET')).toEqual([`/api/admin/tools/groups/${text}`])
+      })
+      expect(screen.queryByText(translated('en', 'ownerTools.groups.numberInvalid'))).toBeNull()
+    })
+
+    it('takes the message away and finds the group once a whole number is typed', async () => {
+      const { fetchMock } = await renderOwnerTools({ answers: { [groupGet]: answerWith(tripGroup) } })
+      await findToolsTitle()
+      openTab('groups')
+      findGroupNumbered('trip')
+      await screen.findByText(translated('en', 'ownerTools.groups.numberInvalid'))
+
+      findGroupNumbered(tripGroup.id)
+
+      await findGroupCard(tripGroup.name)
+      expect(toolsUrls(fetchMock, 'GET')).toEqual([groupUrl])
+      expect(screen.queryByText(translated('en', 'ownerTools.groups.numberInvalid'))).toBeNull()
+    })
+
+    it('says nothing about the number when Find is pressed with an empty field', async () => {
+      await renderOwnerTools({ answers: { [groupGet]: answerWith(tripGroup) } })
+      await findToolsTitle()
+      openTab('groups')
+
+      findGroupNumbered('   ')
+      await new Promise((resolve) => setTimeout(resolve, 30))
+
+      expect(screen.queryByText(translated('en', 'ownerTools.groups.numberInvalid'))).toBeNull()
+    })
+
     it('asks nothing while the number is only typed and Find is not pressed', async () => {
       const { fetchMock } = await renderOwnerTools({ answers: { [groupGet]: answerWith(tripGroup) } })
       await findToolsTitle()

@@ -4,6 +4,8 @@ import {
   defaultSplitDraft,
   splitProgress,
   withAutoFillRefreshed,
+  withNewPeopleInEveryoneSplit,
+  withOnlyPeopleAmong,
   withPersonIn,
   withSplitType,
   withTypedValueAutoFilled,
@@ -825,6 +827,122 @@ describe('withAutoFillRefreshed', () => {
     const copy = structuredClone(draft)
 
     withAutoFillRefreshed(draft, 200000, 'MKD')
+
+    expect(draft).toEqual(copy)
+  })
+})
+
+describe('withOnlyPeopleAmong', () => {
+  it('gives back the very same draft when everybody is still listed', () => {
+    const draft = draftOf('Equal', ['', '600'], threePeople)
+
+    expect(withOnlyPeopleAmong(draft, threePeople)).toBe(draft)
+  })
+
+  it('gives back the very same draft when the list has more people than the draft', () => {
+    const draft = draftOf('Equal', [], threePeople)
+
+    expect(withOnlyPeopleAmong(draft, fivePeople)).toBe(draft)
+  })
+
+  it('drops a person who is no longer listed and keeps the others as they were', () => {
+    const draft = draftOf('Exact', ['1200', '800', '300'], threePeople)
+
+    const pruned = withOnlyPeopleAmong(draft, [filipId, markoId])
+
+    expect(pruned.people).toEqual([draft.people[0], draft.people[2]])
+    expect(pruned.splitType).toBe('Exact')
+  })
+
+  it('keeps the typed values and the ticked-out state of the people who stay', () => {
+    const draft = draftOf('Equal', ['', '600', '', '150'], fivePeople.slice(0, 4), [markoId])
+
+    const pruned = withOnlyPeopleAmong(draft, [filipId, anaId, markoId])
+
+    expect(pruned.people).toEqual([
+      { memberId: filipId, isIn: true, typedValue: '', isTyped: false },
+      { memberId: anaId, isIn: true, typedValue: '600', isTyped: true },
+      { memberId: markoId, isIn: false, typedValue: '', isTyped: false },
+    ])
+  })
+
+  it('drops several people at once', () => {
+    const draft = draftOf('Shares', ['1', '2', '3', '4', '5'])
+
+    const pruned = withOnlyPeopleAmong(draft, [anaId, petarId])
+
+    expect(pruned.people.map((person) => person.memberId)).toEqual([anaId, petarId])
+  })
+
+  it('leaves an empty draft when nobody is listed any more', () => {
+    expect(withOnlyPeopleAmong(draftOf('Equal', []), []).people).toEqual([])
+  })
+
+  it('does not change the draft it was given', () => {
+    const draft = draftOf('Exact', ['1200', '800', '300'], threePeople)
+    const copy = structuredClone(draft)
+
+    withOnlyPeopleAmong(draft, [filipId])
+
+    expect(draft).toEqual(copy)
+  })
+})
+
+describe('withNewPeopleInEveryoneSplit', () => {
+  it('adds a new person to an untouched Equal split with everybody in', () => {
+    const draft = draftOf('Equal', [], [filipId, anaId])
+
+    const grown = withNewPeopleInEveryoneSplit(draft, [filipId, anaId, markoId])
+
+    expect(grown.people).toEqual([
+      ...draft.people,
+      { memberId: markoId, isIn: true, typedValue: '', isTyped: false },
+    ])
+  })
+
+  it('adds several new people and none of the ones already in the draft', () => {
+    const draft = draftOf('Equal', [], [filipId])
+
+    const grown = withNewPeopleInEveryoneSplit(draft, [filipId, anaId, markoId])
+
+    expect(grown.people.map((person) => person.memberId)).toEqual([filipId, anaId, markoId])
+  })
+
+  it('gives back the very same draft when there is nobody new', () => {
+    const draft = draftOf('Equal', [], threePeople)
+
+    expect(withNewPeopleInEveryoneSplit(draft, threePeople)).toBe(draft)
+  })
+
+  it('does not add anybody when someone is ticked out', () => {
+    const draft = draftOf('Equal', [], threePeople, [anaId])
+
+    expect(withNewPeopleInEveryoneSplit(draft, fivePeople)).toBe(draft)
+  })
+
+  it('does not add anybody when someone has a typed extra', () => {
+    const draft = draftOf('Equal', ['', '600', ''], threePeople)
+
+    expect(withNewPeopleInEveryoneSplit(draft, fivePeople)).toBe(draft)
+  })
+
+  it.each(['Exact', 'Percentage', 'Shares'] as const)('does not add anybody to a %s split', (splitType) => {
+    const draft = withSplitType(draftOf('Equal', [], threePeople), splitType)
+
+    expect(withNewPeopleInEveryoneSplit(draft, fivePeople)).toBe(draft)
+  })
+
+  it('adds nobody when the draft has no people and the list has none', () => {
+    const draft = draftOf('Equal', [], [])
+
+    expect(withNewPeopleInEveryoneSplit(draft, [])).toBe(draft)
+  })
+
+  it('does not change the draft it was given', () => {
+    const draft = draftOf('Equal', [], [filipId])
+    const copy = structuredClone(draft)
+
+    withNewPeopleInEveryoneSplit(draft, [filipId, anaId])
 
     expect(draft).toEqual(copy)
   })

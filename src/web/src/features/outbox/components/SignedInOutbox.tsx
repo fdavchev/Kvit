@@ -36,6 +36,18 @@ export function SignedInOutbox({ children }: SignedInOutboxProps) {
   )
 }
 
+export function PausedOutbox({ children }: SignedInOutboxProps) {
+  const queryClient = useQueryClient()
+  const personId = useSignedInMe().id
+  const sender = useMemo(() => {
+    const pausedSender = createSignedInSender(queryClient, personId)
+    pausedSender.pause()
+    return pausedSender
+  }, [queryClient, personId])
+
+  return <OutboxProvider sender={sender}>{children}</OutboxProvider>
+}
+
 function createSignedInSender(queryClient: QueryClient, personId: string): OutboxSender {
   return createOutboxSender({
     personId,

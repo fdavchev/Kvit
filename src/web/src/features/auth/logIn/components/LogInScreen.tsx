@@ -51,7 +51,7 @@ export function LogInScreen() {
 
   return (
     <KvitScreen>
-      <KvitBackButton to={pathBeforeSignIn(joinToken)} />
+      <KvitBackButton to={pathBeforeSignIn(joinToken)} replace />
       <div className="flex flex-1 flex-col justify-center pb-12">
         <KvitScreenTitle>{t('auth.logIn.title')}</KvitScreenTitle>
         <KvitForm
@@ -69,6 +69,7 @@ export function LogInScreen() {
               <KvitLinkButton
                 to={routes.signUp}
                 state={joinTokenState(joinToken)}
+                replace
                 variant="underlinedLink"
               >
                 {t('auth.logIn.noAccount')}

@@ -78,14 +78,15 @@ describe('the first answer to the "who am I" check says the server is asleep', (
     expect(assign).toHaveBeenCalledExactlyOnceWith(`http://localhost:5018/wake?returnTo=${encodeURIComponent(currentPath + currentSearch)}`)
   })
 
-  it('does not navigate again by itself less than 2 minutes after the last wake visit, and offers the button instead', async () => {
+  it('does not navigate again by itself less than 2 minutes after the last wake visit, and waits quietly without the button', async () => {
     rememberWakeVisitAt(pageOpenedAt - twoMinutes + 1)
-    const { followServerAnswer, readOfferedWakeUrl } = await loadServerWake()
+    const { followServerAnswer, readOfferedWakeUrl, readIsWaitingAfterWakeVisit } = await loadServerWake()
 
     followServerAnswer('GET', endpoints.me, asleepAnswer())
 
     expect(assign).not.toHaveBeenCalled()
-    expect(readOfferedWakeUrl()).toBe(wakeUrl)
+    expect(readOfferedWakeUrl()).toBeNull()
+    expect(readIsWaitingAfterWakeVisit()).toBe(true)
   })
 
   it('navigates by itself again once the last wake visit is 2 minutes old', async () => {
@@ -179,6 +180,121 @@ describe('an asleep answer that is not the first answer to the "who am I" check'
   })
 })
 
+describe('the quiet wait in the 2 minutes after a wake visit', () => {
+  const visitedThirtySecondsAgo = pageOpenedAt - 30_000
+  const waitLeft = twoMinutes - 30_000
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    rememberWakeVisitAt(visitedThirtySecondsAgo)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it.each([
+    ['GET', endpoints.me],
+    ['GET', endpoints.groups],
+    ['POST', endpoints.groups],
+  ])('waits without the button and without leaving the page for an asleep answer to %s %s', async (method, path) => {
+    const { followServerAnswer, readOfferedWakeUrl, readIsWaitingAfterWakeVisit } = await loadServerWake()
+
+    followServerAnswer(method, path, asleepAnswer())
+
+    expect(readIsWaitingAfterWakeVisit()).toBe(true)
+    expect(readOfferedWakeUrl()).toBeNull()
+    expect(assign).not.toHaveBeenCalled()
+  })
+
+  it('keeps waiting through more asleep answers until the 2 minutes after the visit are over', async () => {
+    const { followServerAnswer, readOfferedWakeUrl, readIsWaitingAfterWakeVisit } = await loadServerWake()
+    followServerAnswer('GET', endpoints.me, asleepAnswer())
+
+    vi.advanceTimersByTime(waitLeft - 1)
+    followServerAnswer('GET', endpoints.me, asleepAnswer())
+
+    expect(readIsWaitingAfterWakeVisit()).toBe(true)
+    expect(readOfferedWakeUrl()).toBeNull()
+    expect(assign).not.toHaveBeenCalled()
+  })
+
+  it('offers the wake button as today once the 2 minutes after the visit are over with the server still asleep', async () => {
+    const { followServerAnswer, readOfferedWakeUrl, readIsWaitingAfterWakeVisit } = await loadServerWake()
+    followServerAnswer('GET', endpoints.me, asleepAnswer())
+
+    vi.advanceTimersByTime(waitLeft)
+
+    expect(readIsWaitingAfterWakeVisit()).toBe(false)
+    expect(readOfferedWakeUrl()).toBe(wakeUrl)
+    expect(assign).not.toHaveBeenCalled()
+  })
+
+  it('stops waiting and offers no button when the server answers', async () => {
+    const { followServerAnswer, readOfferedWakeUrl, readIsWaitingAfterWakeVisit } = await loadServerWake()
+    followServerAnswer('GET', endpoints.me, asleepAnswer())
+
+    followServerAnswer('GET', endpoints.me, plainAnswer(200))
+    vi.advanceTimersByTime(waitLeft)
+
+    expect(readIsWaitingAfterWakeVisit()).toBe(false)
+    expect(readOfferedWakeUrl()).toBeNull()
+  })
+
+  it('keeps waiting through a server error that does not say the server is asleep', async () => {
+    const { followServerAnswer, readIsWaitingAfterWakeVisit } = await loadServerWake()
+    followServerAnswer('GET', endpoints.me, asleepAnswer())
+
+    followServerAnswer('GET', endpoints.me, plainAnswer(502))
+
+    expect(readIsWaitingAfterWakeVisit()).toBe(true)
+  })
+
+  it('does not wait for a server error that does not say the server is asleep', async () => {
+    const { followServerAnswer, readIsWaitingAfterWakeVisit } = await loadServerWake()
+
+    followServerAnswer('GET', endpoints.me, plainAnswer(502))
+
+    expect(readIsWaitingAfterWakeVisit()).toBe(false)
+  })
+
+  it('tells its listeners when the wait starts and when it ends, and not for asleep answers in between', async () => {
+    const { followServerAnswer, subscribeToServerWake, readIsWaitingAfterWakeVisit } = await loadServerWake()
+    const seenWaiting: boolean[] = []
+    subscribeToServerWake(() => seenWaiting.push(readIsWaitingAfterWakeVisit()))
+
+    followServerAnswer('GET', endpoints.me, asleepAnswer())
+    followServerAnswer('GET', endpoints.groups, asleepAnswer())
+    vi.advanceTimersByTime(waitLeft)
+
+    expect(seenWaiting).toEqual([true, false, false])
+  })
+
+  it('does not wait and offers the button as today when sessionStorage cannot be read', async () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('Storage is blocked', 'SecurityError')
+    })
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const { followServerAnswer, readOfferedWakeUrl, readIsWaitingAfterWakeVisit } = await loadServerWake()
+
+    followServerAnswer('GET', endpoints.groups, asleepAnswer())
+
+    expect(readIsWaitingAfterWakeVisit()).toBe(false)
+    expect(readOfferedWakeUrl()).toBe(wakeUrl)
+  })
+})
+
+describe('an asleep answer outside any wake visit', () => {
+  it('does not wait quietly and offers the button as today', async () => {
+    const { followServerAnswer, readOfferedWakeUrl, readIsWaitingAfterWakeVisit } = await loadServerWake()
+
+    followServerAnswer('GET', endpoints.groups, asleepAnswer())
+
+    expect(readIsWaitingAfterWakeVisit()).toBe(false)
+    expect(readOfferedWakeUrl()).toBe(wakeUrl)
+  })
+})
+
 describe('an asleep answer whose wake address cannot be trusted', () => {
   it.each([
     ['an http address that is not localhost', 'http://kvit-mk-api.onrender.com/wake'],
@@ -238,9 +354,9 @@ describe('the offered wake button', () => {
   })
 
   it('tells its listeners when it appears and when it goes away', async () => {
-    const { followServerAnswer, subscribeToWakeOffer } = await loadServerWake()
+    const { followServerAnswer, subscribeToServerWake } = await loadServerWake()
     const listener = vi.fn()
-    subscribeToWakeOffer(listener)
+    subscribeToServerWake(listener)
 
     followServerAnswer('GET', endpoints.groups, asleepAnswer())
     followServerAnswer('GET', endpoints.groups, asleepAnswer())

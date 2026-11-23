@@ -1,5 +1,9 @@
+using System.Globalization;
 using System.Text;
+using Kvit.Api.Tests.Cleanup;
 using Kvit.Api.Tests.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace Kvit.Api.Tests.DataProtection
@@ -74,6 +78,62 @@ namespace Kvit.Api.Tests.DataProtection
             using HttpClient client = factory.CreateClient();
 
             Assert.NotNull(client);
+        }
+
+        [Fact]
+        public void Start_WithAnExpiredCertificate_ThrowsAnInvalidOperationExceptionNamingTheSetting()
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            (string base64, string password) = TestCertificate.ValidBetween(now.AddYears(-2), now.AddDays(-1));
+            using KvitApiFactory factory = KvitApiFactory.WithDataProtectionSettings(base64, password);
+
+            Exception exception = Assert.ThrowsAny<Exception>(() => factory.CreateClient());
+
+            AssertNamesTheSettings(exception, CertificateBase64Key, "valid only from");
+        }
+
+        [Fact]
+        public void Start_WithACertificateThatIsNotValidYet_ThrowsAnInvalidOperationExceptionNamingTheSetting()
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            (string base64, string password) = TestCertificate.ValidBetween(now.AddDays(1), now.AddYears(1));
+            using KvitApiFactory factory = KvitApiFactory.WithDataProtectionSettings(base64, password);
+
+            Exception exception = Assert.ThrowsAny<Exception>(() => factory.CreateClient());
+
+            AssertNamesTheSettings(exception, CertificateBase64Key, "valid only from");
+        }
+
+        [Fact]
+        public void Start_WithACertificateThatExpiresWithin60Days_StartsAndLogsAWarningWithTheDate()
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            DateTimeOffset notAfter = now.AddDays(30);
+            (string base64, string password) = TestCertificate.ValidBetween(now.AddDays(-1), notAfter);
+            RecordingLoggerProvider logs = new();
+            using KvitApiFactory factory = KvitApiFactory.WithDataProtectionSettings(base64, password);
+            factory.AdditionalTestServices = services => services.AddSingleton<ILoggerProvider>(logs);
+
+            using HttpClient client = factory.CreateClient();
+
+            RecordedLogEntry warning = Assert.Single(logs.AllEntries, entry => entry.Message.Contains("login-key certificate", StringComparison.Ordinal));
+            Assert.Equal(LogLevel.Warning, warning.Level);
+            Assert.Contains(notAfter.UtcDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), warning.Message, StringComparison.Ordinal);
+            Assert.Contains(CertificateBase64Key, warning.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public void Start_WithACertificateThatExpiresInMoreThan60Days_LogsNoCertificateWarning()
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            (string base64, string password) = TestCertificate.ValidBetween(now.AddDays(-1), now.AddDays(90));
+            RecordingLoggerProvider logs = new();
+            using KvitApiFactory factory = KvitApiFactory.WithDataProtectionSettings(base64, password);
+            factory.AdditionalTestServices = services => services.AddSingleton<ILoggerProvider>(logs);
+
+            using HttpClient client = factory.CreateClient();
+
+            Assert.DoesNotContain(logs.AllEntries, entry => entry.Message.Contains("login-key certificate", StringComparison.Ordinal));
         }
 
         private static void AssertNamesTheSettings(Exception exception, params string[] settingNames)

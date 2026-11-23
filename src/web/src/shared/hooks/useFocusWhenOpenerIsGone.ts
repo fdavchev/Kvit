@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react'
+import { useEffect, useEffectEvent, useRef, type RefObject } from 'react'
 
 export interface FocusAfterSheet {
   opener: Element | null
@@ -10,6 +10,7 @@ export function useFocusWhenOpenerIsGone<T extends HTMLElement>(
   onFocusHandled: () => void,
 ): RefObject<T | null> {
   const ref = useRef<T>(null)
+  const markFocusHandled = useEffectEvent(onFocusHandled)
 
   useEffect(() => {
     if (focus === null || !isTarget) {
@@ -18,7 +19,7 @@ export function useFocusWhenOpenerIsGone<T extends HTMLElement>(
     if (focus.opener?.isConnected !== true) {
       ref.current?.focus()
     }
-    onFocusHandled()
-  }, [focus, isTarget, onFocusHandled])
+    markFocusHandled()
+  }, [focus, isTarget])
   return ref
 }

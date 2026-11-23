@@ -16,16 +16,10 @@ namespace Kvit.Application.Commands.Auth
     {
         public async Task<Result> Handle(SetPasswordCommand command, CancellationToken cancellationToken)
         {
-            Result<MeResponse> me = await _dispatcher.Query<GetMeQuery, MeResponse>(new GetMeQuery(), cancellationToken);
+            Result<MeResponse> me = await _dispatcher.FullAccountOfCallerAsync(cancellationToken);
             if (!me.IsSuccess)
             {
                 return me;
-            }
-
-            Result notGuest = AccountRules.CheckIsNotGuest(me.Value.IsGuest);
-            if (!notGuest.IsSuccess)
-            {
-                return notGuest;
             }
 
             Result newPassword = AccountRules.ValidatePassword(command.NewPassword);
@@ -35,7 +29,7 @@ namespace Kvit.Application.Commands.Auth
             }
 
             Guid userId = me.Value.Id;
-            Result set = await _unitOfWork.RunInTransactionAsync(() => _accountService.SetPasswordAsync(userId, command.NewPassword, cancellationToken), cancellationToken);
+            Result set = await _unitOfWork.RunInTransactionOnceMoreIfAccountChangedMeanwhileAsync(() => _accountService.SetPasswordAsync(userId, command.NewPassword, cancellationToken), cancellationToken);
             if (!set.IsSuccess)
             {
                 return set;

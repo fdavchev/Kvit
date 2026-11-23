@@ -54,6 +54,31 @@ describe('the Record another payment sheet when exactly one other person is in t
   it.each([
     ['a person with an account', anaMember],
     ['a name without an account', markoMember],
+  ])('chooses %s as soon as the sheet opens, before any direction is pressed', async (_name, other) => {
+    const { sheet } = await renderOpenSheet([filipMember, other])
+
+    expect(isPressed(sheetButton(sheet, other.displayName))).toBe(true)
+  })
+
+  it('records the payment from me to the only other person when only the amount is typed', async () => {
+    const { fetchMock } = await renderOpenSheet([filipMember, anaMember])
+    typeAmount('200')
+
+    expect(isDisabled(saveButton())).toBe(false)
+    fireEvent.click(saveButton())
+
+    await waitFor(() => {
+      expect(requestCount(fetchMock, 'POST', settlementsPath)).toBe(1)
+    })
+    expect(sentBody(fetchMock, 'POST', settlementsPath)).toMatchObject({
+      fromMemberId: filipMember.id,
+      toMemberId: anaMember.id,
+    })
+  })
+
+  it.each([
+    ['a person with an account', anaMember],
+    ['a name without an account', markoMember],
   ])('chooses %s as soon as Someone paid me is chosen', async (_name, other) => {
     const { sheet } = await renderOpenSheet([filipMember, other])
 
@@ -143,6 +168,14 @@ describe('the Record another payment sheet when two or more other people are in 
     unfreezeTime()
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
+  })
+
+  it('chooses nobody when the sheet opens', async () => {
+    const { sheet } = await renderOpenSheet([filipMember, anaMember, markoMember])
+
+    for (const other of [anaMember, markoMember]) {
+      expect(isPressed(sheetButton(sheet, other.displayName))).toBe(false)
+    }
   })
 
   it('chooses nobody when Someone paid me is chosen', async () => {

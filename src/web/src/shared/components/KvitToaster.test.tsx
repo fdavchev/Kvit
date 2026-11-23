@@ -13,7 +13,8 @@ vi.mock('sonner', () => ({
   },
 }))
 
-const bottomOffsetAboveTheLiftedToasts = 'calc(var(--toast-offset-bottom) + var(--toast-lift, 0px))'
+const bottomOffsetAboveTheLiftedToasts =
+  'min(var(--open-sheet-height, calc(var(--toast-offset-bottom) + var(--toast-lift, 0px))), calc(100dvh - 96px - env(safe-area-inset-top)))'
 
 function toasterProps(): ToasterProps {
   render(<KvitToaster />)
@@ -28,12 +29,27 @@ describe('KvitToaster', () => {
     toasterPropsSeen.latest = null
   })
 
-  it('puts the toasts at the bottom offset plus the lift, so a bar above them can lift them', () => {
+  it('puts the toasts above the open sheet when there is one, else at the bottom offset plus the lift, never higher than 96px below the top', () => {
     expect(toasterProps().offset).toEqual({ bottom: bottomOffsetAboveTheLiftedToasts })
   })
 
   it('uses the same bottom offset plus the lift on small screens', () => {
     expect(toasterProps().mobileOffset).toEqual({ bottom: bottomOffsetAboveTheLiftedToasts })
+  })
+
+  it('shows two or three toasts at once in full, one above the other, so each Undo can be tapped', () => {
+    const props = toasterProps()
+
+    expect(props.expand).toBe(true)
+    expect(props.visibleToasts).toBe(3)
+  })
+
+  it('labels the toast area with its own label and not with the container label that ends with the Alt+T hint', () => {
+    const props = toasterProps()
+
+    expect(props.customAriaLabel).toEqual(expect.any(String))
+    expect(props.customAriaLabel).not.toBe('')
+    expect(props.containerAriaLabel).toBeUndefined()
   })
 
   it('still shows the toasts at the bottom centre', () => {

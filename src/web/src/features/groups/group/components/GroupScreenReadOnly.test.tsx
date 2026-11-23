@@ -192,5 +192,41 @@ describe('the group screen when the group is read-only', () => {
 
       expect(screen.queryByRole('button', { name: 'Add a name' })).toBeNull()
     })
+
+    it('offers Add a name but no Share invite link to the owner of a group with one person and no expenses that is being closed', async () => {
+      await renderGroupApp(routes.group(groupId), { ...ownerView({ ...closingGroup, memberCount: 1 }), expenses: [] })
+
+      expect(await screen.findByRole('button', { name: 'Add a name' })).toBeTruthy()
+      expect(screen.queryByRole('button', { name: 'Share invite link' })).toBeNull()
+      expect(screen.queryByText('Have Kvit? Share the link and they join with their own account.')).toBeNull()
+    })
+
+    it('offers Share invite link beside Add a name while the group is open, so the test above proves something', async () => {
+      await renderGroupApp(routes.group(groupId), { ...ownerView({ ...testGroup, memberCount: 1 }), expenses: [] })
+
+      expect(await screen.findByRole('button', { name: 'Share invite link' })).toBeTruthy()
+      expect(screen.getByText('Have Kvit? Share the link and they join with their own account.')).toBeTruthy()
+    })
+
+    it.each([
+      ['the owner of an open group', ownerView(openGroup)],
+      ['a member of an open group', anaView(openGroup)],
+      ['the owner of a group that is being closed', ownerView(closingGroup)],
+    ])('shows the Recently deleted link to %s', async (_name, view) => {
+      await renderGroupApp(routes.group(groupId), view)
+
+      expect(await screen.findByRole('link', { name: /Recently deleted/ })).toBeTruthy()
+    })
+
+    it.each([
+      ['a member of a group that is being closed', anaView(closingGroup)],
+      ['the owner of a finished group', ownerView(finishedGroup)],
+      ['a member of a finished group', anaView(finishedGroup)],
+    ])('hides the Recently deleted link from %s, because the server refuses to restore', async (_name, view) => {
+      await renderGroupApp(routes.group(groupId), view)
+      await screen.findByRole('link', { name: /Dinner/ })
+
+      expect(screen.queryByRole('link', { name: /Recently deleted/ })).toBeNull()
+    })
   })
 })

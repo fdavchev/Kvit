@@ -1,6 +1,7 @@
 using System.Net;
 using Kvit.Api.Tests.Auth;
 using Kvit.Api.Tests.Hosting;
+using Kvit.Domain.Results;
 using Xunit;
 
 namespace Kvit.Api.Tests.Proxy
@@ -63,13 +64,13 @@ namespace Kvit.Api.Tests.Proxy
         [InlineData("")]
         [InlineData("not-an-ip")]
         [InlineData("203.0.113.1, 203.0.113.2")]
-        public async Task Request_WithTheRightSecretButNoSingleVisitorAddress_FailsWithAnInvalidOperationException(string? visitorAddress)
+        public async Task Request_WithTheRightSecretButNoSingleVisitorAddress_Answers500ServerError(string? visitorAddress)
         {
             HttpClient client = _app.CreateProductionClientSending(ProxiedApp.Secret, visitorAddress);
 
-            Exception exception = await Assert.ThrowsAnyAsync<Exception>(() => AuthRequests.GetMeAsync(client));
+            HttpResponseMessage response = await AuthRequests.GetMeAsync(client);
 
-            Assert.Contains(ExceptionChain.Of(exception), candidate => candidate is InvalidOperationException);
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.InternalServerError, ResultCodes.SERVER_ERROR);
         }
     }
 }

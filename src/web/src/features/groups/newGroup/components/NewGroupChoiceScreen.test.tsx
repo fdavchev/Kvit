@@ -92,7 +92,7 @@ describe('NewGroupChoiceScreen', () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe(routes.newBill)
     })
-    expect(screen.getByText('one bill page')).toBeTruthy()
+    expect(await screen.findByText('one bill page')).toBeTruthy()
   })
 
   it('opens the group form with one tap on its row', async () => {
@@ -103,7 +103,7 @@ describe('NewGroupChoiceScreen', () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe(routes.newGroupGroup)
     })
-    expect(screen.getByText('group form page')).toBeTruthy()
+    expect(await screen.findByText('group form page')).toBeTruthy()
   })
 
   it('opens the groups list when the back button is pressed', async () => {

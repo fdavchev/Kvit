@@ -166,6 +166,17 @@ describe('expense routes followed through the real route table', () => {
       expect(screen.getByRole('link', { name: translated('en', 'groups.goToGroups') })).toBeTruthy()
       expect(screen.queryByRole('button', { name: translated('en', 'common.retry') })).toBeNull()
     })
+
+    it.each(['not-a-guid', 'not-a-guid/edit'])('never asks the server for an expense whose id is not a guid (%s)', async (path) => {
+      const fetchMock = stubSignedInPerson({
+        [`GET ${expensesPath}/not-a-guid`]: () => new Response(null, { status: 404 }),
+      })
+
+      await renderRoutesWithProviders(routeObjects, `${routes.group(groupId)}/expenses/${path}`)
+
+      expect((await screen.findByRole('alert')).textContent).toContain(translated('en', 'errors.EXPENSE_NOT_FOUND'))
+      expect(fetchMock.mock.calls.map(([url]) => String(url))).not.toContain(`${expensesPath}/not-a-guid`)
+    })
   })
 
   describe('moving around', () => {

@@ -7,8 +7,8 @@ import {
   type NewRecurringIncome,
   type RecurringIncomeFields,
 } from '@/core/services/recurringIncomes/recurringIncomesService'
+import type { SaveRun } from '@/shared/hooks/saveRun'
 import type { SaveOnce } from '../../categories/hooks/useSaveOnce'
-import type { PersonalEntryRun } from '../../entries/hooks/useAddPersonalEntry'
 import { catchUpAfterChange, catchUpFailedMessageKey } from '../recurringIncomeCache'
 
 export interface RecurringIncomeEdit {
@@ -19,7 +19,7 @@ export interface RecurringIncomeEdit {
 function useSaveThenCatchUp<Input>(
   save: (input: Input) => Promise<unknown>,
   oneAtATime: SaveOnce,
-): PersonalEntryRun<Input> {
+): SaveRun<Input> {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const mutation = useMutation<boolean, Error, Input>({
@@ -49,11 +49,11 @@ function useSaveThenCatchUp<Input>(
   }
 }
 
-export function useCreateRecurringIncome(oneAtATime: SaveOnce): PersonalEntryRun<NewRecurringIncome> {
+export function useCreateRecurringIncome(oneAtATime: SaveOnce): SaveRun<NewRecurringIncome> {
   return useSaveThenCatchUp(createRecurringIncome, oneAtATime)
 }
 
-export function useEditRecurringIncome(oneAtATime: SaveOnce): PersonalEntryRun<RecurringIncomeEdit> {
+export function useEditRecurringIncome(oneAtATime: SaveOnce): SaveRun<RecurringIncomeEdit> {
   return useSaveThenCatchUp(
     ({ recurringIncomeId, fields }: RecurringIncomeEdit) => editRecurringIncome(recurringIncomeId, fields),
     oneAtATime,

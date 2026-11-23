@@ -6,6 +6,8 @@ namespace Kvit.Infrastructure.Persistence.Configurations
 {
     public class ExpenseShareConfiguration : IEntityTypeConfiguration<ExpenseShare>
     {
+        public const string PrimaryKeyName = "pk_expense_shares";
+
         public void Configure(EntityTypeBuilder<ExpenseShare> builder)
         {
             builder.ToTable("expense_shares", table =>
@@ -14,7 +16,7 @@ namespace Kvit.Infrastructure.Persistence.Configurations
                 table.HasCheckConstraint("ck_expense_shares_share_minor_not_negative", "share_minor >= 0");
             });
 
-            builder.HasKey(share => new { share.ExpenseId, share.MemberId });
+            builder.HasKey(share => new { share.ExpenseId, share.MemberId }).HasName(PrimaryKeyName);
 
             builder.Property(share => share.CountsInBudget).HasDefaultValue(true).ValueGeneratedNever();
 

@@ -1,12 +1,12 @@
 import { useTranslation } from 'react-i18next'
 import { errorMessageKey } from '@/core/api/errors'
 import type { ExpensePerson } from '@/features/expenses/shared/expensePeople'
-import { useCancelSettlement } from '@/features/settlements/pending/hooks/useCancelSettlement'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
-import { KvitButton } from '@/shared/components/KvitButton'
 import { KvitInlineError } from '@/shared/components/KvitInlineError'
 import { cn } from '@/shared/utils/cn'
-import { balancesRowLook, balancesRowTextLook, balancesTextButtonLook } from '../balancesLooks'
+import { balancesRowLook, balancesRowTextLook } from '../balancesLooks'
+import { useCancelWaitingPayment } from '../hooks/useCancelWaitingPayment'
+import { CancelPaymentButton } from './CancelPaymentButton'
 
 interface WaitingPaymentRowProps {
   groupId: string
@@ -26,7 +26,7 @@ export function WaitingPaymentRow({
   canCancel,
 }: WaitingPaymentRowProps) {
   const { t } = useTranslation()
-  const cancelSettlement = useCancelSettlement(groupId, settlementId)
+  const cancelPayment = useCancelWaitingPayment(groupId, settlementId)
 
   return (
     <li className="flex flex-col gap-2 border-t border-field-border pt-2.5">
@@ -36,18 +36,9 @@ export function WaitingPaymentRow({
           <p className="font-bold break-words">{title}</p>
           <p className="text-[0.8125rem] text-muted-foreground">{detail}</p>
         </div>
-        {canCancel && (
-          <KvitButton
-            variant="underlinedLink"
-            className={balancesTextButtonLook}
-            disabled={cancelSettlement.isPending}
-            onClick={() => cancelSettlement.mutate()}
-          >
-            {t('settlements.cancel')}
-          </KvitButton>
-        )}
+        {canCancel && <CancelPaymentButton cancelPayment={cancelPayment} />}
       </div>
-      {cancelSettlement.isError && <KvitInlineError message={t(errorMessageKey(cancelSettlement.error))} />}
+      {cancelPayment.error !== null && <KvitInlineError message={t(errorMessageKey(cancelPayment.error))} />}
     </li>
   )
 }

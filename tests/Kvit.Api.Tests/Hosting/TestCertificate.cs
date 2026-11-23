@@ -11,17 +11,23 @@ namespace Kvit.Api.Tests.Hosting
 
         public static string Password => Created.Value.Password;
 
-        private static (string Base64, string Password) Create()
+        public static (string Base64, string Password) ValidBetween(DateTimeOffset notBefore, DateTimeOffset notAfter)
         {
             string password = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
-            DateTimeOffset now = DateTimeOffset.UtcNow;
 
             using RSA key = RSA.Create(2048);
             CertificateRequest request = new("CN=Kvit test certificate", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-            using X509Certificate2 certificate = request.CreateSelfSigned(now.AddDays(-1), now.AddYears(1));
+            using X509Certificate2 certificate = request.CreateSelfSigned(notBefore, notAfter);
 
             byte[] pfx = certificate.Export(X509ContentType.Pfx, password);
             return (Convert.ToBase64String(pfx), password);
+        }
+
+        private static (string Base64, string Password) Create()
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+
+            return ValidBetween(now.AddDays(-1), now.AddYears(1));
         }
     }
 }

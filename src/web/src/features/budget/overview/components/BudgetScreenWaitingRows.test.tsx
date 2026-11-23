@@ -66,6 +66,15 @@ describe('BudgetScreen with changes waiting in the outbox', () => {
   })
 
   describe('a waiting personal entry of the month on the screen', () => {
+    it('is not shown once the server saved it and the month has been loaded, so it never sits beside its real row', async () => {
+      const savedEntry: OutboxItem = { ...queuedPersonalEntry('saved', { display: { title: 'Saved bakery run' } }), isSaved: true }
+      await renderBudgetWithWaiting({ waiting: [queuedPersonalEntry('waiting'), savedEntry] })
+
+      await findWaitingRowWith('Bakery run')
+
+      expect(waitingRowTexts().filter((text) => text.includes('Saved bakery run'))).toEqual([])
+    })
+
     it('is shown as a greyed row with its note, its amount and "Not synced yet"', async () => {
       await renderBudgetWithWaiting({ waiting: [queuedPersonalEntry('waiting')] })
 

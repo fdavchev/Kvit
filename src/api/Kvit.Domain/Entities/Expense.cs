@@ -90,6 +90,16 @@ namespace Kvit.Domain.Entities
             return Result.Failure<T>($"The request id {clientRequestId} was already used for another group or by another person.", ResultCodes.EXPENSE_CLIENT_REQUEST_ID_USED);
         }
 
+        public static Result ChangedMeanwhile(Guid expenseId)
+        {
+            return Result.Conflict($"Someone else changed expense {expenseId} at the same moment; nothing of this change was saved.", ResultCodes.EXPENSE_CHANGED_MEANWHILE);
+        }
+
+        public static Result<T> ChangedSinceOpened<T>(Guid expenseId, uint openedVersion, uint currentVersion)
+        {
+            return Result.Conflict<T>($"Expense {expenseId} was changed after this edit was opened (opened at version {openedVersion}, now at version {currentVersion}); nothing of this change was saved.", ResultCodes.EXPENSE_CHANGED_MEANWHILE);
+        }
+
         public static Result<IReadOnlyList<SplitShare>> SplitAmong(GroupRoster roster, ExpenseFields fields, Guid paidByMemberId, IReadOnlyList<SplitInput> inputs)
         {
             Result<NamedMember> payer = roster.FindCurrent(paidByMemberId);
@@ -105,6 +115,29 @@ namespace Kvit.Domain.Entities
             }
 
             return Splitter.Calculate(fields.SplitType, fields.Amount, paidByMemberId, inJoiningOrder.Value);
+        }
+
+        public Result<IReadOnlyList<SplitShare>> SplitAgainAmong(GroupRoster roster, ExpenseFields fields, Guid paidByMemberId, IReadOnlyList<SplitInput> inputs)
+        {
+            if (paidByMemberId != PaidByMemberId)
+            {
+                Result<NamedMember> payer = roster.FindCurrent(paidByMemberId);
+                if (!payer.IsSuccess)
+                {
+                    return payer.ToFailure<IReadOnlyList<SplitShare>>();
+                }
+            }
+
+            foreach (SplitInput input in inputs.Where(input => !KeepsItsShare(input, fields.SplitType)))
+            {
+                Result<NamedMember> row = roster.FindCurrent(input.MemberId);
+                if (!row.IsSuccess)
+                {
+                    return row.ToFailure<IReadOnlyList<SplitShare>>();
+                }
+            }
+
+            return Splitter.Calculate(fields.SplitType, fields.Amount, paidByMemberId, roster.InJoiningOrder(inputs, input => input.MemberId));
         }
 
         public static DateTimeOffset RestorableUntil(DateTimeOffset deletedAt)
@@ -158,6 +191,11 @@ namespace Kvit.Domain.Entities
             DeletedByUserId = null;
 
             return Result.Ok();
+        }
+
+        private bool KeepsItsShare(SplitInput input, SplitType splitType)
+        {
+            return splitType == SplitType && _shares.Any(share => share.MemberId == input.MemberId && share.InputValue == input.InputValue);
         }
 
         private void ApplyFields(ExpenseFields fields, Guid paidByMemberId)

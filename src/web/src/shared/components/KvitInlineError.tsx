@@ -1,10 +1,11 @@
 interface KvitInlineErrorProps {
   message: string
+  id?: string
 }
 
-export function KvitInlineError({ message }: KvitInlineErrorProps) {
+export function KvitInlineError({ message, id }: KvitInlineErrorProps) {
   return (
-    <p role="alert" className="font-semibold text-pretty text-destructive">
+    <p id={id} role="alert" className="font-semibold text-pretty text-destructive">
       {message}
     </p>
   )

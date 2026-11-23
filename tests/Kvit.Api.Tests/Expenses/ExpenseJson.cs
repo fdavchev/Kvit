@@ -6,7 +6,7 @@ namespace Kvit.Api.Tests.Expenses
     {
         public static readonly string[] DetailFieldNames = Sorted(
             "id", "groupId", "title", "note", "amountMinor", "currency", "expenseDate", "categoryId", "paidByMemberId", "paidByName", "splitType",
-            "mkdPerEur", "rateDate", "createdByUserId", "createdByName", "createdAt", "updatedAt", "canEdit", "shares", "history");
+            "mkdPerEur", "rateDate", "createdByUserId", "createdByName", "createdAt", "updatedAt", "canEdit", "version", "shares", "history");
 
         public static readonly string[] ShareFieldNames = Sorted("memberId", "name", "inputValue", "shareMinor");
 

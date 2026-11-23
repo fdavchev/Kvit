@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kvit light theme: which peach?</title>
+<style>
+  :root { --text: #3d2610; --soft: #7a3300; --brand: #b54a00; --ok: #1f6b3a; --bad: #b71f1f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, "Segoe UI", sans-serif; background: #f4f4f4; color: #222; }
+  header { padding: 16px; max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin: 0 0 6px; }
+  header p { margin: 0 0 12px; font-size: 0.95rem; }
+  .picker { display: flex; gap: 8px; flex-wrap: wrap; }
+  .picker button { font: inherit; font-weight: 700; padding: 12px 18px; border-radius: 999px; border: 2px solid #999; background: #fff; cursor: pointer; min-height: 44px; }
+  .picker button[aria-pressed="true"] { background: #222; color: #fff; border-color: #222; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; padding: 0 16px 32px; }
+  .phone { width: 320px; border-radius: 28px; padding: 20px 16px 16px; background: var(--page); color: var(--text); border: 6px solid #222; }
+  .phone.dim { opacity: 0.35; }
+  .phone h2 { margin: 0 0 14px; font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; }
+  .label { font-size: 0.8rem; font-weight: 700; margin: 0 0 8px; color: var(--soft); }
+  .card { background: var(--card); border-radius: 18px; padding: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-weight: 600; }
+  .card small { display: block; font-weight: 500; color: var(--soft); font-size: 0.8rem; }
+  .plus { color: var(--ok); font-weight: 800; white-space: nowrap; }
+  .minus { color: var(--bad); font-weight: 800; white-space: nowrap; }
+  .field { background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 14px; font-weight: 600; margin-bottom: 10px; }
+  .tabs { display: flex; background: var(--card); border-radius: 999px; padding: 4px; margin-bottom: 12px; }
+  .tabs span { flex: 1; text-align: center; padding: 10px 0; border-radius: 999px; font-weight: 700; color: var(--soft); }
+  .tabs span.on { background: var(--pill); color: var(--text); box-shadow: 0 1px 3px rgb(61 38 16 / 18%); }
+  .btn { background: var(--brand); color: #fff; border-radius: 16px; padding: 16px; text-align: center; font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; }
+  .btn2 { background: var(--card); color: var(--soft); border-radius: 16px; padding: 14px; text-align: center; font-weight: 700; }
+  .name { text-align: center; font-weight: 800; margin: 10px 0 0; color: #222; }
+  .note { text-align: center; font-size: 0.8rem; color: #444; margin: 2px 0 0; max-width: 320px; }
+  .o1 { --page: #ffd9a8; --card: #fff1dc; --line: #9c6f47; --pill: #ffffff; }
+  .o2 { --page: #ffead0; --card: #fff9f0; --line: #d9b48a; --pill: #ffffff; }
+  .o3 { --page: #fff4e6; --card: #ffffff; --line: #e6c9a3; --pill: #ffe9cc; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Kvit light theme: which peach?</h1>
+  <p>Three options side by side. Tap a button to highlight one. Option 1 is the app today. This is a picture of the colours only, not the real app.</p>
+  <div class="picker">
+    <button type="button" data-pick="all" aria-pressed="true">Show all</button>
+    <button type="button" data-pick="o1" aria-pressed="false">1 · Today</button>
+    <button type="button" data-pick="o2" aria-pressed="false">2 · Lighter</button>
+    <button type="button" data-pick="o3" aria-pressed="false">3 · Lightest</button>
+  </div>
+</header>
+<div class="row" id="row"></div>
+<template id="phone">
+  <div>
+    <div class="phone">
+      <h2>Hi, Filip</h2>
+      <div class="tabs"><span class="on">Expenses</span><span>Balances</span><span>Activity</span></div>
+      <p class="label">GROUPS</p>
+      <div class="card"><span>🏖️ Ohrid trip<small>4 people</small></span><span class="plus">+1,850 MKD</span></div>
+      <div class="card"><span>🏠 Flat<small>3 people</small></span><span class="minus">−620 MKD</span></div>
+      <p class="label">TITLE</p>
+      <div class="field">Dinner at Kaneo</div>
+      <div class="btn">Save</div>
+      <div class="btn2">Log out</div>
+    </div>
+    <p class="name"></p>
+    <p class="note"></p>
+  </div>
+</template>
+<script>
+  const options = [
+    { key: 'o1', name: '1 · Today', note: 'Page #ffd9a8, cards #fff1dc, field lines #9c6f47' },
+    { key: 'o2', name: '2 · Lighter', note: 'Page #ffead0, cards #fff9f0, field lines #d9b48a (lines are faint: weaker than the 3:1 rule)' },
+    { key: 'o3', name: '3 · Lightest', note: 'Page #fff4e6, cards white, field lines #e6c9a3 (lines are faint: weaker than the 3:1 rule)' },
+  ];
+  const row = document.getElementById('row');
+  const template = document.getElementById('phone');
+  for (const option of options) {
+    const node = template.content.cloneNode(true);
+    const phone = node.querySelector('.phone');
+    phone.classList.add(option.key);
+    phone.dataset.key = option.key;
+    node.querySelector('.name').textContent = option.name;
+    node.querySelector('.note').textContent = option.note;
+    row.appendChild(node);
+  }
+  const buttons = document.querySelectorAll('.picker button');
+  for (const button of buttons) {
+    button.addEventListener('click', () => {
+      for (const other of buttons) other.setAttribute('aria-pressed', String(other === button));
+      for (const phone of document.querySelectorAll('.phone')) {
+        phone.classList.toggle('dim', button.dataset.pick !== 'all' && phone.dataset.key !== button.dataset.pick);
+      }
+    });
+  }
+</script>
+</body>
+</html>

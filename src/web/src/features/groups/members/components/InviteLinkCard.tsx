@@ -21,6 +21,7 @@ export function InviteLinkCard({ group, canResetLink }: InviteLinkCardProps) {
   const resetLink = useResetInviteLink(group.id)
   const undoResetLink = useUndoResetInviteLink(group.id)
   const shownLink = `${window.location.host}${routes.join(group.inviteToken)}`
+  const canInvite: boolean = canInviteToGroup(group)
 
   function showFailure(error: Error): void {
     console.error('Changing the invite link failed', error)
@@ -48,14 +49,16 @@ export function InviteLinkCard({ group, canResetLink }: InviteLinkCardProps) {
     <section className="flex flex-col gap-2">
       <h2 className="text-[1.0625rem] font-bold">{t('members.invite.title')}</h2>
       <div className="flex flex-col gap-3 rounded-[20px] bg-card p-[18px] text-card-foreground">
-        <p className="rounded-xl border border-field-border bg-field px-3 py-2.5 text-[0.8125rem] break-all text-field-foreground">
-          {shownLink}
-        </p>
-        {canInviteToGroup(group) && (
+        {canInvite && (
+          <p className="rounded-xl border border-field-border bg-field px-3 py-2.5 text-[0.8125rem] break-all text-field-foreground">
+            {shownLink}
+          </p>
+        )}
+        {canInvite && (
           <div className="flex gap-2">
             <KvitButton
               className="min-h-12 min-w-0 flex-1 shrink px-3 text-base"
-              onClick={() => void inviteLinkActions.share(group.inviteToken)}
+              onClick={() => void inviteLinkActions.share(group.inviteToken, group.name)}
             >
               {t('members.invite.share')}
             </KvitButton>

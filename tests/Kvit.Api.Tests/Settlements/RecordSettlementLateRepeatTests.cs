@@ -76,17 +76,21 @@ namespace Kvit.Api.Tests.Settlements
         }
 
         [Fact]
-        public async Task Record_RepeatAfterTheSettlementWasDeleted_Answers404SettlementNotFoundAndSavesNothingNew()
+        public async Task Record_RepeatAfterTheConfirmedSettlementWasDeleted_Answers200WithTheSameSettlementAndSavesNothingNew()
         {
             SettlementGroup group = await SettlementSteps.CreateGroupAsync(_app);
             Guid clientRequestId = Guid.CreateVersion7();
             Guid settlementId = await SettlementSteps.RecordAsync(group.Member, group.GroupId, group.OwnerRowId, group.MemberRowId, clientRequestId: clientRequestId);
+            Assert.Equal("Confirmed", await SettlementRows.ValueAsync(_app, settlementId, "status"));
             await SettlementSteps.DeleteAsync(group.Member, group.GroupId, settlementId);
             string before = await SettlementRows.SnapshotAsync(_app, group.GroupId);
 
             HttpResponseMessage response = await SettlementRequests.RecordAsync(group.Member.Client, group.GroupId, group.OwnerRowId, group.MemberRowId, SettlementRequests.DefaultAmountMinor, ExpenseInputs.Mkd, clientRequestId);
 
-            await ProblemResponse.AssertAsync(response, HttpStatusCode.NotFound, ResultCodes.SETTLEMENT_NOT_FOUND);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            JsonElement body = await AuthRequests.ReadJsonAsync(response);
+            Assert.Equal(settlementId, body.GetProperty("id").GetGuid());
+            Assert.Equal("Confirmed", body.GetProperty("status").GetString());
             Assert.Equal(before, await SettlementRows.SnapshotAsync(_app, group.GroupId));
         }
 

@@ -15,6 +15,8 @@ namespace Kvit.Api.Tests.Application
 
         public Queue<Exception> CommitFailures { get; } = new();
 
+        public List<Exception> LoggedClashes { get; } = [];
+
         public Task OpenTransactionAsync(CancellationToken cancellationToken)
         {
             return Record(OpenedCall, cancellationToken);
@@ -34,6 +36,11 @@ namespace Kvit.Api.Tests.Application
         public Task RollbackAsync(CancellationToken cancellationToken)
         {
             return Record(RolledBackCall, cancellationToken);
+        }
+
+        public void LogCaughtClash(Exception clash, string nextStep)
+        {
+            LoggedClashes.Add(clash);
         }
 
         private Task Record(string call, CancellationToken cancellationToken)

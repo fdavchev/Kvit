@@ -7,7 +7,7 @@ import { routes } from '@/core/router/routes'
 import type { Me } from '@/core/services/me/meService'
 import { queuedExpense, queuedPersonalEntry } from '@/test/outboxScreenTestData'
 import { outboxText } from '@/test/outboxTextsTestData'
-import { createDeferred, fakeIdbKeyval, seedOutbox, storedIds } from '@/test/outboxTestHelpers'
+import { createDeferred, fakeIdbKeyval, seedOutbox, storedIds, storedOutbox } from '@/test/outboxTestHelpers'
 import { renderElementWithProviders } from '@/test/renderWithProviders'
 import { seedMe, testGuestMe, testMe } from '@/test/testMe'
 import { resetThemeDocument } from '@/test/themeTestHelpers'
@@ -60,7 +60,7 @@ afterEach(() => {
 })
 
 describe('SettingsScreen log out deleting exactly the changes the warning counted', () => {
-  it('removes the counted changes one by one and does not delete the whole queue of the person', async () => {
+  it('removes the counted changes and then the outbox of the person, which is empty by then', async () => {
     const { answer, fetchMock } = holdTheLogOutRequest()
     await renderSettings(testMe, [queuedExpense('a'), queuedPersonalEntry('b')])
     pressLogOut()
@@ -74,9 +74,9 @@ describe('SettingsScreen log out deleting exactly the changes the warning counte
     })
 
     await waitFor(() => {
-      expect(storedIds(testMe.id)).toEqual([])
+      expect(storedOutbox.has(testMe.id)).toBe(false)
     })
-    expect(fakeIdbKeyval.del).not.toHaveBeenCalled()
+    expect(fakeIdbKeyval.del.mock.calls.map(([personId]) => personId)).toEqual([testMe.id])
   })
 
   it('keeps a change that was queued while the log-out request was still running, because it was never counted', async () => {

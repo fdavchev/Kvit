@@ -4,13 +4,21 @@ export const serverAsleepHeader = 'x-kvit-server-asleep'
 export const wakeUrlHeader = 'x-kvit-wake-url'
 export const lastWakeVisitKey = 'kvit.lastWakeVisitAt'
 export const automaticWakeRepeatGuardMilliseconds = 2 * 60 * 1000
+export const retryWhileServerWakesMilliseconds = 3000
 
 const returnToParameter = 'returnTo'
 const firstServerErrorStatus = 500
 const localHostnames: readonly string[] = ['localhost', '127.0.0.1', '[::1]']
 
+type LastWakeVisit =
+  | { kind: 'unreadable' }
+  | { kind: 'none' }
+  | { kind: 'recent'; waitLeftMilliseconds: number }
+
 let hasMeCheckBeenAnswered = false
 let offeredWakeUrl: string | null = null
+let wakeUrlOfWait: string | null = null
+let waitEndTimer: ReturnType<typeof setTimeout> | null = null
 const listeners = new Set<() => void>()
 
 export function followServerAnswer(method: string, path: string, response: Response): void {
@@ -20,6 +28,7 @@ export function followServerAnswer(method: string, path: string, response: Respo
     hasMeCheckBeenAnswered = true
   }
   if (response.status < firstServerErrorStatus) {
+    stopWaitingAfterWakeVisit()
     setOfferedWakeUrl(null)
     return
   }
@@ -27,7 +36,14 @@ export function followServerAnswer(method: string, path: string, response: Respo
   if (wakeUrl === null) {
     return
   }
-  if (isFirstMeCheckAnswer && wakeAutomatically(wakeUrl)) {
+  const now = Date.now()
+  const lastVisit = readLastWakeVisit(now)
+  if (lastVisit.kind === 'recent') {
+    waitAfterWakeVisit(wakeUrl, lastVisit.waitLeftMilliseconds)
+    return
+  }
+  if (lastVisit.kind === 'none' && isFirstMeCheckAnswer && rememberWakePageVisit(now)) {
+    goToWakePage(wakeUrl)
     return
   }
   setOfferedWakeUrl(wakeUrl)
@@ -62,28 +78,49 @@ function isAllowedWakeUrl(wakeUrl: string): boolean {
   return url.protocol === 'https:' || (url.protocol === 'http:' && localHostnames.includes(url.hostname))
 }
 
-function wakeAutomatically(wakeUrl: string): boolean {
-  const now = Date.now()
-  if (wasWakePageVisitedRecently(now) || !rememberWakePageVisit(now)) {
-    return false
-  }
-  goToWakePage(wakeUrl)
-  return true
-}
-
-function wasWakePageVisitedRecently(now: number): boolean {
+function readLastWakeVisit(now: number): LastWakeVisit {
   let savedVisit: string | null
   try {
     savedVisit = window.sessionStorage.getItem(lastWakeVisitKey)
   } catch (error) {
     console.error(
-      'Kvit cannot read when it last sent you through the wake page (sessionStorage), so it does not do it again by itself',
+      'Kvit cannot read when it last sent you through the wake page (sessionStorage), so it does not do it again by itself and does not wait for the server quietly',
       error,
     )
-    return true
+    return { kind: 'unreadable' }
   }
   const visitedAt = savedVisit === null ? Number.NaN : Number(savedVisit)
-  return Number.isFinite(visitedAt) && now - visitedAt < automaticWakeRepeatGuardMilliseconds
+  if (!Number.isFinite(visitedAt) || now - visitedAt >= automaticWakeRepeatGuardMilliseconds) {
+    return { kind: 'none' }
+  }
+  return { kind: 'recent', waitLeftMilliseconds: visitedAt + automaticWakeRepeatGuardMilliseconds - now }
+}
+
+function waitAfterWakeVisit(wakeUrl: string, waitLeftMilliseconds: number): void {
+  wakeUrlOfWait = wakeUrl
+  if (waitEndTimer !== null) {
+    return
+  }
+  waitEndTimer = setTimeout(endWaitAfterWakeVisit, waitLeftMilliseconds)
+  notifyListeners()
+}
+
+function endWaitAfterWakeVisit(): void {
+  const wakeUrl = wakeUrlOfWait
+  waitEndTimer = null
+  wakeUrlOfWait = null
+  notifyListeners()
+  setOfferedWakeUrl(wakeUrl)
+}
+
+function stopWaitingAfterWakeVisit(): void {
+  if (waitEndTimer === null) {
+    return
+  }
+  clearTimeout(waitEndTimer)
+  waitEndTimer = null
+  wakeUrlOfWait = null
+  notifyListeners()
 }
 
 function rememberWakePageVisit(now: number): boolean {
@@ -110,10 +147,14 @@ function setOfferedWakeUrl(wakeUrl: string | null): void {
     return
   }
   offeredWakeUrl = wakeUrl
+  notifyListeners()
+}
+
+function notifyListeners(): void {
   listeners.forEach((listener) => listener())
 }
 
-export function subscribeToWakeOffer(listener: () => void): () => void {
+export function subscribeToServerWake(listener: () => void): () => void {
   listeners.add(listener)
   return () => {
     listeners.delete(listener)
@@ -122,4 +163,8 @@ export function subscribeToWakeOffer(listener: () => void): () => void {
 
 export function readOfferedWakeUrl(): string | null {
   return offeredWakeUrl
+}
+
+export function readIsWaitingAfterWakeVisit(): boolean {
+  return waitEndTimer !== null
 }

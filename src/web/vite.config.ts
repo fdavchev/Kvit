@@ -16,6 +16,15 @@ export default defineConfig({
     css: { include: [/index\.css/] },
     server: { deps: { inline: ['@number-flow/react', 'number-flow'] } },
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [{ name: 'start', tags: ['$initial'] }],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     strictPort: true,

@@ -110,6 +110,25 @@ namespace Kvit.Api.Tests.Expenses
         }
 
         [Fact]
+        public async Task Activity_ExpenseRestoredEvent_AnswersTheDataObjectWithTitleAmountAndCurrency()
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            Guid expenseId = await _app.AddExpenseAsync(group.Owner, group.GroupId, ExpenseInputs.Equal(1_550, "EUR", group.OwnerRowId, group.OwnerRowId) with { Title = "Dinner" });
+            _app.Clock.Advance(OneMinute);
+            await ExpenseRequests.DeleteAsync(group.Owner.Client, group.GroupId, expenseId);
+            _app.Clock.Advance(OneMinute);
+            await ExpenseRequests.RestoreAsync(group.Owner.Client, group.GroupId, expenseId);
+
+            JsonElement events = await ReadEventsAsync(group.Owner, group.GroupId);
+
+            JsonElement data = events[0].GetProperty("data");
+            Assert.Equal("ExpenseRestored", events[0].GetProperty("type").GetString());
+            Assert.Equal("Dinner", data.GetProperty("title").GetString());
+            Assert.Equal(1_550, data.GetProperty("amountMinor").GetInt64());
+            Assert.Equal("EUR", data.GetProperty("currency").GetString());
+        }
+
+        [Fact]
         public async Task Activity_ExpenseEditedEvent_AnswersTheParsedChangesList()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();

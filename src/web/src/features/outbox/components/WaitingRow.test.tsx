@@ -245,12 +245,12 @@ describe('WaitingRow', () => {
       expect(Array.from(secondLine.classList)).toContain('min-w-0')
     })
 
-    it('keeps the text column at least 120 px wide with min-w-30, so the amount cannot squeeze it any further', async () => {
+    it('keeps the text column at least 96 px wide with min-w-24, so the amount cannot squeeze it any further', async () => {
       await renderRow({ detail: 'Paid by Ana' })
 
       const textColumn = screen.getByText(`Paid by Ana · ${outboxText('en', 'outbox.notSynced')}`).parentElement
 
-      expect(Array.from(textColumn?.classList ?? [])).toContain('min-w-30')
+      expect(Array.from(textColumn?.classList ?? [])).toContain('min-w-24')
     })
 
     it('does not forbid the amount to wrap with whitespace-nowrap', async () => {

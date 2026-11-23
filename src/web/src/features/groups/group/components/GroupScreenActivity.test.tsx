@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 import { languages, type Language } from '@/core/i18n/language'
 import { routeObjects } from '@/core/router/router'
 import { routes } from '@/core/router/routes'
-import { formatMoney } from '@/shared/utils/formatMoney'
+import { currencyLabel, formatMoney, type Currency } from '@/shared/utils/formatMoney'
 import { problemResponse } from '@/test/apiTestHelpers'
 import {
   activityEventId,
@@ -803,11 +803,11 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
       })
     }
 
-    function currencySentence(language: Language, oldCurrency: string, newCurrency: string): string {
+    function currencySentence(language: Language, oldCurrency: Currency, newCurrency: Currency): string {
       return sentenceOf(language, 'expense.historyChangedCurrency', {
         name: 'Ana',
-        old: oldCurrency,
-        new: newCurrency,
+        old: currencyLabel(oldCurrency, language),
+        new: currencyLabel(newCurrency, language),
       })
     }
 
@@ -1231,7 +1231,7 @@ describe('GroupScreen with the Expenses and Activity tabs', () => {
       [
         'a restored expense that is in the list',
         activityEventOf({ type: 'ExpenseRestored', expenseId: taxiExpenseId }),
-        'Ana restored an expense',
+        'Ana restored “Taxi”',
         taxiExpenseId,
       ],
     ])('links the row of %s to the detail of that expense', async (_name, event, sentence, expenseId) => {

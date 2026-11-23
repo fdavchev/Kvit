@@ -5,7 +5,7 @@ import { KvitSheet } from '@/shared/components/KvitSheet'
 import { kvitChipLook } from '@/shared/components/kvitChipLook'
 import { useKvitSheet } from '@/shared/components/useKvitSheet'
 import { cn } from '@/shared/utils/cn'
-import { addDays, isCalendarDate } from '@/shared/utils/formatDate'
+import { addDays, isCalendarDate, todayInTimeZone } from '@/shared/utils/formatDate'
 
 interface DateSheetProps {
   expenseDate: string
@@ -18,14 +18,15 @@ interface DateSheetProps {
 }
 
 const expenseEarliestDate = '2000-01-01'
-const expenseDaysAhead = 365
+const expenseDaysAfterServerToday = 366
+const serverTimeZone = 'UTC'
 const dayChipLook = cn(kvitChipLook, 'disabled:pointer-events-none disabled:opacity-50')
 
 export function DateSheet({
   expenseDate,
   today,
   earliestDate = expenseEarliestDate,
-  latestDate = addDays(today, expenseDaysAhead),
+  latestDate = addDays(todayInTimeZone(serverTimeZone, new Date()), expenseDaysAfterServerToday),
   hint,
   onPick,
   onClose,

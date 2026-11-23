@@ -112,7 +112,7 @@ const expenseChangesList: [string, Mount][] = [
   ],
   [
     'editing an expense',
-    mountHook(() => useUpdateExpense(testGroupId, hotelExpenseId), expenseChanges, noContent),
+    mountHook(() => useUpdateExpense(testGroupId, hotelExpenseId), { ...expenseChanges, version: hotelDetail.version }, noContent),
   ],
   ['deleting an expense', mountHook(() => useDeleteExpense(testGroupId, hotelExpenseId), undefined, noContent)],
   ['restoring an expense', mountHook(() => useRestoreExpense(testGroupId), hotelExpenseId, noContent)],

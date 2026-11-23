@@ -30,6 +30,7 @@ namespace Kvit.Application.Commands.Me
             DateOnly day = UsageEvent.UtcDayOf(now);
             if (_activeDayMemory.IsCounted(userId.Value, day))
             {
+                _ = _lazyDailyCleanup.StartUnlessFinishedOn(now);
                 return Result.Ok();
             }
 

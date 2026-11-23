@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { cn } from '@/shared/utils/cn'
+import { rememberFailedPicture, useHasPictureFailed } from './failedPictureUrls'
 
 type KvitAvatarSize = 'small' | 'large' | 'fill'
 
@@ -33,13 +33,13 @@ function colorStyleOf(colorIndex: KvitAvatarColor): CSSProperties | undefined {
 }
 
 export function KvitAvatar({ name, pictureUrl, colorIndex, size = 'small' }: KvitAvatarProps) {
-  const [failedPictureUrl, setFailedPictureUrl] = useState<string | null>(null)
+  const hasPictureFailed = useHasPictureFailed(pictureUrl)
   const look = cn(
     'grid flex-none place-items-center overflow-hidden rounded-full leading-none font-extrabold',
     sizeLooks[size],
   )
 
-  if (pictureUrl !== null && pictureUrl !== failedPictureUrl) {
+  if (pictureUrl !== null && !hasPictureFailed) {
     return (
       <span aria-hidden="true" className={look}>
         <img
@@ -47,7 +47,7 @@ export function KvitAvatar({ name, pictureUrl, colorIndex, size = 'small' }: Kvi
           alt=""
           referrerPolicy="no-referrer"
           className="size-full object-cover"
-          onError={() => setFailedPictureUrl(pictureUrl)}
+          onError={() => rememberFailedPicture(pictureUrl)}
         />
       </span>
     )

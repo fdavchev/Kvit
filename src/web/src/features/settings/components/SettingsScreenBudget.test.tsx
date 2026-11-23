@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import type { QueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -80,6 +80,16 @@ async function letRequestsSettle(): Promise<void> {
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
   })
+}
+
+async function letSaveDelayPass(): Promise<void> {
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 600))
+  })
+}
+
+function budgetPutBodies(fetchMock: Parameters<typeof requestsOf>[0]): unknown[] {
+  return requestsOf(fetchMock, 'PUT', endpoints.meBudgetCurrency).map((request) => request.body)
 }
 
 function cachedBudgetTotalCurrency(queryClient: QueryClient): unknown {
@@ -214,9 +224,9 @@ describe('SettingsScreen budget card', () => {
       fireEvent.click(radioFor(choice))
 
       await waitFor(() => {
-        expectOnlyChecked(choice)
+        expect(cachedBudgetTotalCurrency(queryClient)).toBe(saved)
       })
-      expect(cachedBudgetTotalCurrency(queryClient)).toBe(saved)
+      expectOnlyChecked(choice)
     })
 
     it('shows "No, keep MKD and EUR apart" as chosen and puts null in the me cache after it is tapped', async () => {
@@ -228,9 +238,9 @@ describe('SettingsScreen budget card', () => {
       fireEvent.click(radioFor(keepApart))
 
       await waitFor(() => {
-        expectOnlyChecked(keepApart)
+        expect(cachedBudgetTotalCurrency(queryClient)).toBeNull()
       })
-      expect(cachedBudgetTotalCurrency(queryClient)).toBeNull()
+      expectOnlyChecked(keepApart)
     })
 
     it.each([
@@ -252,10 +262,11 @@ describe('SettingsScreen budget card', () => {
 
       fireEvent.click(radioFor(inEur))
       await waitFor(() => {
-        expectOnlyChecked(inEur)
+        expect(fetchMock).toHaveBeenCalledOnce()
       })
+      await letRequestsSettle()
 
-      expect(fetchMock).toHaveBeenCalledOnce()
+      expectOnlyChecked(inEur)
       expect(toast.success).not.toHaveBeenCalled()
       expect(toast.error).not.toHaveBeenCalled()
     })
@@ -303,7 +314,9 @@ describe('SettingsScreen budget card', () => {
         expect(toast.error).toHaveBeenCalled()
       })
 
-      expectOnlyChecked(inMkd)
+      await waitFor(() => {
+        expectOnlyChecked(inMkd)
+      })
       expect(cachedBudgetTotalCurrency(queryClient)).toBe('MKD')
     })
 
@@ -325,9 +338,10 @@ describe('SettingsScreen budget card', () => {
       fireEvent.click(radioFor(inEur))
 
       await waitFor(() => {
-        expectOnlyChecked(inEur)
+        expect(requestCount(fetchMock, 'PUT', endpoints.meBudgetCurrency)).toBe(2)
       })
-      expect(requestCount(fetchMock, 'PUT', endpoints.meBudgetCurrency)).toBe(2)
+      await letRequestsSettle()
+      expectOnlyChecked(inEur)
     })
   })
 
@@ -336,10 +350,14 @@ describe('SettingsScreen budget card', () => {
       const { fetchMock } = await renderSettings({ answers: { [budgetPut]: neverAnswer() } })
 
       fireEvent.click(radioFor(inEur))
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'PUT', endpoints.meBudgetCurrency)).toBe(1)
+      })
       fireEvent.click(radioFor(inMkd))
-      await letRequestsSettle()
+      await letSaveDelayPass()
 
       expect(requestCount(fetchMock, 'PUT', endpoints.meBudgetCurrency)).toBe(1)
+      expectOnlyChecked(inMkd)
     })
 
     it('sends only one request when the same option is tapped twice before the server answered', async () => {
@@ -347,9 +365,97 @@ describe('SettingsScreen budget card', () => {
 
       fireEvent.click(radioFor(inEur))
       fireEvent.click(radioFor(inEur))
-      await letRequestsSettle()
+      await letSaveDelayPass()
 
       expect(requestCount(fetchMock, 'PUT', endpoints.meBudgetCurrency)).toBe(1)
+    })
+
+    it('sends the newest choice once the save that was already running has answered', async () => {
+      let answerFirstSave: (response: Response) => void = () => {
+        throw new Error('The first save was never sent')
+      }
+      let saves = 0
+      const { fetchMock, queryClient } = await renderSettings({
+        answers: {
+          [budgetPut]: () => {
+            saves += 1
+            if (saves === 1) {
+              return new Promise<Response>((resolve) => {
+                answerFirstSave = resolve
+              })
+            }
+            return new Response(null, { status: 204 })
+          },
+        },
+      })
+      fireEvent.click(radioFor(inEur))
+      await waitFor(() => {
+        expect(requestCount(fetchMock, 'PUT', endpoints.meBudgetCurrency)).toBe(1)
+      })
+      fireEvent.click(radioFor(inMkd))
+      await letSaveDelayPass()
+
+      answerFirstSave(new Response(null, { status: 204 }))
+
+      await waitFor(() => {
+        expect(budgetPutBodies(fetchMock)).toEqual([{ budgetTotalCurrency: 'EUR' }, { budgetTotalCurrency: 'MKD' }])
+      })
+      await waitFor(() => {
+        expect(cachedBudgetTotalCurrency(queryClient)).toBe('MKD')
+      })
+      expectOnlyChecked(inMkd)
+    })
+  })
+
+  describe('when the choice is moved quickly, as with the arrow keys', () => {
+    it('shows each choice at once and sends only the last one', async () => {
+      const { fetchMock } = await renderSettings({ answers: { [budgetPut]: noContentAnswer() } })
+
+      fireEvent.click(radioFor(inMkd))
+      expectOnlyChecked(inMkd)
+      fireEvent.click(radioFor(inEur))
+      expectOnlyChecked(inEur)
+      await letSaveDelayPass()
+
+      expect(budgetPutBodies(fetchMock)).toEqual([{ budgetTotalCurrency: 'EUR' }])
+      expectOnlyChecked(inEur)
+    })
+
+    it('sends nothing when the choice comes back to the saved one before the save starts', async () => {
+      const { fetchMock } = await renderSettings({ answers: { [budgetPut]: noContentAnswer() } })
+
+      fireEvent.click(radioFor(inMkd))
+      fireEvent.click(radioFor(inEur))
+      fireEvent.click(radioFor(keepApart))
+      await letSaveDelayPass()
+
+      expect(fetchMock).not.toHaveBeenCalled()
+      expectOnlyChecked(keepApart)
+    })
+
+    it('still saves the last choice when the screen is left before the save started', async () => {
+      const { fetchMock, queryClient } = await renderSettings({ answers: { [budgetPut]: noContentAnswer() } })
+
+      fireEvent.click(radioFor(inEur))
+      cleanup()
+
+      await waitFor(() => {
+        expect(budgetPutBodies(fetchMock)).toEqual([{ budgetTotalCurrency: 'EUR' }])
+      })
+      await waitFor(() => {
+        expect(cachedBudgetTotalCurrency(queryClient)).toBe('EUR')
+      })
+    })
+
+    it('shows the failure toast for a save that was sent after the screen was left', async () => {
+      await renderSettings({ answers: { [budgetPut]: problemAnswer(400, 'ME_BUDGET_CURRENCY_INVALID') } })
+
+      fireEvent.click(radioFor(inEur))
+      cleanup()
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(translated('en', 'errors.ME_BUDGET_CURRENCY_INVALID'))
+      })
     })
   })
 })

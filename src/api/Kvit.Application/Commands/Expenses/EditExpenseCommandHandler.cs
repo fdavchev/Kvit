@@ -1,19 +1,15 @@
 using Kvit.Application.Dispatching;
 using Kvit.Application.Persistence;
 using Kvit.Contracts.Auth;
+using Kvit.Domain.Entities;
 using Kvit.Domain.ExchangeRates;
-using Kvit.Domain.Interfaces;
-using Kvit.Domain.MoneyRules;
 using Kvit.Domain.Results;
-using Kvit.Domain.Services.ExchangeRates;
 using Kvit.Domain.Services.Expenses;
 
 namespace Kvit.Application.Commands.Expenses
 {
     public sealed class EditExpenseCommandHandler(
         ICurrentUserProvider _currentUserProvider,
-        IExpenseRepository _expenses,
-        GetCurrentExchangeRate _getCurrentExchangeRate,
         EditExpense _editExpense,
         GroupWriteTransaction _groupWrite) : ICommandHandler<EditExpenseCommand>
     {
@@ -25,23 +21,12 @@ namespace Kvit.Application.Commands.Expenses
                 return userId;
             }
 
-            ExchangeRateSnapshot? currentRate = null;
-            Currency? storedCurrency = await _expenses.FindCurrencyAsync(command.GroupId, command.ExpenseId, cancellationToken);
-            if (storedCurrency is Currency currency && !string.Equals(currency.ToString(), command.Input.Currency, StringComparison.Ordinal))
-            {
-                Result<ExchangeRateSnapshot> rate = await _getCurrentExchangeRate.Execute(cancellationToken);
-                if (!rate.IsSuccess)
-                {
-                    return rate;
-                }
-
-                currentRate = rate.Value;
-            }
-
-            return await _groupWrite.RunAsync(
+            return await _groupWrite.PrepareThenRunOrAnswerIfExpenseChangedMeanwhileAsync<ExchangeRateSnapshot?>(
                 command.GroupId,
                 userId.Value,
-                () => _editExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, command.Input, currentRate, cancellationToken),
+                () => _editExpense.FetchRateIfCurrencyChangesAsync(command.GroupId, userId.Value, command.ExpenseId, command.Input, command.OpenedVersion, cancellationToken),
+                newRate => _editExpense.Execute(command.GroupId, userId.Value, command.ExpenseId, command.Input, command.OpenedVersion, newRate, cancellationToken),
+                () => Task.FromResult(Expense.ChangedMeanwhile(command.ExpenseId)),
                 cancellationToken);
         }
     }

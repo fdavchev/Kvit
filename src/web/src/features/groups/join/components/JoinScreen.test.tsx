@@ -317,7 +317,7 @@ describe('JoinScreen', () => {
         expect(router.state.location.pathname).toBe(routes.group(testGroupId))
       })
       expect(router.state.historyAction).toBe('REPLACE')
-      expect(screen.getByText('group page')).toBeTruthy()
+      expect(await screen.findByText('group page')).toBeTruthy()
     })
 
     it('shows no invite card and sends no join request on the way', async () => {
@@ -745,6 +745,29 @@ describe('JoinScreen', () => {
       )
       expect(router.state.location.pathname).toBe(routes.join(testInviteToken))
       expect(shownToastTexts()).toEqual([])
+    })
+
+    it.each(languages)('says someone just took the name, or it was removed, when the tapped name is gone (%s)', async (language) => {
+      await renderJoinWithNames({
+        language,
+        answers: { [joinRequest]: problemAnswer(404, 'MEMBER_NOT_FOUND') },
+      })
+      await pressJoin(language)
+
+      fireEvent.click(nameButton('Marko'))
+
+      const alert = await screen.findByRole('alert')
+      expect(alert.textContent).toBe(translated(language, 'members.nameJustTaken'))
+      expect(alert.textContent).not.toContain(translated(language, 'errors.MEMBER_NOT_FOUND'))
+    })
+
+    it("keeps the MEMBER_NOT_FOUND text when No, I'm new is refused with it, because no name was tapped", async () => {
+      await renderJoinWithNames({ answers: { [joinRequest]: problemAnswer(404, 'MEMBER_NOT_FOUND') } })
+      await pressJoin()
+
+      fireEvent.click(imNewButton())
+
+      expect((await screen.findByRole('alert')).textContent).toBe(translated('en', 'errors.MEMBER_NOT_FOUND'))
     })
 
     it("shows the RATE_LIMITED text inline in an alert when No, I'm new is refused", async () => {

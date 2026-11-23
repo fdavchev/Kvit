@@ -189,10 +189,6 @@ export async function addDuplicateAnswer({ entryId, expenseId }: DuplicatePairId
   await apiRequest(endpoints.personalDuplicateAnswers, jsonRequest('PUT', { entryId, expenseId, answer }))
 }
 
-export async function removeDuplicateAnswer({ entryId, expenseId }: DuplicatePairIds): Promise<void> {
-  await apiRequest(endpoints.personalDuplicateAnswers, jsonRequest('DELETE', { entryId, expenseId }))
-}
-
 function parseEntry(row: unknown): PersonalEntry {
   const what = 'a personal entry'
   const fields = readObject(row, what)

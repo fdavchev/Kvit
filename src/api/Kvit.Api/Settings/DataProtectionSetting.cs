@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
@@ -7,12 +8,13 @@ namespace Kvit.Api.Settings
     {
         private const string CertificateBase64Key = "DataProtection:CertificateBase64";
         private const string CertificatePasswordKey = "DataProtection:CertificatePassword";
+        public const int ExpiryWarningDays = 60;
         private const string HowToFix =
             "For local work, run from the repository root: dotnet run scripts/NewDataProtectionCertificate.cs " +
             "(see docs/guides/phase-04-local-setup.md, Part 3). " +
             "On a server, set the environment variables DataProtection__CertificateBase64 and DataProtection__CertificatePassword.";
 
-        public static X509Certificate2 LoadCertificate(IConfiguration configuration)
+        public static X509Certificate2 LoadCertificate(IConfiguration configuration, DateTimeOffset now)
         {
             string certificateBase64 = ReadRequired(configuration, CertificateBase64Key);
             string certificatePassword = ReadRequired(configuration, CertificatePasswordKey);
@@ -39,7 +41,40 @@ namespace Kvit.Api.Settings
                     $"so Kvit could not read back the login keys it encrypts with it. {HowToFix}");
             }
 
+            DateTimeOffset notBefore = new(certificate.NotBefore);
+            DateTimeOffset notAfter = new(certificate.NotAfter);
+            if (now < notBefore || now > notAfter)
+            {
+                certificate.Dispose();
+                throw new InvalidOperationException(
+                    $"The certificate in {CertificateBase64Key} is valid only from {IsoDateOf(notBefore)} to {IsoDateOf(notAfter)}, " +
+                    $"but it is now {IsoDateOf(now)}, so Kvit will not protect its login keys with it. " +
+                    $"Make a new certificate that keeps the old login keys readable. {HowToFix}");
+            }
+
             return certificate;
+        }
+
+        public static void WarnIfCertificateExpiresSoon(X509Certificate2 certificate, ILogger logger, DateTimeOffset now)
+        {
+            DateTimeOffset notAfter = new(certificate.NotAfter);
+            TimeSpan left = notAfter - now;
+            if (left > TimeSpan.FromDays(ExpiryWarningDays))
+            {
+                return;
+            }
+
+            logger.LogWarning(
+                "The login-key certificate in {CertificateSetting} expires on {NotAfter}, in {DaysLeft} days. When it expires Kvit stops at start-up. Make a new certificate before then. {HowToFix}",
+                CertificateBase64Key,
+                IsoDateOf(notAfter),
+                (int)Math.Floor(left.TotalDays),
+                HowToFix);
+        }
+
+        private static string IsoDateOf(DateTimeOffset moment)
+        {
+            return moment.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
         }
 
         private static string ReadRequired(IConfiguration configuration, string key)

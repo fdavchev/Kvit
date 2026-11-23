@@ -14,6 +14,8 @@ namespace Kvit.Api.Tests.Expenses
 
         public List<DateOnly> RequestedDates { get; } = [];
 
+        public Func<Task>? WhileAnswering { get; set; }
+
         public void AnswerWith(DateOnly rateDate, decimal mkdPerEur)
         {
             _answer = new FetchedExchangeRate(rateDate, mkdPerEur);
@@ -29,18 +31,24 @@ namespace Kvit.Api.Tests.Expenses
         {
             _answer = new FetchedExchangeRate(DefaultRateDate, DefaultRate);
             _isFailing = false;
+            WhileAnswering = null;
             RequestedDates.Clear();
         }
 
-        public Task<Result<FetchedExchangeRate>> FetchEurRateAsync(DateOnly date, CancellationToken cancellationToken)
+        public async Task<Result<FetchedExchangeRate>> FetchEurRateAsync(DateOnly date, CancellationToken cancellationToken)
         {
             RequestedDates.Add(date);
-            if (_isFailing)
+            if (WhileAnswering is not null)
             {
-                return Task.FromResult(Result.Failure<FetchedExchangeRate>("The scripted exchange rate source was told to fail.", FailureCode));
+                await WhileAnswering();
             }
 
-            return Task.FromResult(Result.Ok(_answer));
+            if (_isFailing)
+            {
+                return Result.Failure<FetchedExchangeRate>("The scripted exchange rate source was told to fail.", FailureCode);
+            }
+
+            return Result.Ok(_answer);
         }
     }
 }

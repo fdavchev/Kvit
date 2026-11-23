@@ -1,5 +1,6 @@
 using Kvit.Contracts.Persistence;
 using Kvit.Domain.Entities;
+using Kvit.Infrastructure.Auth;
 using Kvit.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -23,6 +24,26 @@ namespace Kvit.Infrastructure.Persistence
             {
                 await DiscardAsync(context, cancellationToken);
                 throw new BudgetLimitChangedMeanwhileException(exception);
+            }
+            catch (DbUpdateConcurrencyException exception) when (exception.Entries.Any(entry => entry.Entity is Expense or ExpenseShare))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new ExpenseChangedMeanwhileException(exception);
+            }
+            catch (DbUpdateConcurrencyException exception) when (exception.Entries.Any(entry => entry.Entity is Settlement))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new SettlementChangedMeanwhileException(exception);
+            }
+            catch (DbUpdateConcurrencyException exception) when (exception.Entries.Any(entry => entry.Entity is AppUser))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new AccountChangedMeanwhileException(exception);
+            }
+            catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, ExpenseShareConfiguration.PrimaryKeyName))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new ExpenseChangedMeanwhileException(exception);
             }
             catch (DbUpdateException exception) when (IsUniqueViolationOf(exception, BudgetLimitConfiguration.UserCategoryMonthIndexName))
             {
@@ -56,15 +77,47 @@ namespace Kvit.Infrastructure.Persistence
             }
         }
 
-        private static bool IsDeadlock(InvalidOperationException exception)
+        public static async Task ExecuteSqlOrReportMergeAlreadySavedAsync(this AppDbContext context, FormattableString sql, CancellationToken cancellationToken)
         {
-            return exception.InnerException is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.DeadlockDetected } };
+            try
+            {
+                await context.Database.ExecuteSqlInterpolatedAsync(sql, cancellationToken);
+            }
+            catch (PostgresException exception) when (IsUniqueViolationOf(exception, DuplicateAnswerConfiguration.OneMergePerEntryIndexName, DuplicateAnswerConfiguration.OneMergePerExpenseIndexName))
+            {
+                await DiscardAsync(context, cancellationToken);
+                throw new MergeAlreadySavedException(exception);
+            }
+        }
+
+        public static async Task<AccountChangedMeanwhileException> DiscardBecauseAccountChangedMeanwhileAsync(this AppDbContext context, string identityFailure, CancellationToken cancellationToken)
+        {
+            await DiscardAsync(context, cancellationToken);
+
+            return new AccountChangedMeanwhileException(identityFailure);
+        }
+
+        public static bool IsDeadlock(Exception exception)
+        {
+            for (Exception? cause = exception; cause is not null; cause = cause.InnerException)
+            {
+                if (cause is PostgresException { SqlState: PostgresErrorCodes.DeadlockDetected })
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool IsUniqueViolationOf(DbUpdateException exception, params string[] indexNames)
         {
-            return exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } violation
-                && indexNames.Contains(violation.ConstraintName);
+            return exception.InnerException is PostgresException violation && IsUniqueViolationOf(violation, indexNames);
+        }
+
+        private static bool IsUniqueViolationOf(PostgresException exception, params string[] indexNames)
+        {
+            return exception.SqlState == PostgresErrorCodes.UniqueViolation && indexNames.Contains(exception.ConstraintName);
         }
 
         private static async Task DiscardAsync(AppDbContext context, CancellationToken cancellationToken)

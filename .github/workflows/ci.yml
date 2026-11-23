@@ -125,5 +125,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Install Chromium for the smoke check
+        run: npx playwright install --with-deps chromium
+
+      - name: Smoke check the built website in Chromium
+        run: npm run smoke
+
       - name: Test
         run: npm test

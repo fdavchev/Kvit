@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import indexHtml from '../index.html?raw'
+import { colorOfToken } from './test/indexCssColors'
+import { themeColors } from './test/themeTestHelpers'
 
 const page = new DOMParser().parseFromString(indexHtml, 'text/html')
 const viewportContent = page.querySelector('meta[name="viewport"]')?.getAttribute('content') ?? ''
@@ -69,10 +71,20 @@ describe('index.html', () => {
   })
 
   it('colours the phone status bar peach in the light scheme', () => {
-    expect(themeColorFor('light')).toBe('#ffd9a8')
+    expect(themeColorFor('light')).toBe('#fff4e6')
   })
 
   it('colours the phone status bar like the dark page in the dark scheme', () => {
     expect(themeColorFor('dark')).toBe('#1f1816')
+  })
+
+  it.each(['light', 'dark'] as const)('colours the phone status bar exactly like the page background in the %s scheme', (scheme) => {
+    const hex = Number.parseInt(themeColorFor(scheme)?.slice(1) ?? '', 16)
+
+    expect([(hex >> 16) & 255, (hex >> 8) & 255, hex & 255]).toEqual(colorOfToken('background', scheme))
+  })
+
+  it.each(['light', 'dark'] as const)('has the same %s status bar colour as the test helper that the theme tests use', (scheme) => {
+    expect(themeColorFor(scheme)).toBe(themeColors[scheme])
   })
 })

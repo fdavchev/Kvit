@@ -151,16 +151,15 @@ describe('the "Deletion cancelled" toast', () => {
       expect(toast).not.toHaveBeenCalled()
     })
 
-    it('shows nothing extra when the answer does not carry the field at all', async () => {
-      const olderAnswer = Object.fromEntries(Object.entries(testMe).filter(([name]) => name !== 'deletionCancelled'))
-      const { router } = await renderLogIn(Response.json(olderAnswer))
+    it('shows the generic error and no toast, and stays on the log-in page, when the answer does not carry the field at all', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const answerWithoutTheField = Object.fromEntries(Object.entries(testMe).filter(([name]) => name !== 'deletionCancelled'))
+      const { router } = await renderLogIn(Response.json(answerWithoutTheField))
 
       logInWithEmail()
 
-      await waitFor(() => {
-        expect(router.state.location.pathname).toBe(routes.dashboard)
-      })
-      await watchForExtraToasts()
+      expect(await screen.findByText(translated('en', 'errors.generic'))).toBeTruthy()
+      expect(router.state.location.pathname).toBe(routes.logIn)
       expect(toast.success).not.toHaveBeenCalled()
     })
 

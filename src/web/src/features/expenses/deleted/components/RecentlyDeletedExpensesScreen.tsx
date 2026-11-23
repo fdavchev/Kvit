@@ -1,9 +1,12 @@
 import { useTranslation } from 'react-i18next'
+import { Navigate } from 'react-router'
 import { toast } from 'sonner'
 import { errorMessageKey } from '@/core/api/errors'
 import { useLanguage } from '@/core/i18n/useLanguage'
 import { routes } from '@/core/router/routes'
+import { useGroup } from '@/features/groups/group/hooks/useGroup'
 import { GroupLoadError } from '@/features/groups/shared/components/GroupLoadError'
+import { canChangeGroup } from '@/features/groups/shared/groupAccess'
 import { useGroupIdParam } from '@/features/groups/shared/useGroupIdParam'
 import { KvitBackButton } from '@/shared/components/KvitBackButton'
 import { KvitButton } from '@/shared/components/KvitButton'
@@ -24,6 +27,7 @@ export function RecentlyDeletedExpensesScreen() {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const groupId = useGroupIdParam()
+  const groupQuery = useGroup(groupId)
   const deletedQuery = useDeletedExpenses(groupId)
   const categoriesQuery = useCategories()
   const restoreExpense = useRestoreExpense(groupId)
@@ -43,6 +47,12 @@ export function RecentlyDeletedExpensesScreen() {
   }
 
   function renderContent() {
+    if (groupQuery.isSuccess && !canChangeGroup(groupQuery.data)) {
+      return <Navigate to={routes.group(groupId)} replace />
+    }
+    if (groupQuery.isError) {
+      return <GroupLoadError error={groupQuery.error} onRetry={() => void groupQuery.refetch()} />
+    }
     if (deletedQuery.isError) {
       return <GroupLoadError error={deletedQuery.error} onRetry={() => void deletedQuery.refetch()} />
     }
@@ -54,7 +64,7 @@ export function RecentlyDeletedExpensesScreen() {
         />
       )
     }
-    if (deletedQuery.isPending || categoriesQuery.isPending) {
+    if (groupQuery.isPending || deletedQuery.isPending || categoriesQuery.isPending) {
       return <KvitLoading />
     }
     if (deletedQuery.data.length === 0) {

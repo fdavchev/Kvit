@@ -12,6 +12,7 @@ vi.mock('./router', () => ({
   get router() {
     return routerHolder.current
   },
+  preloadScreens: () => Promise.resolve(),
 }))
 
 interface SlowRestore {

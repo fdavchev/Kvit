@@ -51,7 +51,7 @@ export function KvitRail({ brand, items }: KvitRailProps) {
   }, [activeIndex])
 
   return (
-    <nav className="sticky top-0 flex h-dvh flex-col overflow-y-auto bg-muted px-[clamp(0.6rem,1.2vw,1rem)] py-[clamp(0.9rem,1.6vw,1.4rem)]">
+    <nav data-kvit-rail className="sticky top-0 flex h-dvh flex-col overflow-y-auto bg-muted px-[clamp(0.6rem,1.2vw,1rem)] py-[clamp(0.9rem,1.6vw,1.4rem)]">
       <p className="px-3 pt-1 pb-5 text-2xl font-black text-wordmark">{brand}</p>
       <div ref={trackRef} className="relative">
         {activeIndex !== -1 && (

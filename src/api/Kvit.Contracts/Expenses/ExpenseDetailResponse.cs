@@ -21,6 +21,7 @@ namespace Kvit.Contracts.Expenses
         DateTimeOffset CreatedAt,
         DateTimeOffset? UpdatedAt,
         bool CanEdit,
+        uint Version,
         IReadOnlyList<ExpenseShareRow> Shares,
         IReadOnlyList<ExpenseHistoryRow> History);
 }

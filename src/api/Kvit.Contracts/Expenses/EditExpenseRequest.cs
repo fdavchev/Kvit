@@ -9,5 +9,6 @@ namespace Kvit.Contracts.Expenses
         Guid? CategoryId,
         Guid PaidByMemberId,
         string SplitType,
-        IReadOnlyList<ShareRequest> Shares);
+        IReadOnlyList<ShareRequest> Shares,
+        uint? Version);
 }

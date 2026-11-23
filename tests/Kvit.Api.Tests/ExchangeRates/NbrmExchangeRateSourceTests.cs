@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net;
+using Kvit.Domain.ExchangeRates;
 using Kvit.Domain.Interfaces;
 using Kvit.Domain.Results;
 using Kvit.Infrastructure.ExchangeRates;
@@ -153,6 +154,33 @@ namespace Kvit.Api.Tests.ExchangeRates
             Result<FetchedExchangeRate> result = await source.FetchEurRateAsync(SomeDay, TestContext.Current.CancellationToken);
 
             AssertFailedWithAMessage(result);
+        }
+
+        [Theory]
+        [InlineData("[]")]
+        [InlineData("""[{"rBr":1,"datum":"2026-09-24T00:00:00","valuta":"840","oznaka":"USD","nomin":1,"sreden":52.8}]""")]
+        public async Task FetchEurRateAsync_AnswerWithoutAnEurEntry_FailsAsNotPublishedSoAnEarlierDayCanBeAsked(string body)
+        {
+            NbrmExchangeRateSource source = CreateSource(StubHttpMessageHandler.Answering(HttpStatusCode.OK, body));
+
+            Result<FetchedExchangeRate> result = await source.FetchEurRateAsync(SomeDay, TestContext.Current.CancellationToken);
+
+            Assert.False(result.IsSuccess);
+            Assert.Equal(ExchangeRateFailureCodes.EXCHANGE_RATE_NOT_PUBLISHED, result.ErrorCode);
+        }
+
+        [Theory]
+        [InlineData(HttpStatusCode.NotFound, "[]")]
+        [InlineData(HttpStatusCode.OK, "{}")]
+        [InlineData(HttpStatusCode.OK, """[{"rBr":178,"valuta":"978","oznaka":"EUR","nomin":1,"sreden":61.561}]""")]
+        public async Task FetchEurRateAsync_OtherFailures_FailAsFetchFailedSoNoEarlierDayIsAsked(HttpStatusCode statusCode, string body)
+        {
+            NbrmExchangeRateSource source = CreateSource(StubHttpMessageHandler.Answering(statusCode, body));
+
+            Result<FetchedExchangeRate> result = await source.FetchEurRateAsync(SomeDay, TestContext.Current.CancellationToken);
+
+            Assert.False(result.IsSuccess);
+            Assert.Equal(ExchangeRateFailureCodes.EXCHANGE_RATE_FETCH_FAILED, result.ErrorCode);
         }
 
         [Theory]

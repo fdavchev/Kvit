@@ -29,4 +29,13 @@ describe('the notifications region of KvitToaster', () => {
 
     expect(screen.queryByRole('region', { name: /^Notifications/ })).toBeNull()
   })
+
+  it.each(languages)('has no Alt+T hint in its label (%s)', async (language) => {
+    await renderElementWithProviders(<KvitToaster />, '/toaster', { language })
+
+    const region = screen.getByRole('region', { name: new RegExp(`^${translated(language, 'toasts.region')}`) })
+
+    expect(region.getAttribute('aria-label')).toBe(translated(language, 'toasts.region'))
+    expect(region.getAttribute('aria-label')?.toLowerCase()).not.toContain('alt+t')
+  })
 })

@@ -249,9 +249,21 @@ namespace Kvit.Domain.Tests.Services.Groups
         }
 
         [Fact]
-        public async Task Execute_ASignedInPersonClaimsAPlainNameThatIsTheirOwnName_StillWritesMemberJoinedThenMemberClaimed()
+        public async Task Execute_ASignedInPersonClaimsAPlainNameThatIsTheirOwnName_WritesOnlyOneMemberJoinedEventForTheNameRow()
         {
             await _joinGroup.Execute(GroupTestData.InviteToken, GroupTestData.StrangerId, "Grandma", _plainNameRow.Id, TestContext.Current.CancellationToken);
+
+            ActivityEvent joined = Assert.Single(_activityEvents.Added);
+            Assert.Equal(ActivityEventType.MemberJoined, joined.Type);
+            Assert.Equal(_plainNameRow.Id, joined.MemberId);
+            Assert.Equal("Grandma", ActivityEventData.Name(joined));
+            Assert.Equal(GroupTestData.Moment, _plainNameRow.ClaimedAt);
+        }
+
+        [Fact]
+        public async Task Execute_ASignedInPersonClaimsAPlainNameThatDiffersOnlyInCapitals_StillWritesMemberJoinedThenMemberClaimed()
+        {
+            await _joinGroup.Execute(GroupTestData.InviteToken, GroupTestData.StrangerId, "grandma", _plainNameRow.Id, TestContext.Current.CancellationToken);
 
             Assert.Equal([ActivityEventType.MemberJoined, ActivityEventType.MemberClaimed], _activityEvents.Added.Select(activityEvent => activityEvent.Type));
         }

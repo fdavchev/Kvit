@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Language } from '@/core/i18n/language'
 import type { ThemeChoice } from '@/core/theme/theme'
@@ -7,6 +7,7 @@ import {
   appliedTheme,
   resetThemeDocument,
   stubDeviceColorScheme,
+  stubDeviceColorSchemeThatCanChange,
   type ColorScheme,
 } from '@/test/themeTestHelpers'
 import { translated } from '@/test/translated'
@@ -34,6 +35,10 @@ async function renderToggle(
 
 function toggleNamed(key: ToggleTextKey, language: Language = 'en'): HTMLElement {
   return screen.getByRole('button', { name: translated(language, key) })
+}
+
+function shownIconsOf(toggle: HTMLElement): boolean[] {
+  return Array.from(toggle.querySelectorAll('svg')).map((icon) => !icon.classList.contains('opacity-0'))
 }
 
 describe('KvitThemeToggle', () => {
@@ -87,6 +92,30 @@ describe('KvitThemeToggle', () => {
     await renderToggle(saved, { screenLanguage: 'mk' })
 
     expect(toggleNamed(key, 'mk')).toBeTruthy()
+  })
+
+  it('flips its name and icon when the device changes to dark and back while the choice is system', async () => {
+    window.localStorage.setItem(storageKey, 'system')
+    const device = stubDeviceColorSchemeThatCanChange('light')
+    await renderElementWithProviders(<KvitThemeToggle />, '/')
+    expect(shownIconsOf(toggleNamed('common.switchToDarkMode'))).toEqual([true, false])
+
+    act(() => device.changeTo('dark'))
+    expect(shownIconsOf(toggleNamed('common.switchToLightMode'))).toEqual([false, true])
+
+    act(() => device.changeTo('light'))
+    expect(shownIconsOf(toggleNamed('common.switchToDarkMode'))).toEqual([true, false])
+  })
+
+  it.each<ColorScheme>(['light', 'dark'])('keeps its name when the device changes and the choice is %s', async (saved) => {
+    window.localStorage.setItem(storageKey, saved)
+    const device = stubDeviceColorSchemeThatCanChange(saved)
+    await renderElementWithProviders(<KvitThemeToggle />, '/')
+    const key = saved === 'light' ? 'common.switchToDarkMode' : 'common.switchToLightMode'
+
+    act(() => device.changeTo(saved === 'light' ? 'dark' : 'light'))
+
+    expect(toggleNamed(key)).toBeTruthy()
   })
 
   it('is a button of type button so it never submits a form', async () => {

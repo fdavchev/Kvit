@@ -84,6 +84,14 @@ describe('the Category sheet', () => {
     expect(Array.from(grid?.classList ?? [])).not.toContain('grid-cols-5')
   })
 
+  it('switches to 3 columns on a screen narrower than 346 px', async () => {
+    const sheet = await renderedSheet()
+
+    const grid = categoryButtons(sheet)[0].parentElement
+
+    expect(Array.from(grid?.classList ?? [])).toContain('max-[346px]:grid-cols-3')
+  })
+
   it.each<Language>(['en', 'mk'])('breaks a long name at word edges, with break-words and not wrap-anywhere (%s)', async (language) => {
     const sheet = await renderedSheet(language)
 

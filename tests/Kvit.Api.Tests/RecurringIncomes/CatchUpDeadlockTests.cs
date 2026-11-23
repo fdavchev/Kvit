@@ -5,6 +5,7 @@ using Kvit.Api.Tests.Expenses;
 using Kvit.Api.Tests.Groups;
 using Kvit.Api.Tests.Persistence;
 using Kvit.Api.Tests.PersonalEntries;
+using Kvit.Domain.Results;
 using Xunit;
 
 namespace Kvit.Api.Tests.RecurringIncomes
@@ -14,6 +15,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
         private const int Rounds = 5;
         private const int CallsPerRound = 8;
         private const int WeeklyDueDatesFromJune3 = 20;
+        private const string PersonalEntriesTable = "personal_entries";
 
         private static readonly DateOnly FirstDueDate = new(2026, 8, 15);
         private static readonly DateOnly LastDueDate = new(2026, 10, 15);
@@ -25,11 +27,16 @@ namespace Kvit.Api.Tests.RecurringIncomes
             SignedInUser user = await CatchUpSteps.SignUpAsync(_app);
             Guid recurringIncomeId = await RecurringIncomeRows.InsertAsync(_app, user.UserId, dayOfMonth: 15, startsOn: new DateOnly(2026, 8, 1));
             await using DeadlockPartner partner = await DeadlockPartner.BeginAsync(_app);
+            await using InsertGate gate = await InsertGate.CloseAsync(
+                _app, PersonalEntriesTable, $"NEW.entry_date = DATE '{LastDueDate:yyyy-MM-dd}' AND pg_backend_pid() <> {partner.ProcessId}");
             await partner.InsertEntryAsync(user.UserId, recurringIncomeId, LastDueDate);
 
             Task<HttpResponseMessage> catchUp = RecurringIncomeRequests.CatchUpAsync(user.Client);
-            await partner.WaitUntilARequestWaitsForItAsync();
-            await partner.InsertEntryAsync(user.UserId, recurringIncomeId, FirstDueDate);
+            await gate.WaitUntilRequestsAreHeldAsync(1);
+            Task partnerWaitsForTheRequest = partner.InsertEntryAsync(user.UserId, recurringIncomeId, FirstDueDate);
+            await gate.WaitUntilRequestsWaitForTheHeldRowAsync(1);
+            await gate.OpenAsync();
+            await partnerWaitsForTheRequest;
             await partner.RollBackAsync();
             HttpResponseMessage response = await catchUp;
 
@@ -40,7 +47,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
         }
 
         [Fact]
-        public async Task CatchUp_DeadlockedAgainWhenRunOnceMore_AnswersAnErrorAndSavesNothing()
+        public async Task CatchUp_DeadlockedAgainWhenRunOnceMore_Answers409ChangedMeanwhileAndSavesNothing()
         {
             CatchUpSteps.SetNow(_app, CatchUpSteps.NoonOnOctober20);
             SignedInUser user = await CatchUpSteps.SignUpAsync(_app);
@@ -59,7 +66,7 @@ namespace Kvit.Api.Tests.RecurringIncomes
             await partner.RollBackAsync();
             HttpResponseMessage response = await catchUp;
 
-            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+            await ProblemResponse.AssertAsync(response, HttpStatusCode.Conflict, ResultCodes.CHANGED_MEANWHILE);
             Assert.Empty(await CatchUpSteps.EntryDatesAsync(_app, recurringIncomeId));
             Assert.Equal(0, await PersonalEntrySteps.CountOfUserAsync(_app, user.UserId));
         }

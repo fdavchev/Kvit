@@ -1,8 +1,10 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { errorMessageKey } from '@/core/api/errors'
 import { useDeleteSettlement } from '@/features/settlements/delete/hooks/useDeleteSettlement'
 import { useRestoreSettlement } from '@/features/settlements/delete/hooks/useRestoreSettlement'
+import { refreshWhenSettlementChangedMeanwhile } from '@/features/settlements/shared/settlementCache'
 import { KvitAvatar } from '@/shared/components/KvitAvatar'
 import { KvitButton } from '@/shared/components/KvitButton'
 import { showUndoToast } from '@/shared/toasts/showUndoToast'
@@ -19,12 +21,14 @@ interface PaymentRowProps {
 
 export function PaymentRow({ groupId, payment, detail, canDelete }: PaymentRowProps) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const deleteSettlement = useDeleteSettlement(groupId, payment.settlementId)
   const restoreSettlement = useRestoreSettlement(groupId)
 
   function showFailure(error: Error): void {
     console.error('A payment action failed', error)
     toast.error(t(errorMessageKey(error)))
+    refreshWhenSettlementChangedMeanwhile(queryClient, groupId, error)
   }
 
   function undoDelete(): void {

@@ -1,5 +1,6 @@
 using Kvit.Contracts.Persistence;
 using Kvit.Domain.Accounts;
+using Kvit.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 
 namespace Kvit.Infrastructure.Auth
@@ -7,9 +8,20 @@ namespace Kvit.Infrastructure.Auth
     public sealed class AdminRoleService(
         UserManager<AppUser> _userManager,
         RoleManager<IdentityRole<Guid>> _roleManager,
+        AppDbContext _context,
         IUnitOfWork _unitOfWork)
     {
-        public async Task<bool> GrantAsync(string email, CancellationToken cancellationToken)
+        public Task<bool> GrantAsync(string email, CancellationToken cancellationToken)
+        {
+            return AccountWriteRetry.OnceMoreIfAccountChangedMeanwhileAsync(_unitOfWork, () => GrantOnceAsync(email, cancellationToken));
+        }
+
+        public Task<bool> RevokeAsync(string email, CancellationToken cancellationToken)
+        {
+            return AccountWriteRetry.OnceMoreIfAccountChangedMeanwhileAsync(_unitOfWork, () => RevokeOnceAsync(email, cancellationToken));
+        }
+
+        private async Task<bool> GrantOnceAsync(string email, CancellationToken cancellationToken)
         {
             AppUser? user = await FindAccountAsync(email);
             if (user is null)
@@ -25,7 +37,9 @@ namespace Kvit.Infrastructure.Auth
 
             if (!await _userManager.IsInRoleAsync(user, Roles.Admin))
             {
-                IdentityResultChecks.ThrowIfFailed(await _userManager.AddToRoleAsync(user, Roles.Admin), $"give user {user.Id} the {Roles.Admin} role");
+                IdentityResult added = await _userManager.AddToRoleAsync(user, Roles.Admin);
+                await _context.ThrowIfAccountChangedMeanwhileAsync(added, cancellationToken);
+                IdentityResultChecks.ThrowIfFailed(added, $"give user {user.Id} the {Roles.Admin} role");
             }
 
             await _unitOfWork.CommitAsync(cancellationToken);
@@ -33,7 +47,7 @@ namespace Kvit.Infrastructure.Auth
             return true;
         }
 
-        public async Task<bool> RevokeAsync(string email, CancellationToken cancellationToken)
+        private async Task<bool> RevokeOnceAsync(string email, CancellationToken cancellationToken)
         {
             AppUser? user = await FindAccountAsync(email);
             if (user is null)
@@ -44,7 +58,9 @@ namespace Kvit.Infrastructure.Auth
             await _unitOfWork.OpenTransactionAsync(cancellationToken);
             if (await _userManager.IsInRoleAsync(user, Roles.Admin))
             {
-                IdentityResultChecks.ThrowIfFailed(await _userManager.RemoveFromRoleAsync(user, Roles.Admin), $"take the {Roles.Admin} role from user {user.Id}");
+                IdentityResult removed = await _userManager.RemoveFromRoleAsync(user, Roles.Admin);
+                await _context.ThrowIfAccountChangedMeanwhileAsync(removed, cancellationToken);
+                IdentityResultChecks.ThrowIfFailed(removed, $"take the {Roles.Admin} role from user {user.Id}");
             }
 
             await _unitOfWork.CommitAsync(cancellationToken);

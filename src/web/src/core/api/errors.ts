@@ -83,6 +83,7 @@ const translatedErrorCodes = [
   'EXPENSE_CATEGORY_INVALID',
   'EXPENSE_AMOUNT_TOO_LARGE',
   'EXPENSE_CLIENT_REQUEST_ID_USED',
+  'EXPENSE_CHANGED_MEANWHILE',
   'CATEGORY_NOT_FOUND',
   'CATEGORY_NAME_INVALID',
   'CATEGORY_NAME_TAKEN',
@@ -142,6 +143,10 @@ const translatedErrorCodes = [
   'OWNER_PERSON_NOT_FOUND',
   'OWNER_GROUP_NOT_FOUND',
   'OWNER_CANNOT_ACT_ON_ADMIN',
+  'SERVER_ERROR',
+  'CHANGED_MEANWHILE',
+  'REQUEST_TOO_LARGE',
+  'REQUEST_INVALID',
 ]
 const errorCodeMessageKeys = new Map<string, string>(
   translatedErrorCodes.map((code) => [code, `errors.${code}`]),

@@ -42,3 +42,10 @@ export function removeOutboxItem(personId: string, id: string): Promise<void> {
 export function clearOutbox(personId: string): Promise<void> {
   return del(personId, outboxStore)
 }
+
+export async function clearOutboxIfEmpty(personId: string): Promise<void> {
+  const items = await readOutbox(personId)
+  if (items.length === 0) {
+    await clearOutbox(personId)
+  }
+}

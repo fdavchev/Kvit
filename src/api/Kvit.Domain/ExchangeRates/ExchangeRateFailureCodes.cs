@@ -4,5 +4,6 @@ namespace Kvit.Domain.ExchangeRates
     {
         public const string EXCHANGE_RATE_INVALID = "EXCHANGE_RATE_INVALID";
         public const string EXCHANGE_RATE_FETCH_FAILED = "EXCHANGE_RATE_FETCH_FAILED";
+        public const string EXCHANGE_RATE_NOT_PUBLISHED = "EXCHANGE_RATE_NOT_PUBLISHED";
     }
 }

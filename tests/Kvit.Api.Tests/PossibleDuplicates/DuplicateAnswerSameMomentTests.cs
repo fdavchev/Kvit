@@ -1,4 +1,5 @@
 using System.Net;
+using Kvit.Api.Tests.Auth;
 using Kvit.Api.Tests.BudgetShares;
 using Kvit.Api.Tests.Expenses;
 using Kvit.Api.Tests.Persistence;
@@ -73,6 +74,44 @@ namespace Kvit.Api.Tests.PossibleDuplicates
         }
 
         [Fact]
+        public async Task Put_SameForOneEntryWithTwoExpensesAtTheSameMoment_OneAnswers204AndTheOtherAnswers400AlreadyMerged()
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            Guid firstExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group);
+            Guid secondExpense = await BudgetShareSteps.AddSharedExpenseAsync(_app, group, "2026-10-04");
+            Guid entryId = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, Table);
+
+            Task<HttpResponseMessage> first = DuplicateAnswerRequests.PutAsync(group.Member.Client, entryId, firstExpense, DuplicateAnswerRequests.SameAnswer);
+            await gate.WaitUntilRequestsAreHeldAsync(1);
+            Task<HttpResponseMessage> second = DuplicateAnswerRequests.PutAsync(group.Member.Client, entryId, secondExpense, DuplicateAnswerRequests.SameAnswer);
+            await gate.WaitUntilRequestsAreHeldAsync(2);
+            await gate.OpenAsync();
+            HttpResponseMessage[] responses = await Task.WhenAll(first, second);
+
+            await AssertOneMergedAndTheOtherWasRefusedAsync(responses, group.Member.UserId);
+        }
+
+        [Fact]
+        public async Task Put_SameForOneExpenseWithTwoEntriesAtTheSameMoment_OneAnswers204AndTheOtherAnswers400AlreadyMerged()
+        {
+            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
+            Guid expenseId = await BudgetShareSteps.AddSharedExpenseAsync(_app, group);
+            Guid firstEntry = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
+            Guid secondEntry = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
+            await using InsertGate gate = await InsertGate.CloseAsync(_app, Table);
+
+            Task<HttpResponseMessage> first = DuplicateAnswerRequests.PutAsync(group.Member.Client, firstEntry, expenseId, DuplicateAnswerRequests.SameAnswer);
+            await gate.WaitUntilRequestsAreHeldAsync(1);
+            Task<HttpResponseMessage> second = DuplicateAnswerRequests.PutAsync(group.Member.Client, secondEntry, expenseId, DuplicateAnswerRequests.SameAnswer);
+            await gate.WaitUntilRequestsAreHeldAsync(2);
+            await gate.OpenAsync();
+            HttpResponseMessage[] responses = await Task.WhenAll(first, second);
+
+            await AssertOneMergedAndTheOtherWasRefusedAsync(responses, group.Member.UserId);
+        }
+
+        [Fact]
         public async Task Put_ManyRequestsWithTheSameAnswerAtTheSameMoment_AllAnswer204AndOneRowStays()
         {
             ExpenseGroup group = await _app.CreateExpenseGroupAsync();
@@ -92,25 +131,11 @@ namespace Kvit.Api.Tests.PossibleDuplicates
             }
         }
 
-        [Fact]
-        public async Task PutAndDelete_RepeatedAtTheSameMoment_NeverAnswerAnErrorAndLeaveAtMostOneRow()
+        private async Task AssertOneMergedAndTheOtherWasRefusedAsync(HttpResponseMessage[] responses, Guid userId)
         {
-            ExpenseGroup group = await _app.CreateExpenseGroupAsync();
-            Guid expenseId = await BudgetShareSteps.AddSharedExpenseAsync(_app, group);
-            Guid entryId = await PossibleDuplicateSteps.AddEntryAsync(group.Member);
-
-            for (int repetition = 0; repetition < Repetitions; repetition++)
-            {
-                HttpResponseMessage[] responses = await Task.WhenAll(
-                    DuplicateAnswerRequests.PutAsync(group.Member.Client, entryId, expenseId, DuplicateAnswerRequests.SameAnswer),
-                    DuplicateAnswerRequests.DeleteAsync(group.Member.Client, entryId, expenseId),
-                    DuplicateAnswerRequests.PutAsync(group.Member.Client, entryId, expenseId, DuplicateAnswerRequests.NewAnswer),
-                    DuplicateAnswerRequests.DeleteAsync(group.Member.Client, entryId, expenseId));
-
-                Assert.All(responses, response => Assert.Equal(HttpStatusCode.NoContent, response.StatusCode));
-                Assert.InRange(await DuplicateAnswerRows.CountOfUserAsync(_app, group.Member.UserId), 0, 1);
-                await DuplicateAnswerRows.DeleteOfUserAsync(_app, group.Member.UserId);
-            }
+            Assert.Equal([HttpStatusCode.NoContent, HttpStatusCode.BadRequest], [.. responses.Select(response => response.StatusCode).Order()]);
+            await ProblemResponse.AssertAsync(responses.Single(response => response.StatusCode == HttpStatusCode.BadRequest), HttpStatusCode.BadRequest, DuplicateAnswerRequests.AlreadyMergedCode);
+            Assert.Equal(1, await DuplicateAnswerRows.CountOfUserAsync(_app, userId));
         }
     }
 }
