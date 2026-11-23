@@ -6,7 +6,7 @@
 
 Kvit splits shared expenses with friends and family, shows who pays whom in as few payments as possible, and keeps a personal budget. It works in **Macedonian denars and euros** and in **English and Macedonian**, on a phone or a desktop, and it is free.
 
-> **Status:** Releases 1 to 3 are built and live: splitting, the personal budget, and the polish (offline saving, statistics, legal pages and data rights). The current branch clears the last known bugs. New features are planned as Release 4 in the [roadmap](docs/ROADMAP.md).
+> **Status: live.** Everything in Releases 1 to 3 is released: splitting, the personal budget, and the polish (offline saving, statistics, legal pages and data rights), with all known bugs fixed. The next new features are planned as Release 4 in the [roadmap](docs/ROADMAP.md).
 
 ## Screenshots
 Real screens of the running app at phone size.
